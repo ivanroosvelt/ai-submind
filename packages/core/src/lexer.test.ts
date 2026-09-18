@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenize } from "./lexer";
+import { tokenize } from "./lexer.js";
 
 function kinds(source: string): string[] {
   return tokenize(source).tokens.map((t) => t.kind);

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { tokenize } from "../lexer";
-import { parseSequenceBody } from "./sequence";
-import type { Diagnostic } from "../diagnostics";
+import { tokenize } from "../lexer.js";
+import { parseSequenceBody } from "./sequence.js";
+import type { Diagnostic } from "../diagnostics.js";
 
 function parseBody(source: string) {
   const { tokens, diagnostics: lexDiagnostics } = tokenize(source);
@@ -50,5 +50,10 @@ describe("parseSequenceBody", () => {
   it("reports E027 when a message is missing its text", () => {
     const { diagnostics } = parseBody("participant a\nparticipant b\na -> b :\n");
     expect(diagnostics.some((d) => d.code === "E027")).toBe(true);
+  });
+
+  it("reports E022 when 'as' is immediately followed by a newline (empty alias text)", () => {
+    const { diagnostics } = parseBody("participant a as\n");
+    expect(diagnostics.some((d) => d.code === "E022")).toBe(true);
   });
 });

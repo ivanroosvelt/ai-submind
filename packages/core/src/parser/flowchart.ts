@@ -1,6 +1,6 @@
-import type { Token } from "../tokens";
-import type { Diagnostic } from "../diagnostics";
-import type { FlowchartDiagram, FlowchartNode, FlowchartEdge, NodeShape } from "../ast";
+import type { Token } from "../tokens.js";
+import type { Diagnostic } from "../diagnostics.js";
+import type { FlowchartDiagram, FlowchartNode, FlowchartEdge, NodeShape } from "../ast.js";
 
 const SHAPE_BY_OPEN: Record<string, NodeShape> = {
   LBRACKET: "rectangle",
@@ -71,7 +71,7 @@ export function parseFlowchartBody(
       const openKind = next.kind;
       advance();
       const textToken = current();
-      if (textToken.kind !== "TEXT") {
+      if (textToken.kind !== "TEXT" || !textToken.value) {
         diagnostics.push({
           code: "E011",
           message: "se esperaba el texto del nodo",
@@ -132,7 +132,7 @@ export function parseFlowchartBody(
         advance();
         const labelToken = current();
         if (labelToken.kind === "TEXT") {
-          label = labelToken.value;
+          label = labelToken.value ? labelToken.value : null;
           advance();
         }
       }
@@ -161,6 +161,20 @@ export function parseFlowchartBody(
       skipToNextLine();
     }
     skipNewlines();
+  }
+
+  for (const edge of edges) {
+    for (const id of [edge.from, edge.to]) {
+      if (!nodes.some((node) => node.id === id)) {
+        diagnostics.push({
+          code: "E017",
+          message: `el nodo '${id}' no fue declarado`,
+          line: edge.position.line,
+          column: edge.position.column,
+          severity: "error",
+        });
+      }
+    }
   }
 
   return { kind: "flowchart", nodes, edges };

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parse } from "./index";
+import { parse } from "./index.js";
 
 describe("parse", () => {
   it("reports E003 for an empty file", () => {
@@ -75,6 +75,21 @@ describe("parse", () => {
     });
   });
 
+  it("allows a leading comment line (reduced to a blank NEWLINE) before the header", () => {
+    const source = "// title comment\ndiagram flowchart\nstart[Inicio]\n";
+    const { diagram, diagnostics } = parse(source);
+    expect(diagnostics).toEqual([]);
+    expect(diagram).not.toBeNull();
+    expect(diagram?.kind).toBe("flowchart");
+  });
+
+  it("allows one or more genuinely blank leading lines before the header", () => {
+    const source = "\n\ndiagram flowchart\nstart[Inicio]\n";
+    const { diagram, diagnostics } = parse(source);
+    expect(diagnostics).toEqual([]);
+    expect(diagram).not.toBeNull();
+  });
+
   it("collects diagnostics from multiple invalid lines instead of stopping at the first", () => {
     const source = [
       "diagram flowchart",
@@ -88,5 +103,21 @@ describe("parse", () => {
     const codes = diagnostics.map((d) => d.code);
     expect(codes).toContain("E002");
     expect(codes).toContain("E014");
+  });
+
+  it("sorts diagnostics by (line, column) even though lexer diagnostics are collected before parser diagnostics", () => {
+    const source = ["diagram flowchart", "start ->", "ok[Bien]", "@", ""].join("\n");
+    const { diagnostics } = parse(source);
+    // Without sorting this would come back as [E002 (line 4), E014 (line 2)]
+    // because all lexer diagnostics are collected up front, before the body
+    // parser runs and reports E014 for the earlier line.
+    expect(diagnostics.map((d) => d.code)).toEqual(["E014", "E002"]);
+    expect(diagnostics[0].line).toBe(2);
+    expect(diagnostics[1].line).toBe(4);
+    for (let i = 1; i < diagnostics.length; i += 1) {
+      const prev = diagnostics[i - 1];
+      const curr = diagnostics[i];
+      expect(prev.line < curr.line || (prev.line === curr.line && prev.column <= curr.column)).toBe(true);
+    }
   });
 });

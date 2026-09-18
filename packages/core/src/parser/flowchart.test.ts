@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { tokenize } from "../lexer";
-import { parseFlowchartBody } from "./flowchart";
-import type { Diagnostic } from "../diagnostics";
+import { tokenize } from "../lexer.js";
+import { parseFlowchartBody } from "./flowchart.js";
+import type { Diagnostic } from "../diagnostics.js";
 
 function parseBody(source: string) {
   const { tokens, diagnostics: lexDiagnostics } = tokenize(source);
@@ -49,5 +49,32 @@ describe("parseFlowchartBody", () => {
   it("reports E014 when an edge is missing its target id", () => {
     const { diagnostics } = parseBody("start[Inicio]\nstart ->\n");
     expect(diagnostics.some((d) => d.code === "E014")).toBe(true);
+  });
+
+  it("reports E017 for each endpoint of an edge that references an id never declared as a node", () => {
+    const { diagnostics } = parseBody("ghost1 -> ghost2\n");
+    const e017 = diagnostics.filter((d) => d.code === "E017");
+    expect(e017).toHaveLength(2);
+    expect(e017.map((d) => d.message)).toEqual([
+      "el nodo 'ghost1' no fue declarado",
+      "el nodo 'ghost2' no fue declarado",
+    ]);
+  });
+
+  it("does not report E017 when an edge references a node declared later in the file (order-independent)", () => {
+    const { diagnostics } = parseBody("start -> end\nstart[Inicio]\nend[Fin]\n");
+    expect(diagnostics.filter((d) => d.code === "E017")).toHaveLength(0);
+  });
+
+  it("reports E011 when a node's bracketed label is empty", () => {
+    const { diagnostics } = parseBody("start[]\n");
+    expect(diagnostics.some((d) => d.code === "E011")).toBe(true);
+  });
+
+  it("treats an edge with a colon but no text after it as label: null, not an empty string, and reports no diagnostic", () => {
+    const { diagram, diagnostics } = parseBody("start[A]\nend[B]\nstart -> end :\n");
+    expect(diagnostics).toEqual([]);
+    expect(diagram.edges).toHaveLength(1);
+    expect(diagram.edges[0].label).toBeNull();
   });
 });

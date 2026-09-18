@@ -1,15 +1,25 @@
-import { tokenize } from "../lexer";
-import { parseFlowchartBody } from "./flowchart";
-import { parseSequenceBody } from "./sequence";
-import type { Diagram } from "../ast";
-import type { Diagnostic } from "../diagnostics";
+import { tokenize } from "../lexer.js";
+import { parseFlowchartBody } from "./flowchart.js";
+import { parseSequenceBody } from "./sequence.js";
+import type { Diagram } from "../ast.js";
+import type { Diagnostic } from "../diagnostics.js";
 
 export interface ParseResult {
   diagram: Diagram | null;
   diagnostics: Diagnostic[];
 }
 
+function sortDiagnosticsByPosition(diagnostics: Diagnostic[]): Diagnostic[] {
+  return diagnostics.sort((a, b) => a.line - b.line || a.column - b.column);
+}
+
 export function parse(source: string): ParseResult {
+  const result = parseUnsorted(source);
+  sortDiagnosticsByPosition(result.diagnostics);
+  return result;
+}
+
+function parseUnsorted(source: string): ParseResult {
   const { tokens, diagnostics: lexDiagnostics } = tokenize(source);
   const diagnostics: Diagnostic[] = [...lexDiagnostics];
 
@@ -22,6 +32,8 @@ export function parse(source: string): ParseResult {
     if (token.kind !== "EOF") pos += 1;
     return token;
   }
+
+  while (current().kind === "NEWLINE") advance();
 
   if (current().kind === "EOF") {
     diagnostics.push({

@@ -1,6 +1,6 @@
-import type { Token } from "../tokens";
-import type { Diagnostic } from "../diagnostics";
-import type { SequenceDiagram, SequenceParticipant, SequenceMessage } from "../ast";
+import type { Token } from "../tokens.js";
+import type { Diagnostic } from "../diagnostics.js";
+import type { SequenceDiagram, SequenceParticipant, SequenceMessage } from "../ast.js";
 
 export function parseSequenceBody(
   tokens: Token[],
@@ -72,7 +72,7 @@ export function parseSequenceBody(
       if (current().kind === "IDENT" && current().value === "as") {
         advance();
         const labelToken = current();
-        if (labelToken.kind === "TEXT") {
+        if (labelToken.kind === "TEXT" && labelToken.value) {
           label = labelToken.value;
           advance();
         } else {

@@ -1,6 +1,6 @@
 # Gramática `.flo` (MVP: flowchart + sequence)
 
-    Diagram      ::= Header Newline Body EOF
+    Diagram      ::= BlankLine* Header Newline Body EOF
     Header       ::= "diagram" Kind
     Kind         ::= "flowchart" | "sequence"
     Body         ::= (BlankLine | Statement)*
@@ -26,16 +26,32 @@
 
 ## Reglas léxicas especiales
 
+- Se permiten líneas en blanco (incluida una línea que queda vacía porque
+  un comentario fue eliminado por el lexer, p. ej. `// título\n`) antes
+  del header `diagram <tipo>`. El parser las salta antes de revisar E003
+  (archivo vacío) o E004 (falta `diagram`), así que un comentario inicial
+  no se confunde con contenido inválido.
 - Después de `[`, `(`, `{` o `:`, el lexer entra en modo texto: todo lo
   que sigue hasta el delimitador de cierre (o hasta fin de línea, para
   `:`) es un único token `TEXT`, sin tokenizar palabra por palabra.
-- La palabra `as` es una palabra clave contextual: cuando el lexer emite
-  un `IDENT` con valor `as`, el resto de la línea también se lee como un
-  único token `TEXT` (igual que después de `:`). Es la única forma en que
-  un alias de participante puede tener espacios (`as Base de datos`).
+- La palabra `as` es una palabra reservada global del lexer, no una
+  palabra clave contextual: el lexer entra en modo texto cada vez que
+  emite un `IDENT` con valor `as`, sin importar el tipo de diagrama ni la
+  posición (por ejemplo, también dispara dentro de un `flowchart`, donde
+  `as` no tiene significado gramatical). El resto de la línea se lee
+  entonces como un único token `TEXT` (igual que después de `:`). Es la
+  única forma en que un alias de participante puede tener espacios (`as
+  Base de datos`).
 - Un id de nodo/participante no puede reusarse con una forma distinta
   (flowchart) ni declararse dos veces (sequence) — es un error, no una
   redefinición silenciosa.
+- En `flowchart`, toda arista debe referenciar nodos declarados en algún
+  lugar del mismo archivo — el orden no importa: un nodo declarado más
+  abajo en el archivo puede ser referenciado por una arista anterior sin
+  error. Esta comprobación corre como una pasada posterior, una vez que
+  `nodes` y `edges` están completos; solo se marca un id que nunca llega
+  a declararse en todo el archivo (E017). A diferencia de `sequence`, no
+  hay autodeclaración de nodos en `flowchart`.
 - En `sequence`, un participante usado en un mensaje sin haber sido
   declarado explícitamente con `participant` se autodeclara con su id
   como label. Declarar explícitamente un participante ya autodeclarado
@@ -66,6 +82,7 @@ spec no la especifica con ejemplos concretos.
 | E014 | parser (flowchart) | se esperaba el id del nodo destino |
 | E015 | parser (flowchart) | se esperaba una forma de nodo o `->` |
 | E016 | parser (flowchart/sequence) | contenido inesperado al final de la línea |
+| E017 | parser (flowchart) | id de nodo no declarado en una arista |
 | E020 | parser (sequence) | se esperaba `participant` o un id |
 | E021 | parser (sequence) | se esperaba el id del participante |
 | E022 | parser (sequence) | se esperaba el texto del alias después de `as` |

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatDiagnostic, type Diagnostic } from "./diagnostics";
+import { formatDiagnostic, type Diagnostic } from "./diagnostics.js";
 
 describe("formatDiagnostic", () => {
   it("formats an error diagnostic with code, position and message", () => {

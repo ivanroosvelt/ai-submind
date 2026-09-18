@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isFlowchartDiagram, isSequenceDiagram, type Diagram } from "./ast";
+import { isFlowchartDiagram, isSequenceDiagram, type Diagram } from "./ast.js";
 
 describe("diagram type guards", () => {
   const flowchart: Diagram = { kind: "flowchart", nodes: [], edges: [] };

@@ -1,5 +1,20 @@
 export const VERSION = "0.0.0";
-export { parse } from "./parser/index";
-export type { ParseResult } from "./parser/index";
-export type { Diagram, FlowchartDiagram, SequenceDiagram } from "./ast";
-export type { Diagnostic } from "./diagnostics";
+export { parse } from "./parser/index.js";
+export type { ParseResult } from "./parser/index.js";
+export {
+  isFlowchartDiagram,
+  isSequenceDiagram,
+} from "./ast.js";
+export type {
+  Diagram,
+  FlowchartDiagram,
+  SequenceDiagram,
+  NodeShape,
+  Position,
+  FlowchartNode,
+  FlowchartEdge,
+  SequenceParticipant,
+  SequenceMessage,
+} from "./ast.js";
+export { formatDiagnostic } from "./diagnostics.js";
+export type { Diagnostic, DiagnosticSeverity } from "./diagnostics.js";

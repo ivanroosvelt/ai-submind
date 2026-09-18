@@ -1,5 +1,5 @@
-import type { Token, TokenKind } from "./tokens";
-import type { Diagnostic } from "./diagnostics";
+import type { Token, TokenKind } from "./tokens.js";
+import type { Diagnostic } from "./diagnostics.js";
 
 interface BracketMode {
   kind: "bracket";
