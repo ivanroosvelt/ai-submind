@@ -17,6 +17,13 @@ cualquier tipo de diagrama:
 diagram flowchart
 ```
 
+Ojo: esto solo vale fuera de modo texto. Adentro del texto de un nodo
+(`[ ]`, `{ }`, `( )`) o después de `:` o `as`, `//` ya no abre un
+comentario — queda pegado como parte del texto o la etiqueta. Por ejemplo,
+en `user -> api : POST /x  // nota`, `// nota` termina siendo parte de la
+etiqueta, no un comentario. Usá comentarios en su propia línea, o antes de
+que empiece el texto.
+
 ## Flowchart
 
 Dos tipos de statement: declarar un nodo, o conectar dos nodos con una
@@ -27,7 +34,7 @@ arista.
 ```
 start[Inicio]      // rectángulo
 check{¿Válido?}    // rombo
-home(Home)         // óvalo
+home(Home)         // rectángulo redondeado
 ```
 
 El id (`start`, `check`, `home`) es solo letras ASCII, dígitos y `_`, y no
@@ -61,6 +68,12 @@ participant db as Base de datos
 
 El alias (después de `as`) puede tener espacios — es texto libre hasta
 fin de línea, igual que el texto de un nodo.
+
+Ojo: `as` es una palabra reservada en cualquier tipo de diagrama, no solo
+en `sequence`. Si usás `as` como id o como parte de un nombre en un
+`flowchart`, el lexer igual entra en modo texto y el resto de la línea se
+lee como un solo token de texto — evitá usar `as` fuera de un
+`participant`.
 
 **Mensajes** — la etiqueta después de `:` es obligatoria (a diferencia de
 flowchart, donde es opcional):

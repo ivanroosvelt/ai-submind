@@ -47,9 +47,8 @@ api -> user : 200 OK
 Monorepo con pnpm workspaces:
 
 - **`@flo/core`** (`packages/core`) — lexer, parser, AST y diagnostics.
-  Cero dependencias de runtime, no importa nada de `@flo/web` ni de
-  ningún framework de UI: pensado para publicarse a npm de forma
-  independiente. API pública:
+  No importa nada de `@flo/web` ni de ningún framework de UI: pensado
+  para publicarse a npm de forma independiente. API pública:
 
   ```ts
   import { parse } from "@flo/core";
