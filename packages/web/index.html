@@ -3,9 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <title>.flo editor</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        font-family: system-ui, sans-serif;
+      }
+      #app {
+        display: flex;
+        height: 100vh;
+      }
+      #editor-pane,
+      #preview-pane {
+        flex: 1 1 50%;
+        min-width: 0;
+        overflow: auto;
+      }
+      #editor-pane {
+        border-right: 1px solid #d1d5db;
+      }
+      #preview-pane {
+        padding: 16px;
+      }
+      .cm-editor {
+        height: 100%;
+      }
+      .flo-banner {
+        background: #fef2f2;
+        color: #991b1b;
+        padding: 4px 8px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      .flo-empty {
+        color: #6b7280;
+      }
+      .flo-tok-ident {
+        color: #1d4ed8;
+      }
+      .flo-tok-text {
+        color: #047857;
+      }
+      .flo-tok-arrow {
+        color: #b91c1c;
+        font-weight: bold;
+      }
+      .flo-tok-punct {
+        color: #6b7280;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div id="editor-pane"></div>
+      <div id="preview-pane"></div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
