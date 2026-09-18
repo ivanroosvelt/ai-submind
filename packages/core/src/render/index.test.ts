@@ -60,4 +60,41 @@ describe("render", () => {
     expect(svg).not.toBeNull();
     expect(svg).toContain(">Inicio<");
   });
+
+  it("computes finite dimensions for an empty flowchart with no diagnostics", () => {
+    const { svg, diagnostics } = render("diagram flowchart\n");
+
+    expect(diagnostics).toEqual([]);
+    expect(svg).not.toBeNull();
+    expect(svg).not.toContain("Infinity");
+    expect(svg).not.toContain("NaN");
+  });
+
+  it("keeps both labels when two edges share the same from/to pair", () => {
+    const source = [
+      "diagram flowchart",
+      "",
+      "a[A]",
+      "b[B]",
+      "a -> b : si",
+      "a -> b : no",
+      "",
+    ].join("\n");
+
+    const { svg, diagnostics } = render(source);
+
+    expect(diagnostics).toEqual([]);
+    expect(svg).toContain(">si<");
+    expect(svg).toContain(">no<");
+  });
+
+  it("keeps a dangling edge target's coordinates finite (E017)", () => {
+    const source = ["diagram flowchart", "", "start[Inicio]", "start -> ghost", ""].join("\n");
+
+    const { svg, diagnostics } = render(source);
+
+    expect(diagnostics.some((diagnostic) => diagnostic.code === "E017")).toBe(true);
+    expect(svg).not.toBeNull();
+    expect(svg).not.toContain("NaN");
+  });
 });
