@@ -6,9 +6,10 @@ estructurados en vez de mensajes de texto suelto. Sin compatibilidad con
 sintaxis Mermaid: es un formato nuevo desde cero.
 
 > **Estado actual:** Fase 0 (monorepo + CI), Fase 1 (lenguaje: lexer,
-> parser, AST, diagnostics) y Fase 2 (layout con `dagre` + render a SVG)
-> completas para los tipos `flowchart` y `sequence`. Todavía no hay
-> editor visual — eso es la próxima fase (ver [Roadmap](#roadmap)).
+> parser, AST, diagnostics), Fase 2 (layout con `dagre` + render a SVG) y
+> Fase 3 (editor web: CodeMirror 6 + preview en vivo) completas para los
+> tipos `flowchart` y `sequence`. Todavía no hay persistencia ni
+> exportación — eso es la próxima fase (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
@@ -74,8 +75,13 @@ Monorepo con pnpm workspaces:
   que `parse()`.
 
 - **`@flo/web`** (`packages/web`) — vanilla TypeScript + Vite, consume
-  `@flo/core`. Por ahora es solo un scaffold (muestra la versión del
-  core); el editor real (split-pane texto + preview) llega en Fase 3.
+  `@flo/core`. Editor split-pane: CodeMirror 6 a la izquierda (resaltado
+  de sintaxis `.flo` por tipo de token, diagnósticos del core pintados
+  inline con subrayado + tooltip vía `@codemirror/lint`) y preview SVG en
+  vivo a la derecha, actualizado con debounce de 200ms. Si el diagrama
+  tiene errores, el preview mantiene el último SVG válido y agrega un
+  banner "N errores" en vez de una pantalla en blanco. Sin persistencia
+  ni exportación todavía — eso es la Fase 4.
 
 ## Uso
 
@@ -86,13 +92,13 @@ por `packageManager` en el `package.json` raíz).
 pnpm install
 pnpm build      # compila @flo/core y @flo/web, en ese orden
 pnpm typecheck
-pnpm test       # 38 tests (vitest) en @flo/core + @flo/web
+pnpm test       # 80 tests (vitest) en @flo/core + @flo/web
 ```
 
 Cada paquete también corre estos scripts individualmente con
 `pnpm --filter @flo/core <script>` / `pnpm --filter @flo/web <script>`.
 `@flo/web` además tiene `pnpm --filter @flo/web dev` para levantar el
-scaffold con Vite en modo desarrollo (hot reload).
+editor con Vite en modo desarrollo (hot reload).
 
 Para servir el build estático (`packages/web/dist`) como lo haría un
 hosting de archivos planos:
@@ -114,7 +120,6 @@ typecheck → test` en cada push y PR.
 
 ## Roadmap
 
-- **Fase 3** — editor web: split-pane CodeMirror 6 + preview en vivo.
 - **Fase 4** — persistencia (File System Access API, autosave a IndexedDB) y exportación a SVG/PNG.
 - **Fase 5** — publicación de `@flo/core` a npm, documentación de usuario final, deploy del editor.
 
