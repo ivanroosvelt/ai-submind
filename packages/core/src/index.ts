@@ -1,6 +1,8 @@
 export const VERSION = "0.0.0";
 export { parse } from "./parser/index.js";
 export type { ParseResult } from "./parser/index.js";
+export { render } from "./render/index.js";
+export type { RenderResult } from "./render/index.js";
 export {
   isFlowchartDiagram,
   isSequenceDiagram,
