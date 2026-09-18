@@ -5,10 +5,10 @@ gramática determinista, parser con recuperación de errores y diagnósticos
 estructurados en vez de mensajes de texto suelto. Sin compatibilidad con
 sintaxis Mermaid: es un formato nuevo desde cero.
 
-> **Estado actual:** Fase 0 (monorepo + CI) y Fase 1 (lenguaje: lexer,
-> parser, AST, diagnostics) completas para los tipos `flowchart` y
-> `sequence`. Todavía no hay layout, render a SVG ni editor visual — eso
-> son las próximas fases (ver [Roadmap](#roadmap)).
+> **Estado actual:** Fase 0 (monorepo + CI), Fase 1 (lenguaje: lexer,
+> parser, AST, diagnostics) y Fase 2 (layout con `dagre` + render a SVG)
+> completas para los tipos `flowchart` y `sequence`. Todavía no hay
+> editor visual — eso es la próxima fase (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
@@ -59,6 +59,20 @@ Monorepo con pnpm workspaces:
   la tabla completa de códigos de diagnóstico en
   [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md).
 
+  `@flo/core` también expone `render(source)`, que hace `parse()` +
+  layout + render a SVG en un solo paso:
+
+  ```ts
+  import { render } from "@flo/core";
+
+  const { svg, diagnostics } = render(source);
+  ```
+
+  `svg` es `null` solo cuando `diagram` también lo sería (error de
+  header); si el cuerpo tiene errores recuperables, `svg` sigue
+  reflejando el diagrama parcial y `diagnostics` trae los errores, igual
+  que `parse()`.
+
 - **`@flo/web`** (`packages/web`) — vanilla TypeScript + Vite, consume
   `@flo/core`. Por ahora es solo un scaffold (muestra la versión del
   core); el editor real (split-pane texto + preview) llega en Fase 3.
@@ -99,7 +113,6 @@ typecheck → test` en cada push y PR.
 
 ## Roadmap
 
-- **Fase 2** — layout (`dagre` para flowchart, columnas para sequence) y `render(ast) -> svgString`.
 - **Fase 3** — editor web: split-pane CodeMirror 6 + preview en vivo.
 - **Fase 4** — persistencia (File System Access API, autosave a IndexedDB) y exportación a SVG/PNG.
 - **Fase 5** — publicación de `@flo/core` a npm, documentación de usuario final, deploy del editor.
