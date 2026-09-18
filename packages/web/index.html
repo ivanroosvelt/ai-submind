@@ -10,9 +10,32 @@
         height: 100%;
         font-family: system-ui, sans-serif;
       }
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      #toolbar {
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px;
+        border-bottom: 1px solid #d1d5db;
+        flex: 0 0 auto;
+      }
+      #toolbar button {
+        padding: 4px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      #toolbar button:hover {
+        background: #f3f4f6;
+      }
       #app {
         display: flex;
-        height: 100vh;
+        flex: 1 1 auto;
+        min-height: 0;
       }
       #editor-pane,
       #preview-pane {
@@ -56,6 +79,7 @@
     </style>
   </head>
   <body>
+    <div id="toolbar"></div>
     <div id="app">
       <div id="editor-pane"></div>
       <div id="preview-pane"></div>
