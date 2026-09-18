@@ -96,16 +96,19 @@ describe("saveFloFile", () => {
     expect(result).toBe(handle);
   });
 
-  it("downloads a .flo file when the browser has no File System Access API", async () => {
+  it("prompts for a filename and downloads a .flo file when the browser has no File System Access API", async () => {
+    const promptSpy = vi.spyOn(window, "prompt").mockReturnValue("diagrama.flo");
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
     const result = await saveFloFile("diagram flowchart\n", null, "diagrama.flo");
 
+    expect(promptSpy).toHaveBeenCalledWith("Nombre del archivo para descargar:", "diagrama.flo");
     expect(result).toBeNull();
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("downloads using the passed filename, not a hardcoded one", async () => {
+  it("downloads using the name entered in the prompt, not the suggested one", async () => {
+    vi.spyOn(window, "prompt").mockReturnValue("arquitectura.flo");
     let downloadAttr: string | null = null;
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
       this: HTMLAnchorElement
@@ -113,9 +116,19 @@ describe("saveFloFile", () => {
       downloadAttr = this.download;
     });
 
-    await saveFloFile("diagram flowchart\n", null, "arquitectura.flo");
+    await saveFloFile("diagram flowchart\n", null, "diagrama.flo");
 
     expect(downloadAttr).toBe("arquitectura.flo");
+  });
+
+  it("does not download when the user cancels the filename prompt", async () => {
+    vi.spyOn(window, "prompt").mockReturnValue(null);
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    const result = await saveFloFile("diagram flowchart\n", null, "diagrama.flo");
+
+    expect(result).toBeNull();
+    expect(clickSpy).not.toHaveBeenCalled();
   });
 
   it("returns null without falling back to a download when the user cancels the save picker", async () => {

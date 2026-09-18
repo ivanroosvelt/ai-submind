@@ -1,0 +1,39 @@
+// Flujo de compra completo: carrito -> stock -> pasarela de pago -> orden.
+// Usa las tres formas de nodo y aristas con y sin etiqueta.
+diagram flowchart
+
+inicio(Cliente en el carrito)
+checkout[Confirmar compra]
+stock{¿Hay stock?}
+sinstock[Mostrar "sin stock"]
+reservar[Reservar inventario]
+crearorden[Crear orden pendiente]
+pago[Redirigir a pasarela de pago]
+resultado{¿Pago aprobado?}
+reintentar{¿Reintentar pago?}
+confirmar[Confirmar orden]
+email[Enviar email de confirmación]
+liberar[Liberar inventario reservado]
+exito(Compra exitosa)
+cancelada(Orden cancelada)
+
+inicio -> checkout
+checkout -> stock
+stock -> sinstock : no
+stock -> reservar : sí
+sinstock -> inicio : volver al carrito
+
+// Los ids pueden referenciarse antes de declararse; el orden no importa
+// (ver "liberar", usado más arriba en "reintentar -> liberar").
+reservar -> crearorden
+crearorden -> pago
+pago -> resultado
+
+resultado -> confirmar : aprobado
+resultado -> reintentar : rechazado
+reintentar -> pago : sí
+reintentar -> liberar : no
+liberar -> cancelada
+
+confirmar -> email
+email -> exito

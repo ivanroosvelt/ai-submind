@@ -4,6 +4,8 @@ import { createToolbar, type DiagramKind } from "./toolbar.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
 import { exportSvg, exportPng } from "./export.js";
 import { loadDraft, saveDraft } from "./storage.js";
+import { EXAMPLES } from "./examples.js";
+import { enhanceSequencePreview } from "./sequence-view.js";
 
 const NEW_SOURCE: Record<DiagramKind, string> = {
   flowchart: ["diagram flowchart", "", ""].join("\n"),
@@ -31,6 +33,7 @@ async function main(): Promise<void> {
   const view = createEditor(editorPane, initialSource, (result, source) => {
     previewState = nextPreviewState(previewState, result);
     previewPane.innerHTML = previewHtml(previewState, result);
+    enhanceSequencePreview(previewPane);
     void saveDraft(source);
   });
 
@@ -72,7 +75,17 @@ async function main(): Promise<void> {
         reportActionError("Exportar PNG", error);
       }
     },
-  });
+    onLoadExample(id) {
+      const example = EXAMPLES.find((candidate) => candidate.id === id);
+      if (!example) return;
+      fileHandle = null;
+      fileName = "diagrama.flo";
+      setEditorSource(view, example.source);
+    },
+    onToggleExpand() {
+      document.body.classList.toggle("flo-expanded");
+    },
+  }, EXAMPLES);
 }
 
 void main();

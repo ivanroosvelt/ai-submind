@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { escapeXml, arrowMarkerDefs, svgText, ARROW_MARKER_ID } from "./svg.js";
+import { escapeXml, arrowMarkerDefs, svgLabel, svgText, ARROW_MARKER_ID } from "./svg.js";
 
 describe("escapeXml", () => {
   it("escapes all five XML special characters", () => {
@@ -31,6 +31,16 @@ describe("svgText", () => {
   it("escapes the label content", () => {
     expect(svgText(10, 20, "A & B")).toBe(
       '<text x="10" y="20" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="14">A &amp; B</text>'
+    );
+  });
+});
+
+describe("svgLabel", () => {
+  it("draws a white background rect sized to the text, behind the text element", () => {
+    const result = svgLabel(100, 50, "si");
+    expect(result).toBe(
+      '<rect x="89" y="42" width="22" height="16" fill="#ffffff" />' +
+        '<text x="100" y="50" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="14">si</text>'
     );
   });
 });

@@ -20,3 +20,15 @@ export function arrowMarkerDefs(): string {
 export function svgText(x: number, y: number, text: string): string {
   return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="14">${escapeXml(text)}</text>`;
 }
+
+const LABEL_CHAR_WIDTH = 7;
+const LABEL_PADDING_X = 4;
+const LABEL_HEIGHT = 16;
+
+// Fondo blanco detrás de las etiquetas sobre líneas (arista/mensaje), para
+// que no se confundan visualmente con la flecha que atraviesan.
+export function svgLabel(x: number, y: number, text: string): string {
+  const width = text.length * LABEL_CHAR_WIDTH + LABEL_PADDING_X * 2;
+  const rect = `<rect x="${x - width / 2}" y="${y - LABEL_HEIGHT / 2}" width="${width}" height="${LABEL_HEIGHT}" fill="#ffffff" />`;
+  return `${rect}${svgText(x, y, text)}`;
+}

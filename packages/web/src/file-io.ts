@@ -95,6 +95,8 @@ export async function saveFloFile(
     await writable.close();
     return target;
   }
-  downloadText(source, name, "text/plain");
+  const chosenName = window.prompt("Nombre del archivo para descargar:", name);
+  if (chosenName === null) return null;
+  downloadText(source, chosenName.trim() || name, "text/plain");
   return null;
 }

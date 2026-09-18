@@ -8,6 +8,8 @@ function mockActions(): ToolbarActions {
     onSave: vi.fn(),
     onExportSvg: vi.fn(),
     onExportPng: vi.fn(),
+    onLoadExample: vi.fn(),
+    onToggleExpand: vi.fn(),
   };
 }
 
@@ -34,5 +36,30 @@ describe("createToolbar", () => {
 
     container.querySelector<HTMLButtonElement>("#flo-export-png")!.click();
     expect(actions.onExportPng).toHaveBeenCalledTimes(1);
+
+    container.querySelector<HTMLButtonElement>("#flo-toggle-expand")!.click();
+    expect(actions.onToggleExpand).toHaveBeenCalledTimes(1);
+  });
+
+  it("lists the given examples and loads the selected one", () => {
+    const container = document.createElement("div");
+    const actions = mockActions();
+    createToolbar(container, actions, [
+      { id: "flowchart", title: "Flowchart" },
+      { id: "sequence", title: "Secuencia" },
+    ]);
+
+    const select = container.querySelector<HTMLSelectElement>("#flo-examples")!;
+    expect(Array.from(select.options).map((option) => option.value)).toEqual([
+      "",
+      "flowchart",
+      "sequence",
+    ]);
+
+    select.value = "sequence";
+    select.dispatchEvent(new Event("change"));
+
+    expect(actions.onLoadExample).toHaveBeenCalledWith("sequence");
+    expect(select.value).toBe("");
   });
 });

@@ -49,6 +49,22 @@
       #preview-pane {
         padding: 16px;
       }
+      .flo-seq-sticky {
+        position: sticky;
+        top: 0;
+        height: 0;
+        overflow: visible;
+        z-index: 1;
+      }
+      .flo-seq-sticky svg {
+        display: block;
+      }
+      body.flo-expanded #editor-pane {
+        display: none;
+      }
+      body.flo-expanded #preview-pane {
+        flex: 1 1 100%;
+      }
       .cm-editor {
         height: 100%;
       }

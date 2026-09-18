@@ -1,14 +1,29 @@
 export type DiagramKind = "flowchart" | "sequence";
 
+export interface ExampleOption {
+  id: string;
+  title: string;
+}
+
 export interface ToolbarActions {
   onNew(kind: DiagramKind): void;
   onOpen(): void;
   onSave(): void;
   onExportSvg(): void;
   onExportPng(): void;
+  onLoadExample(id: string): void;
+  onToggleExpand(): void;
 }
 
-export function createToolbar(container: HTMLElement, actions: ToolbarActions): void {
+export function createToolbar(
+  container: HTMLElement,
+  actions: ToolbarActions,
+  examples: ExampleOption[] = []
+): void {
+  const exampleOptions = examples
+    .map((example) => `<option value="${example.id}">${example.title}</option>`)
+    .join("");
+
   container.innerHTML = `
     <button id="flo-new-flowchart" type="button">Nuevo flowchart</button>
     <button id="flo-new-sequence" type="button">Nueva secuencia</button>
@@ -16,6 +31,11 @@ export function createToolbar(container: HTMLElement, actions: ToolbarActions): 
     <button id="flo-save" type="button">Guardar</button>
     <button id="flo-export-svg" type="button">Exportar SVG</button>
     <button id="flo-export-png" type="button">Exportar PNG</button>
+    <button id="flo-toggle-expand" type="button">Ampliar</button>
+    <select id="flo-examples">
+      <option value="" selected disabled>Ejemplos</option>
+      ${exampleOptions}
+    </select>
   `;
 
   function byId(id: string): HTMLElement {
@@ -32,4 +52,12 @@ export function createToolbar(container: HTMLElement, actions: ToolbarActions): 
   byId("flo-save").addEventListener("click", actions.onSave);
   byId("flo-export-svg").addEventListener("click", actions.onExportSvg);
   byId("flo-export-png").addEventListener("click", actions.onExportPng);
+  byId("flo-toggle-expand").addEventListener("click", actions.onToggleExpand);
+
+  const examplesSelect = byId("flo-examples") as HTMLSelectElement;
+  examplesSelect.addEventListener("change", () => {
+    const id = examplesSelect.value;
+    examplesSelect.value = "";
+    if (id) actions.onLoadExample(id);
+  });
 }
