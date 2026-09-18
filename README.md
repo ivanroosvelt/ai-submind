@@ -5,13 +5,13 @@ gramática determinista, parser con recuperación de errores y diagnósticos
 estructurados en vez de mensajes de texto suelto. Sin compatibilidad con
 sintaxis Mermaid: es un formato nuevo desde cero.
 
-> **Estado actual:** Fase 0 (monorepo + CI), Fase 1 (lenguaje: lexer,
-> parser, AST, diagnostics), Fase 2 (layout con `dagre` + render a SVG),
-> Fase 3 (editor web: CodeMirror 6 + preview en vivo) y Fase 4
-> (persistencia: File System Access API + fallback de descarga, autosave
-> a IndexedDB, exportación a SVG/PNG) completas para los tipos
-> `flowchart` y `sequence`. Falta publicar `@flo/core` a npm y desplegar
-> el editor — eso es la próxima fase (ver [Roadmap](#roadmap)).
+> **Estado actual:** Fases 0-4 completas (monorepo + CI, lenguaje, layout
+> + render SVG, editor web, persistencia y exportación) para los tipos
+> `flowchart` y `sequence`. Fase 5 completa: editor deployado en
+> [GitHub Pages](https://ivanroosvelt.github.io/submind/), guía de
+> sintaxis para usuario final en [`docs/SYNTAX.md`](docs/SYNTAX.md), y
+> `@flo/core` preparado para publicarse en npm. Falta ejecutar el
+> `npm publish` real — eso es la Fase 6 (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
@@ -120,13 +120,16 @@ typecheck → test` en cada push y PR.
 
 ## Documentación
 
+- [`docs/SYNTAX.md`](docs/SYNTAX.md) — sintaxis de `.flo` para usuario final, con ejemplos.
 - [`docs/superpowers/specs/2026-09-17-flo-diagram-tool-design.md`](docs/superpowers/specs/2026-09-17-flo-diagram-tool-design.md) — diseño y alcance del proyecto completo (todas las fases).
 - [`docs/superpowers/plans/2026-09-17-flo-lenguaje-mvp.md`](docs/superpowers/plans/2026-09-17-flo-lenguaje-mvp.md) — plan de implementación de Fase 0 + Fase 1.
 - [`docs/superpowers/plans/2026-09-17-flo-layout-render-svg.md`](docs/superpowers/plans/2026-09-17-flo-layout-render-svg.md) — plan de implementación de Fase 2 (layout + render a SVG).
+- [`docs/superpowers/plans/2026-09-18-flo-persistencia-exportacion.md`](docs/superpowers/plans/2026-09-18-flo-persistencia-exportacion.md) — plan de implementación de Fase 4 (persistencia y exportación).
+- [`docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md`](docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md) — plan de implementación de Fase 5 (deploy, docs de usuario, prep de npm).
 - [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md) — gramática formal (EBNF), reglas léxicas especiales y tabla de códigos de diagnóstico (E001–E027).
 
 ## Roadmap
 
-- **Fase 5** — publicación de `@flo/core` a npm, documentación de usuario final, deploy del editor.
+- **Fase 6** — `npm publish` real de `@flo/core` (el paquete ya está preparado; falta correr `npm login && npm publish --access public` desde `packages/core` con una cuenta npm autenticada, y habilitar GitHub Pages en Settings → Pages → Source: "GitHub Actions" para que el workflow de deploy quede activo).
 
 Detalle completo de cada fase en el spec enlazado arriba.
