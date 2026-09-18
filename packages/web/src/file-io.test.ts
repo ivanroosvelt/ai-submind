@@ -21,12 +21,15 @@ describe("hasFileSystemAccess", () => {
 describe("openFloFile", () => {
   it("reads the picked file's content via the File System Access API", async () => {
     const file = new File(["diagram flowchart\n"], "diagrama.flo", { type: "text/plain" });
-    const handle = { getFile: vi.fn().mockResolvedValue(file) } as unknown as FileSystemFileHandle;
+    const handle = {
+      name: "diagrama.flo",
+      getFile: vi.fn().mockResolvedValue(file),
+    } as unknown as FileSystemFileHandle;
     window.showOpenFilePicker = vi.fn().mockResolvedValue([handle]);
 
     const result = await openFloFile();
 
-    expect(result).toEqual({ source: "diagram flowchart\n", handle });
+    expect(result).toEqual({ source: "diagram flowchart\n", handle, name: "diagrama.flo" });
   });
 
   it("falls back to an <input type=file> picker and reads its content", async () => {
@@ -40,7 +43,7 @@ describe("openFloFile", () => {
 
     const result = await openFloFile();
 
-    expect(result).toEqual({ source: "diagram sequence\n", handle: null });
+    expect(result).toEqual({ source: "diagram sequence\n", handle: null, name: "diagrama.flo" });
     clickSpy.mockRestore();
   });
 
@@ -74,7 +77,7 @@ describe("saveFloFile", () => {
     const writable = { write: vi.fn().mockResolvedValue(undefined), close: vi.fn().mockResolvedValue(undefined) };
     const handle = { createWritable: vi.fn().mockResolvedValue(writable) } as unknown as FileSystemFileHandle;
 
-    const result = await saveFloFile("diagram flowchart\n", handle);
+    const result = await saveFloFile("diagram flowchart\n", handle, "diagrama.flo");
 
     expect(writable.write).toHaveBeenCalledWith("diagram flowchart\n");
     expect(writable.close).toHaveBeenCalledTimes(1);
@@ -87,7 +90,7 @@ describe("saveFloFile", () => {
     window.showOpenFilePicker = vi.fn();
     window.showSaveFilePicker = vi.fn().mockResolvedValue(handle);
 
-    const result = await saveFloFile("diagram sequence\n", null);
+    const result = await saveFloFile("diagram sequence\n", null, "diagrama.flo");
 
     expect(window.showSaveFilePicker).toHaveBeenCalledTimes(1);
     expect(result).toBe(handle);
@@ -96,10 +99,23 @@ describe("saveFloFile", () => {
   it("downloads a .flo file when the browser has no File System Access API", async () => {
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
-    const result = await saveFloFile("diagram flowchart\n", null);
+    const result = await saveFloFile("diagram flowchart\n", null, "diagrama.flo");
 
     expect(result).toBeNull();
     expect(clickSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("downloads using the passed filename, not a hardcoded one", async () => {
+    let downloadAttr: string | null = null;
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      downloadAttr = this.download;
+    });
+
+    await saveFloFile("diagram flowchart\n", null, "arquitectura.flo");
+
+    expect(downloadAttr).toBe("arquitectura.flo");
   });
 
   it("returns null without falling back to a download when the user cancels the save picker", async () => {
@@ -109,7 +125,7 @@ describe("saveFloFile", () => {
       .mockRejectedValue(new DOMException("The user aborted a request.", "AbortError"));
     const anchorClickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
-    const result = await saveFloFile("diagram sequence\n", null);
+    const result = await saveFloFile("diagram sequence\n", null, "diagrama.flo");
 
     expect(result).toBeNull();
     expect(anchorClickSpy).not.toHaveBeenCalled();

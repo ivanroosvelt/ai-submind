@@ -10,6 +10,11 @@ const NEW_SOURCE: Record<DiagramKind, string> = {
   sequence: ["diagram sequence", "", ""].join("\n"),
 };
 
+function reportActionError(action: string, error: unknown): void {
+  console.error(`flo: ${action} falló`, error);
+  window.alert(`No se pudo completar: ${action}. Revisá la consola para más detalle.`);
+}
+
 async function main(): Promise<void> {
   const editorPane = document.querySelector<HTMLDivElement>("#editor-pane");
   const previewPane = document.querySelector<HTMLDivElement>("#preview-pane");
@@ -21,6 +26,7 @@ async function main(): Promise<void> {
 
   let previewState: PreviewState = { lastSvg: null };
   let fileHandle: FileSystemFileHandle | null = null;
+  let fileName = "diagrama.flo";
 
   const view = createEditor(editorPane, initialSource, (result, source) => {
     previewState = nextPreviewState(previewState, result);
@@ -31,22 +37,40 @@ async function main(): Promise<void> {
   createToolbar(toolbarPane, {
     onNew(kind) {
       fileHandle = null;
+      fileName = "diagrama.flo";
       setEditorSource(view, NEW_SOURCE[kind]);
     },
     async onOpen() {
-      const opened = await openFloFile();
-      if (!opened) return;
-      fileHandle = opened.handle;
-      setEditorSource(view, opened.source);
+      try {
+        const opened = await openFloFile();
+        if (!opened) return;
+        fileHandle = opened.handle;
+        fileName = opened.name;
+        setEditorSource(view, opened.source);
+      } catch (error) {
+        reportActionError("Abrir", error);
+      }
     },
     async onSave() {
-      fileHandle = await saveFloFile(getEditorSource(view), fileHandle);
+      try {
+        fileHandle = await saveFloFile(getEditorSource(view), fileHandle, fileName);
+      } catch (error) {
+        reportActionError("Guardar", error);
+      }
     },
     onExportSvg() {
-      if (previewState.lastSvg) exportSvg(previewState.lastSvg);
+      try {
+        if (previewState.lastSvg) exportSvg(previewState.lastSvg);
+      } catch (error) {
+        reportActionError("Exportar SVG", error);
+      }
     },
-    onExportPng() {
-      if (previewState.lastSvg) void exportPng(previewState.lastSvg);
+    async onExportPng() {
+      try {
+        if (previewState.lastSvg) await exportPng(previewState.lastSvg);
+      } catch (error) {
+        reportActionError("Exportar PNG", error);
+      }
     },
   });
 }

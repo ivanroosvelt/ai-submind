@@ -21,8 +21,12 @@ export function exportSvg(svg: string): void {
 // verifica a mano en el navegador (pnpm --filter @flo/web dev, Task 6).
 // Si hace falta cobertura automatizada, agregar Playwright (spec §7).
 export function exportPng(svg: string): Promise<void> {
-  const { width, height } = parseSvgSize(svg);
   return new Promise((resolve, reject) => {
+    const { width, height } = parseSvgSize(svg);
+    if (width === 0 || height === 0) {
+      reject(new Error("el diagrama está vacío, no hay nada que exportar"));
+      return;
+    }
     const image = new Image();
     image.onload = () => {
       const canvas = document.createElement("canvas");
