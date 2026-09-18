@@ -1,0 +1,11 @@
+// Comentario antes del header — permitido, junto con líneas en blanco.
+diagram flowchart
+
+// Comentario en su propia línea, dentro del cuerpo.
+start[Inicio]
+end[Fin]
+
+start -> end : ok
+// Ojo: "//" dentro de texto de nodo, alias o etiqueta NO abre comentario,
+// queda pegado como parte del texto. Por eso este comentario va en línea
+// propia y no después de ":" o dentro de "[ ]".

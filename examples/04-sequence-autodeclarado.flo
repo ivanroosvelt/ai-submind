@@ -1,0 +1,7 @@
+// No hace falta declarar "participant" antes: un id usado en un mensaje
+// se autodeclara con su propio id como label. A diferencia de flowchart,
+// en sequence la etiqueta del mensaje (después de ":") es obligatoria.
+diagram sequence
+
+a -> b : hola
+b -> a : chau

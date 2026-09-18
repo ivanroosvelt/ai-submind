@@ -1,0 +1,12 @@
+// Participantes declarados explícitamente, con alias de texto libre
+// (puede tener espacios y acentos) después de "as".
+diagram sequence
+
+participant user as Usuario
+participant api as API
+participant db as Base de datos
+
+user -> api : POST /login
+api -> db : SELECT usuario
+db -> api : fila
+api -> user : 200 OK
