@@ -7,11 +7,12 @@ sintaxis Mermaid: es un formato nuevo desde cero.
 
 > **Estado actual:** Fases 0-4 completas (monorepo + CI, lenguaje, layout
 > + render SVG, editor web, persistencia y exportación) para los tipos
-> `flowchart` y `sequence`. Fase 5 completa: editor deployado en
-> [GitHub Pages](https://ivanroosvelt.github.io/submind/), guía de
-> sintaxis para usuario final en [`docs/SYNTAX.md`](docs/SYNTAX.md), y
-> `@flo/core` preparado para publicarse en npm. Falta ejecutar el
-> `npm publish` real — eso es la Fase 6 (ver [Roadmap](#roadmap)).
+> `flowchart` y `sequence`. Fase 5 completa: workflow de deploy a
+> GitHub Pages listo, guía de sintaxis para usuario final en
+> [`docs/SYNTAX.md`](docs/SYNTAX.md), y `@flo/core` preparado para
+> publicarse en npm. Falta un paso manual para activar el deploy
+> (habilitar Pages en Settings) y ejecutar el `npm publish` real —
+> ambos son la Fase 6 (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
