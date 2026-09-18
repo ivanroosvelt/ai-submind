@@ -43,6 +43,29 @@ describe("openFloFile", () => {
     expect(result).toEqual({ source: "diagram sequence\n", handle: null });
     clickSpy.mockRestore();
   });
+
+  it("returns null when the user cancels the native open picker", async () => {
+    window.showOpenFilePicker = vi
+      .fn()
+      .mockRejectedValue(new DOMException("The user aborted a request.", "AbortError"));
+
+    const result = await openFloFile();
+
+    expect(result).toBeNull();
+  });
+
+  it("resolves null when the user cancels the fallback file picker", async () => {
+    const clickSpy = vi
+      .spyOn(HTMLInputElement.prototype, "click")
+      .mockImplementation(function (this: HTMLInputElement) {
+        this.dispatchEvent(new Event("cancel"));
+      });
+
+    const result = await openFloFile();
+
+    expect(result).toBeNull();
+    clickSpy.mockRestore();
+  });
 });
 
 describe("saveFloFile", () => {
@@ -77,6 +100,19 @@ describe("saveFloFile", () => {
 
     expect(result).toBeNull();
     expect(clickSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns null without falling back to a download when the user cancels the save picker", async () => {
+    window.showOpenFilePicker = vi.fn();
+    window.showSaveFilePicker = vi
+      .fn()
+      .mockRejectedValue(new DOMException("The user aborted a request.", "AbortError"));
+    const anchorClickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    const result = await saveFloFile("diagram sequence\n", null);
+
+    expect(result).toBeNull();
+    expect(anchorClickSpy).not.toHaveBeenCalled();
   });
 });
 

@@ -20,6 +20,10 @@ function readFileAsText(file: File): Promise<string> {
   });
 }
 
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
 function openFloFileFallback(): Promise<OpenResult | null> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
@@ -33,13 +37,20 @@ function openFloFileFallback(): Promise<OpenResult | null> {
       }
       readFileAsText(file).then((source) => resolve({ source, handle: null }));
     });
+    input.addEventListener("cancel", () => resolve(null));
     input.click();
   });
 }
 
 export async function openFloFile(): Promise<OpenResult | null> {
   if (hasFileSystemAccess()) {
-    const [handle] = await window.showOpenFilePicker!(FLO_PICKER_OPTIONS);
+    let handle: FileSystemFileHandle;
+    try {
+      [handle] = await window.showOpenFilePicker!(FLO_PICKER_OPTIONS);
+    } catch (error) {
+      if (isAbortError(error)) return null;
+      throw error;
+    }
     const file = await handle.getFile();
     return { source: await readFileAsText(file), handle };
   }
@@ -64,7 +75,17 @@ export async function saveFloFile(
   handle: FileSystemFileHandle | null
 ): Promise<FileSystemFileHandle | null> {
   if (hasFileSystemAccess()) {
-    const target = handle ?? (await window.showSaveFilePicker!(FLO_PICKER_OPTIONS));
+    let target: FileSystemFileHandle;
+    if (handle) {
+      target = handle;
+    } else {
+      try {
+        target = await window.showSaveFilePicker!(FLO_PICKER_OPTIONS);
+      } catch (error) {
+        if (isAbortError(error)) return null;
+        throw error;
+      }
+    }
     const writable = await target.createWritable();
     await writable.write(source);
     await writable.close();
