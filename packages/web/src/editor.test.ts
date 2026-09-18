@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { RenderResult } from "@flo/core";
-import { createEditor } from "./editor.js";
+import { createEditor, getEditorSource, setEditorSource } from "./editor.js";
 import { floHighlightField } from "./flo-highlight-field.js";
 
 describe("createEditor", () => {
@@ -60,6 +60,36 @@ describe("createEditor", () => {
     });
 
     expect(decorated).toEqual(["start", "[", "Inicio", "]"]);
+    view.destroy();
+  });
+});
+
+it("passes the current source alongside the render result", () => {
+  vi.useFakeTimers();
+  const container = document.createElement("div");
+  const sources: string[] = [];
+  const view = createEditor(container, "start[Inicio]\n", (_result, source) => {
+    sources.push(source);
+  });
+
+  view.dispatch({ changes: { from: view.state.doc.length, insert: "check[Otro]\n" } });
+  vi.advanceTimersByTime(200);
+
+  expect(sources).toEqual(["start[Inicio]\n", "start[Inicio]\ncheck[Otro]\n"]);
+  view.destroy();
+  vi.useRealTimers();
+});
+
+describe("getEditorSource / setEditorSource", () => {
+  it("reads and replaces the full document", () => {
+    const container = document.createElement("div");
+    const view = createEditor(container, "start[Inicio]\n", () => {});
+
+    expect(getEditorSource(view)).toBe("start[Inicio]\n");
+
+    setEditorSource(view, "diagram sequence\n");
+    expect(getEditorSource(view)).toBe("diagram sequence\n");
+
     view.destroy();
   });
 });

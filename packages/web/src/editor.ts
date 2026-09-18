@@ -11,7 +11,7 @@ const PREVIEW_DEBOUNCE_MS = 200;
 export function createEditor(
   parent: HTMLElement,
   initialSource: string,
-  onPreview: (result: RenderResult) => void
+  onPreview: (result: RenderResult, source: string) => void
 ): EditorView {
   let timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -28,14 +28,25 @@ export function createEditor(
         EditorView.updateListener.of((update) => {
           if (!update.docChanged) return;
           clearTimeout(timer);
-          timer = setTimeout(() => onPreview(render(update.state.doc.toString())), PREVIEW_DEBOUNCE_MS);
+          timer = setTimeout(() => {
+            const source = update.state.doc.toString();
+            onPreview(render(source), source);
+          }, PREVIEW_DEBOUNCE_MS);
         }),
       ],
     }),
     parent,
   });
 
-  onPreview(render(initialSource));
+  onPreview(render(initialSource), initialSource);
 
   return view;
+}
+
+export function getEditorSource(view: EditorView): string {
+  return view.state.doc.toString();
+}
+
+export function setEditorSource(view: EditorView, source: string): void {
+  view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: source } });
 }

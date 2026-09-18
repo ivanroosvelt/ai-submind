@@ -6,10 +6,12 @@ estructurados en vez de mensajes de texto suelto. Sin compatibilidad con
 sintaxis Mermaid: es un formato nuevo desde cero.
 
 > **Estado actual:** Fase 0 (monorepo + CI), Fase 1 (lenguaje: lexer,
-> parser, AST, diagnostics), Fase 2 (layout con `dagre` + render a SVG) y
-> Fase 3 (editor web: CodeMirror 6 + preview en vivo) completas para los
-> tipos `flowchart` y `sequence`. Todavía no hay persistencia ni
-> exportación — eso es la próxima fase (ver [Roadmap](#roadmap)).
+> parser, AST, diagnostics), Fase 2 (layout con `dagre` + render a SVG),
+> Fase 3 (editor web: CodeMirror 6 + preview en vivo) y Fase 4
+> (persistencia: File System Access API + fallback de descarga, autosave
+> a IndexedDB, exportación a SVG/PNG) completas para los tipos
+> `flowchart` y `sequence`. Falta publicar `@flo/core` a npm y desplegar
+> el editor — eso es la próxima fase (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
@@ -80,8 +82,13 @@ Monorepo con pnpm workspaces:
   inline con subrayado + tooltip vía `@codemirror/lint`) y preview SVG en
   vivo a la derecha, actualizado con debounce de 200ms. Si el diagrama
   tiene errores, el preview mantiene el último SVG válido y agrega un
-  banner "N errores" en vez de una pantalla en blanco. Sin persistencia
-  ni exportación todavía — eso es la Fase 4.
+  banner "N errores" en vez de una pantalla en blanco.
+  Barra de herramientas con Nuevo (flowchart/secuencia), Abrir y Guardar
+  (File System Access API en Chrome/Edge, con fallback de
+  `<input type=file>` + descarga en otros navegadores), Exportar SVG y
+  Exportar PNG. Autosave del borrador a IndexedDB en cada edición,
+  independiente del archivo real en disco — se restaura al recargar la
+  página.
 
 ## Uso
 
@@ -120,7 +127,6 @@ typecheck → test` en cada push y PR.
 
 ## Roadmap
 
-- **Fase 4** — persistencia (File System Access API, autosave a IndexedDB) y exportación a SVG/PNG.
 - **Fase 5** — publicación de `@flo/core` a npm, documentación de usuario final, deploy del editor.
 
 Detalle completo de cada fase en el spec enlazado arriba.
