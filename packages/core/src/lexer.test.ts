@@ -142,4 +142,23 @@ describe("Lexer", () => {
     lexer.peek(); // buffer ocupado
     expect(() => lexer.readTextUntil("]")).toThrow();
   });
+
+  it("lexes a double-quoted string", () => {
+    const lexer = new Lexer('use "./catalog.flo"');
+    lexer.next();
+    const str = lexer.next();
+    expect(str.kind).toBe("STRING");
+    expect(str.value).toBe("./catalog.flo"); // sin las comillas
+    expect(str.range).toEqual({
+      start: { line: 1, column: 5 },
+      end: { line: 1, column: 20 }, // el range SÍ las incluye
+    });
+  });
+
+  it("reports E002 for a string not closed before end of line", () => {
+    const lexer = new Lexer('use "./catalog.flo\n');
+    lexer.next();
+    lexer.next();
+    expect(lexer.diagnostics[0].code).toBe("E002");
+  });
 });

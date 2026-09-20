@@ -11,6 +11,7 @@ export type TokenKind =
   | "RPAREN"
   | "LBRACE"
   | "RBRACE"
+  | "STRING"
   | "NEWLINE"
   | "EOF";
 

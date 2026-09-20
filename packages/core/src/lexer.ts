@@ -79,6 +79,26 @@ export class Lexer {
         return this.makeToken(kind, ch, start);
       }
 
+      if (ch === '"') {
+        this.advance(); // consume opening quote
+        let value = "";
+        while (this.i < this.source.length && this.source[this.i] !== '"' && this.source[this.i] !== "\n") {
+          value += this.advance();
+        }
+
+        if (this.i < this.source.length && this.source[this.i] === '"') {
+          // Found closing quote
+          this.advance(); // consume closing quote
+          return this.makeToken("STRING", value, start);
+        } else {
+          // Unterminated string (hit newline or EOF)
+          this.diagnostics.push(
+            diagnosticAt("E002", `cadena no cerrada antes de fin de línea`, { start, end: { line: this.line, column: this.column } })
+          );
+          return this.makeToken("STRING", value, start);
+        }
+      }
+
       if (/[A-Za-z_]/.test(ch)) {
         let value = "";
         while (this.i < this.source.length && /[A-Za-z0-9_]/.test(this.source[this.i])) {
