@@ -55,8 +55,8 @@ export function parseFlowchartBody(
       diagnostics.push({
         code: "E010",
         message: `se esperaba un identificador, se encontró '${startToken.value || startToken.kind}'`,
-        line: startToken.line,
-        column: startToken.column,
+        line: startToken.range.start.line,
+        column: startToken.range.start.column,
         severity: "error",
       });
       skipToNextLine();
@@ -75,8 +75,8 @@ export function parseFlowchartBody(
         diagnostics.push({
           code: "E011",
           message: "se esperaba el texto del nodo",
-          line: textToken.line,
-          column: textToken.column,
+          line: textToken.range.start.line,
+          column: textToken.range.start.column,
           severity: "error",
         });
         skipToNextLine();
@@ -89,8 +89,8 @@ export function parseFlowchartBody(
         diagnostics.push({
           code: "E012",
           message: `se esperaba '${CLOSE_CHAR[closeKind]}'`,
-          line: current().line,
-          column: current().column,
+          line: current().range.start.line,
+          column: current().range.start.column,
           severity: "error",
         });
         skipToNextLine();
@@ -104,12 +104,12 @@ export function parseFlowchartBody(
         diagnostics.push({
           code: "E013",
           message: `el nodo '${id.value}' ya fue declarado con otra forma`,
-          line: id.line,
-          column: id.column,
+          line: id.range.start.line,
+          column: id.range.start.column,
           severity: "error",
         });
       } else if (!existing) {
-        nodes.push({ id: id.value, shape, label: textToken.value, position: { line: id.line, column: id.column } });
+        nodes.push({ id: id.value, shape, label: textToken.value, position: { line: id.range.start.line, column: id.range.start.column } });
       }
     } else if (next.kind === "ARROW") {
       advance();
@@ -118,8 +118,8 @@ export function parseFlowchartBody(
         diagnostics.push({
           code: "E014",
           message: "se esperaba el id del nodo destino",
-          line: toToken.line,
-          column: toToken.column,
+          line: toToken.range.start.line,
+          column: toToken.range.start.column,
           severity: "error",
         });
         skipToNextLine();
@@ -136,13 +136,13 @@ export function parseFlowchartBody(
           advance();
         }
       }
-      edges.push({ from: id.value, to: toToken.value, label, position: { line: id.line, column: id.column } });
+      edges.push({ from: id.value, to: toToken.value, label, position: { line: id.range.start.line, column: id.range.start.column } });
     } else {
       diagnostics.push({
         code: "E015",
         message: "se esperaba una forma de nodo ('[', '(' o '{') o '->'",
-        line: next.line,
-        column: next.column,
+        line: next.range.start.line,
+        column: next.range.start.column,
         severity: "error",
       });
       skipToNextLine();
@@ -154,8 +154,8 @@ export function parseFlowchartBody(
       diagnostics.push({
         code: "E016",
         message: "contenido inesperado al final de la línea",
-        line: current().line,
-        column: current().column,
+        line: current().range.start.line,
+        column: current().range.start.column,
         severity: "error",
       });
       skipToNextLine();

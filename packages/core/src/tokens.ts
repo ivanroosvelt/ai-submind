@@ -1,3 +1,5 @@
+import type { Range } from "./ast.js";
+
 export type TokenKind =
   | "IDENT"
   | "TEXT"
@@ -15,6 +17,5 @@ export type TokenKind =
 export interface Token {
   kind: TokenKind;
   value: string;
-  line: number;
-  column: number;
+  range: Range;
 }

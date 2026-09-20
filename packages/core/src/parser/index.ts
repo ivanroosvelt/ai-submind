@@ -51,8 +51,8 @@ function parseUnsorted(source: string): ParseResult {
     diagnostics.push({
       code: "E004",
       message: "se esperaba 'diagram' al inicio del archivo",
-      line: keywordToken.line,
-      column: keywordToken.column,
+      line: keywordToken.range.start.line,
+      column: keywordToken.range.start.column,
       severity: "error",
     });
     return { diagram: null, diagnostics };
@@ -64,8 +64,8 @@ function parseUnsorted(source: string): ParseResult {
     diagnostics.push({
       code: "E005",
       message: "se esperaba 'flowchart' o 'sequence' después de 'diagram'",
-      line: kindToken.line,
-      column: kindToken.column,
+      line: kindToken.range.start.line,
+      column: kindToken.range.start.column,
       severity: "error",
     });
     return { diagram: null, diagnostics };
@@ -76,8 +76,8 @@ function parseUnsorted(source: string): ParseResult {
     diagnostics.push({
       code: "E006",
       message: "contenido inesperado después del tipo de diagrama",
-      line: current().line,
-      column: current().column,
+      line: current().range.start.line,
+      column: current().range.start.column,
       severity: "error",
     });
     return { diagram: null, diagnostics };

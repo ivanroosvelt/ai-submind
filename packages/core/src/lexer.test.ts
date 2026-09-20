@@ -92,4 +92,26 @@ describe("tokenize", () => {
       ["EOF", ""],
     ]);
   });
+
+  it("gives each token a range covering its full span", () => {
+    const { tokens } = tokenize("start -> check\n");
+    expect(tokens[0].range).toEqual({
+      start: { line: 1, column: 1 },
+      end: { line: 1, column: 6 },
+    });
+    expect(tokens[1].range).toEqual({
+      start: { line: 1, column: 7 },
+      end: { line: 1, column: 9 },
+    });
+  });
+
+  it("ranges a TEXT token over the source span, not the trimmed value", () => {
+    const { tokens } = tokenize("start[  Inicio  ]\n");
+    const text = tokens.find((t) => t.kind === "TEXT")!;
+    expect(text.value).toBe("Inicio");
+    expect(text.range).toEqual({
+      start: { line: 1, column: 7 },
+      end: { line: 1, column: 17 },
+    });
+  });
 });

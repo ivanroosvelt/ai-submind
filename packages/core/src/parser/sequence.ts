@@ -43,8 +43,8 @@ export function parseSequenceBody(
       diagnostics.push({
         code: "E020",
         message: `se esperaba 'participant' o el id de un participante, se encontró '${startToken.value || startToken.kind}'`,
-        line: startToken.line,
-        column: startToken.column,
+        line: startToken.range.start.line,
+        column: startToken.range.start.column,
         severity: "error",
       });
       skipToNextLine();
@@ -59,8 +59,8 @@ export function parseSequenceBody(
         diagnostics.push({
           code: "E021",
           message: "se esperaba el id del participante",
-          line: idToken.line,
-          column: idToken.column,
+          line: idToken.range.start.line,
+          column: idToken.range.start.column,
           severity: "error",
         });
         skipToNextLine();
@@ -79,8 +79,8 @@ export function parseSequenceBody(
           diagnostics.push({
             code: "E022",
             message: "se esperaba el texto del alias después de 'as'",
-            line: labelToken.line,
-            column: labelToken.column,
+            line: labelToken.range.start.line,
+            column: labelToken.range.start.column,
             severity: "error",
           });
           skipToNextLine();
@@ -93,12 +93,12 @@ export function parseSequenceBody(
         diagnostics.push({
           code: "E023",
           message: `el participante '${idToken.value}' ya fue declarado`,
-          line: idToken.line,
-          column: idToken.column,
+          line: idToken.range.start.line,
+          column: idToken.range.start.column,
           severity: "error",
         });
       } else {
-        participants.push({ id: idToken.value, label, position: { line: idToken.line, column: idToken.column } });
+        participants.push({ id: idToken.value, label, position: { line: idToken.range.start.line, column: idToken.range.start.column } });
       }
     } else {
       const fromToken = startToken;
@@ -107,8 +107,8 @@ export function parseSequenceBody(
         diagnostics.push({
           code: "E024",
           message: "se esperaba '->'",
-          line: current().line,
-          column: current().column,
+          line: current().range.start.line,
+          column: current().range.start.column,
           severity: "error",
         });
         skipToNextLine();
@@ -121,8 +121,8 @@ export function parseSequenceBody(
         diagnostics.push({
           code: "E025",
           message: "se esperaba el id del participante destino",
-          line: toToken.line,
-          column: toToken.column,
+          line: toToken.range.start.line,
+          column: toToken.range.start.column,
           severity: "error",
         });
         skipToNextLine();
@@ -134,8 +134,8 @@ export function parseSequenceBody(
         diagnostics.push({
           code: "E026",
           message: "se esperaba ':' seguido del mensaje",
-          line: current().line,
-          column: current().column,
+          line: current().range.start.line,
+          column: current().range.start.column,
           severity: "error",
         });
         skipToNextLine();
@@ -148,8 +148,8 @@ export function parseSequenceBody(
         diagnostics.push({
           code: "E027",
           message: "se esperaba el texto del mensaje",
-          line: labelToken.line,
-          column: labelToken.column,
+          line: labelToken.range.start.line,
+          column: labelToken.range.start.column,
           severity: "error",
         });
         skipToNextLine();
@@ -157,17 +157,17 @@ export function parseSequenceBody(
         continue;
       }
       advance();
-      ensureParticipant(fromToken.value, fromToken.line, fromToken.column);
-      ensureParticipant(toToken.value, toToken.line, toToken.column);
-      messages.push({ from: fromToken.value, to: toToken.value, label: labelToken.value, position: { line: fromToken.line, column: fromToken.column } });
+      ensureParticipant(fromToken.value, fromToken.range.start.line, fromToken.range.start.column);
+      ensureParticipant(toToken.value, toToken.range.start.line, toToken.range.start.column);
+      messages.push({ from: fromToken.value, to: toToken.value, label: labelToken.value, position: { line: fromToken.range.start.line, column: fromToken.range.start.column } });
     }
 
     if (current().kind !== "EOF" && current().kind !== "NEWLINE") {
       diagnostics.push({
         code: "E016",
         message: "contenido inesperado al final de la línea",
-        line: current().line,
-        column: current().column,
+        line: current().range.start.line,
+        column: current().range.start.column,
         severity: "error",
       });
       skipToNextLine();

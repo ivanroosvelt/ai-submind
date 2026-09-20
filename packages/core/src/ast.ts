@@ -3,6 +3,12 @@ export interface Position {
   column: number;
 }
 
+/** `end` is exclusive: points to the position following the last character. */
+export interface Range {
+  start: Position;
+  end: Position;
+}
+
 export type NodeShape = "rectangle" | "rounded" | "decision";
 
 export interface FlowchartNode {

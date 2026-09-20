@@ -1,5 +1,6 @@
 import type { Token, TokenKind } from "./tokens.js";
 import type { Diagnostic } from "./diagnostics.js";
+import type { Position } from "./ast.js";
 
 interface BracketMode {
   kind: "bracket";
@@ -45,13 +46,12 @@ export function tokenize(source: string): TokenizeResult {
     return ch;
   }
 
-  function push(kind: TokenKind, value: string, startLine: number, startColumn: number): void {
-    tokens.push({ kind, value, line: startLine, column: startColumn });
+  function push(kind: TokenKind, value: string, start: Position): void {
+    tokens.push({ kind, value, range: { start, end: { line, column } } });
   }
 
   while (i < source.length) {
-    const startLine = line;
-    const startColumn = column;
+    const start: Position = { line, column };
     const ch = source[i];
 
     if (pending?.kind === "bracket") {
@@ -70,7 +70,7 @@ export function tokenize(source: string): TokenizeResult {
         pending = null;
         continue;
       }
-      push("TEXT", text.trim(), startLine, startColumn);
+      push("TEXT", text.trim(), start);
       pending = null;
       continue;
     }
@@ -80,7 +80,7 @@ export function tokenize(source: string): TokenizeResult {
       while (i < source.length && source[i] !== "\n") {
         text += advance();
       }
-      push("TEXT", text.trim(), startLine, startColumn);
+      push("TEXT", text.trim(), start);
       pending = null;
       continue;
     }
@@ -92,7 +92,7 @@ export function tokenize(source: string): TokenizeResult {
 
     if (ch === "\n") {
       advance();
-      push("NEWLINE", "\n", startLine, startColumn);
+      push("NEWLINE", "\n", start);
       continue;
     }
 
@@ -106,13 +106,13 @@ export function tokenize(source: string): TokenizeResult {
     if (ch === "-" && source[i + 1] === ">") {
       advance();
       advance();
-      push("ARROW", "->", startLine, startColumn);
+      push("ARROW", "->", start);
       continue;
     }
 
     if (ch === ":") {
       advance();
-      push("COLON", ":", startLine, startColumn);
+      push("COLON", ":", start);
       pending = { kind: "colon" };
       continue;
     }
@@ -120,15 +120,15 @@ export function tokenize(source: string): TokenizeResult {
     if (ch === "[" || ch === "(" || ch === "{") {
       advance();
       const kind: TokenKind = ch === "[" ? "LBRACKET" : ch === "(" ? "LPAREN" : "LBRACE";
-      push(kind, ch, startLine, startColumn);
-      pending = { kind: "bracket", closer: BRACKET_CLOSERS[ch], openLine: startLine, openColumn: startColumn };
+      push(kind, ch, start);
+      pending = { kind: "bracket", closer: BRACKET_CLOSERS[ch], openLine: start.line, openColumn: start.column };
       continue;
     }
 
     if (ch === "]" || ch === ")" || ch === "}") {
       advance();
       const kind: TokenKind = ch === "]" ? "RBRACKET" : ch === ")" ? "RPAREN" : "RBRACE";
-      push(kind, ch, startLine, startColumn);
+      push(kind, ch, start);
       continue;
     }
 
@@ -137,7 +137,7 @@ export function tokenize(source: string): TokenizeResult {
       while (i < source.length && /[A-Za-z0-9_]/.test(source[i])) {
         value += advance();
       }
-      push("IDENT", value, startLine, startColumn);
+      push("IDENT", value, start);
       if (value === "as") {
         pending = { kind: "colon" };
       }
@@ -147,13 +147,13 @@ export function tokenize(source: string): TokenizeResult {
     diagnostics.push({
       code: "E002",
       message: `carácter inesperado '${ch}'`,
-      line: startLine,
-      column: startColumn,
+      line: start.line,
+      column: start.column,
       severity: "error",
     });
     advance();
   }
 
-  tokens.push({ kind: "EOF", value: "", line, column });
+  tokens.push({ kind: "EOF", value: "", range: { start: { line, column }, end: { line, column } } });
   return { tokens, diagnostics };
 }
