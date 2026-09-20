@@ -7,7 +7,7 @@ describe("nextPreviewState", () => {
     const state: PreviewState = { lastSvg: "<svg>OLD</svg>" };
     const result: RenderResult = {
       svg: null,
-      diagnostics: [{ code: "E004", message: "x", line: 1, column: 1, severity: "error" }],
+      diagnostics: [{ code: "E004", message: "x", range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } }, severity: "error" }],
     };
 
     expect(nextPreviewState(state, result).lastSvg).toBe("<svg>OLD</svg>");
@@ -33,7 +33,7 @@ describe("previewHtml", () => {
     const state: PreviewState = { lastSvg: null };
     const result: RenderResult = {
       svg: "<svg>PARTIAL</svg>",
-      diagnostics: [{ code: "E014", message: "x", line: 1, column: 1, severity: "error" }],
+      diagnostics: [{ code: "E014", message: "x", range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } }, severity: "error" }],
     };
 
     expect(previewHtml(state, result)).toBe('<div class="flo-banner">1 error</div><svg>PARTIAL</svg>');
@@ -44,8 +44,8 @@ describe("previewHtml", () => {
     const result: RenderResult = {
       svg: null,
       diagnostics: [
-        { code: "E003", message: "x", line: 1, column: 1, severity: "error" },
-        { code: "E004", message: "y", line: 1, column: 1, severity: "error" },
+        { code: "E003", message: "x", range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } }, severity: "error" },
+        { code: "E004", message: "y", range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } }, severity: "error" },
       ],
     };
 
@@ -56,7 +56,7 @@ describe("previewHtml", () => {
     const state: PreviewState = { lastSvg: null };
     const result: RenderResult = {
       svg: null,
-      diagnostics: [{ code: "E003", message: "x", line: 1, column: 1, severity: "error" }],
+      diagnostics: [{ code: "E003", message: "x", range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } }, severity: "error" }],
     };
 
     expect(previewHtml(state, result)).toBe(

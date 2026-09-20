@@ -20,14 +20,20 @@ const CLASS_BY_KIND: Partial<Record<Token["kind"], string>> = {
   RBRACE: "flo-tok-punct",
 };
 
+function offsetOf(doc: Text, position: { line: number; column: number }): number {
+  return doc.line(position.line).from + (position.column - 1);
+}
+
 export function buildHighlightRanges(doc: Text): HighlightRange[] {
   const { tokens } = tokenize(doc.toString());
   const ranges: HighlightRange[] = [];
   for (const token of tokens) {
     const className = CLASS_BY_KIND[token.kind];
-    if (!className || token.value.length === 0) continue;
-    const from = doc.line(token.line).from + (token.column - 1);
-    ranges.push({ from, to: from + token.value.length, className });
+    if (!className) continue;
+    const from = offsetOf(doc, token.range.start);
+    const to = offsetOf(doc, token.range.end);
+    if (to <= from) continue;
+    ranges.push({ from, to, className });
   }
   return ranges;
 }
