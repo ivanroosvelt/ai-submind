@@ -148,6 +148,14 @@ describe("Lexer", () => {
     expect(lexer.diagnostics[0].code).toBe("E001");
   });
 
+  it("anchors E001 at the open-bracket token, not at the cursor position readTextUntil was called from", () => {
+    const lexer = new Lexer("start[Inicio\n");
+    lexer.next(); // start
+    const lbracket = lexer.next(); // [
+    lexer.readTextUntil("]");
+    expect(lexer.diagnostics[0].range.start).toEqual(lbracket.range.start);
+  });
+
   it("throws if text mode is requested while a token is buffered", () => {
     const lexer = new Lexer("start[Inicio]");
     lexer.next();

@@ -170,6 +170,7 @@ export class Lexer {
   private line = 1;
   private column = 1;
   private buffered: Token | null = null;
+  private lastReturned: Token | null = null;
 
   constructor(private readonly source: string) {}
 
@@ -254,12 +255,15 @@ export class Lexer {
 
   /** Siguiente token en modo código. Nunca produce TEXT. */
   next(): Token {
+    let token: Token;
     if (this.buffered) {
-      const token = this.buffered;
+      token = this.buffered;
       this.buffered = null;
-      return token;
+    } else {
+      token = this.scanCodeToken();
     }
-    return this.scanCodeToken();
+    this.lastReturned = token;
+    return token;
   }
 
   /** Lookahead de exactamente un token, en modo código. */
@@ -296,9 +300,15 @@ export class Lexer {
     }
 
     if (this.i >= this.source.length || this.source[this.i] === "\n") {
+      // Se ancla en el token de apertura (el último que devolvió next()),
+      // no en el cursor: readTextUntil siempre se llama justo después de
+      // consumir ese token, así que anclar en el cursor quedaría una
+      // columna después del bracket, igual que tokenize() lo hacía con
+      // `pending.openPosition`.
+      const anchor = this.lastReturned ? this.lastReturned.range.start : start;
       this.diagnostics.push(
         diagnosticAt("E001", `se esperaba '${closer}' antes de fin de línea`, {
-          start,
+          start: anchor,
           end: { line: this.line, column: this.column },
         })
       );
