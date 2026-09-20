@@ -1,5 +1,5 @@
 import type { Text } from "@codemirror/state";
-import { tokenize, type Token } from "@flo/core";
+import { Lexer, type Token } from "@flo/core";
 
 export interface HighlightRange {
   from: number;
@@ -20,20 +20,47 @@ const CLASS_BY_KIND: Partial<Record<Token["kind"], string>> = {
   RBRACE: "flo-tok-punct",
 };
 
+// El highlighter no es consciente de la gramática (no llama a parse()), así
+// que replica aquí, explícitamente y sin condición alguna, los tres
+// disparadores de modo texto que el resaltado siempre reconoció: abrir
+// '['/'('/'{', ':' y la palabra 'as'. El Lexer perezoso nunca entra en modo
+// texto por sí mismo.
+const TEXT_CLOSER_BY_OPEN: Partial<Record<Token["kind"], "]" | ")" | "}">> = {
+  LBRACKET: "]",
+  LPAREN: ")",
+  LBRACE: "}",
+};
+
 function offsetOf(doc: Text, position: { line: number; column: number }): number {
   return doc.line(position.line).from + (position.column - 1);
 }
 
 export function buildHighlightRanges(doc: Text): HighlightRange[] {
-  const { tokens } = tokenize(doc.toString());
+  const lexer = new Lexer(doc.toString());
   const ranges: HighlightRange[] = [];
-  for (const token of tokens) {
+
+  function pushToken(token: Token): void {
     const className = CLASS_BY_KIND[token.kind];
-    if (!className || token.value.length === 0) continue;
+    if (!className || token.value.length === 0) return;
     const from = offsetOf(doc, token.range.start);
     const to = offsetOf(doc, token.range.end);
-    if (to <= from) continue;
+    if (to <= from) return;
     ranges.push({ from, to, className });
   }
+
+  let token = lexer.next();
+  while (token.kind !== "EOF") {
+    pushToken(token);
+
+    const closer = TEXT_CLOSER_BY_OPEN[token.kind];
+    if (closer) {
+      pushToken(lexer.readTextUntil(closer));
+    } else if (token.kind === "COLON" || (token.kind === "IDENT" && token.value === "as")) {
+      pushToken(lexer.readTextUntil("\n"));
+    }
+
+    token = lexer.next();
+  }
+
   return ranges;
 }

@@ -1,4 +1,5 @@
 import type { Token } from "../tokens.js";
+import type { Lexer } from "../lexer.js";
 import { diagnosticAt, type Diagnostic } from "../diagnostics.js";
 import type { FlowchartDiagram, FlowchartNode, FlowchartEdge, NodeShape } from "../ast.js";
 
@@ -14,28 +15,35 @@ const CLOSE_BY_OPEN: Record<string, string> = {
   LBRACE: "RBRACE",
 };
 
-const CLOSE_CHAR: Record<string, string> = {
-  RBRACKET: "]",
-  RPAREN: ")",
-  RBRACE: "}",
+const CLOSE_CHAR: Record<string, "]" | ")" | "}"> = {
+  LBRACKET: "]",
+  LPAREN: ")",
+  LBRACE: "}",
 };
 
 export function parseFlowchartBody(
-  tokens: Token[],
+  lexer: Lexer,
   diagnostics: Diagnostic[]
 ): FlowchartDiagram {
   const nodes: FlowchartNode[] = [];
   const edges: FlowchartEdge[] = [];
-  let pos = 0;
+  let buffered: Token | null = null;
 
   function current(): Token {
-    return tokens[pos];
+    if (buffered === null) buffered = lexer.next();
+    return buffered;
   }
 
   function advance(): Token {
-    const token = tokens[pos];
-    if (token.kind !== "EOF") pos += 1;
+    const token = current();
+    if (token.kind !== "EOF") buffered = null;
     return token;
+  }
+
+  /** Pide texto al lexer. Requiere que no haya lookahead pendiente. */
+  function readText(closer: "]" | ")" | "}" | "\n"): Token {
+    if (buffered !== null) throw new Error("readText con lookahead pendiente");
+    return lexer.readTextUntil(closer);
   }
 
   function skipNewlines(): void {
@@ -70,8 +78,8 @@ export function parseFlowchartBody(
     if (next.kind === "LBRACKET" || next.kind === "LPAREN" || next.kind === "LBRACE") {
       const openKind = next.kind;
       advance();
-      const textToken = current();
-      if (textToken.kind !== "TEXT" || !textToken.value) {
+      const textToken = readText(CLOSE_CHAR[openKind]);
+      if (!textToken.value) {
         diagnostics.push(
           diagnosticAt("E011", "se esperaba el texto del nodo", textToken.range)
         );
@@ -79,11 +87,10 @@ export function parseFlowchartBody(
         skipNewlines();
         continue;
       }
-      advance();
       const closeKind = CLOSE_BY_OPEN[openKind];
       if (current().kind !== closeKind) {
         diagnostics.push(
-          diagnosticAt("E012", `se esperaba '${CLOSE_CHAR[closeKind]}'`, current().range)
+          diagnosticAt("E012", `se esperaba '${CLOSE_CHAR[openKind]}'`, current().range)
         );
         skipToNextLine();
         skipNewlines();
@@ -126,12 +133,9 @@ export function parseFlowchartBody(
       let lastConsumedRange = toToken.range;
       if (current().kind === "COLON") {
         advance();
-        const labelToken = current();
-        if (labelToken.kind === "TEXT") {
-          label = labelToken.value ? labelToken.value : null;
-          lastConsumedRange = labelToken.range;
-          advance();
-        }
+        const labelToken = readText("\n");
+        label = labelToken.value ? labelToken.value : null;
+        lastConsumedRange = labelToken.range;
       }
       edges.push({
         from: id.value,

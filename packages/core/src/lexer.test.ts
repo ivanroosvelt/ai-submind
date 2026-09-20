@@ -1,79 +1,44 @@
 import { describe, it, expect } from "vitest";
-import { tokenize, Lexer } from "./lexer.js";
+import { Lexer } from "./lexer.js";
 
-function kinds(source: string): string[] {
-  return tokenize(source).tokens.map((t) => t.kind);
-}
-
-describe("tokenize", () => {
-  it("tokenizes an identifier and a bracketed node label", () => {
-    const { tokens, diagnostics } = tokenize("start[Inicio]\n");
-    expect(diagnostics).toEqual([]);
-    expect(tokens.map((t) => [t.kind, t.value])).toEqual([
-      ["IDENT", "start"],
-      ["LBRACKET", "["],
-      ["TEXT", "Inicio"],
-      ["RBRACKET", "]"],
-      ["NEWLINE", "\n"],
-      ["EOF", ""],
-    ]);
+describe("Lexer", () => {
+  it("tokenizes identifiers, arrows, colons and brackets in code mode", () => {
+    const lexer = new Lexer("start -> check : x\n");
+    expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "start" });
+    expect(lexer.next()).toMatchObject({ kind: "ARROW", value: "->" });
+    expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "check" });
+    expect(lexer.next()).toMatchObject({ kind: "COLON", value: ":" });
+    expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "x" });
+    expect(lexer.next().kind).toBe("NEWLINE");
+    expect(lexer.next().kind).toBe("EOF");
+    expect(lexer.diagnostics).toEqual([]);
   });
 
-  it("tokenizes rounded and decision shapes", () => {
-    expect(kinds("a(Rounded)\n")).toEqual([
-      "IDENT", "LPAREN", "TEXT", "RPAREN", "NEWLINE", "EOF",
-    ]);
-    expect(kinds("b{Decision}\n")).toEqual([
-      "IDENT", "LBRACE", "TEXT", "RBRACE", "NEWLINE", "EOF",
-    ]);
-  });
-
-  it("tokenizes an arrow and a colon-label running to end of line", () => {
-    const { tokens } = tokenize("a -> b : hola mundo\n");
-    expect(tokens.map((t) => [t.kind, t.value])).toEqual([
-      ["IDENT", "a"],
-      ["ARROW", "->"],
-      ["IDENT", "b"],
-      ["COLON", ":"],
-      ["TEXT", "hola mundo"],
-      ["NEWLINE", "\n"],
-      ["EOF", ""],
-    ]);
-  });
-
-  it("treats 'as' as a contextual keyword that reads the rest of the line as text", () => {
-    const { tokens } = tokenize("participant db as Base de datos\n");
-    expect(tokens.map((t) => [t.kind, t.value])).toEqual([
-      ["IDENT", "participant"],
-      ["IDENT", "db"],
-      ["IDENT", "as"],
-      ["TEXT", "Base de datos"],
-      ["NEWLINE", "\n"],
-      ["EOF", ""],
-    ]);
+  it("gives each token a range covering its full span", () => {
+    const lexer = new Lexer("start -> check\n");
+    const start = lexer.next();
+    expect(start.range).toEqual({
+      start: { line: 1, column: 1 },
+      end: { line: 1, column: 6 },
+    });
+    const arrow = lexer.next();
+    expect(arrow.range).toEqual({
+      start: { line: 1, column: 7 },
+      end: { line: 1, column: 9 },
+    });
   });
 
   it("strips line comments without emitting a token", () => {
-    expect(kinds("a[X] // comentario\n")).toEqual([
-      "IDENT", "LBRACKET", "TEXT", "RBRACKET", "NEWLINE", "EOF",
-    ]);
-  });
-
-  it("reports E001 when a bracket is not closed before the newline", () => {
-    const { diagnostics } = tokenize("broken[sin cerrar\n");
-    expect(diagnostics).toEqual([
-      {
-        code: "E001",
-        message: "se esperaba ']' antes de fin de línea",
-        range: { start: { line: 1, column: 7 }, end: { line: 1, column: 18 } },
-        severity: "error",
-      },
-    ]);
+    const lexer = new Lexer("a // comentario\nb\n");
+    expect(lexer.next().value).toBe("a");
+    expect(lexer.next().kind).toBe("NEWLINE");
+    expect(lexer.next().value).toBe("b");
   });
 
   it("reports E002 for an unexpected character and keeps lexing", () => {
-    const { tokens, diagnostics } = tokenize("1bad[X]\n");
-    expect(diagnostics).toEqual([
+    const lexer = new Lexer("1bad\n");
+    expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "bad" });
+    expect(lexer.diagnostics).toEqual([
       {
         code: "E002",
         message: "carácter inesperado '1'",
@@ -81,46 +46,15 @@ describe("tokenize", () => {
         severity: "error",
       },
     ]);
-    expect(tokens.map((t) => [t.kind, t.value])).toEqual([
-      ["IDENT", "bad"],
-      ["LBRACKET", "["],
-      ["TEXT", "X"],
-      ["RBRACKET", "]"],
-      ["NEWLINE", "\n"],
-      ["EOF", ""],
-    ]);
   });
 
-  it("gives each token a range covering its full span", () => {
-    const { tokens } = tokenize("start -> check\n");
-    expect(tokens[0].range).toEqual({
-      start: { line: 1, column: 1 },
-      end: { line: 1, column: 6 },
-    });
-    expect(tokens[1].range).toEqual({
-      start: { line: 1, column: 7 },
-      end: { line: 1, column: 9 },
-    });
-  });
-
-  it("ranges a TEXT token over the source span, not the trimmed value", () => {
-    const { tokens } = tokenize("start[  Inicio  ]\n");
-    const text = tokens.find((t) => t.kind === "TEXT")!;
-    expect(text.value).toBe("Inicio");
-    expect(text.range).toEqual({
-      start: { line: 1, column: 7 },
-      end: { line: 1, column: 17 },
-    });
-  });
-});
-
-describe("Lexer", () => {
   it("does not enter text mode on '{' by itself", () => {
     const lexer = new Lexer("flow login {");
     expect(lexer.next().kind).toBe("IDENT"); // flow
     expect(lexer.next().kind).toBe("IDENT"); // login
     expect(lexer.next().kind).toBe("LBRACE");
     expect(lexer.next().kind).toBe("EOF"); // el cuerpo NO fue tragado
+    expect(lexer.diagnostics).toEqual([]); // tampoco emite E001 por su cuenta
   });
 
   it("treats 'as' as an ordinary identifier", () => {
@@ -131,13 +65,58 @@ describe("Lexer", () => {
     expect(lexer.next().kind).toBe("IDENT"); // Usuario, no TEXT
   });
 
+  it("does not produce an implicit TEXT token after a bare colon at end of line", () => {
+    const lexer = new Lexer("a :\n");
+    lexer.next(); // a
+    lexer.next(); // :
+    expect(lexer.next().kind).toBe("NEWLINE"); // ya no hay TEXT implícito
+  });
+
   it("reads text on demand until the requested closer", () => {
     const lexer = new Lexer("start[  Inicio  ]");
     lexer.next(); // start
     lexer.next(); // [
     const text = lexer.readTextUntil("]");
     expect(text.value).toBe("Inicio");
+    expect(text.range).toEqual({
+      start: { line: 1, column: 7 },
+      end: { line: 1, column: 17 },
+    });
     expect(lexer.next().kind).toBe("RBRACKET");
+  });
+
+  it("reads text on demand for ')' and '}' closers too", () => {
+    const parenLexer = new Lexer("a(Rounded)\n");
+    parenLexer.next();
+    parenLexer.next();
+    expect(parenLexer.readTextUntil(")").value).toBe("Rounded");
+    expect(parenLexer.next().kind).toBe("RPAREN");
+
+    const braceLexer = new Lexer("b{Decision}\n");
+    braceLexer.next();
+    braceLexer.next();
+    expect(braceLexer.readTextUntil("}").value).toBe("Decision");
+    expect(braceLexer.next().kind).toBe("RBRACE");
+  });
+
+  it("reads an explicit empty TEXT when the parser requests text right after a bare colon", () => {
+    const lexer = new Lexer("a :\n");
+    lexer.next(); // a
+    lexer.next(); // :
+    const text = lexer.readTextUntil("\n");
+    expect(text.kind).toBe("TEXT");
+    expect(text.value).toBe("");
+  });
+
+  it("reads text until end of line when the closer is '\\n'", () => {
+    const lexer = new Lexer("a -> b : hola mundo\n");
+    lexer.next(); // a
+    lexer.next(); // ->
+    lexer.next(); // b
+    lexer.next(); // :
+    const text = lexer.readTextUntil("\n");
+    expect(text.value).toBe("hola mundo");
+    expect(lexer.next().kind).toBe("NEWLINE");
   });
 
   it("reports E001 when the closer is missing before end of line", () => {

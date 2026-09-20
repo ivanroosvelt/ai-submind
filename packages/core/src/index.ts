@@ -1,4 +1,4 @@
-export { tokenize } from "./lexer.js";
+export { Lexer } from "./lexer.js";
 export type { Token, TokenKind } from "./tokens.js";
 export { parse } from "./parser/index.js";
 export type { ParseResult } from "./parser/index.js";

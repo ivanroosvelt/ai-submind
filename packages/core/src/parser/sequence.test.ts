@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { tokenize } from "../lexer.js";
+import { Lexer } from "../lexer.js";
 import { parseSequenceBody } from "./sequence.js";
 import type { Diagnostic } from "../diagnostics.js";
 
 function parseBody(source: string) {
-  const { tokens, diagnostics: lexDiagnostics } = tokenize(source);
-  const diagnostics: Diagnostic[] = [...lexDiagnostics];
-  const diagram = parseSequenceBody(tokens, diagnostics);
+  const lexer = new Lexer(source);
+  const diagnostics: Diagnostic[] = [];
+  const diagram = parseSequenceBody(lexer, diagnostics);
+  diagnostics.push(...lexer.diagnostics);
   return { diagram, diagnostics };
 }
 

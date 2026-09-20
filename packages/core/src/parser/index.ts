@@ -1,4 +1,5 @@
-import { tokenize } from "../lexer.js";
+import { Lexer } from "../lexer.js";
+import type { Token } from "../tokens.js";
 import { parseFlowchartBody } from "./flowchart.js";
 import { parseSequenceBody } from "./sequence.js";
 import type { Diagram } from "../ast.js";
@@ -22,17 +23,23 @@ export function parse(source: string): ParseResult {
 }
 
 function parseUnsorted(source: string): ParseResult {
-  const { tokens, diagnostics: lexDiagnostics } = tokenize(source);
-  const diagnostics: Diagnostic[] = [...lexDiagnostics];
+  const lexer = new Lexer(source);
+  const diagnostics: Diagnostic[] = [];
 
-  let pos = 0;
-  function current() {
-    return tokens[pos];
+  let buffered: Token | null = null;
+  function current(): Token {
+    if (buffered === null) buffered = lexer.next();
+    return buffered;
   }
-  function advance() {
-    const token = tokens[pos];
-    if (token.kind !== "EOF") pos += 1;
+  function advance(): Token {
+    const token = current();
+    if (token.kind !== "EOF") buffered = null;
     return token;
+  }
+
+  function finish(diagram: Diagram | null): ParseResult {
+    diagnostics.push(...lexer.diagnostics);
+    return { diagram, diagnostics };
   }
 
   while (current().kind === "NEWLINE") advance();
@@ -44,7 +51,7 @@ function parseUnsorted(source: string): ParseResult {
         end: { line: 1, column: 1 },
       })
     );
-    return { diagram: null, diagnostics };
+    return finish(null);
   }
 
   const keywordToken = current();
@@ -52,7 +59,7 @@ function parseUnsorted(source: string): ParseResult {
     diagnostics.push(
       diagnosticAt("E004", "se esperaba 'diagram' al inicio del archivo", keywordToken.range)
     );
-    return { diagram: null, diagnostics };
+    return finish(null);
   }
   advance();
 
@@ -65,7 +72,7 @@ function parseUnsorted(source: string): ParseResult {
         kindToken.range
       )
     );
-    return { diagram: null, diagnostics };
+    return finish(null);
   }
   advance();
 
@@ -73,14 +80,13 @@ function parseUnsorted(source: string): ParseResult {
     diagnostics.push(
       diagnosticAt("E006", "contenido inesperado después del tipo de diagrama", current().range)
     );
-    return { diagram: null, diagnostics };
+    return finish(null);
   }
   if (current().kind === "NEWLINE") advance();
 
-  const bodyTokens = tokens.slice(pos);
   const diagram =
     kindToken.value === "flowchart"
-      ? parseFlowchartBody(bodyTokens, diagnostics)
-      : parseSequenceBody(bodyTokens, diagnostics);
-  return { diagram, diagnostics };
+      ? parseFlowchartBody(lexer, diagnostics)
+      : parseSequenceBody(lexer, diagnostics);
+  return finish(diagram);
 }

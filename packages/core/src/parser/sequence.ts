@@ -1,23 +1,31 @@
 import type { Token } from "../tokens.js";
+import type { Lexer } from "../lexer.js";
 import { diagnosticAt, type Diagnostic } from "../diagnostics.js";
 import type { Range, SequenceDiagram, SequenceParticipant, SequenceMessage } from "../ast.js";
 
 export function parseSequenceBody(
-  tokens: Token[],
+  lexer: Lexer,
   diagnostics: Diagnostic[]
 ): SequenceDiagram {
   const participants: SequenceParticipant[] = [];
   const messages: SequenceMessage[] = [];
-  let pos = 0;
+  let buffered: Token | null = null;
 
   function current(): Token {
-    return tokens[pos];
+    if (buffered === null) buffered = lexer.next();
+    return buffered;
   }
 
   function advance(): Token {
-    const token = tokens[pos];
-    if (token.kind !== "EOF") pos += 1;
+    const token = current();
+    if (token.kind !== "EOF") buffered = null;
     return token;
+  }
+
+  /** Pide texto al lexer. Requiere que no haya lookahead pendiente. */
+  function readText(closer: "]" | ")" | "}" | "\n"): Token {
+    if (buffered !== null) throw new Error("readText con lookahead pendiente");
+    return lexer.readTextUntil(closer);
   }
 
   function skipNewlines(): void {
@@ -68,11 +76,10 @@ export function parseSequenceBody(
       let lastConsumedRange = idToken.range;
       if (current().kind === "IDENT" && current().value === "as") {
         advance();
-        const labelToken = current();
-        if (labelToken.kind === "TEXT" && labelToken.value) {
+        const labelToken = readText("\n");
+        if (labelToken.value) {
           label = labelToken.value;
           lastConsumedRange = labelToken.range;
-          advance();
         } else {
           diagnostics.push(
             diagnosticAt(
@@ -132,8 +139,8 @@ export function parseSequenceBody(
         continue;
       }
       advance();
-      const labelToken = current();
-      if (labelToken.kind !== "TEXT" || !labelToken.value) {
+      const labelToken = readText("\n");
+      if (!labelToken.value) {
         diagnostics.push(
           diagnosticAt("E027", "se esperaba el texto del mensaje", labelToken.range)
         );
@@ -141,7 +148,6 @@ export function parseSequenceBody(
         skipNewlines();
         continue;
       }
-      advance();
       ensureParticipant(fromToken.value, fromToken.range);
       ensureParticipant(toToken.value, toToken.range);
       messages.push({

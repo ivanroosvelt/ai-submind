@@ -33,4 +33,27 @@ describe("buildHighlightRanges", () => {
     const textRanges = ranges.filter((r) => r.className === "flo-tok-text");
     expect(textRanges).toHaveLength(0);
   });
+
+  it("classifies the message label after ':' as text", () => {
+    // El rango de un TEXT cubre el span crudo (con el espacio que sigue a
+    // ':'), como siempre lo hizo el resaltado; por eso se recorta acá antes
+    // de comparar — el highlighter mismo no cambia ese comportamiento.
+    const source = "a[A]\nb[B]\na -> b : ok\n";
+    const doc = Text.of(source.split("\n"));
+    const ranges = buildHighlightRanges(doc);
+    const texts = ranges
+      .filter((r) => r.className === "flo-tok-text")
+      .map((r) => source.slice(r.from, r.to).trim());
+    expect(texts).toContain("ok");
+  });
+
+  it("classifies the alias after 'as' as text", () => {
+    const source = "participant user as Usuario\n";
+    const doc = Text.of(source.split("\n"));
+    const ranges = buildHighlightRanges(doc);
+    const texts = ranges
+      .filter((r) => r.className === "flo-tok-text")
+      .map((r) => source.slice(r.from, r.to).trim());
+    expect(texts).toContain("Usuario");
+  });
 });
