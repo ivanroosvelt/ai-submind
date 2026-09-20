@@ -1,5 +1,5 @@
 import type { Text } from "@codemirror/state";
-import type { Diagnostic } from "@flo/core";
+import type { Diagnostic, Position } from "@flo/core";
 
 export interface LintDiagnostic {
   from: number;
@@ -8,7 +8,7 @@ export interface LintDiagnostic {
   message: string;
 }
 
-function offsetOf(doc: Text, position: { line: number; column: number }): number {
+function offsetOf(doc: Text, position: Position): number {
   const line = doc.line(Math.min(position.line, doc.lines));
   return Math.min(line.from + (position.column - 1), line.to);
 }

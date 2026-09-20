@@ -71,6 +71,14 @@ cuando una fase futura (entidades, `use "path"`) la necesite.
   como label. Declarar explícitamente un participante ya autodeclarado
   por un mensaje previo es un caso no soportado en esta ronda (error
   E023) — se documenta como limitación conocida, no un bug.
+- Si el header (`diagram <tipo>`) falla al parsear (E003/E004/E005/E006),
+  el parser retorna de inmediato sin llegar a invocar
+  `parseFlowchartBody`/`parseSequenceBody` — el lexer nunca escanea el
+  cuerpo del archivo. Por lo tanto, un problema léxico en el cuerpo (p. ej.
+  un corchete sin cerrar) NO se reporta junto al error de header; solo
+  aparece el diagnóstico del header. Es una consecuencia deliberada de la
+  arquitectura de lexer perezoso (el cuerpo genuinamente nunca se escanea),
+  no un bug.
 
 ## Fuera de esta gramática (futuro, no en este plan)
 
@@ -89,7 +97,7 @@ lexer.
 | Código | Origen | Significado |
 |---|---|---|
 | E001 | lexer | falta el delimitador de cierre antes de fin de línea |
-| E002 | lexer | carácter inesperado |
+| E002 | lexer | carácter inesperado, o cadena (`"`) sin cerrar antes de fin de línea |
 | E003 | parser (header) | archivo vacío |
 | E004 | parser (header) | falta la palabra `diagram` al inicio |
 | E005 | parser (header) | tipo de diagrama desconocido |

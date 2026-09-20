@@ -1,5 +1,5 @@
 import type { Text } from "@codemirror/state";
-import { Lexer, type Token } from "@flo/core";
+import { Lexer, type Token, type Position } from "@flo/core";
 
 export interface HighlightRange {
   from: number;
@@ -31,7 +31,7 @@ const TEXT_CLOSER_BY_OPEN: Partial<Record<Token["kind"], "]" | ")" | "}">> = {
   LBRACE: "}",
 };
 
-function offsetOf(doc: Text, position: { line: number; column: number }): number {
+function offsetOf(doc: Text, position: Position): number {
   return doc.line(position.line).from + (position.column - 1);
 }
 

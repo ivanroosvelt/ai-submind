@@ -14,6 +14,7 @@ export type {
   SequenceDiagram,
   NodeShape,
   Position,
+  Range,
   FlowchartNode,
   FlowchartEdge,
   SequenceParticipant,
