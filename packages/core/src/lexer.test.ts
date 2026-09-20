@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenize } from "./lexer.js";
+import { tokenize, Lexer } from "./lexer.js";
 
 function kinds(source: string): string[] {
   return tokenize(source).tokens.map((t) => t.kind);
@@ -111,5 +111,48 @@ describe("tokenize", () => {
       start: { line: 1, column: 7 },
       end: { line: 1, column: 17 },
     });
+  });
+});
+
+describe("Lexer", () => {
+  it("does not enter text mode on '{' by itself", () => {
+    const lexer = new Lexer("flow login {");
+    expect(lexer.next().kind).toBe("IDENT"); // flow
+    expect(lexer.next().kind).toBe("IDENT"); // login
+    expect(lexer.next().kind).toBe("LBRACE");
+    expect(lexer.next().kind).toBe("EOF"); // el cuerpo NO fue tragado
+  });
+
+  it("treats 'as' as an ordinary identifier", () => {
+    const lexer = new Lexer("participant user as Usuario");
+    expect(lexer.next().value).toBe("participant");
+    expect(lexer.next().value).toBe("user");
+    expect(lexer.next().value).toBe("as");
+    expect(lexer.next().kind).toBe("IDENT"); // Usuario, no TEXT
+  });
+
+  it("reads text on demand until the requested closer", () => {
+    const lexer = new Lexer("start[  Inicio  ]");
+    lexer.next(); // start
+    lexer.next(); // [
+    const text = lexer.readTextUntil("]");
+    expect(text.value).toBe("Inicio");
+    expect(lexer.next().kind).toBe("RBRACKET");
+  });
+
+  it("reports E001 when the closer is missing before end of line", () => {
+    const lexer = new Lexer("start[Inicio\n");
+    lexer.next();
+    lexer.next();
+    lexer.readTextUntil("]");
+    expect(lexer.diagnostics[0].code).toBe("E001");
+  });
+
+  it("throws if text mode is requested while a token is buffered", () => {
+    const lexer = new Lexer("start[Inicio]");
+    lexer.next();
+    lexer.next();
+    lexer.peek(); // buffer ocupado
+    expect(() => lexer.readTextUntil("]")).toThrow();
   });
 });
