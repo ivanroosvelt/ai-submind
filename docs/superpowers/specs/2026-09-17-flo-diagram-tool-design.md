@@ -2,7 +2,10 @@
 
 - **Fecha:** 2026-09-17
 - **Rama:** `v2` (proyecto nuevo, sin relación con el compilador `.sub` de `master`)
-- **Estado:** diseño aprobado, pendiente de plan de implementación
+- **Estado:** parcialmente reemplazado por
+  [2026-09-19-flo-entidades-centralizadas.md](2026-09-19-flo-entidades-centralizadas.md),
+  que sustituye la fila "Gestión de archivos" de §2, la sintaxis de §4 y las
+  exclusiones de §8. El resto de este documento sigue vigente.
 
 ## 1. Propósito
 
@@ -16,15 +19,15 @@ completo (más tipos de diagrama) después, en fases.
 
 Tomadas durante la sesión de brainstorming:
 
-| Pregunta | Decisión |
-|---|---|
-| Gestión de archivos | Tooling propio (parser/linter/formateador). Sin registro central ni base de datos de diagramas — cada archivo es autocontenido, como un `.md` suelto. |
-| Relación con `submind`/`.sub` | Ninguna. Proyecto independiente, dominio distinto. |
-| Alcance de tipos de diagrama (MVP) | Flowchart + secuencia. Otros tipos (estados, ER, clases) quedan fuera de este plan. |
-| Modelo del editor | Texto con preview en vivo (split-pane), no WYSIWYG/canvas. |
-| Persistencia | Solo navegador, sin backend ni cuentas. File System Access API + fallback de carga/descarga. |
-| Reusabilidad del motor | Sí — `core` se publica como paquete npm independiente del editor, embebible en otros sitios. |
-| Compatibilidad con Mermaid | Ninguna. Formato 100% nuevo, sin importador. |
+| Pregunta                           | Decisión                                                                                                                                              |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gestión de archivos                | Tooling propio (parser/linter/formateador). Sin registro central ni base de datos de diagramas — cada archivo es autocontenido, como un `.md` suelto. |
+| Relación con `submind`/`.sub`      | Ninguna. Proyecto independiente, dominio distinto.                                                                                                    |
+| Alcance de tipos de diagrama (MVP) | Flowchart + secuencia. Otros tipos (estados, ER, clases) quedan fuera de este plan.                                                                   |
+| Modelo del editor                  | Texto con preview en vivo (split-pane), no WYSIWYG/canvas.                                                                                            |
+| Persistencia                       | Solo navegador, sin backend ni cuentas. File System Access API + fallback de carga/descarga.                                                          |
+| Reusabilidad del motor             | Sí — `core` se publica como paquete npm independiente del editor, embebible en otros sitios.                                                          |
+| Compatibilidad con Mermaid         | Ninguna. Formato 100% nuevo, sin importador.                                                                                                          |
 
 ## 3. Arquitectura
 
@@ -143,11 +146,13 @@ principios y el nivel de ambición, no la gramática letra por letra.
 ## 9. Fases y entregables
 
 **Fase 0 — Setup del monorepo**
+
 - pnpm workspace con `@flo/core` y `@flo/web` como paquetes vacíos.
 - Vitest, tsconfig, build (`tsc`/`vite build`) y CI configurados y
   corriendo en verde en cada push, aunque todavía no haya lógica.
 
 **Fase 1 — Lenguaje: lexer + parser + AST**
+
 - Gramática formal (EBNF) para flowchart y secuencia, documentada.
 - Lexer y parser implementados para ambos tipos, con recuperación de
   errores y diagnósticos estructurados.
@@ -157,6 +162,7 @@ principios y el nivel de ambición, no la gramática letra por letra.
   o diagnósticos correctos (por test o CLI mínima).
 
 **Fase 2 — Layout + render a SVG**
+
 - Integración de `dagre` para flowchart; layout de columnas para secuencia.
 - `render(ast) -> svgString` funcionando para ambos tipos.
 - Tests de snapshot visual sobre un set de diagramas de referencia.
@@ -164,17 +170,20 @@ principios y el nivel de ambición, no la gramática letra por letra.
   npm (sin publicar todavía).
 
 **Fase 3 — Editor web (MVP)**
+
 - `@flo/web`: split-pane con CodeMirror 6 + preview en vivo (debounce).
 - Modo de sintaxis `.flo` en CodeMirror con diagnósticos inline.
 - Build estático servible (`npx serve dist` o equivalente).
 
 **Fase 4 — Persistencia y exportación**
+
 - Abrir/Guardar con File System Access API + fallback de carga/descarga.
 - Autosave a IndexedDB.
 - Exportar a SVG/PNG.
 - Menú "Nuevo" (flowchart / secuencia) con header base insertado.
 
 **Fase 5 — Pulido, publicación y documentación**
+
 - `@flo/core` publicado en npm.
 - README con ejemplos de sintaxis y de uso de la librería.
 - Deploy público del editor (ej. GitHub Pages / Vercel estático).
