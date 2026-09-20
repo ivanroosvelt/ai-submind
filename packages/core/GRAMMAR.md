@@ -21,8 +21,13 @@
     Ident        ::= (letra ASCII | "_") (letra ASCII | dígito | "_")*
     Text         ::= cualquier carácter excepto el delimitador de cierre
                       y el salto de línea; se recorta espacio inicial/final
+    String       ::= '"' (carácter excepto '"' y newline)* '"'
     Comment      ::= "//" cualquier carácter hasta fin de línea
                       (se descarta antes de tokenizar, no genera token)
+
+`String` es puramente léxica: el lexer ya la reconoce como token `STRING`,
+pero ninguna regla de la gramática la consume todavía. Queda lista para
+cuando una fase futura (entidades, `use "path"`) la necesite.
 
 ## Reglas léxicas especiales
 
@@ -31,17 +36,26 @@
   del header `diagram <tipo>`. El parser las salta antes de revisar E003
   (archivo vacío) o E004 (falta `diagram`), así que un comentario inicial
   no se confunde con contenido inválido.
-- Después de `[`, `(`, `{` o `:`, el lexer entra en modo texto: todo lo
-  que sigue hasta el delimitador de cierre (o hasta fin de línea, para
-  `:`) es un único token `TEXT`, sin tokenizar palabra por palabra.
-- La palabra `as` es una palabra reservada global del lexer, no una
-  palabra clave contextual: el lexer entra en modo texto cada vez que
-  emite un `IDENT` con valor `as`, sin importar el tipo de diagrama ni la
-  posición (por ejemplo, también dispara dentro de un `flowchart`, donde
-  `as` no tiene significado gramatical). El resto de la línea se lee
-  entonces como un único token `TEXT` (igual que después de `:`). Es la
-  única forma en que un alias de participante puede tener espacios (`as
-  Base de datos`).
+- El lexer es pasivo: `next()`/`peek()` producen tokens de código simples
+  (`LBRACKET`, `LPAREN`, `LBRACE`, `COLON`, `IDENT`, etc.) sin ningún
+  efecto lateral. Ninguno de esos caracteres dispara un "modo texto"
+  automático. El modo texto lo pide explícitamente el *parser*, llamando
+  a `lexer.readTextUntil(closer)`, justo en las posiciones que la
+  gramática de arriba ya implica: después del delimitador de apertura en
+  `Shape`, después de `:` en `EdgeDecl`/`MessageDecl`, y después de `as`
+  en `ParticipantDecl`. Fuera de esas llamadas explícitas, `[`, `(`, `{`
+  y `:` son tokens comunes como cualquier otro.
+- `as` es una palabra clave **contextual**, no una palabra reservada
+  global del lexer: para el lexer, `as` es un `IDENT` como cualquier
+  otro. Solo el parser le da significado especial, y en una única
+  posición — justo después de consumir el id de un participante en
+  `ParticipantDecl` (`parser/sequence.ts`) — donde, si el siguiente token
+  es `IDENT` con valor `"as"`, lo consume y pide texto con
+  `readTextUntil("\n")` para el alias. En cualquier otra posición,
+  incluyendo dentro de un `flowchart`, `as` es un `IDENT` sin efecto
+  gramatical (por ejemplo, `as -> b` en un flowchart declara un nodo
+  llamado `as`). Es la única forma en que un alias de participante puede
+  tener espacios (`as Base de datos`).
 - Un id de nodo/participante no puede reusarse con una forma distinta
   (flowchart) ni declararse dos veces (sequence) — es un error, no una
   redefinición silenciosa.
@@ -64,6 +78,11 @@ Subgrafos, loops/alt de secuencia, notas, estilos. El principio de
 bloques con `{ }` para anidamiento (spec §4) queda reservado para cuando
 se agreguen — no se inventa sintaxis de bloques en esta ronda porque el
 spec no la especifica con ejemplos concretos.
+
+`{` ya no está atado al modo texto automático (ver "Reglas léxicas
+especiales" arriba), así que queda desambiguado y disponible como
+delimitador de bloque para la Fase C sin requerir más cambios en el
+lexer.
 
 ## Códigos de diagnóstico
 
