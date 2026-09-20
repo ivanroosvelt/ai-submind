@@ -19,8 +19,7 @@ describe("index", () => {
     const formatted = formatDiagnostic({
       code: "E999",
       message: "prueba",
-      line: 1,
-      column: 1,
+      range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } },
       severity: "error",
     });
     expect(formatted).toBe("E999 error [1:1]: prueba");

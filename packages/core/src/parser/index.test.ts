@@ -112,11 +112,11 @@ describe("parse", () => {
     // because all lexer diagnostics are collected up front, before the body
     // parser runs and reports E014 for the earlier line.
     expect(diagnostics.map((d) => d.code)).toEqual(["E014", "E002"]);
-    expect(diagnostics[0].line).toBe(2);
-    expect(diagnostics[1].line).toBe(4);
+    expect(diagnostics[0].range.start.line).toBe(2);
+    expect(diagnostics[1].range.start.line).toBe(4);
     for (let i = 1; i < diagnostics.length; i += 1) {
-      const prev = diagnostics[i - 1];
-      const curr = diagnostics[i];
+      const prev = diagnostics[i - 1].range.start;
+      const curr = diagnostics[i].range.start;
       expect(prev.line < curr.line || (prev.line === curr.line && prev.column <= curr.column)).toBe(true);
     }
   });

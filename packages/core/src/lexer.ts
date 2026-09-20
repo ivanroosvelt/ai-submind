@@ -1,12 +1,11 @@
 import type { Token, TokenKind } from "./tokens.js";
-import type { Diagnostic } from "./diagnostics.js";
+import { diagnosticAt, type Diagnostic } from "./diagnostics.js";
 import type { Position } from "./ast.js";
 
 interface BracketMode {
   kind: "bracket";
   closer: string;
-  openLine: number;
-  openColumn: number;
+  openPosition: Position;
 }
 
 interface ColonMode {
@@ -60,13 +59,13 @@ export function tokenize(source: string): TokenizeResult {
         text += advance();
       }
       if (i >= source.length || source[i] === "\n") {
-        diagnostics.push({
-          code: "E001",
-          message: `se esperaba '${pending.closer}' antes de fin de línea`,
-          line: pending.openLine,
-          column: pending.openColumn,
-          severity: "error",
-        });
+        diagnostics.push(
+          diagnosticAt(
+            "E001",
+            `se esperaba '${pending.closer}' antes de fin de línea`,
+            { start: pending.openPosition, end: { line, column } }
+          )
+        );
         pending = null;
         continue;
       }
@@ -121,7 +120,7 @@ export function tokenize(source: string): TokenizeResult {
       advance();
       const kind: TokenKind = ch === "[" ? "LBRACKET" : ch === "(" ? "LPAREN" : "LBRACE";
       push(kind, ch, start);
-      pending = { kind: "bracket", closer: BRACKET_CLOSERS[ch], openLine: start.line, openColumn: start.column };
+      pending = { kind: "bracket", closer: BRACKET_CLOSERS[ch], openPosition: start };
       continue;
     }
 
@@ -144,14 +143,10 @@ export function tokenize(source: string): TokenizeResult {
       continue;
     }
 
-    diagnostics.push({
-      code: "E002",
-      message: `carácter inesperado '${ch}'`,
-      line: start.line,
-      column: start.column,
-      severity: "error",
-    });
     advance();
+    diagnostics.push(
+      diagnosticAt("E002", `carácter inesperado '${ch}'`, { start, end: { line, column } })
+    );
   }
 
   tokens.push({ kind: "EOF", value: "", range: { start: { line, column }, end: { line, column } } });

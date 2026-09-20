@@ -65,8 +65,7 @@ describe("tokenize", () => {
       {
         code: "E001",
         message: "se esperaba ']' antes de fin de línea",
-        line: 1,
-        column: 7,
+        range: { start: { line: 1, column: 7 }, end: { line: 1, column: 18 } },
         severity: "error",
       },
     ]);
@@ -78,8 +77,7 @@ describe("tokenize", () => {
       {
         code: "E002",
         message: "carácter inesperado '1'",
-        line: 1,
-        column: 1,
+        range: { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } },
         severity: "error",
       },
     ]);
