@@ -3,9 +3,103 @@
   <head>
     <meta charset="UTF-8" />
     <title>.flo editor</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      #toolbar {
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px;
+        border-bottom: 1px solid #d1d5db;
+        flex: 0 0 auto;
+      }
+      #toolbar button {
+        padding: 4px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      #toolbar button:hover {
+        background: #f3f4f6;
+      }
+      #app {
+        display: flex;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      #editor-pane,
+      #preview-pane {
+        flex: 1 1 50%;
+        min-width: 0;
+        overflow: auto;
+      }
+      #editor-pane {
+        border-right: 1px solid #d1d5db;
+      }
+      #preview-pane {
+        padding: 16px;
+      }
+      .flo-seq-sticky {
+        position: sticky;
+        top: 0;
+        height: 0;
+        overflow: visible;
+        z-index: 1;
+      }
+      .flo-seq-sticky svg {
+        display: block;
+      }
+      body.flo-expanded #editor-pane {
+        display: none;
+      }
+      body.flo-expanded #preview-pane {
+        flex: 1 1 100%;
+      }
+      .cm-editor {
+        height: 100%;
+      }
+      .flo-banner {
+        background: #fef2f2;
+        color: #991b1b;
+        padding: 4px 8px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      .flo-empty {
+        color: #6b7280;
+      }
+      .flo-tok-ident {
+        color: #1d4ed8;
+      }
+      .flo-tok-text {
+        color: #047857;
+      }
+      .flo-tok-arrow {
+        color: #b91c1c;
+        font-weight: bold;
+      }
+      .flo-tok-punct {
+        color: #6b7280;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="toolbar"></div>
+    <div id="app">
+      <div id="editor-pane"></div>
+      <div id="preview-pane"></div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

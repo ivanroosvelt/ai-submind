@@ -1,11 +1,29 @@
 {
   "name": "@flo/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Lexer, parser, AST y renderer a SVG para .flo, un lenguaje de diagramas con gramática determinista (flowchart y sequence).",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanroosvelt/submind.git",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "diagram",
+    "flowchart",
+    "sequence-diagram",
+    "parser",
+    "svg"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

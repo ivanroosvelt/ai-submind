@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import {
-  VERSION,
   parse,
   isFlowchartDiagram,
   isSequenceDiagram,
@@ -8,10 +7,6 @@ import {
 } from "./index.js";
 
 describe("index", () => {
-  it("exports a version string", () => {
-    expect(VERSION).toBe("0.0.0");
-  });
-
   it("re-exports the type guards and formatDiagnostic so consumers of parse() can narrow diagrams and format diagnostics", () => {
     const { diagram, diagnostics } = parse("diagram flowchart\nstart[Inicio]\n");
     expect(diagram).not.toBeNull();

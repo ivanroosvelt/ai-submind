@@ -1,6 +1,6 @@
 import type { FlowchartDiagram, FlowchartNode } from "../ast.js";
 import type { FlowchartLayout, FlowchartNodeLayout } from "../layout/flowchart.js";
-import { ARROW_MARKER_ID, FILL_COLOR, STROKE_COLOR, arrowMarkerDefs, svgText } from "./svg.js";
+import { ARROW_MARKER_ID, FILL_COLOR, STROKE_COLOR, arrowMarkerDefs, svgLabel, svgText } from "./svg.js";
 
 function shapeElement(node: FlowchartNode, nodeLayout: FlowchartNodeLayout): string {
   const { x, y, width, height } = nodeLayout;
@@ -40,7 +40,7 @@ export function renderFlowchartToSvg(diagram: FlowchartDiagram, layout: Flowchar
       return line;
     }
     const mid = edgeLayout.points[Math.floor(edgeLayout.points.length / 2)];
-    return `${line}${svgText(mid.x, mid.y - 8, edge.label)}`;
+    return `${line}${svgLabel(mid.x, mid.y - 8, edge.label)}`;
   });
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${layout.width}" height="${layout.height}" viewBox="0 0 ${layout.width} ${layout.height}">${arrowMarkerDefs()}${nodeElements.join("")}${edgeElements.join("")}</svg>`;
