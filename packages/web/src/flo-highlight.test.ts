@@ -24,4 +24,13 @@ describe("buildHighlightRanges", () => {
     expect(ranges.every((r) => r.to > r.from)).toBe(true);
     expect(ranges).toHaveLength(4);
   });
+
+  it("skips whitespace-only TEXT tokens (empty after trim)", () => {
+    const source = "a[   ]\n";
+    const doc = Text.of(source.split("\n"));
+    const ranges = buildHighlightRanges(doc);
+    // Should have only identifier 'a' and brackets, no flo-tok-text for whitespace
+    const textRanges = ranges.filter((r) => r.className === "flo-tok-text");
+    expect(textRanges).toHaveLength(0);
+  });
 });

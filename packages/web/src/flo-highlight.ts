@@ -29,7 +29,7 @@ export function buildHighlightRanges(doc: Text): HighlightRange[] {
   const ranges: HighlightRange[] = [];
   for (const token of tokens) {
     const className = CLASS_BY_KIND[token.kind];
-    if (!className) continue;
+    if (!className || token.value.length === 0) continue;
     const from = offsetOf(doc, token.range.start);
     const to = offsetOf(doc, token.range.end);
     if (to <= from) continue;
