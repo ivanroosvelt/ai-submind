@@ -14,6 +14,13 @@ export class Lexer {
   private line = 1;
   private column = 1;
   private buffered: Token | null = null;
+  // Solo válido para anclar el E001 de readTextUntil porque todos los call
+  // sites actuales llaman a readTextUntil() justo después de que next()
+  // devuelve el token de apertura, sin otra llamada a readTextUntil de por
+  // medio. Si algún día un caller necesita dos lecturas de texto
+  // consecutivas, esta referencia no se habrá actualizado entre ambas y el
+  // ancla de la segunda lectura quedaría obsoleta (apuntando al token de
+  // apertura de la primera, no de la segunda).
   private lastReturned: Token | null = null;
 
   constructor(private readonly source: string) {}
@@ -178,5 +185,24 @@ export class Lexer {
     }
 
     return this.makeToken("TEXT", text.trim(), start);
+  }
+
+  /**
+   * Descarta caracteres crudos hasta el próximo newline (o EOF), sin emitir
+   * tokens ni diagnósticos. Recuperación de errores pura: para cuando el
+   * parser ya decidió abandonar la línea actual y no quiere que el resto se
+   * escanee como tokens de código (lo que generaría diagnósticos E002
+   * espurios por caracteres que habrían quedado dentro de una región de
+   * texto si la línea no hubiera fallado).
+   */
+  skipRestOfLine(): void {
+    if (this.buffered) {
+      throw new Error(
+        "Lexer.skipRestOfLine: hay un token en el buffer de peek(); no se puede descartar texto crudo con un lookahead pendiente"
+      );
+    }
+    while (this.i < this.source.length && this.source[this.i] !== "\n") {
+      this.advance();
+    }
   }
 }

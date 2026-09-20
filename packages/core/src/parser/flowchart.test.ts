@@ -75,8 +75,24 @@ describe("parseFlowchartBody", () => {
 
   it("recovers after an unterminated node shape and keeps parsing the next line", () => {
     const { diagram, diagnostics } = parseBody("broken[sin cerrar\nok[Bien]\n");
-    expect(diagnostics.some((d) => d.code === "E001")).toBe(true);
+    expect(diagnostics.map((d) => d.code)).toEqual(["E012", "E001"]);
     expect(diagram.nodes.map((n) => n.id)).toEqual(["ok"]);
+  });
+
+  it("does not report spurious E002s for raw characters skipped during line recovery", () => {
+    // "a" is a valid IDENT, but "b" isn't a node-shape opener or "->", so
+    // E015 fires with "b" already lexed as a plain token. The rest of the
+    // line ("[¿Qué?]") must be discarded raw by skipToNextLine, not
+    // scanned as code-mode tokens - otherwise "¿", "é", "?" each trip the
+    // lexer's generic "carácter inesperado" E002 path.
+    const { diagnostics } = parseBody("a b[¿Qué?]\n");
+    expect(diagnostics.map((d) => d.code)).toEqual(["E015"]);
+  });
+
+  it("renders a STRING token with its quotes when it appears where an identifier was expected", () => {
+    const { diagnostics } = parseBody('"x" -> b\n');
+    expect(diagnostics[0].code).toBe("E010");
+    expect(diagnostics[0].message).toContain('"x"');
   });
 
   it("reports E014 when an edge is missing its target id", () => {

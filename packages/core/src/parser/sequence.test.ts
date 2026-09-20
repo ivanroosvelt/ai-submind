@@ -84,4 +84,19 @@ describe("parseSequenceBody", () => {
     const { diagnostics } = parseBody("participant a as\n");
     expect(diagnostics.some((d) => d.code === "E022")).toBe(true);
   });
+
+  it("does not report spurious E002s for raw characters skipped during line recovery", () => {
+    // "a" and "b" are both valid IDENTs, but "b" isn't "->", so E024 fires
+    // with "b" already lexed as a plain token. The rest of the line
+    // (" ¿Qué?") must be discarded raw by skipToNextLine, not scanned as
+    // code-mode tokens - otherwise "¿", "é", "?" each trip E002.
+    const { diagnostics } = parseBody("a b ¿Qué?\n");
+    expect(diagnostics.map((d) => d.code)).toEqual(["E024"]);
+  });
+
+  it("renders a STRING token with its quotes when it appears where an id was expected", () => {
+    const { diagnostics } = parseBody('"x" -> b : hola\n');
+    expect(diagnostics[0].code).toBe("E020");
+    expect(diagnostics[0].message).toContain('"x"');
+  });
 });

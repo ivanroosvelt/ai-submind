@@ -50,9 +50,32 @@ export function parseFlowchartBody(
     while (current().kind === "NEWLINE") advance();
   }
 
+  /**
+   * Abandona la línea actual sin escanearla como tokens de código: descarta
+   * el token en buffer (si hay uno, ya fue leído del lexer) y le pide al
+   * lexer que descarte el resto de caracteres crudos hasta el próximo
+   * newline. Evita E002 espurios por caracteres que habrían quedado dentro
+   * de una región de texto si la línea no hubiera fallado.
+   *
+   * Si el token en buffer ya es NEWLINE o EOF, el cursor ya está en el
+   * límite de línea (p. ej. porque un `current()` anterior, buscando otra
+   * cosa, ya consumió el newline al escanearlo) — no hay nada crudo que
+   * descartar, y llamar a skipRestOfLine() ahí saltaría de más la línea
+   * siguiente completa.
+   */
   function skipToNextLine(): void {
-    while (current().kind !== "NEWLINE" && current().kind !== "EOF") advance();
-    if (current().kind === "NEWLINE") advance();
+    if (buffered !== null) {
+      const already = buffered;
+      buffered = null;
+      if (already.kind === "NEWLINE") return;
+      if (already.kind === "EOF") {
+        buffered = already;
+        return;
+      }
+    }
+    lexer.skipRestOfLine();
+    buffered = lexer.next(); // será NEWLINE (o EOF)
+    if (buffered.kind === "NEWLINE") buffered = null;
   }
 
   skipNewlines();
@@ -63,7 +86,9 @@ export function parseFlowchartBody(
       diagnostics.push(
         diagnosticAt(
           "E010",
-          `se esperaba un identificador, se encontró '${startToken.value || startToken.kind}'`,
+          `se esperaba un identificador, se encontró '${
+            startToken.kind === "STRING" ? `"${startToken.value}"` : startToken.value || startToken.kind
+          }'`,
           startToken.range
         )
       );
