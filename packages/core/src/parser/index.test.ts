@@ -38,13 +38,45 @@ describe("parse", () => {
     expect(diagram).toEqual({
       kind: "flowchart",
       nodes: [
-        { id: "start", shape: "rectangle", label: "Inicio", position: { line: 3, column: 1 } },
-        { id: "check", shape: "decision", label: "Login valido", position: { line: 4, column: 1 } },
-        { id: "home", shape: "rectangle", label: "Mostrar home", position: { line: 5, column: 1 } },
+        {
+          id: "start",
+          shape: "rectangle",
+          label: "Inicio",
+          range: { start: { line: 3, column: 1 }, end: { line: 3, column: 14 } },
+          nameRange: { start: { line: 3, column: 1 }, end: { line: 3, column: 6 } },
+        },
+        {
+          id: "check",
+          shape: "decision",
+          label: "Login valido",
+          range: { start: { line: 4, column: 1 }, end: { line: 4, column: 20 } },
+          nameRange: { start: { line: 4, column: 1 }, end: { line: 4, column: 6 } },
+        },
+        {
+          id: "home",
+          shape: "rectangle",
+          label: "Mostrar home",
+          range: { start: { line: 5, column: 1 }, end: { line: 5, column: 19 } },
+          nameRange: { start: { line: 5, column: 1 }, end: { line: 5, column: 5 } },
+        },
       ],
       edges: [
-        { from: "start", to: "check", label: null, position: { line: 7, column: 1 } },
-        { from: "check", to: "home", label: "si", position: { line: 8, column: 1 } },
+        {
+          from: "start",
+          to: "check",
+          label: null,
+          range: { start: { line: 7, column: 1 }, end: { line: 7, column: 15 } },
+          fromRange: { start: { line: 7, column: 1 }, end: { line: 7, column: 6 } },
+          toRange: { start: { line: 7, column: 10 }, end: { line: 7, column: 15 } },
+        },
+        {
+          from: "check",
+          to: "home",
+          label: "si",
+          range: { start: { line: 8, column: 1 }, end: { line: 8, column: 19 } },
+          fromRange: { start: { line: 8, column: 1 }, end: { line: 8, column: 6 } },
+          toRange: { start: { line: 8, column: 10 }, end: { line: 8, column: 14 } },
+        },
       ],
     });
   });
@@ -65,12 +97,36 @@ describe("parse", () => {
     expect(diagram).toEqual({
       kind: "sequence",
       participants: [
-        { id: "user", label: "Usuario", position: { line: 3, column: 13 } },
-        { id: "api", label: "API", position: { line: 4, column: 13 } },
+        {
+          id: "user",
+          label: "Usuario",
+          range: { start: { line: 3, column: 13 }, end: { line: 3, column: 28 } },
+          nameRange: { start: { line: 3, column: 13 }, end: { line: 3, column: 17 } },
+        },
+        {
+          id: "api",
+          label: "API",
+          range: { start: { line: 4, column: 13 }, end: { line: 4, column: 23 } },
+          nameRange: { start: { line: 4, column: 13 }, end: { line: 4, column: 16 } },
+        },
       ],
       messages: [
-        { from: "user", to: "api", label: "POST /login", position: { line: 6, column: 1 } },
-        { from: "api", to: "user", label: "200 OK", position: { line: 7, column: 1 } },
+        {
+          from: "user",
+          to: "api",
+          label: "POST /login",
+          range: { start: { line: 6, column: 1 }, end: { line: 6, column: 26 } },
+          fromRange: { start: { line: 6, column: 1 }, end: { line: 6, column: 5 } },
+          toRange: { start: { line: 6, column: 9 }, end: { line: 6, column: 12 } },
+        },
+        {
+          from: "api",
+          to: "user",
+          label: "200 OK",
+          range: { start: { line: 7, column: 1 }, end: { line: 7, column: 21 } },
+          fromRange: { start: { line: 7, column: 1 }, end: { line: 7, column: 4 } },
+          toRange: { start: { line: 7, column: 8 }, end: { line: 7, column: 12 } },
+        },
       ],
     });
   });

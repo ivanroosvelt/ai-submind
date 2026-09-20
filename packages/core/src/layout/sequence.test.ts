@@ -1,16 +1,20 @@
 import { describe, it, expect } from "vitest";
 import { layoutSequence } from "./sequence.js";
-import type { SequenceDiagram } from "../ast.js";
+import type { SequenceDiagram, Range } from "../ast.js";
+
+// ponytail: layout ignores range/nameRange entirely, so the exact span here is
+// irrelevant to these tests — one placeholder stands in for every occurrence.
+const RANGE: Range = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
 
 describe("layoutSequence", () => {
   it("places participants in columns and a message on the first row", () => {
     const diagram: SequenceDiagram = {
       kind: "sequence",
       participants: [
-        { id: "a", label: "Alice", position: { line: 1, column: 1 } },
-        { id: "b", label: "Bob", position: { line: 2, column: 1 } },
+        { id: "a", label: "Alice", range: RANGE, nameRange: RANGE },
+        { id: "b", label: "Bob", range: RANGE, nameRange: RANGE },
       ],
-      messages: [{ from: "a", to: "b", label: "hola", position: { line: 3, column: 1 } }],
+      messages: [{ from: "a", to: "b", label: "hola", range: RANGE, fromRange: RANGE, toRange: RANGE }],
     };
 
     expect(layoutSequence(diagram)).toEqual({
@@ -30,12 +34,12 @@ describe("layoutSequence", () => {
     const diagram: SequenceDiagram = {
       kind: "sequence",
       participants: [
-        { id: "a", label: "a", position: { line: 1, column: 1 } },
-        { id: "b", label: "b", position: { line: 1, column: 6 } },
+        { id: "a", label: "a", range: RANGE, nameRange: RANGE },
+        { id: "b", label: "b", range: RANGE, nameRange: RANGE },
       ],
       messages: [
-        { from: "a", to: "b", label: "hola", position: { line: 1, column: 1 } },
-        { from: "b", to: "a", label: "chau", position: { line: 2, column: 1 } },
+        { from: "a", to: "b", label: "hola", range: RANGE, fromRange: RANGE, toRange: RANGE },
+        { from: "b", to: "a", label: "chau", range: RANGE, fromRange: RANGE, toRange: RANGE },
       ],
     };
 
@@ -49,7 +53,7 @@ describe("layoutSequence", () => {
   it("lays out a diagram with no messages, keeping just the header row", () => {
     const diagram: SequenceDiagram = {
       kind: "sequence",
-      participants: [{ id: "a", label: "a", position: { line: 1, column: 1 } }],
+      participants: [{ id: "a", label: "a", range: RANGE, nameRange: RANGE }],
       messages: [],
     };
 

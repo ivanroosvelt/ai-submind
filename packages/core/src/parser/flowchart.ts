@@ -89,6 +89,7 @@ export function parseFlowchartBody(
         skipNewlines();
         continue;
       }
+      const closeToken = current();
       advance();
       const existing = nodes.find((node) => node.id === id.value);
       const shape = SHAPE_BY_OPEN[openKind];
@@ -101,7 +102,13 @@ export function parseFlowchartBody(
           )
         );
       } else if (!existing) {
-        nodes.push({ id: id.value, shape, label: textToken.value, position: { line: id.range.start.line, column: id.range.start.column } });
+        nodes.push({
+          id: id.value,
+          shape,
+          label: textToken.value,
+          range: { start: id.range.start, end: closeToken.range.end },
+          nameRange: id.range,
+        });
       }
     } else if (next.kind === "ARROW") {
       advance();
@@ -116,15 +123,24 @@ export function parseFlowchartBody(
       }
       advance();
       let label: string | null = null;
+      let lastConsumedRange = toToken.range;
       if (current().kind === "COLON") {
         advance();
         const labelToken = current();
         if (labelToken.kind === "TEXT") {
           label = labelToken.value ? labelToken.value : null;
+          lastConsumedRange = labelToken.range;
           advance();
         }
       }
-      edges.push({ from: id.value, to: toToken.value, label, position: { line: id.range.start.line, column: id.range.start.column } });
+      edges.push({
+        from: id.value,
+        to: toToken.value,
+        label,
+        range: { start: id.range.start, end: lastConsumedRange.end },
+        fromRange: id.range,
+        toRange: toToken.range,
+      });
     } else {
       diagnostics.push(
         diagnosticAt(
@@ -148,17 +164,12 @@ export function parseFlowchartBody(
   }
 
   for (const edge of edges) {
-    for (const id of [edge.from, edge.to]) {
+    for (const [id, range] of [
+      [edge.from, edge.fromRange],
+      [edge.to, edge.toRange],
+    ] as const) {
       if (!nodes.some((node) => node.id === id)) {
-        // ponytail: E017 still reports at edge.position (degenerate range) —
-        // pointing at the specific missing identifier needs fromRange/toRange
-        // on FlowchartEdge, added in Task 3.
-        diagnostics.push(
-          diagnosticAt("E017", `el nodo '${id}' no fue declarado`, {
-            start: edge.position,
-            end: edge.position,
-          })
-        );
+        diagnostics.push(diagnosticAt("E017", `el nodo '${id}' no fue declarado`, range));
       }
     }
   }

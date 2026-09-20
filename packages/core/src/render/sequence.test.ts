@@ -1,17 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { renderSequenceToSvg } from "./sequence.js";
 import { layoutSequence } from "../layout/sequence.js";
-import type { SequenceDiagram } from "../ast.js";
+import type { SequenceDiagram, Range } from "../ast.js";
+
+// ponytail: rendering ignores range/nameRange entirely, so the exact span here
+// is irrelevant to these tests — one placeholder stands in for every occurrence.
+const RANGE: Range = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
 
 describe("renderSequenceToSvg", () => {
   it("renders participant boxes, lifelines and one message with its label", () => {
     const diagram: SequenceDiagram = {
       kind: "sequence",
       participants: [
-        { id: "a", label: "Alice", position: { line: 1, column: 1 } },
-        { id: "b", label: "Bob", position: { line: 2, column: 1 } },
+        { id: "a", label: "Alice", range: RANGE, nameRange: RANGE },
+        { id: "b", label: "Bob", range: RANGE, nameRange: RANGE },
       ],
-      messages: [{ from: "a", to: "b", label: "hola", position: { line: 3, column: 1 } }],
+      messages: [{ from: "a", to: "b", label: "hola", range: RANGE, fromRange: RANGE, toRange: RANGE }],
     };
     const layout = layoutSequence(diagram);
 
@@ -30,7 +34,7 @@ describe("renderSequenceToSvg", () => {
   it("renders a diagram with no messages, keeping just the participant boxes and lifelines", () => {
     const diagram: SequenceDiagram = {
       kind: "sequence",
-      participants: [{ id: "a", label: "a", position: { line: 1, column: 1 } }],
+      participants: [{ id: "a", label: "a", range: RANGE, nameRange: RANGE }],
       messages: [],
     };
     const layout = layoutSequence(diagram);

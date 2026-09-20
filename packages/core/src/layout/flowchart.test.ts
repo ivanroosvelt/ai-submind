@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { layoutFlowchart, measureFlowchartNode } from "./flowchart.js";
-import type { FlowchartDiagram } from "../ast.js";
+import type { FlowchartDiagram, Range } from "../ast.js";
+
+// ponytail: layout ignores range/nameRange entirely, so the exact span here is
+// irrelevant to these tests — one placeholder stands in for every occurrence.
+const RANGE: Range = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
 
 describe("measureFlowchartNode", () => {
   it("sizes a rectangle from its label length", () => {
@@ -21,13 +25,13 @@ describe("layoutFlowchart", () => {
     const diagram: FlowchartDiagram = {
       kind: "flowchart",
       nodes: [
-        { id: "start", shape: "rectangle", label: "Inicio", position: { line: 1, column: 1 } },
-        { id: "check", shape: "decision", label: "Login valido", position: { line: 2, column: 1 } },
-        { id: "end", shape: "rounded", label: "Fin", position: { line: 3, column: 1 } },
+        { id: "start", shape: "rectangle", label: "Inicio", range: RANGE, nameRange: RANGE },
+        { id: "check", shape: "decision", label: "Login valido", range: RANGE, nameRange: RANGE },
+        { id: "end", shape: "rounded", label: "Fin", range: RANGE, nameRange: RANGE },
       ],
       edges: [
-        { from: "start", to: "check", label: null, position: { line: 4, column: 1 } },
-        { from: "check", to: "end", label: null, position: { line: 5, column: 1 } },
+        { from: "start", to: "check", label: null, range: RANGE, fromRange: RANGE, toRange: RANGE },
+        { from: "check", to: "end", label: null, range: RANGE, fromRange: RANGE, toRange: RANGE },
       ],
     };
 
@@ -67,7 +71,7 @@ describe("layoutFlowchart", () => {
   it("lays out a single node with no edges", () => {
     const diagram: FlowchartDiagram = {
       kind: "flowchart",
-      nodes: [{ id: "solo", shape: "rectangle", label: "Solo", position: { line: 1, column: 1 } }],
+      nodes: [{ id: "solo", shape: "rectangle", label: "Solo", range: RANGE, nameRange: RANGE }],
       edges: [],
     };
 

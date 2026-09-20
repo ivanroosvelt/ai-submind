@@ -1,17 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { renderFlowchartToSvg } from "./flowchart.js";
 import { layoutFlowchart } from "../layout/flowchart.js";
-import type { FlowchartDiagram } from "../ast.js";
+import type { FlowchartDiagram, Range } from "../ast.js";
+
+// ponytail: rendering ignores range/nameRange entirely, so the exact span here
+// is irrelevant to these tests — one placeholder stands in for every occurrence.
+const RANGE: Range = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
 
 describe("renderFlowchartToSvg", () => {
   it("renders a rectangle, a rounded node and a labeled edge between them", () => {
     const diagram: FlowchartDiagram = {
       kind: "flowchart",
       nodes: [
-        { id: "start", shape: "rectangle", label: "Inicio", position: { line: 1, column: 1 } },
-        { id: "end", shape: "rounded", label: "Fin", position: { line: 2, column: 1 } },
+        { id: "start", shape: "rectangle", label: "Inicio", range: RANGE, nameRange: RANGE },
+        { id: "end", shape: "rounded", label: "Fin", range: RANGE, nameRange: RANGE },
       ],
-      edges: [{ from: "start", to: "end", label: "ok", position: { line: 3, column: 1 } }],
+      edges: [{ from: "start", to: "end", label: "ok", range: RANGE, fromRange: RANGE, toRange: RANGE }],
     };
     const layout = layoutFlowchart(diagram);
 
@@ -30,7 +34,7 @@ describe("renderFlowchartToSvg", () => {
   it("renders a decision node as a polygon and omits the label element for an unlabeled edge", () => {
     const diagram: FlowchartDiagram = {
       kind: "flowchart",
-      nodes: [{ id: "check", shape: "decision", label: "OK?", position: { line: 1, column: 1 } }],
+      nodes: [{ id: "check", shape: "decision", label: "OK?", range: RANGE, nameRange: RANGE }],
       edges: [],
     };
     const layout = layoutFlowchart(diagram);

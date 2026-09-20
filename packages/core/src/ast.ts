@@ -15,14 +15,17 @@ export interface FlowchartNode {
   id: string;
   shape: NodeShape;
   label: string;
-  position: Position;
+  range: Range; // toda la declaración: `start[Inicio]`
+  nameRange: Range; // solo `start`
 }
 
 export interface FlowchartEdge {
   from: string;
   to: string;
   label: string | null;
-  position: Position;
+  range: Range; // toda la arista
+  fromRange: Range; // solo el id origen
+  toRange: Range; // solo el id destino
 }
 
 export interface FlowchartDiagram {
@@ -34,14 +37,17 @@ export interface FlowchartDiagram {
 export interface SequenceParticipant {
   id: string;
   label: string;
-  position: Position;
+  range: Range;
+  nameRange: Range;
 }
 
 export interface SequenceMessage {
   from: string;
   to: string;
   label: string;
-  position: Position;
+  range: Range;
+  fromRange: Range;
+  toRange: Range;
 }
 
 export interface SequenceDiagram {

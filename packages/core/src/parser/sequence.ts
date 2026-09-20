@@ -1,6 +1,6 @@
 import type { Token } from "../tokens.js";
 import { diagnosticAt, type Diagnostic } from "../diagnostics.js";
-import type { SequenceDiagram, SequenceParticipant, SequenceMessage } from "../ast.js";
+import type { Range, SequenceDiagram, SequenceParticipant, SequenceMessage } from "../ast.js";
 
 export function parseSequenceBody(
   tokens: Token[],
@@ -29,9 +29,9 @@ export function parseSequenceBody(
     if (current().kind === "NEWLINE") advance();
   }
 
-  function ensureParticipant(id: string, line: number, column: number): void {
+  function ensureParticipant(id: string, range: Range): void {
     if (!participants.some((participant) => participant.id === id)) {
-      participants.push({ id, label: id, position: { line, column } });
+      participants.push({ id, label: id, range, nameRange: range });
     }
   }
 
@@ -65,11 +65,13 @@ export function parseSequenceBody(
       }
       advance();
       let label = idToken.value;
+      let lastConsumedRange = idToken.range;
       if (current().kind === "IDENT" && current().value === "as") {
         advance();
         const labelToken = current();
         if (labelToken.kind === "TEXT" && labelToken.value) {
           label = labelToken.value;
+          lastConsumedRange = labelToken.range;
           advance();
         } else {
           diagnostics.push(
@@ -94,7 +96,12 @@ export function parseSequenceBody(
           )
         );
       } else {
-        participants.push({ id: idToken.value, label, position: { line: idToken.range.start.line, column: idToken.range.start.column } });
+        participants.push({
+          id: idToken.value,
+          label,
+          range: { start: idToken.range.start, end: lastConsumedRange.end },
+          nameRange: idToken.range,
+        });
       }
     } else {
       const fromToken = startToken;
@@ -135,9 +142,16 @@ export function parseSequenceBody(
         continue;
       }
       advance();
-      ensureParticipant(fromToken.value, fromToken.range.start.line, fromToken.range.start.column);
-      ensureParticipant(toToken.value, toToken.range.start.line, toToken.range.start.column);
-      messages.push({ from: fromToken.value, to: toToken.value, label: labelToken.value, position: { line: fromToken.range.start.line, column: fromToken.range.start.column } });
+      ensureParticipant(fromToken.value, fromToken.range);
+      ensureParticipant(toToken.value, toToken.range);
+      messages.push({
+        from: fromToken.value,
+        to: toToken.value,
+        label: labelToken.value,
+        range: { start: fromToken.range.start, end: labelToken.range.end },
+        fromRange: fromToken.range,
+        toRange: toToken.range,
+      });
     }
 
     if (current().kind !== "EOF" && current().kind !== "NEWLINE") {

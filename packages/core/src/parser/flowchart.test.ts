@@ -17,9 +17,27 @@ describe("parseFlowchartBody", () => {
     );
     expect(diagnostics).toEqual([]);
     expect(diagram.nodes).toEqual([
-      { id: "start", shape: "rectangle", label: "Inicio", position: { line: 1, column: 1 } },
-      { id: "check", shape: "decision", label: "Login valido", position: { line: 2, column: 1 } },
-      { id: "done", shape: "rounded", label: "Fin", position: { line: 3, column: 1 } },
+      {
+        id: "start",
+        shape: "rectangle",
+        label: "Inicio",
+        range: { start: { line: 1, column: 1 }, end: { line: 1, column: 14 } },
+        nameRange: { start: { line: 1, column: 1 }, end: { line: 1, column: 6 } },
+      },
+      {
+        id: "check",
+        shape: "decision",
+        label: "Login valido",
+        range: { start: { line: 2, column: 1 }, end: { line: 2, column: 20 } },
+        nameRange: { start: { line: 2, column: 1 }, end: { line: 2, column: 6 } },
+      },
+      {
+        id: "done",
+        shape: "rounded",
+        label: "Fin",
+        range: { start: { line: 3, column: 1 }, end: { line: 3, column: 10 } },
+        nameRange: { start: { line: 3, column: 1 }, end: { line: 3, column: 5 } },
+      },
     ]);
   });
 
@@ -29,8 +47,22 @@ describe("parseFlowchartBody", () => {
     );
     expect(diagnostics).toEqual([]);
     expect(diagram.edges).toEqual([
-      { from: "start", to: "check", label: null, position: { line: 3, column: 1 } },
-      { from: "check", to: "start", label: "reintentar", position: { line: 4, column: 1 } },
+      {
+        from: "start",
+        to: "check",
+        label: null,
+        range: { start: { line: 3, column: 1 }, end: { line: 3, column: 15 } },
+        fromRange: { start: { line: 3, column: 1 }, end: { line: 3, column: 6 } },
+        toRange: { start: { line: 3, column: 10 }, end: { line: 3, column: 15 } },
+      },
+      {
+        from: "check",
+        to: "start",
+        label: "reintentar",
+        range: { start: { line: 4, column: 1 }, end: { line: 4, column: 28 } },
+        fromRange: { start: { line: 4, column: 1 }, end: { line: 4, column: 6 } },
+        toRange: { start: { line: 4, column: 10 }, end: { line: 4, column: 15 } },
+      },
     ]);
   });
 
@@ -59,6 +91,8 @@ describe("parseFlowchartBody", () => {
       "el nodo 'ghost1' no fue declarado",
       "el nodo 'ghost2' no fue declarado",
     ]);
+    expect(e017[0].range).toEqual({ start: { line: 1, column: 1 }, end: { line: 1, column: 7 } });
+    expect(e017[1].range).toEqual({ start: { line: 1, column: 11 }, end: { line: 1, column: 17 } });
   });
 
   it("does not report E017 when an edge references a node declared later in the file (order-independent)", () => {

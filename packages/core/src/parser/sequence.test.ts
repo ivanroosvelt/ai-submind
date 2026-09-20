@@ -17,8 +17,18 @@ describe("parseSequenceBody", () => {
     );
     expect(diagnostics).toEqual([]);
     expect(diagram.participants).toEqual([
-      { id: "user", label: "Usuario", position: { line: 1, column: 13 } },
-      { id: "api", label: "api", position: { line: 2, column: 13 } },
+      {
+        id: "user",
+        label: "Usuario",
+        range: { start: { line: 1, column: 13 }, end: { line: 1, column: 28 } },
+        nameRange: { start: { line: 1, column: 13 }, end: { line: 1, column: 17 } },
+      },
+      {
+        id: "api",
+        label: "api",
+        range: { start: { line: 2, column: 13 }, end: { line: 2, column: 16 } },
+        nameRange: { start: { line: 2, column: 13 }, end: { line: 2, column: 16 } },
+      },
     ]);
   });
 
@@ -28,7 +38,14 @@ describe("parseSequenceBody", () => {
     );
     expect(diagnostics).toEqual([]);
     expect(diagram.messages).toEqual([
-      { from: "user", to: "api", label: "POST /login", position: { line: 3, column: 1 } },
+      {
+        from: "user",
+        to: "api",
+        label: "POST /login",
+        range: { start: { line: 3, column: 1 }, end: { line: 3, column: 26 } },
+        fromRange: { start: { line: 3, column: 1 }, end: { line: 3, column: 5 } },
+        toRange: { start: { line: 3, column: 9 }, end: { line: 3, column: 12 } },
+      },
     ]);
   });
 
@@ -36,8 +53,18 @@ describe("parseSequenceBody", () => {
     const { diagram, diagnostics } = parseBody("a -> b : hola\n");
     expect(diagnostics).toEqual([]);
     expect(diagram.participants).toEqual([
-      { id: "a", label: "a", position: { line: 1, column: 1 } },
-      { id: "b", label: "b", position: { line: 1, column: 6 } },
+      {
+        id: "a",
+        label: "a",
+        range: { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } },
+        nameRange: { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } },
+      },
+      {
+        id: "b",
+        label: "b",
+        range: { start: { line: 1, column: 6 }, end: { line: 1, column: 7 } },
+        nameRange: { start: { line: 1, column: 6 }, end: { line: 1, column: 7 } },
+      },
     ]);
   });
 
