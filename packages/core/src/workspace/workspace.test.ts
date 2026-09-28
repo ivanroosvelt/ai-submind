@@ -181,3 +181,95 @@ describe("Workspace with .md documents", () => {
     expect(codes(result.diagnostics.get("f.flo")).map(([code]) => code)).toEqual(["E032", "E030", "E030"]);
   });
 });
+
+describe("Workspace relations", () => {
+  const RELATIONS_SCHEMA = "type_tags: [decision]\nrelation_types: [enforces, visualized_by, affects]\n";
+  const pkce = [
+    "---", // 1
+    "id: pkce", // 2
+    "title: PKCE", // 3
+    "memory_type: long_term", // 4
+    "relations:", // 5
+    "  - target: ../reglas/passwords.md", // 6
+    "    type: enforces", // 7
+    "  - target: ../flujos/auth.flo#acceso", // 8
+    "    type: visualized_by", // 9
+    "  - target: api", // 10  alcanzable solo vía el use implícito de flujos/auth.flo
+    "    type: affects", // 11
+    "  - target: ../flujos/auth.flo", // 12  .flo sin #bloque
+    "    type: affects", // 13
+    "  - target: ../flujos/auth.flo#nope", // 14
+    "    type: affects", // 15
+    "  - target: fantasma", // 16
+    "    type: affects", // 17
+    "---",
+    "",
+  ].join("\n");
+  const files = {
+    [SCHEMA_URI]: RELATIONS_SCHEMA,
+    "catalogo.flo": "entity api\nentity auth\n",
+    "flujos/auth.flo": 'use "../catalogo.flo"\nflow acceso {\n  api -> auth\n}\n',
+    "reglas/passwords.md": note("br_passwords"),
+    "decisiones/pkce.md": pkce,
+  };
+
+  it("resolves the three target forms and reports the rest as E035", () => {
+    const result = workspace(files).link();
+    expect(codes(result.diagnostics.get("decisiones/pkce.md"))).toEqual([
+      ["E035", 12, 13],
+      ["E035", 14, 13],
+      ["E035", 16, 13],
+    ]);
+    const relations = result.entities.get("pkce")!.knowledge!.relations;
+    expect(relations.map((relation) => relation.resolved)).toEqual([
+      { kind: "entity", id: "br_passwords" },
+      { kind: "block", id: "flujos/auth.flo#acceso" },
+      { kind: "entity", id: "api" },
+      null,
+      null,
+      null,
+    ]);
+    // Post-orden DFS de los use implícitos, en orden de aparición (decisión #24).
+    expect([...result.documents.get("decisiones/pkce.md")!.catalog.keys()]).toEqual([
+      "br_passwords",
+      "api",
+      "auth",
+      "pkce",
+    ]);
+  });
+
+  it("indexes relations both ways; only the id form counts as a reference", () => {
+    const { xref } = workspace(files).link();
+    expect(xref.relationsFrom("pkce")).toHaveLength(6);
+    expect(xref.relationsFrom("api")).toEqual([]);
+    expect(xref.relationsTo("api").map(({ from, relation }) => [from, relation.target])).toEqual([["pkce", "api"]]);
+    expect(xref.relationsTo("br_passwords").map(({ from }) => from)).toEqual(["pkce"]);
+    expect(xref.referencesTo("api")).toEqual([
+      {
+        uri: "decisiones/pkce.md",
+        range: { start: { line: 10, column: 13 }, end: { line: 10, column: 16 } },
+      },
+      {
+        uri: "flujos/auth.flo",
+        range: { start: { line: 3, column: 3 }, end: { line: 3, column: 6 } },
+      },
+    ]);
+    expect(xref.referencesTo("br_passwords")).toEqual([]);
+  });
+
+  it("accepts relation cycles between .md documents", () => {
+    const result = workspace({
+      [SCHEMA_URI]: RELATIONS_SCHEMA,
+      "a.md": note("a", ["relations:", "  - target: ./b.md", "    type: affects"]),
+      "b.md": note("b", ["relations:", "  - target: ./a.md", "    type: affects"]),
+    }).link();
+    for (const list of result.diagnostics.values()) expect(list).toEqual([]);
+    expect(result.xref.relationsTo("a").map(({ from }) => from)).toEqual(["b"]);
+    expect(result.xref.relationsTo("b").map(({ from }) => from)).toEqual(["a"]);
+  });
+
+  it("reports E032 for a missing 'use:' path in a .md", () => {
+    const result = workspace({ [SCHEMA_URI]: RELATIONS_SCHEMA, "x.md": note("x", ['use: ["./nope.flo"]']) }).link();
+    expect(codes(result.diagnostics.get("x.md"))).toEqual([["E032", 5, 7]]);
+  });
+});

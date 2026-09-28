@@ -1,4 +1,4 @@
-import type { DocumentUri } from "../ast.js";
+import type { BlockId, DocumentUri } from "../ast.js";
 
 /**
  * Resuelve la ruta de un `use` relativa al documento que la declara. Las
@@ -18,4 +18,9 @@ export function resolveUse(from: DocumentUri, path: string): DocumentUri | null 
     }
   }
   return parts.length === 0 ? null : parts.join("/");
+}
+
+/** Identidad de un bloque en el workspace: `uri#nombre` (decisión #25). */
+export function blockId(uri: DocumentUri, name: string): BlockId {
+  return `${uri}#${name}`;
 }

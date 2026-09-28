@@ -3,6 +3,7 @@ import type { DocumentUri, EntityDecl, EntityId, ParsedDocument } from "../ast.j
 import { resolveUse } from "./uri.js";
 import { openingRange } from "../parser/markdown.js";
 import { SCHEMA_URI, checkVocabulary, type Vocabulary } from "./schema.js";
+import { relationUses, resolveRelations } from "./knowledge.js";
 
 export type Catalog = Map<EntityId, EntityDecl>;
 
@@ -11,9 +12,9 @@ export interface LinkedDocuments {
   entities: Catalog;
   /** Por documento, el catálogo alcanzable vía `use`: dependencias primero, el documento al final. */
   catalogs: Map<DocumentUri, Catalog>;
-  /** Por documento, las uris que resuelven sus `use`, en orden de aparición y sin repetir. */
+  /** Por documento, las uris que resuelven sus `use`, en orden de aparición y sin repetir; incluye los `use` implícitos de `relations`. */
   uses: Map<DocumentUri, DocumentUri[]>;
-  /** Por documento, diagnósticos de resolución (E030–E033), ordenados por posición. */
+  /** Por documento, diagnósticos de resolución (E030–E033, E035, E065, E066, E068), ordenados por posición. */
   diagnostics: Map<DocumentUri, Diagnostic[]>;
 }
 
@@ -27,8 +28,10 @@ export function byUri(a: { uri: DocumentUri }, b: { uri: DocumentUri }): number 
  * primera declaración de cada id gana, decisión #2), resuelve los `use`
  * (E032), calcula el catálogo alcanzable de cada documento, rellena todos
  * los `Ref.target` contra ese catálogo (E030) y reporta bloques repetidos
- * dentro de un documento (E033). Valida el vocabulario de los `.md` contra
- * el esquema (E065, E066) o reporta su ausencia (E068).
+ * dentro de un documento (E033); las rutas de `relations` cuentan como
+ * `use` implícito y cada `relations.target` se resuelve (E035). Valida el
+ * vocabulario de los `.md` contra el esquema (E065, E066) o reporta su
+ * ausencia (E068).
  */
 export function linkDocuments(input: ParsedDocument[], vocabulary: Vocabulary = "missing"): LinkedDocuments {
   const documents = [...input].sort(byUri);
@@ -63,6 +66,9 @@ export function linkDocuments(input: ParsedDocument[], vocabulary: Vocabulary = 
         targets.push(target);
       }
     }
+    for (const uri of relationUses(document, (candidate) => documentsByUri.has(candidate))) {
+      if (!targets.includes(uri)) targets.push(uri);
+    }
     uses.set(document.uri, targets);
   }
 
@@ -76,6 +82,7 @@ export function linkDocuments(input: ParsedDocument[], vocabulary: Vocabulary = 
     }
     catalogs.set(document.uri, catalog);
     resolveBlocks(document, catalog, entities, diagnostics.get(document.uri)!);
+    resolveRelations(document, catalog, documentsByUri, diagnostics.get(document.uri)!);
   }
 
   if (vocabulary === "missing") {

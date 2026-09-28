@@ -1,16 +1,15 @@
-import type { DocumentUri, EntityId, ParsedDocument, Range } from "../ast.js";
+import type { DocumentUri, EntityId, ParsedDocument, Range, Relation } from "../ast.js";
 import { byUri, type Catalog } from "./resolver.js";
+import { blockId } from "./uri.js";
+import { relationPath } from "./knowledge.js";
 
 import type { BlockId } from "../ast.js";
 export type { BlockId };
+export { blockId } from "./uri.js";
 
 export interface Location {
   uri: DocumentUri;
   range: Range;
-}
-
-export function blockId(uri: DocumentUri, name: string): BlockId {
-  return `${uri}#${name}`;
 }
 
 function push<K, V>(map: Map<K, V[]>, key: K, value: V): void {
@@ -22,19 +21,35 @@ function push<K, V>(map: Map<K, V[]>, key: K, value: V): void {
 /**
  * Índice de referencias cruzadas del workspace (spec §6.2). Se construye a
  * partir de referencias ya resueltas por `linkDocuments`; las no resueltas
- * (E030) no entran. Inmutable: cada `link()` construye uno nuevo.
+ * (E030, E035) no entran. Inmutable: cada `link()` construye uno nuevo.
  */
 export class XRefIndex {
   private readonly references = new Map<EntityId, Location[]>();
   private readonly blocksByEntity = new Map<EntityId, BlockId[]>();
   private readonly entitiesByBlock = new Map<BlockId, EntityId[]>();
   private readonly adjacent = new Map<EntityId, Set<EntityId>>();
+  private readonly incoming = new Map<EntityId, { from: EntityId; relation: Relation }[]>();
 
   constructor(
     documents: ParsedDocument[],
     private readonly entities: Catalog
   ) {
     for (const document of [...documents].sort(byUri)) {
+      // Relaciones de las declaraciones ganadoras; van antes que los bloques
+      // porque el frontmatter está al principio del archivo.
+      for (const entity of document.entities) {
+        if (!entity.knowledge || this.entities.get(entity.id) !== entity) continue;
+        for (const relation of entity.knowledge.relations) {
+          if (relation.resolved?.kind !== "entity") continue;
+          push(this.incoming, relation.resolved.id, { from: entity.id, relation });
+          // Solo la forma id escribe el id: es la que cuenta como referencia
+          // (y la que renombrar edita, decisión #30).
+          if (relationPath(relation.target) === null) {
+            push(this.references, relation.resolved.id, { uri: document.uri, range: relation.range });
+          }
+        }
+      }
+
       const seen = new Set<string>();
       for (const block of document.blocks) {
         const inBlock = new Set<EntityId>();
@@ -80,6 +95,16 @@ export class XRefIndex {
 
   neighbors(id: EntityId): EntityId[] {
     return this.inCatalogOrder(this.adjacent.get(id) ?? new Set());
+  }
+
+  /** Las relaciones que declara el `.md` de la entidad, resueltas o no. */
+  relationsFrom(id: EntityId): Relation[] {
+    return this.entities.get(id)?.knowledge?.relations ?? [];
+  }
+
+  /** Relaciones resueltas que apuntan a la entidad, en orden de documento. */
+  relationsTo(id: EntityId): { from: EntityId; relation: Relation }[] {
+    return this.incoming.get(id) ?? [];
   }
 
   private adjacentOf(id: EntityId): Set<EntityId> {

@@ -137,6 +137,12 @@ Ambas claves son obligatorias y listas de identificadores. Sin esquema, el
 primer `.md` (por uri) lleva un único `E068` y no se valida vocabulario; con
 un esquema inválido, los diagnósticos van en el esquema y tampoco se valida.
 
+`relations.target` es una ruta si lo anterior a `#` contiene `/` o termina
+en `.md`/`.flo`: `x.md` resuelve a la entidad de ese `.md`, `x.flo#nombre`
+(o `x.md#nombre`) al bloque. Cualquier otro valor es un id del catálogo
+alcanzable. Las rutas que existen cuentan como `use` implícito. Un target
+que no resuelve es `E035`.
+
 ## Fuera de esta gramática (futuro, no en este plan)
 
 subgrafos, `alt`/`loop` de secuencia, notas, estilos.
@@ -160,6 +166,7 @@ subgrafos, `alt`/`loop` de secuencia, notas, estilos.
 | E032 | resolver | `use` apunta a un documento inexistente o fuera de la raíz |
 | E033 | resolver | nombre de bloque duplicado |
 | E034 | entity | propiedad de entidad desconocida |
+| E035 | resolver | `relations.target` no resuelve a una entidad, `.md` o bloque |
 | E040 | document | se esperaba `entity`, `flow`, `sequence` o `use` |
 | E041 | entity | se esperaba el id de la entidad |
 | E042 | entity | se esperaba `:` después de la propiedad |
