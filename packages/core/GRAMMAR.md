@@ -120,6 +120,11 @@ relations:
 La entidad es un rectángulo con `title` como label; su `range` es el
 frontmatter completo y su `nameRange` el valor de `id`.
 
+Cada bloque de código cercado (` ``` ` o `~~~`) cuyo info-string empieza
+con la palabra `flo` se parsea como un `.flo` con el uri del `.md`, con sus
+líneas y columnas reales. Sus entidades van después de la del frontmatter
+(decisión #22). Los demás bloques de código se ignoran.
+
 ## Fuera de esta gramática (futuro, no en este plan)
 
 subgrafos, `alt`/`loop` de secuencia, notas, estilos.

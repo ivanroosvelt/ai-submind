@@ -143,3 +143,66 @@ describe("parseMarkdownDocument: frontmatter", () => {
     expect(result.document.entities[0]).toMatchObject({ id: "a", label: "a", knowledge: { memoryType: null } });
   });
 });
+
+describe("parseMarkdownDocument: embedded flo blocks", () => {
+  const source = [
+    "---", // 1
+    "id: nota", // 2
+    "title: Nota", // 3
+    "memory_type: working", // 4
+    "---", // 5
+    "Texto.", // 6
+    "```flo", // 7
+    "entity api [API]", // 8
+    "flow pkce {", // 9
+    "  nota -> api", // 10
+    "}", // 11
+    "```", // 12
+    "~~~", // 13  cerca de otro tipo: lo de adentro no es flo
+    "```flo", // 14
+    "entity oculto", // 15
+    "~~~", // 16
+    "```ts", // 17
+    "entity tampoco", // 18
+    "```", // 19
+    "```flo", // 20
+    "flow roto {", // 21  sin '}': E052 dentro de su cerca
+    "  api -> nota", // 22
+    "```", // 23
+    "```flo extra", // 24  el info-string es la primera palabra
+    "entity cola", // 25
+    "```", // 26
+    "",
+  ].join("\n");
+
+  it("parses each flo fence with exact ranges, after the frontmatter entity", () => {
+    const { document, diagnostics } = parseMarkdownDocument(source, "notas/nota.md")!;
+    expect(document.entities.map((e) => [e.id, e.uri])).toEqual([
+      ["nota", "notas/nota.md"],
+      ["api", "notas/nota.md"],
+      ["cola", "notas/nota.md"],
+    ]);
+    expect(document.entities[1].nameRange).toEqual(r(8, 8, 8, 11));
+    expect(document.blocks.map((b) => b.name)).toEqual(["pkce", "roto"]);
+    expect(document.blocks[0].edges[0].from.range).toEqual(r(10, 3, 10, 7));
+    expect(document.blocks[1].edges.map((e) => [e.from.name, e.to.name])).toEqual([["api", "nota"]]);
+    expect(diagnostics.map((d) => [d.code, d.range.start.line, d.range.start.column])).toEqual([["E052", 21, 11]]);
+  });
+
+  it("runs an unclosed fence to the end of the file", () => {
+    const { document, diagnostics } = parseMarkdownDocument(
+      "---\nid: a\ntitle: A\nmemory_type: working\n---\n```flo\nentity z\n",
+      "a.md"
+    )!;
+    expect(diagnostics).toEqual([]);
+    expect(document.entities.map((e) => [e.id, e.nameRange.start.line])).toEqual([
+      ["a", 2],
+      ["z", 7],
+    ]);
+  });
+
+  it("parses fences even when the frontmatter has no valid id", () => {
+    const { document } = parseMarkdownDocument("---\ntitle: A\n---\n```flo\nentity z\n```\n", "a.md")!;
+    expect(document.entities.map((e) => e.id)).toEqual(["z"]);
+  });
+});

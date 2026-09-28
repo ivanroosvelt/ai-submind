@@ -1,6 +1,7 @@
 import { isMap, isScalar, isSeq } from "yaml";
 import { diagnosticAt, sortDiagnostics, type Diagnostic } from "../diagnostics.js";
 import { isIdentifier, parseYamlSource, type YamlSource } from "./yaml.js";
+import { parseDocument } from "./document.js";
 import type {
   CustomTagValue,
   DocumentUri,
@@ -15,10 +16,36 @@ import type {
 const MEMORY_TYPES: readonly string[] = ["working", "short_term", "long_term"];
 const REQUIRED = ["id", "title", "memory_type"];
 const CONTEXT_TAG = /^[^:]+:.+$/;
+const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})\s*([^\s`]*)/;
+const FENCE_CLOSE = /^ {0,3}(`{3,}|~{3,})\s*$/;
 
 /** El `---` de apertura: ancla de E060, E062 y del E068 por esquema ausente. */
 export function openingRange(): Range {
   return { start: { line: 1, column: 1 }, end: { line: 1, column: 4 } };
+}
+
+function closesFence(line: string, marker: string): boolean {
+  const match = FENCE_CLOSE.exec(line);
+  return match !== null && match[1][0] === marker[0] && match[1].length >= marker.length;
+}
+
+/**
+ * Líneas de contenido `[start, end)` (índices 0-based) de cada bloque de
+ * código cercado cuyo info-string es `flo` (decisión #28). Una cerca sin
+ * cerrar llega a fin de archivo, como en CommonMark; lo de adentro de
+ * cualquier cerca no abre otra.
+ */
+function floFences(lines: string[], from: number): { start: number; end: number }[] {
+  const fences: { start: number; end: number }[] = [];
+  for (let index = from; index < lines.length; index++) {
+    const open = FENCE_OPEN.exec(lines[index]);
+    if (!open) continue;
+    let end = index + 1;
+    while (end < lines.length && !closesFence(lines[end], open[1])) end++;
+    if (open[2] === "flo") fences.push({ start: index + 1, end });
+    index = end;
+  }
+  return fences;
 }
 
 function isDelimiter(line: string): boolean {
@@ -53,6 +80,17 @@ export function parseMarkdownDocument(
   const body = lines.slice(close + 1).join("\n");
   const entity = readFrontmatter(yaml, uri, range, body, document.uses, diagnostics);
   if (entity) document.entities.push(entity);
+
+  // Cada cerca se parsea sola (un bloque sin cerrar no se traga la
+  // siguiente) sobre líneas vacías hasta su posición: los rangos salen
+  // exactos sin desplazar nada.
+  for (const fence of floFences(lines, close + 1)) {
+    const embedded = parseDocument("\n".repeat(fence.start) + lines.slice(fence.start, fence.end).join("\n"), uri);
+    document.uses.push(...embedded.document.uses);
+    document.entities.push(...embedded.document.entities);
+    document.blocks.push(...embedded.document.blocks);
+    diagnostics.push(...embedded.diagnostics);
+  }
 
   return { document, diagnostics: sortDiagnostics(diagnostics) };
 }
