@@ -161,4 +161,32 @@ describe("Lexer", () => {
     lexer.next();
     expect(lexer.diagnostics[0].code).toBe("E002");
   });
+
+  it("tokenizes a comma as COMMA", () => {
+    const lexer = new Lexer("a, b\n");
+    expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "a" });
+    expect(lexer.next()).toMatchObject({
+      kind: "COMMA",
+      value: ",",
+      range: { start: { line: 1, column: 2 }, end: { line: 1, column: 3 } },
+    });
+    expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "b" });
+    expect(lexer.diagnostics).toEqual([]);
+  });
+
+  it("restOfLineIsBlank looks at the raw rest of the line without consuming it", () => {
+    const blank = new Lexer("{   // nota\nx");
+    blank.next(); // {
+    expect(blank.restOfLineIsBlank()).toBe(true);
+    expect(blank.next().kind).toBe("NEWLINE");
+
+    const text = new Lexer("{ Decisión }\n");
+    text.next(); // {
+    expect(text.restOfLineIsBlank()).toBe(false);
+    expect(text.readTextUntil("}").value).toBe("Decisión");
+
+    const eof = new Lexer("{");
+    eof.next();
+    expect(eof.restOfLineIsBlank()).toBe(true);
+  });
 });

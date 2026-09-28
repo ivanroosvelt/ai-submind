@@ -5,6 +5,7 @@ export type TokenKind =
   | "TEXT"
   | "ARROW"
   | "COLON"
+  | "COMMA"
   | "LBRACKET"
   | "RBRACKET"
   | "LPAREN"

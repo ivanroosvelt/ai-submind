@@ -74,6 +74,11 @@ export class Lexer {
         return this.makeToken("COLON", ":", start);
       }
 
+      if (ch === ",") {
+        this.advance();
+        return this.makeToken("COMMA", ",", start);
+      }
+
       if (ch === "[" || ch === "(" || ch === "{") {
         this.advance();
         const kind: TokenKind = ch === "[" ? "LBRACKET" : ch === "(" ? "LPAREN" : "LBRACE";
