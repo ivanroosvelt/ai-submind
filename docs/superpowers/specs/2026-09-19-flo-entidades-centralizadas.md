@@ -423,3 +423,4 @@ Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-0
 | # | Fecha | Decisión | Afecta a |
 |---|---|---|---|
 | 23 | 2026-09-28 | **`use` es palabra clave contextual** como las de #3, y entra en la enmienda #13: una línea `use` dentro de un cuerpo sin cerrar lo cierra. `use` sin string es `E046`. | parser (D) |
+| 24 | 2026-09-28 | **Namespace y orden del workspace.** Los ids de entidad son globales al workspace: `E031` también entre documentos que no se usan entre sí. "Primera declaración" (#2) = documentos ordenados por uri (comparación de strings), luego orden de fuente; así el ganador no depende del orden de carga. El catálogo alcanzable de un documento es el post-orden DFS de sus `use` (dependencias primero, él al final) filtrado a las declaraciones ganadoras; es el orden de columnas de #1. | resolver (D), layout, mapa agregado (F), `.md` (K1) |

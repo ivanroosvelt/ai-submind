@@ -54,15 +54,24 @@ bloque se derivan de las entidades que sus aristas referencian.
 - El `}` que cierra un bloque o el cuerpo de una entidad va en su propia
   línea.
 - Un bloque solo contiene aristas; sus nodos se derivan de las entidades
-  que referencia. Toda referencia debe resolver a una `entity` del mismo
-  documento, declarada antes o después en el archivo (`E030` si no
-  resuelve). La primera declaración de un id gana el catálogo; las
-  siguientes se reportan con `E031`. Los nombres de bloque son únicos
-  dentro del documento (`E033` para los repetidos).
-- Orden de nodos/columnas en el render: el orden de declaración de las
-  entidades en el catálogo, no el orden en que aparecen en las aristas;
-  las referencias sin resolver van al final, en orden de aparición, y se
-  dibujan con trazo punteado.
+  que referencia. Los ids de entidad son únicos en todo el workspace: la
+  primera declaración de un id gana (documentos ordenados por uri, dentro
+  de cada documento en orden de fuente) y las siguientes se reportan con
+  `E031`. Cada documento ve un **catálogo alcanzable**: sus propias
+  entidades más las de los documentos que nombra con `use`,
+  transitivamente (los ciclos se cortan, no son error; repetir un `use` no
+  hace nada). Toda referencia debe resolver a una entidad de ese catálogo,
+  declarada antes o después en el archivo (`E030` si no resuelve; si la
+  entidad existe en un documento no alcanzable, el mensaje lo nombra). Una
+  ruta de `use` es relativa al documento que la declara (`/` inicial = la
+  raíz del workspace); si sale de la raíz o no nombra un documento del
+  workspace es `E032`. Los nombres de bloque son únicos dentro del
+  documento (`E033` para los repetidos).
+- Orden de nodos/columnas en el render: el orden del catálogo alcanzable
+  (primero las entidades de los documentos usados, en post-orden de
+  `use`; al final las del propio documento, en orden de declaración), no
+  el orden en que aparecen en las aristas; las referencias sin resolver
+  van al final, en orden de aparición, y se dibujan con trazo punteado.
 - Recuperación de errores: una línea que no parsea se descarta sin
   escanear el resto de esa línea (no genera un `E016`/`E010` espurio por
   cada token sobrante). Una racha de líneas inválidas consecutivas de
@@ -106,7 +115,8 @@ subgrafos, `alt`/`loop` de secuencia, notas, estilos.
 | E026 | block (sequence) | se esperaba `:` seguido del mensaje |
 | E027 | block (sequence) | se esperaba el texto del mensaje |
 | E030 | resolver | entidad referenciada pero no declarada |
-| E031 | resolver | entidad declarada dos veces |
+| E031 | resolver | entidad declarada dos veces (en el mismo documento o en otro) |
+| E032 | resolver | `use` apunta a un documento inexistente o fuera de la raíz |
 | E033 | resolver | nombre de bloque duplicado |
 | E034 | entity | propiedad de entidad desconocida |
 | E040 | document | se esperaba `entity`, `flow`, `sequence` o `use` |

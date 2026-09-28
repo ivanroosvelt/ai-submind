@@ -1,7 +1,7 @@
 import { parseDocument } from "./document.js";
-import { resolveDocument, type Catalog } from "../workspace/resolver.js";
+import { linkDocuments, type Catalog } from "../workspace/resolver.js";
+import { sortDiagnostics, type Diagnostic } from "../diagnostics.js";
 import type { DocumentUri, ParsedDocument } from "../ast.js";
-import type { Diagnostic } from "../diagnostics.js";
 
 export interface ParseResult {
   document: ParsedDocument;
@@ -9,18 +9,13 @@ export interface ParseResult {
   diagnostics: Diagnostic[];
 }
 
-function sortDiagnosticsByPosition(diagnostics: Diagnostic[]): Diagnostic[] {
-  return diagnostics.sort(
-    (a, b) => a.range.start.line - b.range.start.line || a.range.start.column - b.range.start.column
-  );
-}
-
+/** Un documento suelto: sus `use` no encuentran nada (E032) y solo ve su propio catálogo. */
 export function parse(source: string, uri: DocumentUri = ""): ParseResult {
   const parsed = parseDocument(source, uri);
-  const resolved = resolveDocument(parsed.document);
+  const linked = linkDocuments([parsed.document]);
   return {
     document: parsed.document,
-    catalog: resolved.catalog,
-    diagnostics: sortDiagnosticsByPosition([...parsed.diagnostics, ...resolved.diagnostics]),
+    catalog: linked.catalogs.get(uri)!,
+    diagnostics: sortDiagnostics([...parsed.diagnostics, ...linked.diagnostics.get(uri)!]),
   };
 }

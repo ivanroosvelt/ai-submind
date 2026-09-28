@@ -1,25 +1,99 @@
-import { diagnosticAt, type Diagnostic } from "../diagnostics.js";
-import type { EntityDecl, EntityId, ParsedDocument } from "../ast.js";
+import { diagnosticAt, sortDiagnostics, type Diagnostic } from "../diagnostics.js";
+import type { DocumentUri, EntityDecl, EntityId, ParsedDocument } from "../ast.js";
+import { resolveUse } from "./uri.js";
 
 export type Catalog = Map<EntityId, EntityDecl>;
 
-/**
- * Resolución estricta dentro de un único documento: arma el catálogo (la
- * primera declaración de cada id gana), rellena `Ref.target` y reporta
- * E030/E031/E033. La Fase D lo generaliza a varios documentos vía `use`.
- */
-export function resolveDocument(document: ParsedDocument): { catalog: Catalog; diagnostics: Diagnostic[] } {
-  const diagnostics: Diagnostic[] = [];
-  const catalog: Catalog = new Map();
+export interface LinkedDocuments {
+  /** Catálogo global: la declaración ganadora de cada id (los ids son únicos en el workspace). */
+  entities: Catalog;
+  /** Por documento, el catálogo alcanzable vía `use`: dependencias primero, el documento al final. */
+  catalogs: Map<DocumentUri, Catalog>;
+  /** Por documento, las uris que resuelven sus `use`, en orden de aparición y sin repetir. */
+  uses: Map<DocumentUri, DocumentUri[]>;
+  /** Por documento, diagnósticos de resolución (E030–E033), ordenados por posición. */
+  diagnostics: Map<DocumentUri, Diagnostic[]>;
+}
 
-  for (const entity of document.entities) {
-    if (catalog.has(entity.id)) {
-      diagnostics.push(diagnosticAt("E031", `la entidad '${entity.id}' ya fue declarada`, entity.nameRange));
-    } else {
-      catalog.set(entity.id, entity);
+/** Orden determinista de documentos (decisión #24): por uri, sin importar el orden de carga. */
+export function byUri(a: { uri: DocumentUri }, b: { uri: DocumentUri }): number {
+  return a.uri < b.uri ? -1 : a.uri > b.uri ? 1 : 0;
+}
+
+/**
+ * Resolución de un conjunto de documentos: arma el catálogo global (la
+ * primera declaración de cada id gana, decisión #2), resuelve los `use`
+ * (E032), calcula el catálogo alcanzable de cada documento, rellena todos
+ * los `Ref.target` contra ese catálogo (E030) y reporta bloques repetidos
+ * dentro de un documento (E033).
+ */
+export function linkDocuments(input: ParsedDocument[]): LinkedDocuments {
+  const documents = [...input].sort(byUri);
+  const documentsByUri = new Map(documents.map((d) => [d.uri, d]));
+  const diagnostics = new Map<DocumentUri, Diagnostic[]>(documents.map((d) => [d.uri, []]));
+
+  const entities: Catalog = new Map();
+  for (const document of documents) {
+    for (const entity of document.entities) {
+      const first = entities.get(entity.id);
+      if (first === undefined) {
+        entities.set(entity.id, entity);
+        continue;
+      }
+      const where = first.uri === entity.uri ? "" : ` en '${first.uri}'`;
+      diagnostics
+        .get(document.uri)!
+        .push(diagnosticAt("E031", `la entidad '${entity.id}' ya fue declarada${where}`, entity.nameRange));
     }
   }
 
+  const uses = new Map<DocumentUri, DocumentUri[]>();
+  for (const document of documents) {
+    const targets: DocumentUri[] = [];
+    for (const use of document.uses) {
+      const target = resolveUse(document.uri, use.path);
+      if (target === null || !documentsByUri.has(target)) {
+        diagnostics
+          .get(document.uri)!
+          .push(diagnosticAt("E032", `el documento '${use.path}' no existe en el workspace`, use.pathRange));
+      } else if (!targets.includes(target)) {
+        targets.push(target);
+      }
+    }
+    uses.set(document.uri, targets);
+  }
+
+  const catalogs = new Map<DocumentUri, Catalog>();
+  for (const document of documents) {
+    const catalog: Catalog = new Map();
+    for (const uri of reachable(document.uri, uses)) {
+      for (const entity of documentsByUri.get(uri)!.entities) {
+        if (entities.get(entity.id) === entity) catalog.set(entity.id, entity);
+      }
+    }
+    catalogs.set(document.uri, catalog);
+    resolveBlocks(document, catalog, entities, diagnostics.get(document.uri)!);
+  }
+
+  for (const list of diagnostics.values()) sortDiagnostics(list);
+  return { entities, catalogs, uses, diagnostics };
+}
+
+/** Post-orden DFS sobre `use`: dependencias primero, `root` al final. Los ciclos se cortan por visitado. */
+function reachable(root: DocumentUri, uses: Map<DocumentUri, DocumentUri[]>): DocumentUri[] {
+  const order: DocumentUri[] = [];
+  const visited = new Set<DocumentUri>();
+  const visit = (uri: DocumentUri): void => {
+    if (visited.has(uri)) return;
+    visited.add(uri);
+    for (const dependency of uses.get(uri) ?? []) visit(dependency);
+    order.push(uri);
+  };
+  visit(root);
+  return order;
+}
+
+function resolveBlocks(document: ParsedDocument, catalog: Catalog, entities: Catalog, diagnostics: Diagnostic[]): void {
   const blockNames = new Set<string>();
   for (const block of document.blocks) {
     if (blockNames.has(block.name)) {
@@ -30,14 +104,15 @@ export function resolveDocument(document: ParsedDocument): { catalog: Catalog; d
     for (const edge of block.edges) {
       for (const ref of [edge.from, edge.to]) {
         ref.target = catalog.has(ref.name) ? ref.name : null;
-        if (ref.target === null) {
-          diagnostics.push(
-            diagnosticAt("E030", `la entidad '${ref.name}' no está declarada; añade 'entity ${ref.name}'`, ref.range)
-          );
-        }
+        if (ref.target === null) diagnostics.push(diagnosticAt("E030", unresolvedMessage(ref.name, entities), ref.range));
       }
     }
   }
+}
 
-  return { catalog, diagnostics };
+function unresolvedMessage(name: string, entities: Catalog): string {
+  const elsewhere = entities.get(name);
+  return elsewhere
+    ? `la entidad '${name}' está declarada en '${elsewhere.uri}', que este documento no alcanza; añade un 'use' a ese archivo`
+    : `la entidad '${name}' no está declarada; añade 'entity ${name}'`;
 }
