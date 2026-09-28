@@ -28,6 +28,7 @@ describe("parseEntity", () => {
       uri: "catalog.flo",
       range: { start: { line: 1, column: 1 }, end: { line: 1, column: 60 } },
       nameRange: { start: { line: 1, column: 8 }, end: { line: 1, column: 11 } },
+      knowledge: null,
     });
   });
 

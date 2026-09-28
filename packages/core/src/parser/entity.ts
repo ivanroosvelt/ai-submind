@@ -140,6 +140,7 @@ export function parseEntity(cursor: TokenCursor, uri: DocumentUri, diagnostics: 
     uri,
     range: { start: keyword.range.start, end: idToken.range.end },
     nameRange: idToken.range,
+    knowledge: null,
   };
 
   const open = cursor.current();

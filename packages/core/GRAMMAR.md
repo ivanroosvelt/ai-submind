@@ -96,6 +96,30 @@ bloque se derivan de las entidades que sus aristas referencian.
   siempre: se descarta el resto de la línea y el cuerpo sigue en las
   líneas siguientes.
 
+## Documentos `.md` de conocimiento
+
+Un `.md` es documento del workspace solo si su primera línea es `---`
+(decisión #21); el frontmatter termina en la siguiente línea `---`. Es YAML
+(dependencia `yaml`) y declara una entidad del catálogo:
+
+```yaml
+---
+id: decision_auth        # obligatorio, identificador (misma regla que IDENT)
+title: "OAuth2 + PKCE"   # obligatorio, texto no vacío → label
+memory_type: long_term   # obligatorio: working | short_term | long_term
+type_tags: [decision]    # identificadores declarados en el esquema
+context_tags: ["project:core"]  # 'clave:valor'
+custom_tags: { status: approved, level: 3 }  # escalares
+use: ["../catalogo.flo"] # como 'use' en .flo
+relations:
+  - target: api          # id, ruta a .md, o ruta a bloque 'x.flo#nombre'
+    type: affects        # declarado en el esquema
+---
+```
+
+La entidad es un rectángulo con `title` como label; su `range` es el
+frontmatter completo y su `nameRange` el valor de `id`.
+
 ## Fuera de esta gramática (futuro, no en este plan)
 
 subgrafos, `alt`/`loop` de secuencia, notas, estilos.
@@ -129,6 +153,12 @@ subgrafos, `alt`/`loop` de secuencia, notas, estilos.
 | E050 | block | se esperaba el nombre del bloque |
 | E051 | block | se esperaba `{` para abrir el bloque |
 | E052 | block | falta `}` que cierra el bloque |
+| E060 | markdown | frontmatter sin cerrar (falta el `---` final) |
+| E061 | markdown / esquema | error de sintaxis YAML |
+| E062 | markdown | falta un campo obligatorio (`id`, `title`, `memory_type`; `target`/`type` de una relación) |
+| E063 | markdown | valor con tipo inválido para su campo |
+| E064 | markdown | `memory_type` fuera de `working`, `short_term`, `long_term` |
+| E067 | markdown | campo de frontmatter (o de relación) desconocido |
 
 **Retirados:** E003, E004, E005, E006, E013, E015, E017, E020, E021, E022,
 E023, E025. No se reusan con otro significado.

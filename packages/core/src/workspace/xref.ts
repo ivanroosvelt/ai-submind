@@ -1,8 +1,8 @@
 import type { DocumentUri, EntityId, ParsedDocument, Range } from "../ast.js";
 import { byUri, type Catalog } from "./resolver.js";
 
-/** Identidad de un bloque en el workspace: `uri#nombre` (decisión #25). */
-export type BlockId = string;
+import type { BlockId } from "../ast.js";
+export type { BlockId };
 
 export interface Location {
   uri: DocumentUri;

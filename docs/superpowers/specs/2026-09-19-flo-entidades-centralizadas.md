@@ -446,3 +446,9 @@ Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-0
   texto "no existe en el workspace"; convendría decir que sale de la raíz.
 - **F — editor:** `editor.ts` llama a `render(source)` sin uri, así que el preview y el SVG exportado llevan `data-flo-uri=""` y `data-flo-block="#<nombre>"`. Cuando el editor tenga documentos con nombre tiene que pasar su uri.
 - **F — preview:** la etiqueta de una arista (`<rect>` + `<text>`) no lleva `data-flo-*` (decisión #26 los pone solo en la `<polyline>`/`<line>`): un click en la etiqueta tiene que resolverse contra la arista vecina, o hay que agrupar línea y etiqueta.
+
+### Decisiones de la Fase K1 (2026-09-28)
+
+| # | Fecha | Decisión | Afecta a |
+|---|---|---|---|
+| 27 | 2026-09-28 | **Recuperación del frontmatter.** Cada campo inválido da un diagnóstico y no impide validar los demás. Hay entidad si y solo si `id` es válido; `title` inválido ⇒ label = id; `memory_type` inválido (cualquier valor fuera del enum, también no-strings: `E064`) ⇒ `memoryType: null`. Con un `E061` no se valida nada del frontmatter; con `E060` no se parsea nada del archivo. `E062` (y el `E068` por esquema ausente) se anclan en el `---` de apertura (1:1–1:4); a una relación sin `target`/`type` le corresponde `E062` en el rango del ítem, y una clave desconocida en una relación es `E067`. Rangos: `Relation.range` = valor de `target`, `Relation.typeRange` = valor de `type`, `KnowledgeMeta.typeTagRanges` paralelo a `typeTags`. | parser (K1), MCP `write_node` (K3), renombrar (F) |

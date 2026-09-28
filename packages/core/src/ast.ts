@@ -14,6 +14,32 @@ export type NodeShape = "rectangle" | "rounded" | "decision";
 export type EntityId = string;
 export type DocumentUri = string;
 
+/** Identidad de un bloque en el workspace: `uri#nombre` (decisión #25). */
+export type BlockId = string;
+
+export type MemoryType = "working" | "short_term" | "long_term";
+export type CustomTagValue = string | number | boolean;
+
+/** Una entrada de `relations` en el frontmatter de un `.md`. */
+export interface Relation {
+  type: string;
+  target: string; // tal como se escribió
+  resolved: { kind: "entity"; id: EntityId } | { kind: "block"; id: BlockId } | null; // lo rellena el resolver
+  range: Range; // el valor de `target`
+  typeRange: Range; // el valor de `type`
+}
+
+/** Lo que un `.md` agrega a su entidad (spec de conocimiento §4). */
+export interface KnowledgeMeta {
+  memoryType: MemoryType | null; // null solo si el frontmatter lo diagnosticó
+  typeTags: string[];
+  typeTagRanges: Range[]; // paralelo a typeTags, para E065
+  contextTags: string[]; // "clave:valor"
+  customTags: Record<string, CustomTagValue>;
+  relations: Relation[];
+  body: string; // Markdown sin frontmatter
+}
+
 export interface EntityDecl {
   id: EntityId;
   label: string;
@@ -23,6 +49,7 @@ export interface EntityDecl {
   uri: DocumentUri;
   range: Range; // la declaración completa, desde `entity`
   nameRange: Range; // solo el identificador
+  knowledge: KnowledgeMeta | null; // null en entidades declaradas en .flo
 }
 
 /** Referencia a una entidad desde una arista. `target` lo rellena el resolver. */
