@@ -383,3 +383,23 @@ redecidirlas.
 | 12 | 2026-09-27 | **Un solo tipo `DiagramBlock`** con `kind: "flow" \| "sequence"` y `edges`; la única diferencia es que `sequence` exige etiqueta. | AST, layout, render |
 | 13 | 2026-09-27 | **Enmienda a #3**: dentro de un cuerpo (bloque o entidad), una línea que empieza con `entity`, `flow` o `sequence` y no es una arista (en un bloque: no sigue de `->`) cierra el cuerpo abierto (`E052`/`E045`) en vez de tragarse el resto del archivo como si fuera parte de ese cuerpo; la línea no se consume, así que el parser de documento la retoma como el siguiente statement de nivel superior. | parser (C) |
 | 14 | 2026-09-27 | **`{}` es un bloque/cuerpo vacío**, sin diagnósticos. Un cuerpo con contenido en la misma línea que el `{` reporta un único `E016`; si esa línea termina en `}`, el bloque/cuerpo se cierra ahí mismo (una sola línea) en vez de tragarse el resto del archivo. | parser (C) |
+| 15 | 2026-09-27 | **Layout identifica nodos por la entidad resuelta, no por el nombre escrito.** Hoy `layout/` usa `ref.name` para las aristas y funciona porque en un documento único `ref.target === ref.name`; cuando la Fase D resuelva nombres entre documentos, las aristas deben usar `ref.target ?? ref.name`. | layout (D) |
+
+### Pendientes diferidos (Fase C, 2026-09-27)
+
+Detectados en la revisión de la Fase C y dejados conscientemente para más
+adelante; el plan de la fase indicada debe recogerlos o descartarlos
+explícitamente.
+
+- **F — preview:** un bloque vacío (`flow a {}`) renderiza un SVG de tamaño
+  0: se ve el título sin nada debajo.
+- **F — preview:** un borrador viejo muestra el texto de estado vacío junto
+  al banner "1 error"; el `E040` con la pista de migración sí es correcto.
+- **F — editor:** el resaltado no colorea títulos (`STRING`) ni comas; y
+  tras `type:` colorea el resto de la línea como texto.
+- **F — mensajes:** `tags: x, y` da `E042 se esperaba ':' después de 'y'`;
+  convendría sugerir que los tags se separan con espacios.
+- **Cualquiera — render:** dos aristas `a -> b` repetidas se dibujan
+  superpuestas (dagre no es multigrafo); comportamiento previo a la Fase C.
+- **Cualquiera — parser:** `flow a { x -> y } // comentario` da `E016` +
+  `E052` en vez de un solo `E016` (no se pierde contenido).
