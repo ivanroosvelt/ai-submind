@@ -1,25 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { renderSequenceToSvg } from "./sequence.js";
 import { layoutSequence } from "../layout/sequence.js";
-import type { SequenceDiagram, Range } from "../ast.js";
+import { parse } from "../parser/index.js";
 
-// ponytail: rendering ignores range/nameRange entirely, so the exact span here
-// is irrelevant to these tests — one placeholder stands in for every occurrence.
-const RANGE: Range = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
+function renderFirst(source: string): string {
+  const { document, catalog } = parse(source);
+  return renderSequenceToSvg(layoutSequence(document.blocks[0], catalog));
+}
 
 describe("renderSequenceToSvg", () => {
   it("renders participant boxes, lifelines and one message with its label", () => {
-    const diagram: SequenceDiagram = {
-      kind: "sequence",
-      participants: [
-        { id: "a", label: "Alice", range: RANGE, nameRange: RANGE },
-        { id: "b", label: "Bob", range: RANGE, nameRange: RANGE },
-      ],
-      messages: [{ from: "a", to: "b", label: "hola", range: RANGE, fromRange: RANGE, toRange: RANGE }],
-    };
-    const layout = layoutSequence(diagram);
-
-    const svg = renderSequenceToSvg(diagram, layout);
+    const svg = renderFirst("entity a [Alice]\nentity b [Bob]\nsequence s {\n  a -> b : hola\n}\n");
 
     expect(svg).toBe(
       '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="190" viewBox="0 0 320 190">' +
@@ -31,17 +22,10 @@ describe("renderSequenceToSvg", () => {
     );
   });
 
-  it("renders a diagram with no messages, keeping just the participant boxes and lifelines", () => {
-    const diagram: SequenceDiagram = {
-      kind: "sequence",
-      participants: [{ id: "a", label: "a", range: RANGE, nameRange: RANGE }],
-      messages: [],
-    };
-    const layout = layoutSequence(diagram);
-
-    const svg = renderSequenceToSvg(diagram, layout);
-
-    expect(svg).toContain('<line x1="80" y1="50" x2="80" y2="120"');
-    expect(svg).not.toContain("marker-end");
+  it("renders an unresolved participant with a dashed box, keeping the sticky-header class", () => {
+    const svg = renderFirst("entity a\nsequence s {\n  a -> ghost : x\n}\n");
+    expect(svg).toContain('<g class="flo-unresolved"><g class="flo-seq-header-box">');
+    expect(svg).toContain('stroke-width="2" stroke-dasharray="4 4" />');
+    expect(svg).toContain(">ghost<");
   });
 });

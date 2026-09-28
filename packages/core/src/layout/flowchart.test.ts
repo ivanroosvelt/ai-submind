@@ -1,10 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { layoutFlowchart, measureFlowchartNode } from "./flowchart.js";
-import type { FlowchartDiagram, Range } from "../ast.js";
-
-// ponytail: layout ignores range/nameRange entirely, so the exact span here is
-// irrelevant to these tests — one placeholder stands in for every occurrence.
-const RANGE: Range = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
+import { measureFlowchartNode, layoutFlowchart } from "./flowchart.js";
+import { parse } from "../parser/index.js";
 
 describe("measureFlowchartNode", () => {
   it("sizes a rectangle from its label length", () => {
@@ -20,68 +16,58 @@ describe("measureFlowchartNode", () => {
   });
 });
 
+function firstBlock(source: string) {
+  const { document, catalog } = parse(source);
+  return { block: document.blocks[0], catalog };
+}
+
 describe("layoutFlowchart", () => {
   it("lays out a linear chain top-to-bottom with dagre, sizing each shape correctly", () => {
-    const diagram: FlowchartDiagram = {
-      kind: "flowchart",
-      nodes: [
-        { id: "start", shape: "rectangle", label: "Inicio", range: RANGE, nameRange: RANGE },
-        { id: "check", shape: "decision", label: "Login valido", range: RANGE, nameRange: RANGE },
-        { id: "end", shape: "rounded", label: "Fin", range: RANGE, nameRange: RANGE },
-      ],
-      edges: [
-        { from: "start", to: "check", label: null, range: RANGE, fromRange: RANGE, toRange: RANGE },
-        { from: "check", to: "end", label: null, range: RANGE, fromRange: RANGE, toRange: RANGE },
-      ],
-    };
+    const { block, catalog } = firstBlock(
+      "entity start [Inicio]\nentity check {Login valido}\nentity end (Fin)\nflow f {\n  start -> check\n  check -> end\n}\n"
+    );
 
-    const layout = layoutFlowchart(diagram);
-
-    expect(layout).toEqual({
+    expect(layoutFlowchart(block, catalog)).toEqual({
       width: 272,
       height: 340,
       nodes: [
-        { id: "start", x: 136, y: 45, width: 88, height: 50 },
-        { id: "check", x: 136, y: 170, width: 232, height: 80 },
-        { id: "end", x: 136, y: 295, width: 80, height: 50 },
+        { id: "start", label: "Inicio", shape: "rectangle", resolved: true, x: 136, y: 45, width: 88, height: 50 },
+        { id: "check", label: "Login valido", shape: "decision", resolved: true, x: 136, y: 170, width: 232, height: 80 },
+        { id: "end", label: "Fin", shape: "rounded", resolved: true, x: 136, y: 295, width: 80, height: 50 },
       ],
       edges: [
-        {
-          from: "start",
-          to: "check",
-          points: [
-            { x: 136, y: 70 },
-            { x: 136, y: 100 },
-            { x: 136, y: 130 },
-          ],
-        },
-        {
-          from: "check",
-          to: "end",
-          points: [
-            { x: 136, y: 210 },
-            { x: 136, y: 240 },
-            { x: 136, y: 270 },
-          ],
-        },
+        { from: "start", to: "check", label: null, points: [{ x: 136, y: 70 }, { x: 136, y: 100 }, { x: 136, y: 130 }] },
+        { from: "check", to: "end", label: null, points: [{ x: 136, y: 210 }, { x: 136, y: 240 }, { x: 136, y: 270 }] },
       ],
     });
   });
 
-  it("lays out a single node with no edges", () => {
-    const diagram: FlowchartDiagram = {
-      kind: "flowchart",
-      nodes: [{ id: "solo", shape: "rectangle", label: "Solo", range: RANGE, nameRange: RANGE }],
-      edges: [],
-    };
+  it("orders nodes by catalog declaration, not by first use in the edges", () => {
+    const { block, catalog } = firstBlock("entity b\nentity a\nflow f {\n  a -> b\n}\n");
+    expect(layoutFlowchart(block, catalog).nodes.map((n) => n.id)).toEqual(["b", "a"]);
+  });
 
-    const layout = layoutFlowchart(diagram);
+  it("includes only the entities the block references", () => {
+    const { block, catalog } = firstBlock("entity a\nentity b\nentity unused\nflow f {\n  a -> b\n}\n");
+    expect(layoutFlowchart(block, catalog).nodes.map((n) => n.id)).toEqual(["a", "b"]);
+  });
 
-    expect(layout).toEqual({
-      width: 120,
-      height: 90,
-      nodes: [{ id: "solo", x: 60, y: 45, width: 80, height: 50 }],
-      edges: [],
-    });
+  it("adds a visible, finite placeholder for an unresolved reference, after the resolved nodes", () => {
+    const { block, catalog } = firstBlock("entity a [A]\nflow f {\n  ghost -> a\n}\n");
+    const layout = layoutFlowchart(block, catalog);
+    expect(layout.nodes.map((n) => [n.id, n.label, n.shape, n.resolved])).toEqual([
+      ["a", "A", "rectangle", true],
+      ["ghost", "ghost", "rectangle", false],
+    ]);
+    expect(layout.nodes[1].width).toBeGreaterThan(1);
+    expect(layout.nodes.every((n) => Number.isFinite(n.x) && Number.isFinite(n.y))).toBe(true);
+    expect(Number.isFinite(layout.width) && Number.isFinite(layout.height)).toBe(true);
+  });
+
+  it("lays out an empty block with finite dimensions", () => {
+    const { block, catalog } = firstBlock("flow f {\n}\n");
+    const layout = layoutFlowchart(block, catalog);
+    expect(layout.nodes).toEqual([]);
+    expect(Number.isFinite(layout.width) && Number.isFinite(layout.height)).toBe(true);
   });
 });

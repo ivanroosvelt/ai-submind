@@ -2,99 +2,66 @@ import { describe, it, expect } from "vitest";
 import { render } from "./index.js";
 
 describe("render", () => {
-  it("returns svg: null and the parse diagnostics for an empty file", () => {
-    const { svg, diagnostics } = render("");
-    expect(svg).toBeNull();
-    expect(diagnostics).toHaveLength(1);
-    expect(diagnostics[0].code).toBe("E003");
+  it("returns no diagrams and no diagnostics for an empty file", () => {
+    expect(render("")).toEqual({ diagrams: [], diagnostics: [] });
   });
 
-  it("renders a full flowchart end to end, with no diagnostics", () => {
+  it("renders one diagram per block, in source order, with name, title and kind", () => {
     const source = [
-      "diagram flowchart",
-      "",
-      "start[Inicio]",
-      "end(Fin)",
-      "",
-      "start -> end : ok",
+      "entity a [A]",
+      "entity b [B]",
+      'flow uno "Primero" {',
+      "  a -> b",
+      "}",
+      "sequence dos {",
+      "  a -> b : hola",
+      "}",
       "",
     ].join("\n");
 
-    const { svg, diagnostics } = render(source);
+    const { diagrams, diagnostics } = render(source);
 
     expect(diagnostics).toEqual([]);
-    expect(svg).not.toBeNull();
-    expect(svg).toContain("<svg");
-    expect(svg).toContain(">Inicio<");
-    expect(svg).toContain(">Fin<");
-    expect(svg).toContain(">ok<");
+    expect(diagrams.map((d) => [d.name, d.title, d.kind])).toEqual([
+      ["uno", "Primero", "flow"],
+      ["dos", null, "sequence"],
+    ]);
+    expect(diagrams[0].svg).toContain(">A<");
+    expect(diagrams[1].svg).toContain('class="flo-seq-header-box"');
   });
 
-  it("renders a full sequence diagram end to end, with no diagnostics", () => {
-    const source = [
-      "diagram sequence",
-      "",
-      "participant user as Usuario",
-      "participant api as API",
-      "",
-      "user -> api : POST /login",
-      "",
-    ].join("\n");
+  it("renders an entity the same way in every block that uses it", () => {
+    const { diagrams } = render("entity db {Base}\nentity a\nflow x {\n  a -> db\n}\nflow y {\n  db -> a\n}\n");
+    for (const diagram of diagrams) {
+      expect(diagram.svg).toContain("<polygon");
+      expect(diagram.svg).toContain(">Base<");
+    }
+  });
 
-    const { svg, diagnostics } = render(source);
+  it("still renders the block when an edge line has a recoverable error", () => {
+    const { diagrams, diagnostics } = render("entity start [Inicio]\nentity b\nflow f {\n  start -> b\n  start ->\n}\n");
+    expect(diagnostics.map((d) => d.code)).toEqual(["E014"]);
+    expect(diagrams[0].svg).toContain(">Inicio<");
+  });
 
+  it("renders a block with an unresolved reference (E030) with finite coordinates", () => {
+    const { diagrams, diagnostics } = render("entity start [Inicio]\nflow f {\n  start -> ghost\n}\n");
+    expect(diagnostics.map((d) => d.code)).toEqual(["E030"]);
+    expect(diagrams[0].svg).toContain('class="flo-unresolved"');
+    expect(diagrams[0].svg).not.toContain("NaN");
+  });
+
+  it("computes finite dimensions for an empty block", () => {
+    const { diagrams, diagnostics } = render("flow f {\n}\n");
     expect(diagnostics).toEqual([]);
-    expect(svg).not.toBeNull();
-    expect(svg).toContain("<svg");
-    expect(svg).toContain(">Usuario<");
-    expect(svg).toContain(">API<");
-    expect(svg).toContain(">POST /login<");
-  });
-
-  it("still renders the partial diagram when the body has a recoverable error", () => {
-    const source = ["diagram flowchart", "", "start[Inicio]", "start ->", ""].join("\n");
-
-    const { svg, diagnostics } = render(source);
-
-    expect(diagnostics.some((diagnostic) => diagnostic.code === "E014")).toBe(true);
-    expect(svg).not.toBeNull();
-    expect(svg).toContain(">Inicio<");
-  });
-
-  it("computes finite dimensions for an empty flowchart with no diagnostics", () => {
-    const { svg, diagnostics } = render("diagram flowchart\n");
-
-    expect(diagnostics).toEqual([]);
-    expect(svg).not.toBeNull();
-    expect(svg).not.toContain("Infinity");
-    expect(svg).not.toContain("NaN");
+    expect(diagrams[0].svg).not.toContain("Infinity");
+    expect(diagrams[0].svg).not.toContain("NaN");
   });
 
   it("keeps both labels when two edges share the same from/to pair", () => {
-    const source = [
-      "diagram flowchart",
-      "",
-      "a[A]",
-      "b[B]",
-      "a -> b : si",
-      "a -> b : no",
-      "",
-    ].join("\n");
-
-    const { svg, diagnostics } = render(source);
-
+    const { diagrams, diagnostics } = render("entity a\nentity b\nflow f {\n  a -> b : si\n  a -> b : no\n}\n");
     expect(diagnostics).toEqual([]);
-    expect(svg).toContain(">si<");
-    expect(svg).toContain(">no<");
-  });
-
-  it("keeps a dangling edge target's coordinates finite (E017)", () => {
-    const source = ["diagram flowchart", "", "start[Inicio]", "start -> ghost", ""].join("\n");
-
-    const { svg, diagnostics } = render(source);
-
-    expect(diagnostics.some((diagnostic) => diagnostic.code === "E017")).toBe(true);
-    expect(svg).not.toBeNull();
-    expect(svg).not.toContain("NaN");
+    expect(diagrams[0].svg).toContain(">si<");
+    expect(diagrams[0].svg).toContain(">no<");
   });
 });

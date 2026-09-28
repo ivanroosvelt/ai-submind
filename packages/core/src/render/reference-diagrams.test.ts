@@ -1,64 +1,57 @@
 import { describe, it, expect } from "vitest";
 import { render } from "./index.js";
 
+// Los SVG de estos snapshots son los del lenguaje anterior (`diagram <kind>`)
+// y NO se regeneraron: el lenguaje nuevo tiene que producirlos byte a byte.
 describe("reference diagrams (visual snapshot)", () => {
   it("renders the login flowchart from the spec (branching decision)", () => {
     const source = [
-      "diagram flowchart",
+      "entity start [Inicio]",
+      "entity check {Login valido}",
+      "entity home [Mostrar home]",
+      "entity error [Mostrar error]",
       "",
-      "start[Inicio]",
-      "check{Login valido}",
-      "home[Mostrar home]",
-      "error[Mostrar error]",
-      "",
-      "start -> check",
-      "check -> home : si",
-      "check -> error : no",
+      "flow login {",
+      "  start -> check",
+      "  check -> home : si",
+      "  check -> error : no",
+      "}",
       "",
     ].join("\n");
 
-    const { svg, diagnostics } = render(source);
+    const { diagrams, diagnostics } = render(source);
 
     expect(diagnostics).toEqual([]);
-    expect(svg).toMatchSnapshot();
+    expect(diagrams[0].svg).toMatchSnapshot();
   });
 
   it("renders the login sequence diagram from the spec (three participants)", () => {
     const source = [
-      "diagram sequence",
+      "entity user [Usuario]",
+      "entity api [API]",
+      "entity db [Base de datos]",
       "",
-      "participant user as Usuario",
-      "participant api as API",
-      "participant db as Base de datos",
-      "",
-      "user -> api : POST /login",
-      "api -> db : SELECT usuario",
-      "db -> api : fila",
-      "api -> user : 200 OK",
+      "sequence login {",
+      "  user -> api : POST /login",
+      "  api -> db : SELECT usuario",
+      "  db -> api : fila",
+      "  api -> user : 200 OK",
+      "}",
       "",
     ].join("\n");
 
-    const { svg, diagnostics } = render(source);
+    const { diagrams, diagnostics } = render(source);
 
     expect(diagnostics).toEqual([]);
-    expect(svg).toMatchSnapshot();
+    expect(diagrams[0].svg).toMatchSnapshot();
   });
 
-  it("renders a flowchart with a single node and no edges", () => {
-    const source = ["diagram flowchart", "", "solo[Nodo unico]", ""].join("\n");
+  it("renders a sequence diagram whose entities have no shape (label = id)", () => {
+    const source = ["entity a", "entity b", "", "sequence s {", "  a -> b : hola", "  b -> a : chau", "}", ""].join("\n");
 
-    const { svg, diagnostics } = render(source);
-
-    expect(diagnostics).toEqual([]);
-    expect(svg).toMatchSnapshot();
-  });
-
-  it("renders a sequence diagram with auto-declared participants (no explicit 'participant' lines)", () => {
-    const source = ["diagram sequence", "", "a -> b : hola", "b -> a : chau", ""].join("\n");
-
-    const { svg, diagnostics } = render(source);
+    const { diagrams, diagnostics } = render(source);
 
     expect(diagnostics).toEqual([]);
-    expect(svg).toMatchSnapshot();
+    expect(diagrams[0].svg).toMatchSnapshot();
   });
 });

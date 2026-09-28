@@ -1,69 +1,50 @@
 import { describe, it, expect } from "vitest";
 import { layoutSequence } from "./sequence.js";
-import type { SequenceDiagram, Range } from "../ast.js";
+import { parse } from "../parser/index.js";
 
-// ponytail: layout ignores range/nameRange entirely, so the exact span here is
-// irrelevant to these tests — one placeholder stands in for every occurrence.
-const RANGE: Range = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
+function firstBlock(source: string) {
+  const { document, catalog } = parse(source);
+  return { block: document.blocks[0], catalog };
+}
 
 describe("layoutSequence", () => {
   it("places participants in columns and a message on the first row", () => {
-    const diagram: SequenceDiagram = {
-      kind: "sequence",
-      participants: [
-        { id: "a", label: "Alice", range: RANGE, nameRange: RANGE },
-        { id: "b", label: "Bob", range: RANGE, nameRange: RANGE },
-      ],
-      messages: [{ from: "a", to: "b", label: "hola", range: RANGE, fromRange: RANGE, toRange: RANGE }],
-    };
+    const { block, catalog } = firstBlock("entity a [Alice]\nentity b [Bob]\nsequence s {\n  a -> b : hola\n}\n");
 
-    expect(layoutSequence(diagram)).toEqual({
+    expect(layoutSequence(block, catalog)).toEqual({
       width: 320,
       height: 190,
       lifelineTop: 50,
       lifelineBottom: 170,
       participants: [
-        { id: "a", label: "Alice", x: 80 },
-        { id: "b", label: "Bob", x: 240 },
+        { id: "a", label: "Alice", resolved: true, x: 80 },
+        { id: "b", label: "Bob", resolved: true, x: 240 },
       ],
       messages: [{ from: "a", to: "b", label: "hola", y: 120 }],
     });
   });
 
-  it("increments the row for each successive message, in declaration order", () => {
-    const diagram: SequenceDiagram = {
-      kind: "sequence",
-      participants: [
-        { id: "a", label: "a", range: RANGE, nameRange: RANGE },
-        { id: "b", label: "b", range: RANGE, nameRange: RANGE },
-      ],
-      messages: [
-        { from: "a", to: "b", label: "hola", range: RANGE, fromRange: RANGE, toRange: RANGE },
-        { from: "b", to: "a", label: "chau", range: RANGE, fromRange: RANGE, toRange: RANGE },
-      ],
-    };
-
-    const layout = layoutSequence(diagram);
-
-    expect(layout.messages.map((message) => message.y)).toEqual([120, 170]);
-    expect(layout.lifelineBottom).toBe(220);
-    expect(layout.height).toBe(240);
+  it("increments the row for each successive message, in source order", () => {
+    const { block, catalog } = firstBlock("entity a\nentity b\nsequence s {\n  a -> b : uno\n  b -> a : dos\n}\n");
+    expect(layoutSequence(block, catalog).messages.map((m) => [m.label, m.y])).toEqual([
+      ["uno", 120],
+      ["dos", 170],
+    ]);
   });
 
-  it("lays out a diagram with no messages, keeping just the header row", () => {
-    const diagram: SequenceDiagram = {
-      kind: "sequence",
-      participants: [{ id: "a", label: "a", range: RANGE, nameRange: RANGE }],
-      messages: [],
-    };
+  it("orders columns by catalog declaration, with unresolved participants last", () => {
+    const { block, catalog } = firstBlock("entity b\nentity a\nsequence s {\n  ghost -> a : x\n  a -> b : y\n}\n");
+    expect(layoutSequence(block, catalog).participants.map((p) => [p.id, p.resolved])).toEqual([
+      ["b", true],
+      ["a", true],
+      ["ghost", false],
+    ]);
+  });
 
-    expect(layoutSequence(diagram)).toEqual({
-      width: 160,
-      height: 140,
-      lifelineTop: 50,
-      lifelineBottom: 120,
-      participants: [{ id: "a", label: "a", x: 80 }],
-      messages: [],
-    });
+  it("lays out an empty block with no columns", () => {
+    const { block, catalog } = firstBlock("sequence s {\n}\n");
+    const layout = layoutSequence(block, catalog);
+    expect(layout.participants).toEqual([]);
+    expect(layout.width).toBe(0);
   });
 });

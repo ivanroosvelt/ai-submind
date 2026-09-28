@@ -1,4 +1,6 @@
-import type { SequenceDiagram } from "../ast.js";
+import type { DiagramBlock } from "../ast.js";
+import type { Catalog } from "../workspace/resolver.js";
+import { blockNodes } from "./nodes.js";
 
 export const COLUMN_WIDTH = 160;
 export const HEADER_HEIGHT = 50;
@@ -9,6 +11,7 @@ const BOTTOM_MARGIN = 20;
 export interface SequenceParticipantLayout {
   id: string;
   label: string;
+  resolved: boolean;
   x: number;
 }
 
@@ -28,17 +31,18 @@ export interface SequenceLayout {
   messages: SequenceMessageLayout[];
 }
 
-export function layoutSequence(diagram: SequenceDiagram): SequenceLayout {
-  const participants: SequenceParticipantLayout[] = diagram.participants.map((participant, index) => ({
-    id: participant.id,
-    label: participant.label,
+export function layoutSequence(block: DiagramBlock, catalog: Catalog): SequenceLayout {
+  const participants: SequenceParticipantLayout[] = blockNodes(block, catalog).map((node, index) => ({
+    id: node.id,
+    label: node.label,
+    resolved: node.resolved,
     x: COLUMN_WIDTH / 2 + index * COLUMN_WIDTH,
   }));
 
-  const messages: SequenceMessageLayout[] = diagram.messages.map((message, index) => ({
-    from: message.from,
-    to: message.to,
-    label: message.label,
+  const messages: SequenceMessageLayout[] = block.edges.map((edge, index) => ({
+    from: edge.from.name,
+    to: edge.to.name,
+    label: edge.label ?? "", // el parser garantiza la etiqueta en `sequence`
     y: HEADER_HEIGHT + TOP_MARGIN + (index + 1) * ROW_HEIGHT,
   }));
 

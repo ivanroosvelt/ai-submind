@@ -3,28 +3,31 @@ import { layoutFlowchart } from "../layout/flowchart.js";
 import { layoutSequence } from "../layout/sequence.js";
 import { renderFlowchartToSvg } from "./flowchart.js";
 import { renderSequenceToSvg } from "./sequence.js";
+import type { BlockKind, DocumentUri } from "../ast.js";
 import type { Diagnostic } from "../diagnostics.js";
 
+export interface RenderedDiagram {
+  name: string;
+  title: string | null;
+  kind: BlockKind;
+  svg: string;
+}
+
 export interface RenderResult {
-  svg: string | null;
+  diagrams: RenderedDiagram[];
   diagnostics: Diagnostic[];
 }
 
-export function render(source: string): RenderResult {
-  const { diagram, diagnostics } = parse(source);
-
-  if (diagram === null) {
-    return { svg: null, diagnostics };
-  }
-
-  switch (diagram.kind) {
-    case "flowchart": {
-      const layout = layoutFlowchart(diagram);
-      return { svg: renderFlowchartToSvg(diagram, layout), diagnostics };
-    }
-    case "sequence": {
-      const layout = layoutSequence(diagram);
-      return { svg: renderSequenceToSvg(diagram, layout), diagnostics };
-    }
-  }
+export function render(source: string, uri: DocumentUri = ""): RenderResult {
+  const { document, catalog, diagnostics } = parse(source, uri);
+  const diagrams = document.blocks.map((block) => ({
+    name: block.name,
+    title: block.title,
+    kind: block.kind,
+    svg:
+      block.kind === "flow"
+        ? renderFlowchartToSvg(layoutFlowchart(block, catalog))
+        : renderSequenceToSvg(layoutSequence(block, catalog)),
+  }));
+  return { diagrams, diagnostics };
 }

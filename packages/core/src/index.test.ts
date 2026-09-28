@@ -1,48 +1,24 @@
 import { describe, it, expect } from "vitest";
-import {
-  parse,
-  isFlowchartDiagram,
-  isSequenceDiagram,
-  formatDiagnostic,
-  type FlowchartDiagram,
-} from "./index.js";
+import { parse, render, formatDiagnostic, escapeXml } from "./index.js";
 
 describe("index", () => {
-  it("re-exports the type guards and formatDiagnostic so consumers of parse() can narrow diagrams and format diagnostics", () => {
-    const { diagram, diagnostics } = parse("diagram flowchart\nstart[Inicio]\n");
-    expect(diagram).not.toBeNull();
-    if (diagram) {
-      expect(isFlowchartDiagram(diagram)).toBe(true);
-      expect(isSequenceDiagram(diagram)).toBe(false);
-    }
-    expect(diagnostics).toEqual([]);
-
-    const formatted = formatDiagnostic({
-      code: "E999",
-      message: "prueba",
-      range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } },
-      severity: "error",
-    });
-    expect(formatted).toBe("E999 error [1:1]: prueba");
+  it("exposes parse, render, formatDiagnostic and escapeXml", () => {
+    expect(parse("entity a\n").document.entities).toHaveLength(1);
+    expect(render("entity a\nflow f {\n  a -> a\n}\n").diagrams).toHaveLength(1);
+    expect(escapeXml("<a>")).toBe("&lt;a&gt;");
+    expect(
+      formatDiagnostic({
+        code: "E999",
+        message: "prueba",
+        range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } },
+        severity: "error",
+      })
+    ).toBe("E999 error [1:1]: prueba");
   });
 
-  it("records the full declaration range and the name range separately", () => {
-    const { diagram } = parse("diagram flowchart\nstart[Inicio]\n");
-    const node = (diagram as FlowchartDiagram).nodes[0];
-    expect(node.nameRange).toEqual({
-      start: { line: 2, column: 1 },
-      end: { line: 2, column: 6 },
-    });
-    expect(node.range).toEqual({
-      start: { line: 2, column: 1 },
-      end: { line: 2, column: 14 },
-    });
-  });
-
-  it("records the range of each edge endpoint", () => {
-    const { diagram } = parse("diagram flowchart\na[A]\nb[B]\na -> b : ok\n");
-    const edge = (diagram as FlowchartDiagram).edges[0];
-    expect(edge.fromRange.start).toEqual({ line: 4, column: 1 });
-    expect(edge.toRange.start).toEqual({ line: 4, column: 6 });
+  it("records the declaration range and the name range of an entity separately", () => {
+    const entity = parse("entity start [Inicio]\n").document.entities[0];
+    expect(entity.nameRange).toEqual({ start: { line: 1, column: 8 }, end: { line: 1, column: 13 } });
+    expect(entity.range).toEqual({ start: { line: 1, column: 1 }, end: { line: 1, column: 22 } });
   });
 });

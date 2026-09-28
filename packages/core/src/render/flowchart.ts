@@ -1,11 +1,15 @@
-import type { FlowchartDiagram, FlowchartNode } from "../ast.js";
 import type { FlowchartLayout, FlowchartNodeLayout } from "../layout/flowchart.js";
 import { ARROW_MARKER_ID, FILL_COLOR, STROKE_COLOR, arrowMarkerDefs, svgLabel, svgText } from "./svg.js";
 
-function shapeElement(node: FlowchartNode, nodeLayout: FlowchartNodeLayout): string {
-  const { x, y, width, height } = nodeLayout;
+// Un nodo sin resolver (E030) se dibuja igual pero punteado, para que el
+// flujo se siga leyendo y el hueco del catálogo salte a la vista.
+const UNRESOLVED_DASH = ' stroke-dasharray="4 4"';
+
+function shapeElement(node: FlowchartNodeLayout): string {
+  const { x, y, width, height } = node;
   const left = x - width / 2;
   const top = y - height / 2;
+  const dash = node.resolved ? "" : UNRESOLVED_DASH;
 
   if (node.shape === "decision") {
     const points = [
@@ -14,32 +18,26 @@ function shapeElement(node: FlowchartNode, nodeLayout: FlowchartNodeLayout): str
       `${x},${top + height}`,
       `${x - width / 2},${y}`,
     ].join(" ");
-    return `<polygon points="${points}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2" />`;
+    return `<polygon points="${points}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2"${dash} />`;
   }
 
   const rx = node.shape === "rounded" ? 12 : 0;
-  return `<rect x="${left}" y="${top}" width="${width}" height="${height}" rx="${rx}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2" />`;
+  return `<rect x="${left}" y="${top}" width="${width}" height="${height}" rx="${rx}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2"${dash} />`;
 }
 
-export function renderFlowchartToSvg(diagram: FlowchartDiagram, layout: FlowchartLayout): string {
-  const nodeLayoutById = new Map(layout.nodes.map((node) => [node.id, node]));
+export function renderFlowchartToSvg(layout: FlowchartLayout): string {
+  const nodeElements = layout.nodes.map(
+    (node) =>
+      `<g${node.resolved ? "" : ' class="flo-unresolved"'}>${shapeElement(node)}${svgText(node.x, node.y, node.label)}</g>`
+  );
 
-  const nodeElements = diagram.nodes.map((node) => {
-    const nodeLayout = nodeLayoutById.get(node.id);
-    if (!nodeLayout) {
-      throw new Error(`falta el layout del nodo '${node.id}'`);
-    }
-    return `<g>${shapeElement(node, nodeLayout)}${svgText(nodeLayout.x, nodeLayout.y, node.label)}</g>`;
-  });
-
-  const edgeElements = layout.edges.map((edgeLayout, index) => {
-    const edge = diagram.edges[index];
-    const points = edgeLayout.points.map((point) => `${point.x},${point.y}`).join(" ");
+  const edgeElements = layout.edges.map((edge) => {
+    const points = edge.points.map((point) => `${point.x},${point.y}`).join(" ");
     const line = `<polyline points="${points}" fill="none" stroke="${STROKE_COLOR}" stroke-width="2" marker-end="url(#${ARROW_MARKER_ID})" />`;
     if (!edge.label) {
       return line;
     }
-    const mid = edgeLayout.points[Math.floor(edgeLayout.points.length / 2)];
+    const mid = edge.points[Math.floor(edge.points.length / 2)];
     return `${line}${svgLabel(mid.x, mid.y - 8, edge.label)}`;
   });
 

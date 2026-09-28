@@ -1,18 +1,19 @@
-import type { SequenceDiagram } from "../ast.js";
 import type { SequenceLayout } from "../layout/sequence.js";
 import { COLUMN_WIDTH, HEADER_HEIGHT } from "../layout/sequence.js";
 import { ARROW_MARKER_ID, FILL_COLOR, LIFELINE_COLOR, STROKE_COLOR, arrowMarkerDefs, svgLabel, svgText } from "./svg.js";
 
-export function renderSequenceToSvg(diagram: SequenceDiagram, layout: SequenceLayout): string {
+export function renderSequenceToSvg(layout: SequenceLayout): string {
   const xById = new Map(layout.participants.map((participant) => [participant.id, participant.x]));
 
   const participantElements = layout.participants.map((participant) => {
     const left = participant.x - COLUMN_WIDTH / 2 + 10;
     const boxWidth = COLUMN_WIDTH - 20;
-    const box = `<rect x="${left}" y="0" width="${boxWidth}" height="${HEADER_HEIGHT}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2" />`;
+    const dash = participant.resolved ? "" : ' stroke-dasharray="4 4"';
+    const box = `<rect x="${left}" y="0" width="${boxWidth}" height="${HEADER_HEIGHT}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2"${dash} />`;
     const label = svgText(participant.x, HEADER_HEIGHT / 2, participant.label);
     const lifeline = `<line x1="${participant.x}" y1="${layout.lifelineTop}" x2="${participant.x}" y2="${layout.lifelineBottom}" stroke="${LIFELINE_COLOR}" stroke-width="1" stroke-dasharray="4 4" />`;
-    return `<g><g class="flo-seq-header-box">${box}${label}</g>${lifeline}</g>`;
+    const group = participant.resolved ? "<g>" : '<g class="flo-unresolved">';
+    return `${group}<g class="flo-seq-header-box">${box}${label}</g>${lifeline}</g>`;
   });
 
   const messageElements = layout.messages.map((message) => {

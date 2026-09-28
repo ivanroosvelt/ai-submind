@@ -1,25 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { renderFlowchartToSvg } from "./flowchart.js";
 import { layoutFlowchart } from "../layout/flowchart.js";
-import type { FlowchartDiagram, Range } from "../ast.js";
+import { parse } from "../parser/index.js";
 
-// ponytail: rendering ignores range/nameRange entirely, so the exact span here
-// is irrelevant to these tests — one placeholder stands in for every occurrence.
-const RANGE: Range = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
+function renderFirst(source: string): string {
+  const { document, catalog } = parse(source);
+  return renderFlowchartToSvg(layoutFlowchart(document.blocks[0], catalog));
+}
 
 describe("renderFlowchartToSvg", () => {
   it("renders a rectangle, a rounded node and a labeled edge between them", () => {
-    const diagram: FlowchartDiagram = {
-      kind: "flowchart",
-      nodes: [
-        { id: "start", shape: "rectangle", label: "Inicio", range: RANGE, nameRange: RANGE },
-        { id: "end", shape: "rounded", label: "Fin", range: RANGE, nameRange: RANGE },
-      ],
-      edges: [{ from: "start", to: "end", label: "ok", range: RANGE, fromRange: RANGE, toRange: RANGE }],
-    };
-    const layout = layoutFlowchart(diagram);
-
-    const svg = renderFlowchartToSvg(diagram, layout);
+    const svg = renderFirst("entity start [Inicio]\nentity end (Fin)\nflow f {\n  start -> end : ok\n}\n");
 
     expect(svg).toBe(
       '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="200" viewBox="0 0 128 200">' +
@@ -31,17 +22,16 @@ describe("renderFlowchartToSvg", () => {
     );
   });
 
-  it("renders a decision node as a polygon and omits the label element for an unlabeled edge", () => {
-    const diagram: FlowchartDiagram = {
-      kind: "flowchart",
-      nodes: [{ id: "check", shape: "decision", label: "OK?", range: RANGE, nameRange: RANGE }],
-      edges: [],
-    };
-    const layout = layoutFlowchart(diagram);
-
-    const svg = renderFlowchartToSvg(diagram, layout);
-
+  it("renders a decision node as a polygon", () => {
+    const svg = renderFirst("entity a [A]\nentity check {OK?}\nflow f {\n  a -> check\n}\n");
     expect(svg).toContain("<polygon points=");
-    expect(svg).not.toContain("<rect");
+  });
+
+  it("renders an unresolved reference as a dashed, marked placeholder labelled with its name", () => {
+    const svg = renderFirst("entity a [A]\nflow f {\n  a -> ghost\n}\n");
+    expect(svg).toContain('<g class="flo-unresolved"><rect');
+    expect(svg).toContain('stroke-dasharray="4 4"');
+    expect(svg).toContain(">ghost<");
+    expect(svg).not.toContain("NaN");
   });
 });

@@ -1,5 +1,7 @@
 import dagre from "dagre";
-import type { FlowchartDiagram, NodeShape } from "../ast.js";
+import type { DiagramBlock, NodeShape } from "../ast.js";
+import type { Catalog } from "../workspace/resolver.js";
+import { blockNodes, type BlockNode } from "./nodes.js";
 
 const GRAPH_OPTIONS = { rankdir: "TB", nodesep: 40, ranksep: 60, marginx: 20, marginy: 20 };
 const CHAR_WIDTH = 8;
@@ -9,8 +11,7 @@ export interface LayoutPoint {
   y: number;
 }
 
-export interface FlowchartNodeLayout {
-  id: string;
+export interface FlowchartNodeLayout extends BlockNode {
   x: number;
   y: number;
   width: number;
@@ -20,6 +21,7 @@ export interface FlowchartNodeLayout {
 export interface FlowchartEdgeLayout {
   from: string;
   to: string;
+  label: string | null;
   points: LayoutPoint[];
 }
 
@@ -42,39 +44,37 @@ function finiteOrZero(value: number | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-export function layoutFlowchart(diagram: FlowchartDiagram): FlowchartLayout {
+export function layoutFlowchart(block: DiagramBlock, catalog: Catalog): FlowchartLayout {
   const graph = new dagre.graphlib.Graph();
   graph.setGraph({ ...GRAPH_OPTIONS });
   graph.setDefaultEdgeLabel(() => ({}));
 
-  for (const node of diagram.nodes) {
+  // Primero todos los nodos y después todas las aristas, en ese orden: es
+  // el mismo input que recibía dagre con el lenguaje anterior, y del orden
+  // de inserción depende la posición final.
+  const nodes = blockNodes(block, catalog);
+  for (const node of nodes) {
     graph.setNode(node.id, measureFlowchartNode(node.shape, node.label));
   }
-  const declaredIds = new Set(diagram.nodes.map((node) => node.id));
-  for (const edge of diagram.edges) {
-    for (const id of [edge.from, edge.to]) {
-      if (!declaredIds.has(id) && !graph.hasNode(id)) {
-        // Placeholder para un extremo no declarado (E017): dagre necesita un
-        // tamaño configurado para calcular una posición finita. El ancho debe
-        // ser > 0 porque intersectRect divide por el ancho/2 al recortar el
-        // último punto de la arista, y un ancho 0 produce NaN.
-        graph.setNode(id, { width: 1, height: 1 });
-      }
-    }
-    graph.setEdge(edge.from, edge.to);
+  for (const edge of block.edges) {
+    graph.setEdge(edge.from.name, edge.to.name);
   }
 
   dagre.layout(graph);
 
   const graphSize = graph.graph();
-  const nodes: FlowchartNodeLayout[] = diagram.nodes.map((node) => {
-    const laidOut = graph.node(node.id);
-    return { id: node.id, x: laidOut.x, y: laidOut.y, width: laidOut.width, height: laidOut.height };
-  });
-  const edges: FlowchartEdgeLayout[] = diagram.edges.map((edge) => {
-    const laidOut = graph.edge(edge.from, edge.to);
-    return { from: edge.from, to: edge.to, points: laidOut.points };
-  });
-
-  return { width: finiteOrZero(graphSize.width), height: finiteOrZero(graphSize.height), nodes, edges };
+  return {
+    width: finiteOrZero(graphSize.width),
+    height: finiteOrZero(graphSize.height),
+    nodes: nodes.map((node) => {
+      const laidOut = graph.node(node.id);
+      return { ...node, x: laidOut.x, y: laidOut.y, width: laidOut.width, height: laidOut.height };
+    }),
+    edges: block.edges.map((edge) => ({
+      from: edge.from.name,
+      to: edge.to.name,
+      label: edge.label,
+      points: graph.edge(edge.from.name, edge.to.name).points,
+    })),
+  };
 }
