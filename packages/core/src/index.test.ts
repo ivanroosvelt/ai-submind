@@ -9,11 +9,15 @@ import {
   blockId,
   layoutFlowchart,
   layoutSequence,
+  SCHEMA_URI,
   type BlockId,
   type FlowchartLayout,
   type LinkResult,
   type Location,
   type SequenceLayout,
+  type KnowledgeMeta,
+  type MemoryType,
+  type Relation,
 } from "./index.js";
 
 describe("index", () => {
@@ -88,5 +92,51 @@ describe("index: navigation surface (Fase E)", () => {
     const { document, catalog: reachable } = workspace.link().documents.get("solo.flo")!;
 
     expect(renderBlock(document.blocks[0], reachable, "solo.flo").svg).toBe(render(source, "solo.flo").diagrams[0].svg);
+  });
+
+  it("links and renders a complete knowledge workspace through the public API", () => {
+    const workspace = new Workspace();
+    workspace.setDocument(SCHEMA_URI, "type_tags: [decision]\nrelation_types: [affects, visualized_by]\n");
+    workspace.setDocument("catalogo.flo", "entity api [API Gateway]\n");
+    workspace.setDocument(
+      "decisiones/pkce.md",
+      [
+        "---",
+        "id: pkce",
+        'title: "Decisión: PKCE"',
+        "memory_type: long_term",
+        "type_tags: [decision]",
+        'use: ["../catalogo.flo"]',
+        "relations:",
+        "  - target: api",
+        "    type: affects",
+        "  - target: ./pkce.md#validacion",
+        "    type: visualized_by",
+        "---",
+        "",
+        "```flo",
+        'flow validacion "Validación" {',
+        "  api -> pkce : code_verifier",
+        "}",
+        "```",
+        "",
+      ].join("\n")
+    );
+    const result = workspace.link();
+    for (const list of result.diagnostics.values()) expect(list).toEqual([]);
+
+    const knowledge: KnowledgeMeta = result.entities.get("pkce")!.knowledge!;
+    const memory: MemoryType | null = knowledge.memoryType;
+    const relations: Relation[] = result.xref.relationsFrom("pkce");
+    expect(memory).toBe("long_term");
+    expect(relations.map((relation) => relation.resolved)).toEqual([
+      { kind: "entity", id: "api" },
+      { kind: "block", id: "decisiones/pkce.md#validacion" },
+    ]);
+
+    const { document, catalog } = result.documents.get("decisiones/pkce.md")!;
+    const svg = renderBlock(document.blocks[0], catalog, document.uri).svg;
+    expect(svg).toContain('data-flo-entity="pkce"');
+    expect(svg).toContain("Decisión: PKCE");
   });
 });

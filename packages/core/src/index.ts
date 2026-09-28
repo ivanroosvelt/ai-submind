@@ -5,6 +5,7 @@ export type { ParseResult } from "./parser/index.js";
 export type { Catalog } from "./workspace/resolver.js";
 export { Workspace } from "./workspace/workspace.js";
 export type { LinkResult, LinkedDocument } from "./workspace/workspace.js";
+export { SCHEMA_URI } from "./workspace/schema.js";
 export { blockId } from "./workspace/xref.js";
 export type { XRefIndex, BlockId, Location } from "./workspace/xref.js";
 export { layoutFlowchart } from "./layout/flowchart.js";
@@ -27,6 +28,10 @@ export type {
   DiagramBlock,
   UseDecl,
   ParsedDocument,
+  MemoryType,
+  CustomTagValue,
+  KnowledgeMeta,
+  Relation,
 } from "./ast.js";
 export { formatDiagnostic } from "./diagnostics.js";
 export type { Diagnostic, DiagnosticSeverity } from "./diagnostics.js";
