@@ -1,4 +1,4 @@
-import type { DiagramBlock } from "../ast.js";
+import type { DiagramBlock, Range } from "../ast.js";
 import type { Catalog } from "../workspace/resolver.js";
 import { blockNodes, nodeId } from "./nodes.js";
 
@@ -13,6 +13,7 @@ export interface SequenceParticipantLayout {
   label: string;
   resolved: boolean;
   x: number;
+  range: Range;
 }
 
 export interface SequenceMessageLayout {
@@ -20,6 +21,7 @@ export interface SequenceMessageLayout {
   to: string;
   label: string;
   y: number;
+  range: Range;
 }
 
 export interface SequenceLayout {
@@ -37,6 +39,7 @@ export function layoutSequence(block: DiagramBlock, catalog: Catalog): SequenceL
     label: node.label,
     resolved: node.resolved,
     x: COLUMN_WIDTH / 2 + index * COLUMN_WIDTH,
+    range: node.range,
   }));
 
   const messages: SequenceMessageLayout[] = block.edges.map((edge, index) => ({
@@ -44,6 +47,7 @@ export function layoutSequence(block: DiagramBlock, catalog: Catalog): SequenceL
     to: nodeId(edge.to),
     label: edge.label ?? "", // el parser garantiza la etiqueta en `sequence`
     y: HEADER_HEIGHT + TOP_MARGIN + (index + 1) * ROW_HEIGHT,
+    range: edge.range,
   }));
 
   const lifelineTop = HEADER_HEIGHT;

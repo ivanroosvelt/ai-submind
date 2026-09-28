@@ -31,13 +31,28 @@ describe("layoutFlowchart", () => {
       width: 272,
       height: 340,
       nodes: [
-        { id: "start", label: "Inicio", shape: "rectangle", resolved: true, x: 136, y: 45, width: 88, height: 50 },
-        { id: "check", label: "Login valido", shape: "decision", resolved: true, x: 136, y: 170, width: 232, height: 80 },
-        { id: "end", label: "Fin", shape: "rounded", resolved: true, x: 136, y: 295, width: 80, height: 50 },
+        {
+          id: "start", label: "Inicio", shape: "rectangle", resolved: true, x: 136, y: 45, width: 88, height: 50,
+          range: { start: { line: 5, column: 3 }, end: { line: 5, column: 8 } },
+        },
+        {
+          id: "check", label: "Login valido", shape: "decision", resolved: true, x: 136, y: 170, width: 232, height: 80,
+          range: { start: { line: 5, column: 12 }, end: { line: 5, column: 17 } },
+        },
+        {
+          id: "end", label: "Fin", shape: "rounded", resolved: true, x: 136, y: 295, width: 80, height: 50,
+          range: { start: { line: 6, column: 12 }, end: { line: 6, column: 15 } },
+        },
       ],
       edges: [
-        { from: "start", to: "check", label: null, points: [{ x: 136, y: 70 }, { x: 136, y: 100 }, { x: 136, y: 130 }] },
-        { from: "check", to: "end", label: null, points: [{ x: 136, y: 210 }, { x: 136, y: 240 }, { x: 136, y: 270 }] },
+        {
+          from: "start", to: "check", label: null, points: [{ x: 136, y: 70 }, { x: 136, y: 100 }, { x: 136, y: 130 }],
+          range: { start: { line: 5, column: 3 }, end: { line: 5, column: 17 } },
+        },
+        {
+          from: "check", to: "end", label: null, points: [{ x: 136, y: 210 }, { x: 136, y: 240 }, { x: 136, y: 270 }],
+          range: { start: { line: 6, column: 3 }, end: { line: 6, column: 15 } },
+        },
       ],
     });
   });
@@ -69,5 +84,14 @@ describe("layoutFlowchart", () => {
     const layout = layoutFlowchart(block, catalog);
     expect(layout.nodes).toEqual([]);
     expect(Number.isFinite(layout.width) && Number.isFinite(layout.height)).toBe(true);
+  });
+
+  it("records each node's first reference in the block, resolved or not", () => {
+    const { block, catalog } = firstBlock("entity a\nentity b\nflow f {\n  a -> ghost\n  ghost -> b\n}\n");
+    expect(layoutFlowchart(block, catalog).nodes.map((n) => [n.id, n.range])).toEqual([
+      ["a", { start: { line: 4, column: 3 }, end: { line: 4, column: 4 } }],
+      ["b", { start: { line: 5, column: 12 }, end: { line: 5, column: 13 } }],
+      ["ghost", { start: { line: 4, column: 8 }, end: { line: 4, column: 13 } }],
+    ]);
   });
 });

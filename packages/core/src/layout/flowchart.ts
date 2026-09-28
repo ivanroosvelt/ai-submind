@@ -1,5 +1,5 @@
 import dagre from "dagre";
-import type { DiagramBlock, NodeShape } from "../ast.js";
+import type { DiagramBlock, NodeShape, Range } from "../ast.js";
 import type { Catalog } from "../workspace/resolver.js";
 import { blockNodes, nodeId, type BlockNode } from "./nodes.js";
 
@@ -23,6 +23,7 @@ export interface FlowchartEdgeLayout {
   to: string;
   label: string | null;
   points: LayoutPoint[];
+  range: Range;
 }
 
 export interface FlowchartLayout {
@@ -75,6 +76,7 @@ export function layoutFlowchart(block: DiagramBlock, catalog: Catalog): Flowchar
       to: nodeId(edge.to),
       label: edge.label,
       points: graph.edge(nodeId(edge.from), nodeId(edge.to)).points,
+      range: edge.range,
     })),
   };
 }

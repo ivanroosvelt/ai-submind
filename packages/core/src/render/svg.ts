@@ -1,3 +1,6 @@
+import type { DocumentUri } from "../ast.js";
+import type { BlockId } from "../workspace/xref.js";
+
 export function escapeXml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -5,6 +8,19 @@ export function escapeXml(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
+}
+
+/** De dónde sale un bloque renderizado: se repite en cada elemento anotado. */
+export interface BlockOrigin {
+  uri: DocumentUri;
+  block: BlockId;
+}
+
+/** Atributos `data-flo-*` (spec §6.3, decisión #26), en el orden dado y escapados. */
+export function dataAttributes(attributes: Record<string, string | number>): string {
+  return Object.entries(attributes)
+    .map(([name, value]) => ` data-flo-${name}="${escapeXml(String(value))}"`)
+    .join("");
 }
 
 export const ARROW_MARKER_ID = "flo-arrow";

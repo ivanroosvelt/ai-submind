@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { render } from "./index.js";
 
+// Los data-flo-* (decisión #26) no son geometría: se quitan antes de
+// comparar, y así estos snapshots siguen sin regenerarse.
+function geometry(svg: string): string {
+  return svg.replace(/ data-flo-[a-z]+="[^"]*"/g, "");
+}
+
 // Los SVG de estos snapshots son los del lenguaje anterior (`diagram <kind>`)
 // y NO se regeneraron: el lenguaje nuevo tiene que producirlos byte a byte.
 describe("reference diagrams (visual snapshot)", () => {
@@ -22,7 +28,7 @@ describe("reference diagrams (visual snapshot)", () => {
     const { diagrams, diagnostics } = render(source);
 
     expect(diagnostics).toEqual([]);
-    expect(diagrams[0].svg).toMatchSnapshot();
+    expect(geometry(diagrams[0].svg)).toMatchSnapshot();
   });
 
   it("renders the login sequence diagram from the spec (three participants)", () => {
@@ -43,7 +49,7 @@ describe("reference diagrams (visual snapshot)", () => {
     const { diagrams, diagnostics } = render(source);
 
     expect(diagnostics).toEqual([]);
-    expect(diagrams[0].svg).toMatchSnapshot();
+    expect(geometry(diagrams[0].svg)).toMatchSnapshot();
   });
 
   it("renders a sequence diagram whose entities have no shape (label = id)", () => {
@@ -52,6 +58,6 @@ describe("reference diagrams (visual snapshot)", () => {
     const { diagrams, diagnostics } = render(source);
 
     expect(diagnostics).toEqual([]);
-    expect(diagrams[0].svg).toMatchSnapshot();
+    expect(geometry(diagrams[0].svg)).toMatchSnapshot();
   });
 });

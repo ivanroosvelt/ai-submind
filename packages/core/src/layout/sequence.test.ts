@@ -17,10 +17,12 @@ describe("layoutSequence", () => {
       lifelineTop: 50,
       lifelineBottom: 170,
       participants: [
-        { id: "a", label: "Alice", resolved: true, x: 80 },
-        { id: "b", label: "Bob", resolved: true, x: 240 },
+        { id: "a", label: "Alice", resolved: true, x: 80, range: { start: { line: 4, column: 3 }, end: { line: 4, column: 4 } } },
+        { id: "b", label: "Bob", resolved: true, x: 240, range: { start: { line: 4, column: 8 }, end: { line: 4, column: 9 } } },
       ],
-      messages: [{ from: "a", to: "b", label: "hola", y: 120 }],
+      messages: [
+        { from: "a", to: "b", label: "hola", y: 120, range: { start: { line: 4, column: 3 }, end: { line: 4, column: 16 } } },
+      ],
     });
   });
 

@@ -1,5 +1,14 @@
 import type { FlowchartLayout, FlowchartNodeLayout } from "../layout/flowchart.js";
-import { ARROW_MARKER_ID, FILL_COLOR, STROKE_COLOR, arrowMarkerDefs, svgLabel, svgText } from "./svg.js";
+import {
+  ARROW_MARKER_ID,
+  FILL_COLOR,
+  STROKE_COLOR,
+  arrowMarkerDefs,
+  dataAttributes,
+  svgLabel,
+  svgText,
+  type BlockOrigin,
+} from "./svg.js";
 
 // Un nodo sin resolver (E030) se dibuja igual pero punteado, para que el
 // flujo se siga leyendo y el hueco del catálogo salte a la vista.
@@ -25,15 +34,22 @@ function shapeElement(node: FlowchartNodeLayout): string {
   return `<rect x="${left}" y="${top}" width="${width}" height="${height}" rx="${rx}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2"${dash} />`;
 }
 
-export function renderFlowchartToSvg(layout: FlowchartLayout): string {
-  const nodeElements = layout.nodes.map(
-    (node) =>
-      `<g${node.resolved ? "" : ' class="flo-unresolved"'}>${shapeElement(node)}${svgText(node.x, node.y, node.label)}</g>`
-  );
+export function renderFlowchartToSvg(layout: FlowchartLayout, origin: BlockOrigin): string {
+  const nodeElements = layout.nodes.map((node) => {
+    const data = dataAttributes({ entity: node.id, block: origin.block, uri: origin.uri, line: node.range.start.line });
+    return `<g${node.resolved ? "" : ' class="flo-unresolved"'}${data}>${shapeElement(node)}${svgText(node.x, node.y, node.label)}</g>`;
+  });
 
   const edgeElements = layout.edges.map((edge) => {
     const points = edge.points.map((point) => `${point.x},${point.y}`).join(" ");
-    const line = `<polyline points="${points}" fill="none" stroke="${STROKE_COLOR}" stroke-width="2" marker-end="url(#${ARROW_MARKER_ID})" />`;
+    const data = dataAttributes({
+      from: edge.from,
+      to: edge.to,
+      block: origin.block,
+      uri: origin.uri,
+      line: edge.range.start.line,
+    });
+    const line = `<polyline points="${points}" fill="none" stroke="${STROKE_COLOR}" stroke-width="2" marker-end="url(#${ARROW_MARKER_ID})"${data} />`;
     if (!edge.label) {
       return line;
     }

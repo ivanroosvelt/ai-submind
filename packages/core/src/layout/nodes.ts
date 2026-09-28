@@ -1,4 +1,4 @@
-import type { DiagramBlock, NodeShape, Ref } from "../ast.js";
+import type { DiagramBlock, NodeShape, Range, Ref } from "../ast.js";
 import type { Catalog } from "../workspace/resolver.js";
 
 export interface BlockNode {
@@ -6,6 +6,8 @@ export interface BlockNode {
   label: string;
   shape: NodeShape;
   resolved: boolean;
+  /** Primera referencia al nodo dentro del bloque (no la declaración de la entidad). */
+  range: Range;
 }
 
 /**
@@ -16,23 +18,24 @@ export interface BlockNode {
  * nombre como label.
  */
 export function blockNodes(block: DiagramBlock, catalog: Catalog): BlockNode[] {
-  const referenced = new Set<string>();
+  const firstRef = new Map<string, Range>();
   const unresolved: string[] = [];
   for (const edge of block.edges) {
     for (const ref of [edge.from, edge.to]) {
-      if (ref.target !== null) referenced.add(ref.target);
-      else if (!unresolved.includes(ref.name)) unresolved.push(ref.name);
+      const id = nodeId(ref);
+      if (firstRef.has(id)) continue;
+      firstRef.set(id, ref.range);
+      if (ref.target === null) unresolved.push(ref.name);
     }
   }
 
   const nodes: BlockNode[] = [];
   for (const entity of catalog.values()) {
-    if (referenced.has(entity.id)) {
-      nodes.push({ id: entity.id, label: entity.label, shape: entity.shape, resolved: true });
-    }
+    const range = firstRef.get(entity.id);
+    if (range) nodes.push({ id: entity.id, label: entity.label, shape: entity.shape, resolved: true, range });
   }
   for (const name of unresolved) {
-    nodes.push({ id: name, label: name, shape: "rectangle", resolved: false });
+    nodes.push({ id: name, label: name, shape: "rectangle", resolved: false, range: firstRef.get(name)! });
   }
   return nodes;
 }

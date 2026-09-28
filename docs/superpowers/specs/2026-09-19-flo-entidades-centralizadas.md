@@ -273,7 +273,7 @@ linking incremental: se reparsea el documento editado y se relinkea todo.
 | `E030` | Entidad referenciada pero no declarada en el catálogo alcanzable. |
 | `E031` | Entidad declarada dos veces (mismo id en documentos distintos).   |
 | `E032` | `use` apunta a un documento inexistente.                          |
-| `E033` | Nombre de bloque duplicado en el workspace.                       |
+| `E033` | Nombre de bloque duplicado en el documento (decisión #25).        |
 | `E034` | Propiedad de entidad desconocida.                                 |
 
 Se mantiene la recuperación de errores del parser: un `E030` no impide
@@ -425,3 +425,22 @@ Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-0
 | 23 | 2026-09-28 | **`use` es palabra clave contextual** como las de #3, y entra en la enmienda #13: una línea `use` dentro de un cuerpo sin cerrar lo cierra. `use` sin string es `E046`. | parser (D) |
 | 24 | 2026-09-28 | **Namespace y orden del workspace.** Los ids de entidad son globales al workspace: `E031` también entre documentos que no se usan entre sí. "Primera declaración" (#2) = documentos ordenados por uri (comparación de strings), luego orden de fuente; así el ganador no depende del orden de carga. El catálogo alcanzable de un documento es el post-orden DFS de sus `use` (dependencias primero, él al final) filtrado a las declaraciones ganadoras; es el orden de columnas de #1. | resolver (D), layout, mapa agregado (F), `.md` (K1) |
 | 25 | 2026-09-28 | **Identidad de bloque = `uri#nombre`** (`BlockId`). Los nombres de bloque solo son únicos dentro de su documento: `E033` es por documento (enmienda §7, que decía "en el workspace"). Con un nombre repetido, las consultas por bloque del índice toman el primero; las referencias y aristas de todos cuentan. Es la misma forma que usa `relations.target` en K1 (`auth.flo#acceso`). | xref (D), atributos `data-flo-block` (E), explorador (F), `.md` (K1) |
+
+### Decisiones de la Fase E (2026-09-28)
+
+| # | Fecha | Decisión | Afecta a |
+|---|---|---|---|
+| 26 | 2026-09-28 | **Atributos `data-flo-*` del SVG** (§6.3). Cada nodo o participante (`<g>` exterior) lleva `data-flo-entity` (id del nodo: la entidad resuelta, o el nombre escrito si es placeholder, que además tiene `flo-unresolved`), `data-flo-block` (`BlockId`, #25), `data-flo-uri` (documento del bloque, no el de la declaración) y `data-flo-line` (línea de la primera referencia al nodo en el bloque). Cada arista o mensaje (`<polyline>`/`<line>`) lleva `data-flo-from`, `data-flo-to`, `data-flo-block`, `data-flo-uri` y `data-flo-line` (línea de la arista). Se emiten siempre, también en Exportar SVG. Los snapshots de SVG comparan geometría: el test quita `data-flo-*` antes de `toMatchSnapshot()` y el `.snap` no se regenera. Los tipos de `layout/` llevan el `Range` de origen de cada nodo y arista. | render (E), preview y navegación (F), vista de grafo (K4) |
+
+### Pendientes diferidos (Fase E, 2026-09-28)
+
+- **F — preview:** el header fijo de `sequence` (`sequence-view.ts`) clona
+  `.flo-seq-header-box`, que no lleva los `data-flo-*` (están en el `<g>`
+  padre): un click en el header fijo tiene que resolverse contra el
+  participante original.
+- **F — workspace:** `link()` reescribe `Ref.target` en los documentos que
+  guarda el `Workspace`, así que un `LinkResult` anterior cambia con el
+  siguiente `link()` (§6.4). El editor no debe conservar resultados viejos
+  entre links.
+- **F — mensajes:** un `use` cuya ruta sale de la raíz da `E032` con el
+  texto "no existe en el workspace"; convendría decir que sale de la raíz.
