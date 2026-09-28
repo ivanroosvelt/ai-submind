@@ -116,6 +116,8 @@ las entidades en el catálogo, no por orden de aparición en los mensajes.
 **`E030`** — una arista referencia un id que no tiene `entity`:
 
 ```
+entity user [Usuario]
+
 flow f {
   user -> api
 }
