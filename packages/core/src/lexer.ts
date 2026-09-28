@@ -188,6 +188,22 @@ export class Lexer {
   }
 
   /**
+   * Mira, sin consumir nada, si lo que queda de la línea actual es solo
+   * espacio en blanco o un comentario `//`. Lo usa el parser para decidir
+   * si un `{` abre un cuerpo o una forma `{decisión}`.
+   */
+  restOfLineIsBlank(): boolean {
+    if (this.buffered) {
+      throw new Error("Lexer.restOfLineIsBlank: hay un token en el buffer de peek()");
+    }
+    let j = this.i;
+    while (j < this.source.length && (this.source[j] === " " || this.source[j] === "\t" || this.source[j] === "\r")) {
+      j += 1;
+    }
+    return j >= this.source.length || this.source[j] === "\n" || (this.source[j] === "/" && this.source[j + 1] === "/");
+  }
+
+  /**
    * Descarta caracteres crudos hasta el próximo newline (o EOF), sin emitir
    * tokens ni diagnósticos. Recuperación de errores pura: para cuando el
    * parser ya decidió abandonar la línea actual y no quiere que el resto se
