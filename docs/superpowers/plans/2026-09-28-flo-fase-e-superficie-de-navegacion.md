@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-28 (`e07edae`, `8ed80fd`, `bfea843`), revisión final sin hallazgos críticos ni importantes.
+
 **Goal:** Que el SVG deje de ser una imagen muerta (atributos `data-flo-*`
 en cada nodo y arista) y que `@flo/core` exponga el workspace, el índice de
 referencias y el layout en su API pública.
@@ -122,7 +124,7 @@ de link, `layoutFlowchart`/`layoutSequence` con sus tipos, y `renderBlock`.
   export function renderBlock(block: DiagramBlock, catalog: Catalog, uri: DocumentUri): RenderedDiagram;
   ```
 
-- [ ] **Step 1: Tests de layout que fallan (rango de cada nodo y arista)**
+- [x] **Step 1: Tests de layout que fallan (rango de cada nodo y arista)**
 
 En `packages/core/src/layout/flowchart.test.ts`, reemplazar el `toEqual`
 del test `"lays out a linear chain top-to-bottom with dagre, sizing each shape correctly"`
@@ -191,12 +193,12 @@ test `"places participants in columns and a message on the first row"`:
     });
 ```
 
-- [ ] **Step 2: Verificar que fallan**
+- [x] **Step 2: Verificar que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/layout`
 Expected: FAIL — los objetos no tienen `range`.
 
-- [ ] **Step 3: Implementar los rangos en `layout/`**
+- [x] **Step 3: Implementar los rangos en `layout/`**
 
 `packages/core/src/layout/nodes.ts` (archivo completo):
 
@@ -321,12 +323,12 @@ export interface SequenceMessageLayout {
   }));
 ```
 
-- [ ] **Step 4: Verificar que layout pasa**
+- [x] **Step 4: Verificar que layout pasa**
 
 Run: `pnpm --filter @flo/core exec vitest run src/layout`
 Expected: PASS.
 
-- [ ] **Step 5: Tests de render que fallan**
+- [x] **Step 5: Tests de render que fallan**
 
 `packages/core/src/render/flowchart.test.ts` (archivo completo):
 
@@ -495,14 +497,14 @@ y cambiar las tres líneas `expect(diagrams[0].svg).toMatchSnapshot();` por
 `expect(geometry(diagrams[0].svg)).toMatchSnapshot();`. **No tocar el
 `.snap`.**
 
-- [ ] **Step 6: Verificar que fallan**
+- [x] **Step 6: Verificar que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/render`
 Expected: FAIL — typecheck/`renderBlock` no existe y los SVG no traen
 `data-flo-*`. (Los snapshots pasan ya en este paso: quitar atributos que
 todavía no existen no cambia nada.)
 
-- [ ] **Step 7: Implementar el render anotado**
+- [x] **Step 7: Implementar el render anotado**
 
 `packages/core/src/render/svg.ts`: agregar al principio y después de
 `escapeXml`:
@@ -633,13 +635,13 @@ export function render(source: string, uri: DocumentUri = ""): RenderResult {
 }
 ```
 
-- [ ] **Step 8: Verificar que core pasa, snapshots incluidos**
+- [x] **Step 8: Verificar que core pasa, snapshots incluidos**
 
 Run: `pnpm --filter @flo/core typecheck && pnpm --filter @flo/core test`
 Expected: PASS. `git status --short packages/core/src/render/__snapshots__`
 no lista nada.
 
-- [ ] **Step 9: Spec — §7, decisión #26 y pendientes**
+- [x] **Step 9: Spec — §7, decisión #26 y pendientes**
 
 En `docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`:
 
@@ -674,7 +676,7 @@ agregar:
   texto "no existe en el workspace"; convendría decir que sale de la raíz.
 ```
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add packages/core/src/layout packages/core/src/render docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
@@ -702,7 +704,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
   `XRefIndex` se exporta **solo como tipo** (se obtiene de `link()`, no se
   construye).
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 En `packages/core/src/index.test.ts`, reemplazar la línea de import de
 `./index.js` por:
@@ -783,13 +785,13 @@ describe("index: navigation surface (Fase E)", () => {
 });
 ```
 
-- [ ] **Step 2: Verificar que falla**
+- [x] **Step 2: Verificar que falla**
 
 Run: `pnpm --filter @flo/core exec vitest run src/index.test.ts`
 Expected: FAIL — `Workspace`, `blockId`, `layoutFlowchart`, … no se
 exportan desde `./index.js`.
 
-- [ ] **Step 3: Exportar**
+- [x] **Step 3: Exportar**
 
 `packages/core/src/index.ts`: reemplazar la línea
 `export { render } from "./render/index.js";` por
@@ -808,19 +810,19 @@ export type { SequenceLayout, SequenceParticipantLayout, SequenceMessageLayout }
 export type { BlockNode } from "./layout/nodes.js";
 ```
 
-- [ ] **Step 4: Verificar que pasa**
+- [x] **Step 4: Verificar que pasa**
 
 Run: `pnpm --filter @flo/core exec vitest run src/index.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Verificación completa (core build + web contra el `dist/` nuevo)**
+- [x] **Step 5: Verificación completa (core build + web contra el `dist/` nuevo)**
 
 Run (desde la raíz del repo):
 `pnpm --filter @flo/core build && pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: todo PASS; `git status --short packages/core/src/render/__snapshots__ packages/web`
 no lista nada.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core/src/index.ts packages/core/src/index.test.ts

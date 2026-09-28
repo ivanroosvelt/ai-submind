@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-28 (`9a99bd5`..`cb40431`), revisión final sin hallazgos críticos ni importantes.
+
 **Goal:** Que varios documentos `.flo` compartan un catálogo de entidades
 mediante `use "./ruta.flo"`, con resolución transitiva y deduplicada, un
 `Workspace` en memoria (`setDocument` / `removeDocument` / `link()`) y un
@@ -124,7 +126,7 @@ fases en `docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md`
   export function isTopLevelKeyword(value: string): boolean; // entity | flow | sequence | use
   ```
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 En `packages/core/src/parser/document.test.ts`:
 
@@ -207,12 +209,12 @@ describe("use", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests y verificar que fallan**
+- [x] **Step 2: Correr los tests y verificar que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/parser/document.test.ts`
 Expected: FAIL (`uses` no existe; `use` da `E040`; mensaje de `E040` distinto).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `packages/core/src/ast.ts` — agregar antes de `ParsedDocument` y sumar el campo:
 
@@ -312,12 +314,12 @@ En `parseDocument`: el doc-comment pasa a `Document ::= (BlankLine | Use | Entit
 
 `packages/core/src/index.ts` — agregar `UseDecl` a la lista de `export type { ... } from "./ast.js"`.
 
-- [ ] **Step 4: Correr la suite del core**
+- [x] **Step 4: Correr la suite del core**
 
 Run: `pnpm --filter @flo/core exec vitest run && pnpm --filter @flo/core typecheck`
 Expected: PASS. Si algún otro test construye un `ParsedDocument` literal sin `uses`, agregarle `uses: []` (no cambiar nada más).
 
-- [ ] **Step 5: GRAMMAR.md y §11**
+- [x] **Step 5: GRAMMAR.md y §11**
 
 En `packages/core/GRAMMAR.md`:
 
@@ -340,7 +342,7 @@ Al final de `docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`, 
 | 23 | 2026-09-28 | **`use` es palabra clave contextual** como las de #3, y entra en la enmienda #13: una línea `use` dentro de un cuerpo sin cerrar lo cierra. `use` sin string es `E046`. | parser (D) |
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
@@ -363,7 +365,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
   Las uris son rutas POSIX relativas a la raíz del workspace (`"a.flo"`,
   `"dir/b.flo"`).
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 `packages/core/src/workspace/uri.test.ts`:
 
@@ -396,12 +398,12 @@ describe("resolveUse", () => {
 });
 ```
 
-- [ ] **Step 2: Verificar que falla**
+- [x] **Step 2: Verificar que falla**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/uri.test.ts`
 Expected: FAIL (no existe `./uri.js`).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `packages/core/src/workspace/uri.ts`:
 
@@ -429,12 +431,12 @@ export function resolveUse(from: DocumentUri, path: string): DocumentUri | null 
 }
 ```
 
-- [ ] **Step 4: Verificar que pasa**
+- [x] **Step 4: Verificar que pasa**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/uri.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/workspace/uri.ts packages/core/src/workspace/uri.test.ts
@@ -482,7 +484,7 @@ Reglas (decisión #24, texto en el step 5):
 - **Referencias** se resuelven contra el catálogo alcanzable. Si no resuelve pero el id existe en el catálogo global, el `E030` dice dónde está.
 - `E033` sigue siendo por documento.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 Reemplazar todo `packages/core/src/workspace/resolver.test.ts` por:
 
@@ -629,12 +631,12 @@ describe("linkDocuments — varios documentos", () => {
 });
 ```
 
-- [ ] **Step 2: Verificar que fallan**
+- [x] **Step 2: Verificar que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/resolver.test.ts`
 Expected: FAIL (`linkDocuments` no existe).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `packages/core/src/diagnostics.ts` — agregar:
 
@@ -796,12 +798,12 @@ export function parse(source: string, uri: DocumentUri = ""): ParseResult {
 }
 ```
 
-- [ ] **Step 4: Correr la suite del core**
+- [x] **Step 4: Correr la suite del core**
 
 Run: `pnpm --filter @flo/core exec vitest run && pnpm --filter @flo/core typecheck`
 Expected: PASS, incluidos `render/reference-diagrams.test.ts` y sus snapshots **sin cambios**. Si `git status` muestra `__snapshots__` modificado, es un bug: no regenerar.
 
-- [ ] **Step 5: GRAMMAR.md y §11**
+- [x] **Step 5: GRAMMAR.md y §11**
 
 En `packages/core/GRAMMAR.md`, reemplazar el bullet que empieza con "Un bloque solo contiene aristas; sus nodos se derivan..." por:
 
@@ -833,7 +835,7 @@ Agregar a la tabla de "Decisiones de la Fase D" del spec (creada en la task 1):
 | 24 | 2026-09-28 | **Namespace y orden del workspace.** Los ids de entidad son globales al workspace: `E031` también entre documentos que no se usan entre sí. "Primera declaración" (#2) = documentos ordenados por uri (comparación de strings), luego orden de fuente; así el ganador no depende del orden de carga. El catálogo alcanzable de un documento es el post-orden DFS de sus `use` (dependencias primero, él al final) filtrado a las declaraciones ganadoras; es el orden de columnas de #1. | resolver (D), layout, mapa agregado (F), `.md` (K1) |
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
@@ -873,7 +875,7 @@ Reglas: un bloque con nombre repetido en su documento (`E033`) no entra en
 cuentan en `referencesTo` y sus aristas en `neighbors` (renombrar tiene que
 alcanzarlas).
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 `packages/core/src/workspace/xref.test.ts`:
 
@@ -958,12 +960,12 @@ describe("XRefIndex", () => {
 });
 ```
 
-- [ ] **Step 2: Verificar que falla**
+- [x] **Step 2: Verificar que falla**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/xref.test.ts`
 Expected: FAIL (no existe `./xref.js`).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `packages/core/src/workspace/xref.ts`:
 
@@ -1065,12 +1067,12 @@ export class XRefIndex {
 }
 ```
 
-- [ ] **Step 4: Verificar que pasa**
+- [x] **Step 4: Verificar que pasa**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/xref.test.ts && pnpm --filter @flo/core typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: §11**
+- [x] **Step 5: §11**
 
 Agregar a la tabla de "Decisiones de la Fase D" del spec:
 
@@ -1078,7 +1080,7 @@ Agregar a la tabla de "Decisiones de la Fase D" del spec:
 | 25 | 2026-09-28 | **Identidad de bloque = `uri#nombre`** (`BlockId`). Los nombres de bloque solo son únicos dentro de su documento: `E033` es por documento (enmienda §7, que decía "en el workspace"). Con un nombre repetido, las consultas por bloque del índice toman el primero; las referencias y aristas de todos cuentan. Es la misma forma que usa `relations.target` en K1 (`auth.flo#acceso`). | xref (D), atributos `data-flo-block` (E), explorador (F), `.md` (K1) |
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core/src/workspace/xref.ts packages/core/src/workspace/xref.test.ts docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
@@ -1117,7 +1119,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
   export function nodeId(ref: Ref): string; // ref.target ?? ref.name (decisión #15)
   ```
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 `packages/core/src/workspace/workspace.test.ts`:
 
@@ -1215,12 +1217,12 @@ Nota sobre el test de "removed": en `login`, línea 4 es `  usuario -> pantalla`
 
 Nota sobre el test de "merges": `  start ->` da `E014` en la posición del fin de línea (col 11), igual que el test existente de `parser/index.test.ts`; si el lexer lo ancla en otra columna, ajustar **solo** esa columna al valor que reporte el lexer, sin tocar el código.
 
-- [ ] **Step 2: Verificar que falla**
+- [x] **Step 2: Verificar que falla**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/workspace.test.ts`
 Expected: FAIL (no existe `./workspace.js`).
 
-- [ ] **Step 3: Implementar el `Workspace`**
+- [x] **Step 3: Implementar el `Workspace`**
 
 `packages/core/src/workspace/workspace.ts`:
 
@@ -1284,7 +1286,7 @@ export class Workspace {
 }
 ```
 
-- [ ] **Step 4: `parse()` sobre el `Workspace`**
+- [x] **Step 4: `parse()` sobre el `Workspace`**
 
 `packages/core/src/parser/index.ts` — reemplazar por:
 
@@ -1310,7 +1312,7 @@ export function parse(source: string, uri: DocumentUri = ""): ParseResult {
 }
 ```
 
-- [ ] **Step 5: Aristas por entidad resuelta (decisión #15)**
+- [x] **Step 5: Aristas por entidad resuelta (decisión #15)**
 
 `packages/core/src/layout/nodes.ts` — cambiar el import a `import type { DiagramBlock, NodeShape, Ref } from "../ast.js";` y agregar:
 
@@ -1345,7 +1347,7 @@ export function nodeId(ref: Ref): string {
 
 Hoy `ref.target === ref.name` siempre que resuelve (no hay alias), así que el SVG no cambia.
 
-- [ ] **Step 6: Verificación completa**
+- [x] **Step 6: Verificación completa**
 
 Run: `pnpm --filter @flo/core exec vitest run && pnpm --filter @flo/core typecheck`
 Expected: PASS; `git status` no muestra cambios en `render/__snapshots__/`.
@@ -1353,7 +1355,7 @@ Expected: PASS; `git status` no muestra cambios en `render/__snapshots__/`.
 Run (desde la raíz del repo): `pnpm --filter @flo/core build && pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: todo PASS, incluida la suite de `@flo/web` sin cambios en su código.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/core
