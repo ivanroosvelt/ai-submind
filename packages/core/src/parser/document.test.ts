@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseDocument } from "./document.js";
+import { parse } from "./index.js";
 
 describe("parseDocument", () => {
   it("collects entities and blocks in source order, mixed in one file", () => {
@@ -65,5 +66,61 @@ describe("parseDocument", () => {
   it("includes lexer diagnostics", () => {
     const { diagnostics } = parseDocument('flow f "sin cerrar {\n}\n', "a.flo");
     expect(diagnostics.map((d) => d.code)).toContain("E002");
+  });
+
+  describe("recuperación de un '}' faltante o un cuerpo en una línea", () => {
+    it("una línea 'flow'/'sequence' sin '->' cierra el bloque anterior con E052, sin arrastrar el resto", () => {
+      const source = "entity a\nentity b\nflow one {\n  a -> b\nsequence two {\n  a -> b : hi\n}\n";
+      const { diagnostics, document } = parse(source);
+      expect(diagnostics.map((d) => d.code)).toEqual(["E052"]);
+      expect(diagnostics[0].range.start).toEqual({ line: 3, column: 10 });
+      expect(document.blocks.map((b) => [b.name, b.edges.length])).toEqual([
+        ["one", 1],
+        ["two", 1],
+      ]);
+    });
+
+    it("una línea 'entity' sin '->' cierra el bloque anterior con E052; las entidades siguientes se declaran igual", () => {
+      const source = "flow a {\n  x -> y\nentity x\nentity y\n";
+      const { diagnostics, document } = parse(source);
+      expect(diagnostics.map((d) => d.code)).toEqual(["E052"]);
+      expect(document.entities.map((e) => e.id)).toEqual(["x", "y"]);
+      expect(document.blocks[0].edges[0].from.target).toBe("x");
+    });
+
+    it("una línea 'flow' sin '->' dentro de un cuerpo de entidad lo cierra con E045", () => {
+      const source = "entity w {\n  type: s\nflow f {\n  w -> w\n}\n";
+      const { diagnostics, document } = parse(source);
+      expect(diagnostics.map((d) => d.code)).toEqual(["E045"]);
+      expect(document.entities[0]).toMatchObject({ id: "w", type: "s" });
+      expect(document.blocks[0].edges).toHaveLength(1);
+    });
+
+    it("'{}' es un bloque vacío sin diagnósticos", () => {
+      const source = "entity x\nflow a {}\nflow b {\n  x -> x\n}\n";
+      const { diagnostics, document } = parse(source);
+      expect(diagnostics).toEqual([]);
+      expect(document.blocks.map((b) => b.edges.length)).toEqual([0, 1]);
+    });
+
+    it("un bloque en una sola línea reporta un solo E016 y sigue con el resto del documento", () => {
+      const source = "entity x\nflow a { x -> x }\nflow b {\n  x -> x\n}\n";
+      const { diagnostics, document } = parse(source);
+      expect(diagnostics.map((d) => d.code)).toEqual(["E016"]);
+      expect(document.blocks).toHaveLength(2);
+    });
+
+    it("un cuerpo de entidad en una sola línea reporta un solo E016 y sigue con el resto del documento", () => {
+      const source = "entity x [X] { type: a }\nflow f {\n  x -> x\n}\n";
+      const { diagnostics, document } = parse(source);
+      expect(diagnostics.map((d) => d.code)).toEqual(["E016"]);
+      expect(document.entities.map((e) => e.id)).toEqual(["x"]);
+      expect(document.blocks[0].edges).toHaveLength(1);
+    });
+
+    it("'entity e {}' es un cuerpo vacío sin diagnósticos", () => {
+      const { diagnostics } = parse("entity e {}\n");
+      expect(diagnostics).toEqual([]);
+    });
   });
 });

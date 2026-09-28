@@ -24,6 +24,35 @@ export class TokenCursor {
     return token;
   }
 
+  /**
+   * Mira un token más allá de current(), sin consumir nada. Usa el peek()
+   * propio del lexer: como current() ya dejó el lexer sin lookahead pendiente
+   * (o lo llena ahora mismo), este peek() del lexer queda libre para mirar el
+   * token siguiente.
+   */
+  peekNext(): Token {
+    this.current();
+    return this.lexer.peek();
+  }
+
+  /**
+   * Si lo que resta de la línea actual (desde donde va el lexer, incluido el
+   * token ya cacheado como current()) termina en '}' ignorando espacio en
+   * blanco, descarta ese current() y los caracteres crudos previos a esa '}'
+   * sin tokenizarlos, dejando la '}' como próximo current(). No toca nada si
+   * no encuentra esa '}' al final: repone el token para que el caller siga
+   * igual que si esto no se hubiera llamado.
+   */
+  closeTrailingBraceOnLine(): boolean {
+    const pending = this.buffered;
+    this.buffered = null;
+    if (!this.lexer.closeTrailingBraceOnLine()) {
+      this.buffered = pending;
+      return false;
+    }
+    return true;
+  }
+
   /** Pide texto al lexer. Requiere que no haya lookahead pendiente. */
   readText(closer: "]" | ")" | "}" | "\n"): Token {
     if (this.buffered !== null) throw new Error("readText con lookahead pendiente");
@@ -34,6 +63,12 @@ export class TokenCursor {
   restOfLineIsBlank(): boolean {
     if (this.buffered !== null) throw new Error("restOfLineIsBlank con lookahead pendiente");
     return this.lexer.restOfLineIsBlank();
+  }
+
+  /** Pide al lexer si el próximo carácter no blanco de la línea es '}'. */
+  restOfLineStartsWithBrace(): boolean {
+    if (this.buffered !== null) throw new Error("restOfLineStartsWithBrace con lookahead pendiente");
+    return this.lexer.restOfLineStartsWithBrace();
   }
 
   atLineEnd(): boolean {
@@ -82,4 +117,24 @@ export function reportTrailing(cursor: TokenCursor, diagnostics: Diagnostic[]): 
   if (cursor.atLineEnd()) return;
   diagnostics.push(diagnosticAt("E016", "contenido inesperado al final de la línea", cursor.current().range));
   cursor.skipToNextLine();
+}
+
+/**
+ * Como reportTrailing(), para el contenido que sigue a un '{' que abre un
+ * cuerpo (bloque o entidad) en la misma línea. Un '}' inmediato (cuerpo
+ * vacío en una línea) no es contenido sobrante: el caller lo ve como
+ * current() y lo cierra él mismo. Si hay contenido y la línea cruda termina
+ * en '}', reporta un único E016 en ese primer token y deja la '}' como
+ * próximo current(), sin escanear el resto como tokens de código (evita
+ * E002 espurios por texto de etiqueta). Si no termina en '}', cae en
+ * reportTrailing de siempre: E016 y se descarta el resto de la línea.
+ */
+export function reportTrailingAfterOpenBrace(cursor: TokenCursor, diagnostics: Diagnostic[]): void {
+  if (cursor.atLineEnd() || cursor.current().kind === "RBRACE") return;
+  const trailing = cursor.current();
+  if (cursor.closeTrailingBraceOnLine()) {
+    diagnostics.push(diagnosticAt("E016", "contenido inesperado al final de la línea", trailing.range));
+    return;
+  }
+  reportTrailing(cursor, diagnostics);
 }

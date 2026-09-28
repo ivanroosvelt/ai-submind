@@ -1,5 +1,5 @@
 import type { Token, TokenKind } from "../tokens.js";
-import { describeToken, reportTrailing, type TokenCursor } from "./cursor.js";
+import { describeToken, reportTrailing, reportTrailingAfterOpenBrace, type TokenCursor } from "./cursor.js";
 import { diagnosticAt, type Diagnostic } from "../diagnostics.js";
 import type { DocumentUri, EntityDecl, NodeShape } from "../ast.js";
 
@@ -78,7 +78,7 @@ function parseProps(cursor: TokenCursor, entity: EntityDecl, diagnostics: Diagno
 
 /** `Body ::= "{" Newline (PropList? Newline)* "}"`. `open` ya fue consumido. */
 function parseBody(cursor: TokenCursor, entity: EntityDecl, open: Token, diagnostics: Diagnostic[]): void {
-  reportTrailing(cursor, diagnostics);
+  reportTrailingAfterOpenBrace(cursor, diagnostics);
   cursor.skipNewlines();
   for (;;) {
     const token = cursor.current();
@@ -92,6 +92,17 @@ function parseBody(cursor: TokenCursor, entity: EntityDecl, open: Token, diagnos
     if (token.kind === "RBRACE") {
       entity.range.end = cursor.advance().range.end;
       reportTrailing(cursor, diagnostics);
+      return;
+    }
+    if (token.kind === "IDENT" && (token.value === "entity" || token.value === "flow" || token.value === "sequence")) {
+      // Solo 'type'/'tags' son claves válidas en un cuerpo de entidad: una
+      // línea que empieza con una de estas palabras clave es en realidad el
+      // siguiente statement de nivel superior. No hace falta lookahead (a
+      // diferencia de un bloque, aquí nunca es un edge válido). No se
+      // consume la línea, para que el parser de documento la retome.
+      diagnostics.push(
+        diagnosticAt("E045", `falta '}' que cierra el cuerpo de la entidad '${entity.id}'`, open.range)
+      );
       return;
     }
     if (parseProps(cursor, entity, diagnostics)) reportTrailing(cursor, diagnostics);
@@ -129,8 +140,10 @@ export function parseEntity(cursor: TokenCursor, uri: DocumentUri, diagnostics: 
   if (isOpen(open.kind)) {
     const openKind = open.kind;
     cursor.advance();
-    // `entity X {` sin nada más en la línea: el `{` abre el cuerpo, no un rombo.
-    if (openKind === "LBRACE" && cursor.restOfLineIsBlank()) {
+    // `entity X {` sin nada más en la línea, o `entity X {}` con el cierre
+    // ahí mismo: el `{` abre el cuerpo (vacío en el segundo caso), no un
+    // rombo.
+    if (openKind === "LBRACE" && (cursor.restOfLineIsBlank() || cursor.restOfLineStartsWithBrace())) {
       parseBody(cursor, entity, open, diagnostics);
       return entity;
     }

@@ -209,6 +209,43 @@ export class Lexer {
   }
 
   /**
+   * Mira, sin consumir nada, si el próximo carácter no blanco de la línea
+   * actual es '}'. Lo usa el parser para reconocer `entity X {}` (cuerpo
+   * vacío en la misma línea) sin tokenizar lo que sigue — así no arriesga un
+   * E002 espurio si en cambio es la forma corta `{texto}` de una entidad.
+   */
+  restOfLineStartsWithBrace(): boolean {
+    if (this.buffered) {
+      throw new Error("Lexer.restOfLineStartsWithBrace: hay un token en el buffer de peek()");
+    }
+    let j = this.i;
+    while (j < this.source.length && (this.source[j] === " " || this.source[j] === "\t" || this.source[j] === "\r")) {
+      j += 1;
+    }
+    return this.source[j] === "}";
+  }
+
+  /**
+   * Si lo que resta de la línea actual, ignorando espacio en blanco final,
+   * termina en '}', descarta los caracteres crudos hasta justo antes de esa
+   * '}' (que el próximo next()/peek() tokenizará) y devuelve true. Si no
+   * termina en '}', no consume nada y devuelve false. Lo usa el parser para
+   * cerrar en la misma línea un cuerpo abierto con contenido detrás del '{'.
+   */
+  closeTrailingBraceOnLine(): boolean {
+    if (this.buffered) {
+      throw new Error("Lexer.closeTrailingBraceOnLine: hay un token en el buffer de peek()");
+    }
+    let j = this.i;
+    while (j < this.source.length && this.source[j] !== "\n") j += 1;
+    let k = j - 1;
+    while (k >= this.i && (this.source[k] === " " || this.source[k] === "\t" || this.source[k] === "\r")) k -= 1;
+    if (k < this.i || this.source[k] !== "}") return false;
+    while (this.i < k) this.advance();
+    return true;
+  }
+
+  /**
    * Descarta caracteres crudos hasta el próximo newline (o EOF), sin emitir
    * tokens ni diagnósticos. Recuperación de errores pura: para cuando el
    * parser ya decidió abandonar la línea actual y no quiere que el resto se

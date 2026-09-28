@@ -53,4 +53,22 @@ describe("enhanceSequencePreview", () => {
 
     expect(container.querySelector(".flo-seq-sticky")).toBeNull();
   });
+
+  it("adds one sticky per block section when the preview has several blocks, without reprocessing the inserted headers", () => {
+    const container = document.createElement("div");
+    const sequenceSvg =
+      '<svg width="320" height="170">' +
+      '<g><g class="flo-seq-header-box"><rect width="140" height="50" /><text>Alice</text></g><line /></g>' +
+      "</svg>";
+    container.innerHTML =
+      `<section class="flo-block">${sequenceSvg}</section>` + `<section class="flo-block">${sequenceSvg}</section>`;
+
+    enhanceSequencePreview(container);
+
+    const stickies = container.querySelectorAll(".flo-seq-sticky");
+    expect(stickies).toHaveLength(2);
+    container.querySelectorAll("section.flo-block").forEach((section) => {
+      expect(section.querySelectorAll(".flo-seq-sticky")).toHaveLength(1);
+    });
+  });
 });
