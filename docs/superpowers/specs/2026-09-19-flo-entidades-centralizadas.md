@@ -251,7 +251,7 @@ preview deje de ser una imagen muerta:
 ```html
 <g
   data-flo-entity="Api"
-  data-flo-block="login"
+  data-flo-block="login.flo#login"
   data-flo-uri="login.flo"
   data-flo-line="4"
 ></g>
@@ -444,3 +444,5 @@ Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-0
   entre links.
 - **F — mensajes:** un `use` cuya ruta sale de la raíz da `E032` con el
   texto "no existe en el workspace"; convendría decir que sale de la raíz.
+- **F — editor:** `editor.ts` llama a `render(source)` sin uri, así que el preview y el SVG exportado llevan `data-flo-uri=""` y `data-flo-block="#<nombre>"`. Cuando el editor tenga documentos con nombre tiene que pasar su uri.
+- **F — preview:** la etiqueta de una arista (`<rect>` + `<text>`) no lleva `data-flo-*` (decisión #26 los pone solo en la `<polyline>`/`<line>`): un click en la etiqueta tiene que resolverse contra la arista vecina, o hay que agrupar línea y etiqueta.
