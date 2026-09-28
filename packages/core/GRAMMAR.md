@@ -1,22 +1,17 @@
-# Gramática `.flo` (MVP: flowchart + sequence)
+# Gramática `.flo` (catálogo de entidades + bloques nombrados)
 
-    Diagram      ::= BlankLine* Header Newline Body EOF
-    Header       ::= "diagram" Kind
-    Kind         ::= "flowchart" | "sequence"
-    Body         ::= (BlankLine | Statement)*
+    Document     ::= (BlankLine | EntityDecl | Block)* EOF
     BlankLine    ::= Newline
-    Statement    ::= (FlowchartStatement | SequenceStatement) Newline
 
-    (* --- flowchart --- *)
-    FlowchartStatement ::= NodeDecl | EdgeDecl
-    NodeDecl     ::= Ident Shape
+    EntityDecl   ::= "entity" Ident Shape? PropList? EntityBody? Newline
     Shape        ::= "[" Text "]" | "(" Text ")" | "{" Text "}"
-    EdgeDecl     ::= Ident "->" Ident (":" Text)?
+    PropList     ::= Prop ("," Prop)*
+    Prop         ::= "type" ":" Ident | "tags" ":" Ident+
+    EntityBody   ::= "{" Newline (PropList? Newline)* "}"
 
-    (* --- sequence --- *)
-    SequenceStatement  ::= ParticipantDecl | MessageDecl
-    ParticipantDecl ::= "participant" Ident ("as" Text)?
-    MessageDecl  ::= Ident "->" Ident ":" Text
+    Block        ::= ("flow" | "sequence") Ident String? "{" Newline BlockLine* "}" Newline
+    BlockLine    ::= (Edge)? Newline
+    Edge         ::= Ident "->" Ident (":" Text)?     (* en sequence ":" Text es obligatorio *)
 
     Ident        ::= (letra ASCII | "_") (letra ASCII | dígito | "_")*
     Text         ::= cualquier carácter excepto el delimitador de cierre
@@ -25,96 +20,88 @@
     Comment      ::= "//" cualquier carácter hasta fin de línea
                       (se descarta antes de tokenizar, no genera token)
 
-`String` es puramente léxica: el lexer ya la reconoce como token `STRING`,
-pero ninguna regla de la gramática la consume todavía. Queda lista para
-cuando una fase futura (entidades, `use "path"`) la necesite.
+Un documento es una lista de declaraciones de nivel superior: entidades
+(el catálogo) y bloques `flow`/`sequence` (las vistas). No hay header de
+documento ni declaración de nodos dentro de un bloque — los nodos de un
+bloque se derivan de las entidades que sus aristas referencian.
 
-## Reglas léxicas especiales
+## Reglas léxicas y de parseo
 
-- Se permiten líneas en blanco (incluida una línea que queda vacía porque
-  un comentario fue eliminado por el lexer, p. ej. `// título\n`) antes
-  del header `diagram <tipo>`. El parser las salta antes de revisar E003
-  (archivo vacío) o E004 (falta `diagram`), así que un comentario inicial
-  no se confunde con contenido inválido.
 - El lexer es pasivo: `next()`/`peek()` producen tokens de código simples
   (`LBRACKET`, `LPAREN`, `LBRACE`, `COLON`, `IDENT`, etc.) sin ningún
-  efecto lateral. Ninguno de esos caracteres dispara un "modo texto"
-  automático. El modo texto lo pide explícitamente el *parser*, llamando
-  a `lexer.readTextUntil(closer)`, justo en las posiciones que la
-  gramática de arriba ya implica: después del delimitador de apertura en
-  `Shape`, después de `:` en `EdgeDecl`/`MessageDecl`, y después de `as`
-  en `ParticipantDecl`. Fuera de esas llamadas explícitas, `[`, `(`, `{`
-  y `:` son tokens comunes como cualquier otro.
-- `as` es una palabra clave **contextual**, no una palabra reservada
-  global del lexer: para el lexer, `as` es un `IDENT` como cualquier
-  otro. Solo el parser le da significado especial, y en una única
-  posición — justo después de consumir el id de un participante en
-  `ParticipantDecl` (`parser/sequence.ts`) — donde, si el siguiente token
-  es `IDENT` con valor `"as"`, lo consume y pide texto con
-  `readTextUntil("\n")` para el alias. En cualquier otra posición,
-  incluyendo dentro de un `flowchart`, `as` es un `IDENT` sin efecto
-  gramatical (por ejemplo, `as -> b` en un flowchart declara un nodo
-  llamado `as`). Es la única forma en que un alias de participante puede
-  tener espacios (`as Base de datos`).
-- Un id de nodo/participante no puede reusarse con una forma distinta
-  (flowchart) ni declararse dos veces (sequence) — es un error, no una
-  redefinición silenciosa.
-- En `flowchart`, toda arista debe referenciar nodos declarados en algún
-  lugar del mismo archivo — el orden no importa: un nodo declarado más
-  abajo en el archivo puede ser referenciado por una arista anterior sin
-  error. Esta comprobación corre como una pasada posterior, una vez que
-  `nodes` y `edges` están completos; solo se marca un id que nunca llega
-  a declararse en todo el archivo (E017). A diferencia de `sequence`, no
-  hay autodeclaración de nodos en `flowchart`.
-- En `sequence`, un participante usado en un mensaje sin haber sido
-  declarado explícitamente con `participant` se autodeclara con su id
-  como label. Declarar explícitamente un participante ya autodeclarado
-  por un mensaje previo es un caso no soportado en esta ronda (error
-  E023) — se documenta como limitación conocida, no un bug.
-- Si el header (`diagram <tipo>`) falla al parsear (E003/E004/E005/E006),
-  el parser retorna de inmediato sin llegar a invocar
-  `parseFlowchartBody`/`parseSequenceBody` — el lexer nunca escanea el
-  cuerpo del archivo. Por lo tanto, un problema léxico en el cuerpo (p. ej.
-  un corchete sin cerrar) NO se reporta junto al error de header; solo
-  aparece el diagnóstico del header. Es una consecuencia deliberada de la
-  arquitectura de lexer perezoso (el cuerpo genuinamente nunca se escanea),
-  no un bug.
+  efecto lateral. El modo texto lo pide explícitamente el *parser*,
+  llamando a `lexer.readTextUntil(closer)`: después del delimitador de
+  apertura de `Shape` y después de `:` en `Edge`. Fuera de esas llamadas
+  explícitas, `[`, `(`, `{` y `:` son tokens comunes como cualquier otro.
+- `entity`, `flow` y `sequence` son palabras clave **solo al inicio de
+  una línea de nivel superior**; dentro de un bloque son identificadores
+  comunes como cualquier otro (`flow -> entity` es una arista válida si
+  ambos ids fueron declarados como entidades). Ninguna palabra es
+  reservada en el lexer.
+- `{` tras el id de una entidad es ambiguo entre abrir un cuerpo o la
+  forma `{decisión}`: si el resto de la línea está vacío o es un
+  comentario, abre el cuerpo (`EntityBody`); si no, es la forma. Se
+  decide mirando la línea cruda (`Lexer.restOfLineIsBlank()`), no con
+  heurísticas sobre el texto ya leído.
+- Sin `Shape`, una entidad es válida: un rectángulo con su id como label.
+- `type` admite un identificador; `tags`, uno o más (separados por
+  espacio). Ambas propiedades pueden ir en línea (`type: x, tags: a b`) o
+  dentro del cuerpo, una por línea. Una propiedad repetida es `E044`; una
+  propiedad que no es `type` ni `tags` es `E034`.
+- El `}` que cierra un bloque o el cuerpo de una entidad va en su propia
+  línea.
+- Un bloque solo contiene aristas; sus nodos se derivan de las entidades
+  que referencia. Toda referencia debe resolver a una `entity` del mismo
+  documento, declarada antes o después en el archivo (`E030` si no
+  resuelve). La primera declaración de un id gana el catálogo; las
+  siguientes se reportan con `E031`. Los nombres de bloque son únicos
+  dentro del documento (`E033` para los repetidos).
+- Orden de nodos/columnas en el render: el orden de declaración de las
+  entidades en el catálogo, no el orden en que aparecen en las aristas;
+  las referencias sin resolver van al final, en orden de aparición, y se
+  dibujan con trazo punteado.
+- Recuperación de errores: una línea que no parsea se descarta sin
+  escanear el resto de esa línea (no genera un `E016`/`E010` espurio por
+  cada token sobrante). Una racha de líneas inválidas consecutivas de
+  nivel superior produce un solo `E040` (en la primera; la racha la corta
+  el siguiente statement válido). Si falta el `}` de un bloque o del
+  cuerpo de una entidad, se reporta `E052`/`E045` y se conserva lo que se
+  llegó a parsear — un bloque sin cerrar se traga el resto del archivo
+  como si fuera su cuerpo, porque las palabras clave no se reconocen
+  dentro de un cuerpo; es una limitación conocida, no un bug.
 
 ## Fuera de esta gramática (futuro, no en este plan)
 
-Subgrafos, loops/alt de secuencia, notas, estilos. El principio de
-bloques con `{ }` para anidamiento (spec §4) queda reservado para cuando
-se agreguen — no se inventa sintaxis de bloques en esta ronda porque el
-spec no la especifica con ejemplos concretos.
+`use "path"` y documentos múltiples (Fase D); subgrafos, `alt`/`loop` de
+secuencia, notas, estilos.
 
-`{` ya no está atado al modo texto automático (ver "Reglas léxicas
-especiales" arriba), así que queda desambiguado y disponible como
-delimitador de bloque para la Fase C sin requerir más cambios en el
-lexer.
-
-## Códigos de diagnóstico
+## Tabla de diagnósticos
 
 | Código | Origen | Significado |
 |---|---|---|
 | E001 | lexer | falta el delimitador de cierre antes de fin de línea |
-| E002 | lexer | carácter inesperado, o cadena (`"`) sin cerrar antes de fin de línea |
-| E003 | parser (header) | archivo vacío |
-| E004 | parser (header) | falta la palabra `diagram` al inicio |
-| E005 | parser (header) | tipo de diagrama desconocido |
-| E006 | parser (header) | contenido inesperado después del tipo |
-| E010 | parser (flowchart) | se esperaba un identificador |
-| E011 | parser (flowchart) | se esperaba el texto del nodo |
-| E012 | parser (flowchart) | falta el delimitador de cierre del nodo |
-| E013 | parser (flowchart) | nodo redeclarado con otra forma |
-| E014 | parser (flowchart) | se esperaba el id del nodo destino |
-| E015 | parser (flowchart) | se esperaba una forma de nodo o `->` |
-| E016 | parser (flowchart/sequence) | contenido inesperado al final de la línea |
-| E017 | parser (flowchart) | id de nodo no declarado en una arista |
-| E020 | parser (sequence) | se esperaba `participant` o un id |
-| E021 | parser (sequence) | se esperaba el id del participante |
-| E022 | parser (sequence) | se esperaba el texto del alias después de `as` |
-| E023 | parser (sequence) | participante redeclarado |
-| E024 | parser (sequence) | se esperaba `->` |
-| E025 | parser (sequence) | se esperaba el id del participante destino |
-| E026 | parser (sequence) | se esperaba `:` seguido del mensaje |
-| E027 | parser (sequence) | se esperaba el texto del mensaje |
+| E002 | lexer | carácter inesperado, o cadena sin cerrar |
+| E010 | parser | se esperaba un identificador |
+| E011 | entity | se esperaba el texto de la entidad (forma vacía) |
+| E012 | entity | falta el delimitador de cierre de la forma |
+| E014 | block | se esperaba el id destino |
+| E016 | parser | contenido inesperado al final de la línea |
+| E024 | block | se esperaba `->` |
+| E026 | block (sequence) | se esperaba `:` seguido del mensaje |
+| E027 | block (sequence) | se esperaba el texto del mensaje |
+| E030 | resolver | entidad referenciada pero no declarada |
+| E031 | resolver | entidad declarada dos veces |
+| E033 | resolver | nombre de bloque duplicado |
+| E034 | entity | propiedad de entidad desconocida |
+| E040 | document | se esperaba `entity`, `flow` o `sequence` |
+| E041 | entity | se esperaba el id de la entidad |
+| E042 | entity | se esperaba `:` después de la propiedad |
+| E043 | entity | se esperaba el valor de la propiedad |
+| E044 | entity | propiedad repetida |
+| E045 | entity | falta `}` que cierra el cuerpo de la entidad |
+| E050 | block | se esperaba el nombre del bloque |
+| E051 | block | se esperaba `{` para abrir el bloque |
+| E052 | block | falta `}` que cierra el bloque |
+
+**Retirados:** E003, E004, E005, E006, E013, E015, E017, E020, E021, E022,
+E023, E025. No se reusan con otro significado.

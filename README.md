@@ -16,50 +16,51 @@ sintaxis Mermaid: es un formato nuevo desde cero.
 
 ## Ejemplos
 
-```
-diagram flowchart
-
-start[Inicio]
-check{¿Login válido?}
-home[Mostrar home]
-error[Mostrar error]
-
-start -> check
-check -> home : sí
-check -> error : no
-```
+Un documento declara un catálogo de entidades y uno o más bloques
+(`flow`/`sequence`) que las conectan:
 
 ```
-diagram sequence
+entity user (Usuario)
+entity api  [API]
+entity db   {Base de datos}
 
-participant user as Usuario
-participant api as API
-participant db as Base de datos
+flow login "Inicio de sesión" {
+  user -> api : POST /login
+  api  -> db  : buscar credenciales
+  db   -> api : perfil
+}
 
-user -> api : POST /login
-api -> db : SELECT usuario
-db -> api : fila
-api -> user : 200 OK
+sequence login_detail "Detalle" {
+  user -> api : POST /login
+  api  -> db  : SELECT usuario
+  db   -> api : fila
+  api  -> user : 200 OK
+}
 ```
+
+Las entidades se declaran una vez (id, forma y label) y se ven igual en
+todos los bloques que las usan; los bloques solo contienen aristas. Ver
+[`docs/SYNTAX.md`](docs/SYNTAX.md) para la guía completa.
 
 ## Paquetes
 
 Monorepo con pnpm workspaces:
 
-- **`@flo/core`** (`packages/core`) — lexer, parser, AST y diagnostics.
-  No importa nada de `@flo/web` ni de ningún framework de UI: pensado
-  para publicarse a npm de forma independiente. API pública:
+- **`@flo/core`** (`packages/core`) — lexer, parser, resolver, layout y
+  render a SVG. No importa nada de `@flo/web` ni de ningún framework de
+  UI: pensado para publicarse a npm de forma independiente. API pública:
 
   ```ts
   import { parse } from "@flo/core";
 
-  const { diagram, diagnostics } = parse(source);
+  const { document, catalog, diagnostics } = parse(source);
   ```
 
-  `diagram` es `null` si el header (`diagram <tipo>`) es inválido;
+  `document` trae las entidades y los bloques parseados; `catalog` es el
+  mapa id → entidad ya resuelto (la primera declaración de cada id gana).
   `diagnostics` siempre trae todos los errores encontrados en la pasada
-  (el parser nunca aborta en el primer error). Ver la gramática formal y
-  la tabla completa de códigos de diagnóstico en
+  (el parser nunca aborta en el primero). Ver la gramática formal y la
+  tabla completa de códigos de diagnóstico en
   [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md).
 
   `@flo/core` también expone `render(source)`, que hace `parse()` +
@@ -68,13 +69,12 @@ Monorepo con pnpm workspaces:
   ```ts
   import { render } from "@flo/core";
 
-  const { svg, diagnostics } = render(source);
+  const { diagrams, diagnostics } = render(source);
+  // un elemento por bloque: { name, title, kind: "flow" | "sequence", svg }
   ```
 
-  `svg` es `null` solo cuando `diagram` también lo sería (error de
-  header); si el cuerpo tiene errores recuperables, `svg` sigue
-  reflejando el diagrama parcial y `diagnostics` trae los errores, igual
-  que `parse()`.
+  `diagrams` trae un elemento por cada bloque que se pudo parsear, con su
+  SVG, aunque el documento tenga errores en otras partes.
 
 - **`@flo/web`** (`packages/web`) — vanilla TypeScript + Vite, consume
   `@flo/core`. Editor split-pane: CodeMirror 6 a la izquierda (resaltado
@@ -126,7 +126,7 @@ typecheck → test` en cada push y PR.
 - [`docs/superpowers/plans/2026-09-17-flo-layout-render-svg.md`](docs/superpowers/plans/2026-09-17-flo-layout-render-svg.md) — plan de implementación de Fase 2 (layout + render a SVG).
 - [`docs/superpowers/plans/2026-09-18-flo-persistencia-exportacion.md`](docs/superpowers/plans/2026-09-18-flo-persistencia-exportacion.md) — plan de implementación de Fase 4 (persistencia y exportación).
 - [`docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md`](docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md) — plan de implementación de Fase 5 (deploy, docs de usuario, prep de npm).
-- [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md) — gramática formal (EBNF), reglas léxicas especiales y tabla de códigos de diagnóstico (E001–E027).
+- [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md) — gramática formal (EBNF), reglas léxicas especiales y tabla de códigos de diagnóstico.
 
 ## Roadmap
 
