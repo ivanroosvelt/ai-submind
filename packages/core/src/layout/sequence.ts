@@ -1,6 +1,6 @@
 import type { DiagramBlock } from "../ast.js";
 import type { Catalog } from "../workspace/resolver.js";
-import { blockNodes } from "./nodes.js";
+import { blockNodes, nodeId } from "./nodes.js";
 
 export const COLUMN_WIDTH = 160;
 export const HEADER_HEIGHT = 50;
@@ -40,8 +40,8 @@ export function layoutSequence(block: DiagramBlock, catalog: Catalog): SequenceL
   }));
 
   const messages: SequenceMessageLayout[] = block.edges.map((edge, index) => ({
-    from: edge.from.name,
-    to: edge.to.name,
+    from: nodeId(edge.from),
+    to: nodeId(edge.to),
     label: edge.label ?? "", // el parser garantiza la etiqueta en `sequence`
     y: HEADER_HEIGHT + TOP_MARGIN + (index + 1) * ROW_HEIGHT,
   }));

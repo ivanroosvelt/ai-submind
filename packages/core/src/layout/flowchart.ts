@@ -1,7 +1,7 @@
 import dagre from "dagre";
 import type { DiagramBlock, NodeShape } from "../ast.js";
 import type { Catalog } from "../workspace/resolver.js";
-import { blockNodes, type BlockNode } from "./nodes.js";
+import { blockNodes, nodeId, type BlockNode } from "./nodes.js";
 
 const GRAPH_OPTIONS = { rankdir: "TB", nodesep: 40, ranksep: 60, marginx: 20, marginy: 20 };
 const CHAR_WIDTH = 8;
@@ -57,7 +57,7 @@ export function layoutFlowchart(block: DiagramBlock, catalog: Catalog): Flowchar
     graph.setNode(node.id, measureFlowchartNode(node.shape, node.label));
   }
   for (const edge of block.edges) {
-    graph.setEdge(edge.from.name, edge.to.name);
+    graph.setEdge(nodeId(edge.from), nodeId(edge.to));
   }
 
   dagre.layout(graph);
@@ -71,10 +71,10 @@ export function layoutFlowchart(block: DiagramBlock, catalog: Catalog): Flowchar
       return { ...node, x: laidOut.x, y: laidOut.y, width: laidOut.width, height: laidOut.height };
     }),
     edges: block.edges.map((edge) => ({
-      from: edge.from.name,
-      to: edge.to.name,
+      from: nodeId(edge.from),
+      to: nodeId(edge.to),
       label: edge.label,
-      points: graph.edge(edge.from.name, edge.to.name).points,
+      points: graph.edge(nodeId(edge.from), nodeId(edge.to)).points,
     })),
   };
 }

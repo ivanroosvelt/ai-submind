@@ -1,4 +1,4 @@
-import type { DiagramBlock, NodeShape } from "../ast.js";
+import type { DiagramBlock, NodeShape, Ref } from "../ast.js";
 import type { Catalog } from "../workspace/resolver.js";
 
 export interface BlockNode {
@@ -35,4 +35,12 @@ export function blockNodes(block: DiagramBlock, catalog: Catalog): BlockNode[] {
     nodes.push({ id: name, label: name, shape: "rectangle", resolved: false });
   }
   return nodes;
+}
+
+/**
+ * Id de nodo de un extremo de arista: la entidad resuelta, o el nombre
+ * escrito si no resolvió (placeholder). Decisión #15.
+ */
+export function nodeId(ref: Ref): string {
+  return ref.target ?? ref.name;
 }

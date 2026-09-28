@@ -1,7 +1,7 @@
-import { parseDocument } from "./document.js";
-import { linkDocuments, type Catalog } from "../workspace/resolver.js";
-import { sortDiagnostics, type Diagnostic } from "../diagnostics.js";
+import { Workspace } from "../workspace/workspace.js";
+import type { Catalog } from "../workspace/resolver.js";
 import type { DocumentUri, ParsedDocument } from "../ast.js";
+import type { Diagnostic } from "../diagnostics.js";
 
 export interface ParseResult {
   document: ParsedDocument;
@@ -9,13 +9,11 @@ export interface ParseResult {
   diagnostics: Diagnostic[];
 }
 
-/** Un documento suelto: sus `use` no encuentran nada (E032) y solo ve su propio catálogo. */
+/** Un documento suelto, como un workspace de uno: sus `use` no encuentran nada (E032). */
 export function parse(source: string, uri: DocumentUri = ""): ParseResult {
-  const parsed = parseDocument(source, uri);
-  const linked = linkDocuments([parsed.document]);
-  return {
-    document: parsed.document,
-    catalog: linked.catalogs.get(uri)!,
-    diagnostics: sortDiagnostics([...parsed.diagnostics, ...linked.diagnostics.get(uri)!]),
-  };
+  const workspace = new Workspace();
+  workspace.setDocument(uri, source);
+  const result = workspace.link();
+  const { document, catalog } = result.documents.get(uri)!;
+  return { document, catalog, diagnostics: result.diagnostics.get(uri)! };
 }
