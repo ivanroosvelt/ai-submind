@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Workspace } from "./workspace.js";
+import { SCHEMA_URI } from "./schema.js";
 import type { Diagnostic } from "../diagnostics.js";
 
 const catalog = "entity usuario (Usuario)\nentity api [API Gateway]\nentity db [Base de datos]\n";
@@ -83,5 +84,100 @@ describe("Workspace", () => {
     expect(after.to.target).toBeNull();
     expect(result.diagnostics.get("login.flo")!.map((d) => d.code)).toEqual(["E030"]);
     expect(result.xref.flowsUsing("db")).toEqual([]);
+  });
+});
+
+const SCHEMA = "type_tags: [decision]\nrelation_types: [affects]\n";
+const note = (id: string, extra: string[] = []) =>
+  ["---", `id: ${id}`, `title: ${id}`, "memory_type: long_term", ...extra, "---", ""].join("\n");
+
+describe("Workspace with .md documents", () => {
+  it("lets a flow use the entity of a .md, transitively through its 'use:'", () => {
+    const result = workspace({
+      [SCHEMA_URI]: SCHEMA,
+      "catalogo.flo": "entity api\n",
+      "notas/pkce.md": note("pkce", ['use: ["../catalogo.flo"]']),
+      "flujo.flo": 'use "./notas/pkce.md"\nflow f {\n  pkce -> api\n}\n',
+    }).link();
+    for (const list of result.diagnostics.values()) expect(list).toEqual([]);
+    expect([...result.documents.keys()]).toEqual(["catalogo.flo", "flujo.flo", "notas/pkce.md"]);
+    expect([...result.documents.get("flujo.flo")!.catalog.keys()]).toEqual(["api", "pkce"]);
+    expect(result.xref.flowsUsing("pkce")).toEqual(["flujo.flo#f"]);
+    expect(result.diagnostics.get(SCHEMA_URI)).toEqual([]);
+  });
+
+  it("does not cascade from a partially invalid frontmatter", () => {
+    const result = workspace({
+      [SCHEMA_URI]: SCHEMA,
+      "n.md": "---\nid: n\ntitle: 3\nmemory_type: nope\n---\n",
+      "f.flo": 'use "./n.md"\nflow f {\n  n -> n\n}\n',
+    }).link();
+    expect(codes(result.diagnostics.get("n.md"))).toEqual([
+      ["E063", 3, 8],
+      ["E064", 4, 14],
+    ]);
+    expect(result.diagnostics.get("f.flo")).toEqual([]);
+  });
+
+  it("validates type_tags and relation types against the schema", () => {
+    const result = workspace({
+      [SCHEMA_URI]: SCHEMA,
+      "catalogo.flo": "entity api\n",
+      "n.md": note("n", [
+        "type_tags: [decision, nope]", // 5
+        'use: ["./catalogo.flo"]', // 6
+        "relations:", // 7
+        "  - target: api", // 8
+        "    type: breaks", // 9
+      ]),
+    }).link();
+    expect(codes(result.diagnostics.get("n.md"))).toEqual([
+      ["E065", 5, 23],
+      ["E066", 9, 11],
+    ]);
+  });
+
+  it("reports a single E068 on the first .md when there is no schema, and skips vocabulary", () => {
+    const result = workspace({
+      "b.md": note("b", ["type_tags: [whatever]"]),
+      "a.md": note("a", ["type_tags: [whatever]"]),
+    }).link();
+    expect(codes(result.diagnostics.get("a.md"))).toEqual([["E068", 1, 1]]);
+    expect(result.diagnostics.get("b.md")).toEqual([]);
+    expect(result.diagnostics.has(SCHEMA_URI)).toBe(false);
+  });
+
+  it("reports an invalid schema on the schema document only", () => {
+    const result = workspace({
+      [SCHEMA_URI]: "type_tags: x\nrelation_types: []\n",
+      "a.md": note("a", ["type_tags: [whatever]"]),
+    }).link();
+    expect(codes(result.diagnostics.get(SCHEMA_URI))).toEqual([["E068", 1, 12]]);
+    expect(result.diagnostics.get("a.md")).toEqual([]);
+    expect(result.documents.has(SCHEMA_URI)).toBe(false);
+  });
+
+  it("brings E068 back after the schema is removed", () => {
+    const ws = workspace({ [SCHEMA_URI]: SCHEMA, "a.md": note("a") });
+    expect(ws.link().diagnostics.get("a.md")).toEqual([]);
+    ws.removeDocument(SCHEMA_URI);
+    const result = ws.link();
+    expect(codes(result.diagnostics.get("a.md"))).toEqual([["E068", 1, 1]]);
+    expect(result.diagnostics.has(SCHEMA_URI)).toBe(false);
+  });
+
+  it("ignores a .md without frontmatter, also when an existing one loses it", () => {
+    const ws = workspace({
+      [SCHEMA_URI]: SCHEMA,
+      "README.md": "# hola\n",
+      "n.md": note("n"),
+      "f.flo": 'use "./n.md"\nflow f {\n  n -> n\n}\n',
+    });
+    expect(ws.link().documents.has("README.md")).toBe(false);
+    ws.setDocument("n.md", "# ya no tiene frontmatter\n");
+    const result = ws.link();
+    expect(result.documents.has("n.md")).toBe(false);
+    expect(result.diagnostics.has("n.md")).toBe(false);
+    expect(codes(result.diagnostics.get("f.flo")).map(([code]) => code)).toEqual(["E032", "E030", "E030"]);
   });
 });

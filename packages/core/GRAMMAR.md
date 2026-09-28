@@ -125,6 +125,18 @@ con la palabra `flo` se parsea como un `.flo` con el uri del `.md`, con sus
 líneas y columnas reales. Sus entidades van después de la del frontmatter
 (decisión #22). Los demás bloques de código se ignoran.
 
+El vocabulario vive en `knowledge.schema.yaml`, en la raíz del workspace
+(uri exacto):
+
+```yaml
+type_tags: [architecture, business_rule, decision, incident, pattern]
+relation_types: [enforces, visualized_by, affects, supersedes]
+```
+
+Ambas claves son obligatorias y listas de identificadores. Sin esquema, el
+primer `.md` (por uri) lleva un único `E068` y no se valida vocabulario; con
+un esquema inválido, los diagnósticos van en el esquema y tampoco se valida.
+
 ## Fuera de esta gramática (futuro, no en este plan)
 
 subgrafos, `alt`/`loop` de secuencia, notas, estilos.
@@ -163,7 +175,10 @@ subgrafos, `alt`/`loop` de secuencia, notas, estilos.
 | E062 | markdown | falta un campo obligatorio (`id`, `title`, `memory_type`; `target`/`type` de una relación) |
 | E063 | markdown | valor con tipo inválido para su campo |
 | E064 | markdown | `memory_type` fuera de `working`, `short_term`, `long_term` |
+| E065 | esquema | `type_tag` no declarado en el esquema |
+| E066 | esquema | tipo de relación no declarado en el esquema |
 | E067 | markdown | campo de frontmatter (o de relación) desconocido |
+| E068 | esquema | falta `knowledge.schema.yaml` o su contenido es inválido |
 
 **Retirados:** E003, E004, E005, E006, E013, E015, E017, E020, E021, E022,
 E023, E025. No se reusan con otro significado.

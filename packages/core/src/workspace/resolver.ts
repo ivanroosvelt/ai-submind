@@ -1,6 +1,8 @@
 import { diagnosticAt, sortDiagnostics, type Diagnostic } from "../diagnostics.js";
 import type { DocumentUri, EntityDecl, EntityId, ParsedDocument } from "../ast.js";
 import { resolveUse } from "./uri.js";
+import { openingRange } from "../parser/markdown.js";
+import { SCHEMA_URI, checkVocabulary, type Vocabulary } from "./schema.js";
 
 export type Catalog = Map<EntityId, EntityDecl>;
 
@@ -25,9 +27,10 @@ export function byUri(a: { uri: DocumentUri }, b: { uri: DocumentUri }): number 
  * primera declaración de cada id gana, decisión #2), resuelve los `use`
  * (E032), calcula el catálogo alcanzable de cada documento, rellena todos
  * los `Ref.target` contra ese catálogo (E030) y reporta bloques repetidos
- * dentro de un documento (E033).
+ * dentro de un documento (E033). Valida el vocabulario de los `.md` contra
+ * el esquema (E065, E066) o reporta su ausencia (E068).
  */
-export function linkDocuments(input: ParsedDocument[]): LinkedDocuments {
+export function linkDocuments(input: ParsedDocument[], vocabulary: Vocabulary = "missing"): LinkedDocuments {
   const documents = [...input].sort(byUri);
   const documentsByUri = new Map(documents.map((d) => [d.uri, d]));
   const diagnostics = new Map<DocumentUri, Diagnostic[]>(documents.map((d) => [d.uri, []]));
@@ -73,6 +76,24 @@ export function linkDocuments(input: ParsedDocument[]): LinkedDocuments {
     }
     catalogs.set(document.uri, catalog);
     resolveBlocks(document, catalog, entities, diagnostics.get(document.uri)!);
+  }
+
+  if (vocabulary === "missing") {
+    // Un solo E068, en el primer .md por uri (decisión #29).
+    const first = documents.find((d) => d.uri.endsWith(".md"));
+    if (first) {
+      diagnostics
+        .get(first.uri)!
+        .push(
+          diagnosticAt(
+            "E068",
+            `falta '${SCHEMA_URI}' en la raíz del workspace: no se validan 'type_tags' ni los tipos de relación`,
+            openingRange()
+          )
+        );
+    }
+  } else if (vocabulary !== "invalid") {
+    for (const document of documents) checkVocabulary(document, vocabulary, diagnostics.get(document.uri)!);
   }
 
   for (const list of diagnostics.values()) sortDiagnostics(list);
