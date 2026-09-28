@@ -359,3 +359,25 @@ no hay índice en disco ni proyecto formal.
 
 Las fases A y B son independientes del cambio de lenguaje: valen la pena
 por sí solas y son prerrequisito de todo lo demás.
+
+## 11. Decisiones de implementación (registro)
+
+Decisiones que el spec dejaba abiertas y que más de una fase vuelve a
+encontrar. Se agregan al final, no se reescriben; cambiar una exige
+anotarlo aquí con fecha y motivo. Los planes las citan en vez de
+redecidirlas.
+
+| # | Fecha | Decisión | Afecta a |
+|---|---|---|---|
+| 1 | 2026-09-27 | **Orden de nodos / columnas** = orden de declaración de las entidades en el catálogo; las referencias sin resolver van al final, en orden de aparición. Nunca "orden de primera aparición en las aristas". | layout (C), catálogo multi-documento (D: el orden de los documentos alcanzables debe ser determinista), mapa agregado (F) |
+| 2 | 2026-09-27 | **La primera declaración de un id gana**; las siguientes se reportan con `E031`, dentro del documento o entre documentos. | resolver (C, D) |
+| 3 | 2026-09-27 | **Palabras clave contextuales**: `entity`, `flow`, `sequence` (y `use` en D) solo son especiales al inicio de una línea de nivel superior; dentro de un cuerpo son identificadores. Ninguna palabra es reservada en el lexer. | parser (C, D, anidamiento futuro) |
+| 4 | 2026-09-27 | **Ambigüedad de `{`**: tras el id de una entidad, si el resto de la línea está vacío o es comentario abre un cuerpo; si no, es la forma `{decisión}`. Se decide mirando la línea cruda (`Lexer.restOfLineIsBlank()`), no con heurísticas de texto. | parser (C, anidamiento futuro) |
+| 5 | 2026-09-27 | **`entity` sin forma** es válida: rectángulo con su id como label. | parser, fix sugerido de `E030` |
+| 6 | 2026-09-27 | **Valores de propiedades** (`type`, `tags`) son identificadores: `type` uno, `tags` uno o más; propiedades separadas por `,`. Strings libres quedan fuera hasta que un caso real lo pida. | parser, filtros de la UI (F) |
+| 7 | 2026-09-27 | **Sin errores en cascada**: con error después del id, la entidad se conserva parcial; un bloque sin `}` se conserva con lo parseado (`E052`); una racha de líneas inválidas de nivel superior da un solo `E040`. | parser (C, D) |
+| 8 | 2026-09-27 | **Referencia sin resolver** se dibuja como placeholder punteado (`stroke-dasharray="4 4"`, clase `flo-unresolved`) con su nombre como label. | render (C, E: atributos `data-flo-*`) |
+| 9 | 2026-09-27 | **Códigos de diagnóstico retirados no se reusan.** Rangos: `E00x` lexer, `E01x`–`E02x` líneas de bloque, `E03x` resolución, `E04x` nivel superior y entidades, `E05x` bloques. | todas |
+| 10 | 2026-09-27 | **Sintaxis vieja** (`diagram <tipo>`) no tiene compatibilidad: da un único `E040` con mensaje de migración. | parser, drafts viejos en IndexedDB |
+| 11 | 2026-09-27 | **Varios bloques en el preview**: se muestran todos apilados, con título (o nombre); Exportar SVG/PNG toma el primero hasta que el explorador permita elegir (F). Los títulos son input del usuario y se escapan. | web (C, F) |
+| 12 | 2026-09-27 | **Un solo tipo `DiagramBlock`** con `kind: "flow" \| "sequence"` y `edges`; la única diferencia es que `sequence` exige etiqueta. | AST, layout, render |
