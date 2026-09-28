@@ -8,8 +8,8 @@ import { EXAMPLES } from "./examples.js";
 import { enhanceSequencePreview } from "./sequence-view.js";
 
 const NEW_SOURCE: Record<DiagramKind, string> = {
-  flowchart: ["diagram flowchart", "", ""].join("\n"),
-  sequence: ["diagram sequence", "", ""].join("\n"),
+  flowchart: ["flow nuevo {", "", "}", ""].join("\n"),
+  sequence: ["sequence nuevo {", "", "}", ""].join("\n"),
 };
 
 function reportActionError(action: string, error: unknown): void {
@@ -26,7 +26,7 @@ async function main(): Promise<void> {
   const draft = await loadDraft().catch(() => null);
   const initialSource = draft ?? NEW_SOURCE.flowchart;
 
-  let previewState: PreviewState = { lastSvg: null };
+  let previewState: PreviewState = { lastDiagrams: [] };
   let fileHandle: FileSystemFileHandle | null = null;
   let fileName = "diagrama.flo";
 
@@ -63,14 +63,17 @@ async function main(): Promise<void> {
     },
     onExportSvg() {
       try {
-        if (previewState.lastSvg) exportSvg(previewState.lastSvg);
+        // ponytail: exporta el primer bloque; elegir cuál llega con el explorador (Fase F).
+        const svg = previewState.lastDiagrams[0]?.svg;
+        if (svg) exportSvg(svg);
       } catch (error) {
         reportActionError("Exportar SVG", error);
       }
     },
     async onExportPng() {
       try {
-        if (previewState.lastSvg) await exportPng(previewState.lastSvg);
+        const svg = previewState.lastDiagrams[0]?.svg;
+        if (svg) await exportPng(svg);
       } catch (error) {
         reportActionError("Exportar PNG", error);
       }

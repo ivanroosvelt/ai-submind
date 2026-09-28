@@ -1,39 +1,40 @@
 // Flujo de compra completo: carrito -> stock -> pasarela de pago -> orden.
-// Usa las tres formas de nodo y aristas con y sin etiqueta.
-diagram flowchart
+// Las entidades se declaran una vez (id, forma y label) y el flujo solo
+// las conecta. Usa las tres formas y aristas con y sin etiqueta.
+entity inicio (Cliente en el carrito)
+entity checkout [Confirmar compra]
+entity stock {¿Hay stock?}
+entity sinstock [Mostrar "sin stock"]
+entity reservar [Reservar inventario]
+entity crearorden [Crear orden pendiente]
+entity pago [Redirigir a pasarela de pago]
+entity resultado {¿Pago aprobado?}
+entity reintentar {¿Reintentar pago?}
+entity confirmar [Confirmar orden]
+entity email [Enviar email de confirmación]
+entity liberar [Liberar inventario reservado]
+entity exito (Compra exitosa)
+entity cancelada (Orden cancelada)
 
-inicio(Cliente en el carrito)
-checkout[Confirmar compra]
-stock{¿Hay stock?}
-sinstock[Mostrar "sin stock"]
-reservar[Reservar inventario]
-crearorden[Crear orden pendiente]
-pago[Redirigir a pasarela de pago]
-resultado{¿Pago aprobado?}
-reintentar{¿Reintentar pago?}
-confirmar[Confirmar orden]
-email[Enviar email de confirmación]
-liberar[Liberar inventario reservado]
-exito(Compra exitosa)
-cancelada(Orden cancelada)
+flow compra "Flujo de compra" {
+  inicio -> checkout
+  checkout -> stock
+  stock -> sinstock : no
+  stock -> reservar : sí
+  sinstock -> inicio : volver al carrito
 
-inicio -> checkout
-checkout -> stock
-stock -> sinstock : no
-stock -> reservar : sí
-sinstock -> inicio : volver al carrito
+  // Las entidades pueden declararse en cualquier parte del archivo;
+  // el orden no importa.
+  reservar -> crearorden
+  crearorden -> pago
+  pago -> resultado
 
-// Los ids pueden referenciarse antes de declararse; el orden no importa
-// (ver "liberar", usado más arriba en "reintentar -> liberar").
-reservar -> crearorden
-crearorden -> pago
-pago -> resultado
+  resultado -> confirmar : aprobado
+  resultado -> reintentar : rechazado
+  reintentar -> pago : sí
+  reintentar -> liberar : no
+  liberar -> cancelada
 
-resultado -> confirmar : aprobado
-resultado -> reintentar : rechazado
-reintentar -> pago : sí
-reintentar -> liberar : no
-liberar -> cancelada
-
-confirmar -> email
-email -> exito
+  confirmar -> email
+  email -> exito
+}

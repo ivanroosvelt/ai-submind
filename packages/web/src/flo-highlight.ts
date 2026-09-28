@@ -21,10 +21,11 @@ const CLASS_BY_KIND: Partial<Record<Token["kind"], string>> = {
 };
 
 // El highlighter no es consciente de la gramática (no llama a parse()), así
-// que replica aquí, explícitamente y sin condición alguna, los tres
-// disparadores de modo texto que el resaltado siempre reconoció: abrir
-// '['/'('/'{', ':' y la palabra 'as'. El Lexer perezoso nunca entra en modo
-// texto por sí mismo.
+// que replica aquí, sin condición alguna, los disparadores de modo texto:
+// abrir '['/'('/'{' y ':'. El Lexer perezoso nunca entra en modo texto por
+// sí mismo.
+// ponytail: tras "type:" colorea el resto de la línea como texto; resaltar
+// propiedades de entity requiere un highlighter con gramática.
 const TEXT_CLOSER_BY_OPEN: Partial<Record<Token["kind"], "]" | ")" | "}">> = {
   LBRACKET: "]",
   LPAREN: ")",
@@ -55,7 +56,7 @@ export function buildHighlightRanges(doc: Text): HighlightRange[] {
     const closer = TEXT_CLOSER_BY_OPEN[token.kind];
     if (closer) {
       pushToken(lexer.readTextUntil(closer));
-    } else if (token.kind === "COLON" || (token.kind === "IDENT" && token.value === "as")) {
+    } else if (token.kind === "COLON") {
       pushToken(lexer.readTextUntil("\n"));
     }
 

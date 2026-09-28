@@ -17,22 +17,26 @@ describe("createEditor", () => {
 
   it("calls onPreview immediately with the initial source, then again ~200ms after an edit", () => {
     const results: RenderResult[] = [];
-    const view = createEditor(container, "diagram flowchart\n\nstart[Inicio]\n", (result) => {
-      results.push(result);
-    });
+    const view = createEditor(
+      container,
+      "entity start [Inicio]\nentity check [Otro]\n\nflow f {\n  start -> check\n}\n",
+      (result) => {
+        results.push(result);
+      }
+    );
 
     expect(results).toHaveLength(1);
-    expect(results[0].svg).toContain(">Inicio<");
+    expect(results[0].diagrams[0].svg).toContain(">Inicio<");
     expect(results[0].diagnostics).toEqual([]);
 
-    view.dispatch({ changes: { from: view.state.doc.length, insert: "check[Otro]\nstart -> check\n" } });
+    view.dispatch({ changes: { from: view.state.doc.length, insert: "flow g {\n  check -> start\n}\n" } });
     expect(results).toHaveLength(1);
 
     vi.advanceTimersByTime(199);
     expect(results).toHaveLength(1);
     vi.advanceTimersByTime(1);
     expect(results).toHaveLength(2);
-    expect(results[1].svg).toContain(">Inicio<");
+    expect(results[1].diagrams[0].svg).toContain(">Inicio<");
     expect(results[1].diagnostics).toEqual([]);
 
     view.destroy();
@@ -40,9 +44,13 @@ describe("createEditor", () => {
 
   it("does not schedule a preview update for non-doc changes (e.g. selection only)", () => {
     const results: RenderResult[] = [];
-    const view = createEditor(container, "diagram flowchart\n\nstart[Inicio]\n", (result) => {
-      results.push(result);
-    });
+    const view = createEditor(
+      container,
+      "entity start [Inicio]\nentity check [Otro]\n\nflow f {\n  start -> check\n}\n",
+      (result) => {
+        results.push(result);
+      }
+    );
 
     view.dispatch({ selection: { anchor: 0 } });
     vi.advanceTimersByTime(200);

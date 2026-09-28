@@ -47,13 +47,12 @@ describe("buildHighlightRanges", () => {
     expect(texts).toContain("ok");
   });
 
-  it("classifies the alias after 'as' as text", () => {
-    const source = "participant user as Usuario\n";
+  it("does not treat 'as' as a text trigger anymore", () => {
+    const source = "entity as [Alias]\n";
     const doc = Text.of(source.split("\n"));
-    const ranges = buildHighlightRanges(doc);
-    const texts = ranges
-      .filter((r) => r.className === "flo-tok-text")
-      .map((r) => source.slice(r.from, r.to).trim());
-    expect(texts).toContain("Usuario");
+    const idents = buildHighlightRanges(doc)
+      .filter((r) => r.className === "flo-tok-ident")
+      .map((r) => source.slice(r.from, r.to));
+    expect(idents).toEqual(["entity", "as"]);
   });
 });

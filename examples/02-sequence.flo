@@ -1,31 +1,35 @@
 // El mismo flujo de compra que 01-flowchart.flo, pero como secuencia:
 // frontend, backend, pasarela de pago y el webhook async de confirmación.
-diagram sequence
+// El orden de las columnas es el orden en que se declaran las entidades.
+entity cliente [Cliente]       type: actor
+entity web     [Web]           type: frontend
+entity api     [Backend]       type: service, tags: http
+entity gw      [Pasarela de pago] {
+  type: external
+  tags: http pagos
+}
+entity db      [Base de datos] type: store
+entity mail
 
-participant cliente as Cliente
-participant web as Web
-participant api as Backend
-participant gw as Pasarela de pago
-participant db as Base de datos
+sequence checkout "Checkout" {
+  cliente -> web : Click "Comprar"
+  web -> api : POST /checkout
+  api -> db : SELECT stock
+  db -> api : stock disponible
+  api -> db : INSERT orden (pendiente)
+  api -> gw : POST /charges
+  gw -> api : 201 Created (redirect_url)
+  api -> web : 200 OK (redirect_url)
+  web -> cliente : Redirige a la pasarela
+  cliente -> gw : Completa datos de la tarjeta
+}
 
-cliente -> web : Click "Comprar"
-web -> api : POST /checkout
-api -> db : SELECT stock
-db -> api : stock disponible
-api -> db : INSERT orden (pendiente)
-api -> gw : POST /charges
-gw -> api : 201 Created (redirect_url)
-api -> web : 200 OK (redirect_url)
-web -> cliente : Redirige a la pasarela
-cliente -> gw : Completa datos de la tarjeta
-
-// El webhook llega en su propia request, fuera del flujo síncrono
-// anterior — la pasarela llama al backend cuando el pago se resuelve.
-gw -> api : POST /webhook/pago-aprobado
-api -> db : UPDATE orden SET estado = pagada
-api -> gw : 200 OK
-
-// "mail" no fue declarado con "participant": se autodeclara con su
-// propio id como label al usarse acá por primera vez.
-api -> mail : Enviar email de confirmación
-mail -> cliente : "Tu compra fue exitosa"
+// El webhook llega en su propia request, fuera del flujo síncrono: va en
+// su propio bloque, sobre las mismas entidades.
+sequence webhook "Webhook de pago" {
+  gw -> api : POST /webhook/pago-aprobado
+  api -> db : UPDATE orden SET estado = pagada
+  api -> gw : 200 OK
+  api -> mail : Enviar email de confirmación
+  mail -> cliente : "Tu compra fue exitosa"
+}

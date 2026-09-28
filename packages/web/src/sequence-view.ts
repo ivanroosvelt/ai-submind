@@ -1,13 +1,18 @@
 const HEADER_BOX_CLASS = "flo-seq-header-box";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-// Envuelve los headers de los participantes en un <svg> aparte, pegado con
-// position:sticky, para que queden visibles al hacer scroll en un sequence
-// diagram largo. Si el preview no es un sequence diagram (no hay headers), no hace nada.
+// Envuelve los headers de los participantes de cada sequence diagram en un
+// <svg> aparte, pegado con position:sticky, para que queden visibles al
+// hacer scroll. Cada diagrama vive en su propia <section>, que es el
+// contenedor del sticky: el header de un bloque no se monta sobre el
+// siguiente. Los SVG sin headers (flowcharts) no se tocan.
 export function enhanceSequencePreview(container: HTMLElement): void {
-  const svg = container.querySelector("svg");
-  if (!svg) return;
+  // querySelectorAll es una lista estática: los <svg> de header que se
+  // insertan en el loop no se vuelven a procesar.
+  container.querySelectorAll("svg").forEach((svg) => enhanceOne(container, svg));
+}
 
+function enhanceOne(container: HTMLElement, svg: SVGSVGElement): void {
   const headerBoxes = svg.querySelectorAll(`.${HEADER_BOX_CLASS}`);
   if (headerBoxes.length === 0) return;
 
