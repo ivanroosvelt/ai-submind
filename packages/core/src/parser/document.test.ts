@@ -29,15 +29,18 @@ describe("parseDocument", () => {
   });
 
   it("accepts an empty document and a catalog-only document with no diagnostics", () => {
-    expect(parseDocument("", "a.flo")).toEqual({ document: { uri: "a.flo", entities: [], blocks: [] }, diagnostics: [] });
+    expect(parseDocument("", "a.flo")).toEqual({
+      document: { uri: "a.flo", uses: [], entities: [], blocks: [] },
+      diagnostics: [],
+    });
     expect(parseDocument("\n// solo comentarios\n\n", "a.flo").diagnostics).toEqual([]);
     expect(parseDocument("entity a\nentity b\n", "a.flo").document.entities).toHaveLength(2);
   });
 
   it("reports E040 for an unknown top-level line and resumes at the next statement", () => {
-    const { document, diagnostics } = parseDocument('use "./catalog.flo"\nentity a\n', "a.flo");
+    const { document, diagnostics } = parseDocument('import "./catalog.flo"\nentity a\n', "a.flo");
     expect(diagnostics.map((d) => d.code)).toEqual(["E040"]);
-    expect(diagnostics[0].message).toBe("se esperaba 'entity', 'flow' o 'sequence', se encontró 'use'");
+    expect(diagnostics[0].message).toBe("se esperaba 'entity', 'flow', 'sequence' o 'use', se encontró 'import'");
     expect(document.entities).toHaveLength(1);
   });
 
@@ -121,6 +124,61 @@ describe("parseDocument", () => {
     it("'entity e {}' es un cuerpo vacío sin diagnósticos", () => {
       const { diagnostics } = parse("entity e {}\n");
       expect(diagnostics).toEqual([]);
+    });
+  });
+
+  describe("use", () => {
+    it("parses 'use \"path\"' into document.uses with the path and its ranges", () => {
+      const { document, diagnostics } = parseDocument('use "./catalog.flo"\nentity a\n', "a.flo");
+      expect(diagnostics).toEqual([]);
+      expect(document.uses).toEqual([
+        {
+          path: "./catalog.flo",
+          range: { start: { line: 1, column: 1 }, end: { line: 1, column: 20 } },
+          pathRange: { start: { line: 1, column: 5 }, end: { line: 1, column: 20 } },
+        },
+      ]);
+    });
+
+    it("accepts use anywhere at top level, in any order with entities and blocks", () => {
+      const source = 'entity a\nflow f {\n  a -> a\n}\nuse "./b.flo"\nuse "../c.flo"\n';
+      const { document, diagnostics } = parseDocument(source, "dir/a.flo");
+      expect(diagnostics).toEqual([]);
+      expect(document.uses.map((u) => u.path)).toEqual(["./b.flo", "../c.flo"]);
+    });
+
+    it("reports E046 when use is not followed by a quoted path, and resumes at the next line", () => {
+      const { document, diagnostics } = parseDocument("use catalog.flo\nuse\nentity a\n", "a.flo");
+      expect(diagnostics.map((d) => [d.code, d.range.start.line, d.range.start.column])).toEqual([
+        ["E046", 1, 5],
+        ["E046", 2, 4],
+      ]);
+      expect(diagnostics[0].message).toBe("se esperaba la ruta entre comillas después de 'use'");
+      expect(document.uses).toEqual([]);
+      expect(document.entities).toHaveLength(1);
+    });
+
+    it("reports E016 for content after the path", () => {
+      const { document, diagnostics } = parseDocument('use "./b.flo" extra\n', "a.flo");
+      expect(diagnostics.map((d) => d.code)).toEqual(["E016"]);
+      expect(document.uses).toHaveLength(1);
+    });
+
+    it("treats 'use' as a plain identifier inside a block edge", () => {
+      const { document, diagnostics } = parseDocument("flow f {\n  use -> a\n}\n", "a.flo");
+      expect(diagnostics).toEqual([]);
+      expect(document.uses).toEqual([]);
+      expect(document.blocks[0].edges[0].from.name).toBe("use");
+    });
+
+    it("a 'use' line inside an unclosed block or entity body closes it (E052/E045) and is parsed as top level", () => {
+      const block = parseDocument('flow f {\n  a -> b\nuse "./x.flo"\n', "a.flo");
+      expect(block.diagnostics.map((d) => d.code)).toEqual(["E052"]);
+      expect(block.document.uses.map((u) => u.path)).toEqual(["./x.flo"]);
+
+      const entity = parseDocument('entity a {\n  type: t\nuse "./x.flo"\n', "a.flo");
+      expect(entity.diagnostics.map((d) => d.code)).toEqual(["E045"]);
+      expect(entity.document.uses.map((u) => u.path)).toEqual(["./x.flo"]);
     });
   });
 });

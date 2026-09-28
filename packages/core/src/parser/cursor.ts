@@ -138,3 +138,12 @@ export function reportTrailingAfterOpenBrace(cursor: TokenCursor, diagnostics: D
   }
   reportTrailing(cursor, diagnostics);
 }
+
+/**
+ * Palabras clave de nivel superior (decisiones #3, #13 y #23): solo son
+ * especiales al inicio de una línea de nivel superior, pero una línea que
+ * empieza con una de ellas dentro de un cuerpo sin cerrar lo cierra.
+ */
+export function isTopLevelKeyword(value: string): boolean {
+  return value === "entity" || value === "flow" || value === "sequence" || value === "use";
+}

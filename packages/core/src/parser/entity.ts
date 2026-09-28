@@ -1,5 +1,11 @@
 import type { Token, TokenKind } from "../tokens.js";
-import { describeToken, reportTrailing, reportTrailingAfterOpenBrace, type TokenCursor } from "./cursor.js";
+import {
+  describeToken,
+  isTopLevelKeyword,
+  reportTrailing,
+  reportTrailingAfterOpenBrace,
+  type TokenCursor,
+} from "./cursor.js";
 import { diagnosticAt, type Diagnostic } from "../diagnostics.js";
 import type { DocumentUri, EntityDecl, NodeShape } from "../ast.js";
 
@@ -94,7 +100,7 @@ function parseBody(cursor: TokenCursor, entity: EntityDecl, open: Token, diagnos
       reportTrailing(cursor, diagnostics);
       return;
     }
-    if (token.kind === "IDENT" && (token.value === "entity" || token.value === "flow" || token.value === "sequence")) {
+    if (token.kind === "IDENT" && isTopLevelKeyword(token.value)) {
       // Solo 'type'/'tags' son claves válidas en un cuerpo de entidad: una
       // línea que empieza con una de estas palabras clave es en realidad el
       // siguiente statement de nivel superior. No hace falta lookahead (a

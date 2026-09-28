@@ -417,3 +417,9 @@ Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-0
 | 20 | 2026-09-28 | **Vocabulario en `knowledge.schema.yaml`** en la raíz del workspace (`type_tags`, `relation_types`). `memory_type` es un enum cerrado en el core; `context_tags` y `custom_tags` solo se validan por forma. | type-checker (K1), filtros (K4) |
 | 21 | 2026-09-28 | **Un `.md` sin `---` en la primera línea no es documento del workspace** y se ignora sin diagnóstico. | carga de carpeta (K3, F) |
 | 22 | 2026-09-28 | **Orden en el catálogo** (extiende #1): la entidad de un `.md` va antes que las entidades de sus bloques `flo` embebidos, que siguen su orden de aparición. | layout, query (K2) |
+
+### Decisiones de la Fase D (2026-09-28)
+
+| # | Fecha | Decisión | Afecta a |
+|---|---|---|---|
+| 23 | 2026-09-28 | **`use` es palabra clave contextual** como las de #3, y entra en la enmienda #13: una línea `use` dentro de un cuerpo sin cerrar lo cierra. `use` sin string es `E046`. | parser (D) |

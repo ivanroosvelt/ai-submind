@@ -16,6 +16,7 @@ export type {
   Edge,
   BlockKind,
   DiagramBlock,
+  UseDecl,
   ParsedDocument,
 } from "./ast.js";
 export { formatDiagnostic } from "./diagnostics.js";

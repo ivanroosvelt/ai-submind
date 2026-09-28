@@ -1,14 +1,16 @@
 import type { Token } from "../tokens.js";
-import { describeToken, type TokenCursor, reportTrailing, reportTrailingAfterOpenBrace } from "./cursor.js";
+import {
+  describeToken,
+  isTopLevelKeyword,
+  type TokenCursor,
+  reportTrailing,
+  reportTrailingAfterOpenBrace,
+} from "./cursor.js";
 import { diagnosticAt, type Diagnostic } from "../diagnostics.js";
 import type { BlockKind, DiagramBlock, Edge, Ref } from "../ast.js";
 
 function refOf(token: Token): Ref {
   return { name: token.value, range: token.range, target: null };
-}
-
-function isTopLevelKeyword(value: string): boolean {
-  return value === "entity" || value === "flow" || value === "sequence";
 }
 
 /**
@@ -114,10 +116,10 @@ export function parseBlock(cursor: TokenCursor, diagnostics: Diagnostic[]): Diag
       break;
     }
     if (token.kind === "IDENT" && isTopLevelKeyword(token.value) && cursor.peekNext().kind !== "ARROW") {
-      // Una línea 'entity'/'flow'/'sequence' que no es un edge (no sigue de
-      // '->') es en realidad el siguiente statement de nivel superior: este
-      // bloque quedó sin cerrar. No se consume la línea, para que el parser
-      // de documento la retome.
+      // Una línea 'entity'/'flow'/'sequence'/'use' que no es un edge (no
+      // sigue de '->') es en realidad el siguiente statement de nivel
+      // superior: este bloque quedó sin cerrar. No se consume la línea, para
+      // que el parser de documento la retome.
       diagnostics.push(diagnosticAt("E052", `falta '}' que cierra el bloque '${nameToken.value}'`, open.range));
       break;
     }

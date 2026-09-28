@@ -1,7 +1,8 @@
 # Gramática `.flo` (catálogo de entidades + bloques nombrados)
 
-    Document     ::= (BlankLine | EntityDecl | Block)* EOF
+    Document     ::= (BlankLine | Use | EntityDecl | Block)* EOF
     BlankLine    ::= Newline
+    Use          ::= "use" String Newline
 
     EntityDecl   ::= "entity" Ident Shape? PropList? EntityBody? Newline
     Shape        ::= "[" Text "]" | "(" Text ")" | "{" Text "}"
@@ -33,11 +34,11 @@ bloque se derivan de las entidades que sus aristas referencian.
   llamando a `lexer.readTextUntil(closer)`: después del delimitador de
   apertura de `Shape` y después de `:` en `Edge`. Fuera de esas llamadas
   explícitas, `[`, `(`, `{` y `:` son tokens comunes como cualquier otro.
-- `entity`, `flow` y `sequence` son palabras clave **solo al inicio de
-  una línea de nivel superior**; dentro de un bloque son identificadores
-  comunes como cualquier otro (`flow -> entity` es una arista válida si
-  ambos ids fueron declarados como entidades). Ninguna palabra es
-  reservada en el lexer.
+- `entity`, `flow`, `sequence` y `use` son palabras clave **solo al
+  inicio de una línea de nivel superior**; dentro de un bloque son
+  identificadores comunes como cualquier otro (`flow -> entity` es una
+  arista válida si ambos ids fueron declarados como entidades). Ninguna
+  palabra es reservada en el lexer.
 - `{` tras el id de una entidad es ambiguo entre abrir un cuerpo o la
   forma `{decisión}`: si el resto de la línea está vacío o es un
   comentario, abre el cuerpo (`EntityBody`); si no, es la forma. Se
@@ -69,12 +70,15 @@ bloque se derivan de las entidades que sus aristas referencian.
   el siguiente statement válido). Si falta el `}` de un bloque o del
   cuerpo de una entidad, se reporta `E052`/`E045` (anclado en el `{` que
   abrió) y se conserva lo que se llegó a parsear. Dentro de un cuerpo, una
-  línea que empieza con `entity`, `flow` o `sequence` y no es una arista
-  (en un bloque, si no sigue de `->`) se trata como el statement de nivel
-  superior siguiente en vez de como contenido del cuerpo: cierra el
+  línea que empieza con `entity`, `flow`, `sequence` o `use` y no es una
+  arista (en un bloque, si no sigue de `->`) se trata como el statement de
+  nivel superior siguiente en vez de como contenido del cuerpo: cierra el
   bloque/cuerpo abierto con `E052`/`E045` sin consumir esa línea, así que
   el resto del documento se sigue parseando con normalidad en vez de
   arrastrarse como si fuera parte del cuerpo sin cerrar.
+- `use` va en su propia línea, en cualquier lugar del nivel superior; la
+  ruta es un string entre comillas (`E046` si no). Qué documento nombra y
+  qué trae al catálogo se decide en la resolución (ver abajo).
 - `{}` (con el `}` en la misma línea que el `{`, sin nada más entre
   medio) es un bloque/cuerpo vacío, sin diagnósticos. Un cuerpo con
   contenido en la misma línea que el `{` reporta un único `E016` en el
@@ -85,8 +89,7 @@ bloque se derivan de las entidades que sus aristas referencian.
 
 ## Fuera de esta gramática (futuro, no en este plan)
 
-`use "path"` y documentos múltiples (Fase D); subgrafos, `alt`/`loop` de
-secuencia, notas, estilos.
+subgrafos, `alt`/`loop` de secuencia, notas, estilos.
 
 ## Tabla de diagnósticos
 
@@ -106,12 +109,13 @@ secuencia, notas, estilos.
 | E031 | resolver | entidad declarada dos veces |
 | E033 | resolver | nombre de bloque duplicado |
 | E034 | entity | propiedad de entidad desconocida |
-| E040 | document | se esperaba `entity`, `flow` o `sequence` |
+| E040 | document | se esperaba `entity`, `flow`, `sequence` o `use` |
 | E041 | entity | se esperaba el id de la entidad |
 | E042 | entity | se esperaba `:` después de la propiedad |
 | E043 | entity | se esperaba el valor de la propiedad |
 | E044 | entity | propiedad repetida |
 | E045 | entity | falta `}` que cierra el cuerpo de la entidad |
+| E046 | use | se esperaba la ruta entre comillas después de `use` |
 | E050 | block | se esperaba el nombre del bloque |
 | E051 | block | se esperaba `{` para abrir el bloque |
 | E052 | block | falta `}` que cierra el bloque |

@@ -50,8 +50,16 @@ export interface DiagramBlock {
   nameRange: Range;
 }
 
+/** `use "ruta"`: trae al catálogo alcanzable las entidades de otro documento. */
+export interface UseDecl {
+  path: string; // tal como se escribió, sin comillas
+  range: Range; // desde `use` hasta la comilla de cierre
+  pathRange: Range; // el string, comillas incluidas
+}
+
 export interface ParsedDocument {
   uri: DocumentUri;
+  uses: UseDecl[];
   entities: EntityDecl[];
   blocks: DiagramBlock[];
 }

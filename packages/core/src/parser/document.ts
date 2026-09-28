@@ -1,21 +1,39 @@
 import { Lexer } from "../lexer.js";
 import type { Token } from "../tokens.js";
-import { TokenCursor, describeToken } from "./cursor.js";
+import { TokenCursor, describeToken, reportTrailing } from "./cursor.js";
 import { parseEntity } from "./entity.js";
 import { parseBlock } from "./block.js";
 import { diagnosticAt, type Diagnostic } from "../diagnostics.js";
-import type { DocumentUri, ParsedDocument } from "../ast.js";
+import type { DocumentUri, ParsedDocument, UseDecl } from "../ast.js";
 
 function topLevelMessage(token: Token): string {
   if (token.kind === "IDENT" && token.value === "diagram") {
     return "el header 'diagram <tipo>' ya no existe: declara entidades con 'entity' y diagramas con 'flow <nombre> { ... }' o 'sequence <nombre> { ... }'";
   }
-  return `se esperaba 'entity', 'flow' o 'sequence', se encontró '${describeToken(token)}'`;
+  return `se esperaba 'entity', 'flow', 'sequence' o 'use', se encontró '${describeToken(token)}'`;
+}
+
+/** `Use ::= "use" String Newline`. Devuelve null si la línea no parsea (ya descartada). */
+function parseUse(cursor: TokenCursor, diagnostics: Diagnostic[]): UseDecl | null {
+  const keyword = cursor.advance();
+  const pathToken = cursor.current();
+  if (pathToken.kind !== "STRING") {
+    diagnostics.push(diagnosticAt("E046", "se esperaba la ruta entre comillas después de 'use'", pathToken.range));
+    cursor.skipToNextLine();
+    return null;
+  }
+  cursor.advance();
+  reportTrailing(cursor, diagnostics);
+  return {
+    path: pathToken.value,
+    range: { start: keyword.range.start, end: pathToken.range.end },
+    pathRange: pathToken.range,
+  };
 }
 
 /**
- * `Document ::= (BlankLine | EntityDecl | Block)* EOF`. Las palabras clave
- * solo son especiales aquí, al inicio de una línea de nivel superior.
+ * `Document ::= (BlankLine | Use | EntityDecl | Block)* EOF`. Las palabras
+ * clave solo son especiales aquí, al inicio de una línea de nivel superior.
  *
  * Una racha de líneas inválidas consecutivas produce un solo E040 (en la
  * primera): así un archivo en la sintaxis vieja o el cuerpo huérfano de un
@@ -29,7 +47,7 @@ export function parseDocument(
   const lexer = new Lexer(source);
   const cursor = new TokenCursor(lexer);
   const diagnostics: Diagnostic[] = [];
-  const document: ParsedDocument = { uri, entities: [], blocks: [] };
+  const document: ParsedDocument = { uri, uses: [], entities: [], blocks: [] };
   let inErrorRun = false;
 
   cursor.skipNewlines();
@@ -45,6 +63,10 @@ export function parseDocument(
       const block = parseBlock(cursor, diagnostics);
       if (block) document.blocks.push(block);
       inErrorRun = block === null;
+    } else if (keyword === "use") {
+      const use = parseUse(cursor, diagnostics);
+      if (use) document.uses.push(use);
+      inErrorRun = use === null;
     } else {
       if (!inErrorRun) diagnostics.push(diagnosticAt("E040", topLevelMessage(token), token.range));
       inErrorRun = true;
