@@ -1,0 +1,39 @@
+// Un catálogo de entidades compartido por un flowchart y una secuencia en
+// el mismo archivo: cada entidad se declara una vez y se ve igual en los
+// dos diagramas. Cambiar el label de 'db' acá lo cambia en ambos.
+entity usuario (Usuario)          type: actor
+entity login   [Pantalla de login] type: frontend
+entity api     [API Gateway]      type: service, tags: http publico
+entity valido  {¿Credenciales válidas?}
+
+// Cuerpo sin forma: '{' al final de la línea abre las propiedades
+// (rectángulo con el id como label).
+entity auth {
+  type: service
+  tags: interno
+}
+
+// Cuerpo vacío: equivale a 'entity cola'.
+entity cola {}
+
+flow acceso "Inicio de sesión" {
+  usuario -> login
+  login -> api : POST /login
+  api -> valido
+  valido -> login : no, reintentar
+  valido -> db : sí
+  // 'db' se usa acá y se declara más abajo: el orden no importa.
+}
+
+// Sin título: el preview muestra el nombre del bloque.
+sequence detalle {
+  usuario -> login : ingresa credenciales
+  login -> api : POST /login
+  api -> auth : verificar
+  auth -> db : SELECT usuario
+  db -> auth : fila
+  auth -> cola : publicar evento de login
+  api -> login : 200 OK
+}
+
+entity db [Base de datos] type: store
