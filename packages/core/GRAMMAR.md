@@ -46,8 +46,10 @@ bloque se derivan de las entidades que sus aristas referencian.
 - Sin `Shape`, una entidad es válida: un rectángulo con su id como label.
 - `type` admite un identificador; `tags`, uno o más (separados por
   espacio). Ambas propiedades pueden ir en línea (`type: x, tags: a b`) o
-  dentro del cuerpo, una por línea. Una propiedad repetida es `E044`; una
-  propiedad que no es `type` ni `tags` es `E034`.
+  dentro del cuerpo; dentro del cuerpo también pueden ir juntas en una
+  misma línea separadas por `,` (`type: x, tags: a b`), o cada una en la
+  suya. Una propiedad repetida es `E044`; una propiedad que no es `type`
+  ni `tags` es `E034`.
 - El `}` que cierra un bloque o el cuerpo de una entidad va en su propia
   línea.
 - Un bloque solo contiene aristas; sus nodos se derivan de las entidades
@@ -65,10 +67,21 @@ bloque se derivan de las entidades que sus aristas referencian.
   cada token sobrante). Una racha de líneas inválidas consecutivas de
   nivel superior produce un solo `E040` (en la primera; la racha la corta
   el siguiente statement válido). Si falta el `}` de un bloque o del
-  cuerpo de una entidad, se reporta `E052`/`E045` y se conserva lo que se
-  llegó a parsear — un bloque sin cerrar se traga el resto del archivo
-  como si fuera su cuerpo, porque las palabras clave no se reconocen
-  dentro de un cuerpo; es una limitación conocida, no un bug.
+  cuerpo de una entidad, se reporta `E052`/`E045` (anclado en el `{` que
+  abrió) y se conserva lo que se llegó a parsear. Dentro de un cuerpo, una
+  línea que empieza con `entity`, `flow` o `sequence` y no es una arista
+  (en un bloque, si no sigue de `->`) se trata como el statement de nivel
+  superior siguiente en vez de como contenido del cuerpo: cierra el
+  bloque/cuerpo abierto con `E052`/`E045` sin consumir esa línea, así que
+  el resto del documento se sigue parseando con normalidad en vez de
+  arrastrarse como si fuera parte del cuerpo sin cerrar.
+- `{}` (con el `}` en la misma línea que el `{`, sin nada más entre
+  medio) es un bloque/cuerpo vacío, sin diagnósticos. Un cuerpo con
+  contenido en la misma línea que el `{` reporta un único `E016` en el
+  primer token inesperado; si esa misma línea termina en `}`, el
+  bloque/cuerpo se cierra ahí (una sola línea); si no, se comporta como
+  siempre: se descarta el resto de la línea y el cuerpo sigue en las
+  líneas siguientes.
 
 ## Fuera de esta gramática (futuro, no en este plan)
 

@@ -68,7 +68,9 @@ entity gw [Pasarela de pago] {
 
 `type` acepta un identificador; `tags`, uno o más separados por espacio.
 El core los valida sintácticamente pero no interpreta sus valores — son
-para filtrar y agrupar en la UI.
+para filtrar y agrupar en la UI. Dentro del cuerpo también pueden ir
+juntas en una misma línea, separadas por `,` (`type: external, tags: http
+pagos`), o cada una en la suya como en el ejemplo de arriba.
 
 ## `flow`
 

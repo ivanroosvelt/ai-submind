@@ -99,7 +99,7 @@ por `packageManager` en el `package.json` raíz).
 pnpm install
 pnpm build      # compila @flo/core y @flo/web, en ese orden
 pnpm typecheck
-pnpm test       # 80 tests (vitest) en @flo/core + @flo/web
+pnpm test       # 147 tests (vitest): 98 en @flo/core + 49 en @flo/web
 ```
 
 Cada paquete también corre estos scripts individualmente con
