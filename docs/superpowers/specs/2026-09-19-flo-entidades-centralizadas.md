@@ -403,3 +403,17 @@ explícitamente.
   superpuestas (dagre no es multigrafo); comportamiento previo a la Fase C.
 - **Cualquiera — parser:** `flow a { x -> y } // comentario` da `E016` +
   `E052` en vez de un solo `E016` (no se pierde contenido).
+
+### Decisiones del grafo de conocimiento (2026-09-28)
+
+Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-09-28-flo-grafo-de-conocimiento-design.md).
+
+| # | Fecha | Decisión | Afecta a |
+|---|---|---|---|
+| 16 | 2026-09-28 | **Un `.md` con frontmatter es una entidad del catálogo** (`EntityDecl.knowledge != null`), no un grafo aparte. Un solo `XRefIndex`; los flujos `.flo` la usan como cualquier entidad. | resolver (D, K1), xref, render (K4) |
+| 17 | 2026-09-28 | **No hay `imports` con alias.** Un `.md` declara `use:` (misma semántica que `use` en `.flo`) y las rutas en `relations.target` cuentan como `use` implícito. | resolver (D, K1) |
+| 18 | 2026-09-28 | **Rango `E06x`** = frontmatter y esquema de conocimiento. Un target de relación sin resolver es `E035` (resolución). | diagnósticos (K1) |
+| 19 | 2026-09-28 | **Frontmatter con la dependencia `yaml`**, usando sus rangos de nodo para los `Range` de los diagnósticos. Sin TOML. | core (K1) |
+| 20 | 2026-09-28 | **Vocabulario en `knowledge.schema.yaml`** en la raíz del workspace (`type_tags`, `relation_types`). `memory_type` es un enum cerrado en el core; `context_tags` y `custom_tags` solo se validan por forma. | type-checker (K1), filtros (K4) |
+| 21 | 2026-09-28 | **Un `.md` sin `---` en la primera línea no es documento del workspace** y se ignora sin diagnóstico. | carga de carpeta (K3, F) |
+| 22 | 2026-09-28 | **Orden en el catálogo** (extiende #1): la entidad de un `.md` va antes que las entidades de sus bloques `flo` embebidos, que siguen su orden de aparición. | layout, query (K2) |
