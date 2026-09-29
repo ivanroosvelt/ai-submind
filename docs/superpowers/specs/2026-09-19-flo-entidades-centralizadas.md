@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-09-19
 - **Rama:** `v2`
-- **Estado:** en implementación: fases A–E completadas (2026-09-28); pendiente la F (navegación en el editor), que va ahora: K1, K2 y K3 del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md) están completadas
+- **Estado:** en implementación: fases A–E completadas (2026-09-28); la F (navegación en el editor) tiene [plan](../plans/2026-09-29-flo-fase-f-navegacion-en-el-editor.md) y va ahora: K1, K2 y K3 del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md) están completadas
 - **Reemplaza:** las secciones §2 (fila "Gestión de archivos"), §4 y §8 del
   spec [2026-09-17-flo-diagram-tool-design.md](2026-09-17-flo-diagram-tool-design.md).
   El resto de aquel documento (arquitectura de paquetes, manejo de errores,
@@ -511,3 +511,33 @@ Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-0
 - **Cualquiera — `write_node`:** sobrescribir un archivo no conserva su
   modo (queda `0o666 & umask`); si falla la escritura quedan las carpetas
   creadas vacías.
+
+### Decisiones de la Fase F (2026-09-29)
+
+| # | Fecha | Decisión | Afecta a |
+|---|---|---|---|
+| 37 | 2026-09-29 | **Workspace del editor web** = los archivos abiertos (`EditorWorkspace` sobre un `Workspace` del core). "Abrir carpeta" usa `showDirectoryPicker` con la regla de carga de #33 (`.flo`, `.md` —también sin frontmatter, se pueden editar—, `knowledge.schema.yaml` solo en la raíz; nunca `node_modules` ni `.git`); uri = ruta POSIX relativa a la carpeta. Sin File System Access, `<input webkitdirectory>` de solo lectura. "Abrir" un archivo = workspace de un documento; un ejemplo, igual. Un documento activo en el editor, con su propio `EditorState`. Cada cambio llega al workspace en el acto y `link()` es perezoso: nadie guarda un `LinkResult` entre cambios (pendiente de E). Sin watcher en el navegador: releer = volver a abrir la carpeta. Crear archivos: "Nuevo" con carpeta abierta agrega `nuevo.flo` (`nuevo-2.flo`, ...); borrar o mover archivos no se hace desde el editor. | web (F), K4 |
+| 38 | 2026-09-29 | **Guardado desde el editor, sin validar** (a diferencia de `write_node`, #34: un humano guarda trabajo a medias). Con carpeta, "Guardar" pide el permiso de escritura si hace falta y escribe todos los archivos modificados; sin carpeta, el activo con el picker o la descarga. El borrador de IndexedDB es el workspace entero (`files`, `saved`, `active` y el handle de la carpeta) bajo la misma clave; un borrador anterior (string) se abre como `diagrama.flo`. Reemplazar un workspace con archivos del disco modificados pide confirmación. | web (F), K4 (presets en la carpeta) |
+| 39 | 2026-09-29 | **Navegación en el core**: `entityAt(document, position)` (declaración, target de relación resuelto a entidad o `Ref` resuelta; el borde final del rango cuenta) y `renameEntity(link, id, newId)` → `{ edits: Map<uri, TextEdit[]> } \| { error }`, puros. Renombrar edita exactamente `definitionOf` + `referencesTo` (#30): la declaración ganadora, las relaciones en forma id de `.md` ganadores y las `Ref` resueltas de todos los bloques (también en cercas de `.md`). En YAML el id nuevo va entre comillas dobles si YAML lo leería como null o booleano (`null`, `true`, `false`, `yes`, `no`, `on`, `off`, `y`, `n`, sin distinguir mayúsculas); en `.flo`, nunca. `newId` debe ser identificador y no existir; declaraciones perdedoras (`E031`) y referencias sin resolver no se tocan. En la web, las ediciones del documento activo van por el editor (quedan en su historial de deshacer). | core (F), web (F), MCP (si suma renombrar) |
+| 40 | 2026-09-29 | **Mapa agregado** = `renderMap(link)`: las aristas de flujo de `query` (#32, una por par dirigido) como un `flow` sintético `mapa` sobre `link.entities` (orden #1/#24), uri `""`, `data-flo-block="#mapa"`, `data-flo-line="1"`. Solo entidades con alguna arista; las relaciones de `.md` no entran (son de la vista de grafo, K4). Sin snapshot: se testea por atributos. | core, web (F), K4 |
+| 41 | 2026-09-29 | **Bloque seleccionado y filtros.** El bloque seleccionado (click en su título, en el explorador o en un flujo del panel) es el que exportan SVG/PNG; si no está en el preview, el primero; con el mapa visible, el mapa (cierra #11). Filtros del explorador: un `type` y un tag de `EntityDecl` (#6), con los valores presentes; un valor que dejó de existir no filtra. Los `type_tags` de `.md` no son filtros del explorador (K4). | web (F), K4 |
+| 42 | 2026-09-29 | **Clicks del preview.** Nodo o participante resuelto (también en el header fijo de `sequence`, cuyo clon copia los `data-flo-*`) → panel de entidad; placeholder `flo-unresolved`, aristas y etiquetas de arista del preview no hacen nada (descarta el pendiente de E sobre la etiqueta). En el mapa, las aristas sí: una franja transparente de 12 px encima de cada una abre el panel con los flujos que la contienen. | web (F), K4 (drill-down) |
+
+### Pendientes que resuelve la Fase F (2026-09-29)
+
+Recogidos por el [plan de F](../plans/2026-09-29-flo-fase-f-navegacion-en-el-editor.md):
+bloque vacío con SVG de tamaño 0 y texto de estado junto al banner (C,
+task 6); resaltado de `STRING`, comas y `type:` (C, task 11); `E042` en
+`tags: x, y` (C, task 3); click en el header fijo de `sequence` (E, task
+7); `link()` que reescribe `Ref.target` (E, task 4); `E032` para una ruta
+fuera de la raíz, un `.md` sin frontmatter o el esquema (E y K1, task 3);
+`render(source)` sin uri (E, task 6); renombrar un escalar YAML entre
+comillas (K1, task 1).
+
+Descartados o reasignados:
+- **E — etiqueta de arista sin `data-flo-*`:** descartado; las aristas del
+  preview no son clickeables (#42).
+- **K3 "F / CI — watcher en Linux"** y **K3 "F — watcher"**: son de
+  `@flo/mcp`, no del editor (el navegador no tiene watcher, #37); pasan a
+  **Cualquiera — MCP** sin cambios de contenido.
+
