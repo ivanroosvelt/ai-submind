@@ -13,8 +13,9 @@ sintaxis Mermaid: es un formato nuevo desde cero.
 > entidades y bloques nombrados, workspace multi-documento con `use`,
 > índice de referencias cruzadas y atributos `data-flo-*` en el SVG). Del
 > [grafo de conocimiento](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md)
-> están completas K1 y K2: un `.md` con frontmatter tipado es una entidad del
-> catálogo, y `query`/`tagCatalog` lo consultan. Pendientes: K3, F, K4 y la Fase 6 (ver [Roadmap](#roadmap)).
+> están completas K1, K2 y K3: un `.md` con frontmatter tipado es una entidad del
+> catálogo, `query`/`tagCatalog` lo consultan y `@flo/mcp` lo expone a agentes
+> por MCP. Pendientes: F, K4 y la Fase 6 (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
@@ -142,9 +143,9 @@ por `packageManager` en el `package.json` raíz).
 
 ```bash
 pnpm install
-pnpm build      # compila @flo/core y @flo/web, en ese orden
+pnpm build      # compila @flo/core, y después @flo/web y @flo/mcp
 pnpm typecheck
-pnpm test       # 230 tests (vitest): 180 en @flo/core + 50 en @flo/web
+pnpm test       # 302 tests (vitest): 215 en @flo/core + 50 en @flo/web + 37 en @flo/mcp
 ```
 
 Cada paquete también corre estos scripts individualmente con
@@ -173,14 +174,13 @@ typecheck → test` en cada push y PR.
 - [`docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md`](docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md) — plan de implementación de Fase 5 (deploy, docs de usuario, prep de npm).
 - [`docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`](docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md) — entidades centralizadas, workspace y navegación (fases A–F); su §11 registra las decisiones de lenguaje.
 - [`docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md`](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md) — `.md` tipados como grafo de conocimiento (fases K1–K4).
-- Planes de la v2: [A+B](docs/superpowers/plans/2026-09-19-flo-range-y-lexer-dirigido.md), [C](docs/superpowers/plans/2026-09-27-flo-fase-c-entidades-y-bloques.md), [D](docs/superpowers/plans/2026-09-28-flo-fase-d-workspace-multidocumento.md), [E](docs/superpowers/plans/2026-09-28-flo-fase-e-superficie-de-navegacion.md), [K1](docs/superpowers/plans/2026-09-28-flo-fase-k1-md-como-documento.md), [K2](docs/superpowers/plans/2026-09-28-flo-fase-k2-consultas.md).
+- Planes de la v2: [A+B](docs/superpowers/plans/2026-09-19-flo-range-y-lexer-dirigido.md), [C](docs/superpowers/plans/2026-09-27-flo-fase-c-entidades-y-bloques.md), [D](docs/superpowers/plans/2026-09-28-flo-fase-d-workspace-multidocumento.md), [E](docs/superpowers/plans/2026-09-28-flo-fase-e-superficie-de-navegacion.md), [K1](docs/superpowers/plans/2026-09-28-flo-fase-k1-md-como-documento.md), [K2](docs/superpowers/plans/2026-09-28-flo-fase-k2-consultas.md), [K3](docs/superpowers/plans/2026-09-28-flo-fase-k3-mcp.md).
 - [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md) — gramática formal (EBNF), reglas léxicas especiales y tabla de códigos de diagnóstico.
 
 ## Roadmap
 
-Orden de la v2: D → E → K1 → K2 → **K3** → F → K4.
+Orden de la v2: D → E → K1 → K2 → K3 → **F** → K4.
 
-- **K3** — `@flo/mcp`: servidor MCP local que carga una carpeta y expone el grafo a agentes.
 - **F** — navegación en el editor: explorador, panel de entidad, ir a definición, renombrar, mapa agregado.
 - **K4** — vista de grafo de conocimiento en la web.
 - **Fase 6** — `npm publish` real de `@flo/core` (el paquete ya está preparado; falta correr `npm login && npm publish --access public` desde `packages/core` con una cuenta npm autenticada, y habilitar GitHub Pages en Settings → Pages → Source: "GitHub Actions" para que el workflow de deploy quede activo).

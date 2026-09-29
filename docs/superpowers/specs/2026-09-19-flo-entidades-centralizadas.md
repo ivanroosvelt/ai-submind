@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-09-19
 - **Rama:** `v2`
-- **Estado:** en implementación: fases A–E completadas (2026-09-28); pendiente la F (navegación en el editor), que va después de K3 (K1 y K2 completadas) del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md)
+- **Estado:** en implementación: fases A–E completadas (2026-09-28); pendiente la F (navegación en el editor), que va ahora: K1, K2 y K3 del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md) están completadas
 - **Reemplaza:** las secciones §2 (fila "Gestión de archivos"), §4 y §8 del
   spec [2026-09-17-flo-diagram-tool-design.md](2026-09-17-flo-diagram-tool-design.md).
   El resto de aquel documento (arquitectura de paquetes, manejo de errores,
@@ -492,3 +492,22 @@ Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-0
 | 34 | 2026-09-28 | **`write_node`.** Guarda de ruta: normalizada relativa a la raíz, sin salir de ella tampoco por enlace simbólico (el ancestro existente más cercano, con `realpath`, sigue dentro), terminada en `.md` o `.flo` (el esquema no se escribe por MCP) y fuera de las carpetas ignoradas. Validación en un workspace nuevo con todas las fuentes + el archivo: se rechaza si no es documento del workspace (`.md` sin frontmatter), si tiene algún error, o si otro archivo tiene un error que antes no tenía (multiconjunto por código, rango y mensaje; los errores previos no bloquean). Escritura en un temporal oculto del mismo directorio y `rename`, creando carpetas; el estado se actualiza en el acto, sin esperar al watcher. Los rechazos de ruta son mensajes, no códigos de diagnóstico. | MCP (K3), guardado desde el editor (F) |
 | 35 | 2026-09-28 | **Salida de las herramientas MCP**: un único contenido `text` con JSON; los fallos con `isError: true` y `{ error }` (más `diagnostics`, cada uno con su `uri`, en `write_node`). La entrada se valida con esquemas `zod` estrictos (rechazan claves desconocidas y tipos incorrectos; `depth` entero ≥ 0) antes de llamar al core. `get_node` = `{ node, outgoing: {type, target, resolved}[], incoming: {from, type, target}[] }`; `check` sin ruta lista solo los archivos con diagnósticos. | MCP (K3), K4 si reusa el formato |
 | 36 | 2026-09-28 | **Enmienda a #33: un watcher por directorio.** En vez de un único `fs.watch` recursivo, se observa cada directorio de la carpeta (sin `node_modules`, `.git` ni enlaces simbólicos) con un `fs.watch` no recursivo, y el conjunto se resincroniza en cada relectura completa. Motivo: en Linux el modo recursivo de Node vigila cada archivo por inodo y deja de ver un archivo tras reemplazarlo con `rename` (la escritura atómica de `write_node` o de los editores), y además vigila todo `node_modules`. Los eventos por directorio son por nombre en todas las plataformas. | MCP (K3), carga de carpeta en web (F) |
+
+### Pendientes diferidos (Fase K3, 2026-09-29)
+
+- **F / CI — watcher en Linux:** el watcher por directorio (#36) solo se
+  ejecutó en macOS, donde los tests de reemplazo atómico y de carpeta
+  nueva pasan también sin el cambio; el primer CI en `ubuntu-latest`
+  confirma o no el comportamiento en Linux.
+- **F — watcher:** `load()` lee una carpeta nueva antes de abrir su
+  watcher, así que un archivo creado en esa ventana no se ve hasta la
+  siguiente relectura completa (abrir los watchers antes de recorrer lo
+  cierra). Cualquier evento sobre un directorio existente relee la carpeta
+  entera; un directorio vacío borrado conserva su watcher hasta la
+  siguiente relectura; `watch()` no admite dos llamadas independientes.
+- **K4 — MCP:** `list_tags` no declara `inputSchema` y acepta claves
+  extra; un error que lanza el core dentro de una herramienta llega como
+  texto del SDK, no como `{ error }` JSON (#35).
+- **Cualquiera — `write_node`:** sobrescribir un archivo no conserva su
+  modo (queda `0o666 & umask`); si falla la escritura quedan las carpetas
+  creadas vacías.

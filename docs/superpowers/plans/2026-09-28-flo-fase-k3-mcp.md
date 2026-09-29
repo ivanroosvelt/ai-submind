@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-29 (`df0ff8d`..`a296d3a`, fixes de la revisión final `55c6f11`..`d0b2ffe`). Revisiones por task: task 2 — una ruta con otras mayúsculas (`KB/a.md`) esquivaba la validación en un FS insensible a mayúsculas; `write` canoniza con `realpathSync.native` y el error de E/S solo da el código. Task 3 — una excepción en el callback del watcher tumbaba el servidor; `refresh` trata una lectura fallida como borrado y `onChange` captura y registra. Revisión final: el servidor termina al cerrarse stdin; `load()` tolera directorios ilegibles y reemplaza el estado al final; el `fs.watch` recursivo pasó a un watcher por directorio (decisión #36, por el reemplazo atómico en Linux); `engines` `>=20`, `check` canoniza mayúsculas como `write` (`canonicalUri`) y los tests del watcher esperan a que arranque. Suite: 37 tests en `@flo/mcp`. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase K3)". El código de las tasks de abajo es el del plan original; el entregado incluye esos fixes.
+
 **Goal:** Paquete nuevo `@flo/mcp` con el binario `flo-mcp <carpeta>`: carga
 una carpeta del disco en un `Workspace` de `@flo/core`, la sigue con
 `fs.watch` y expone cinco herramientas MCP por stdio (`query`, `get_node`,
