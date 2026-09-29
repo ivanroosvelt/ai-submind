@@ -1,5 +1,5 @@
 const FLO_PICKER_OPTIONS: FilePickerOptions = {
-  types: [{ description: "Diagrama .flo", accept: { "text/plain": [".flo"] } }],
+  types: [{ description: "Documento .flo o .md", accept: { "text/plain": [".flo", ".md"] } }],
 };
 
 export function hasFileSystemAccess(): boolean {
@@ -12,7 +12,7 @@ export interface OpenResult {
   name: string;
 }
 
-function readFileAsText(file: File): Promise<string> {
+export function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
@@ -21,7 +21,7 @@ function readFileAsText(file: File): Promise<string> {
   });
 }
 
-function isAbortError(error: unknown): boolean {
+export function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
 }
 
@@ -29,7 +29,7 @@ function openFloFileFallback(): Promise<OpenResult | null> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".flo,text/plain";
+    input.accept = ".flo,.md,text/plain";
     input.addEventListener("change", () => {
       const file = input.files?.[0];
       if (!file) {
