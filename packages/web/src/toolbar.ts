@@ -14,6 +14,7 @@ export interface ToolbarActions {
   onExportPng(): void;
   onLoadExample(id: string): void;
   onToggleExpand(): void;
+  onToggleMap(): void;
 }
 
 export function createToolbar(
@@ -33,6 +34,7 @@ export function createToolbar(
     <button id="flo-save" type="button">Guardar</button>
     <button id="flo-export-svg" type="button">Exportar SVG</button>
     <button id="flo-export-png" type="button">Exportar PNG</button>
+    <button id="flo-toggle-map" type="button">Mapa</button>
     <button id="flo-toggle-expand" type="button">Ampliar</button>
     <select id="flo-examples">
       <option value="" selected disabled>Ejemplos</option>
@@ -55,6 +57,7 @@ export function createToolbar(
   byId("flo-save").addEventListener("click", actions.onSave);
   byId("flo-export-svg").addEventListener("click", actions.onExportSvg);
   byId("flo-export-png").addEventListener("click", actions.onExportPng);
+  byId("flo-toggle-map").addEventListener("click", actions.onToggleMap);
   byId("flo-toggle-expand").addEventListener("click", actions.onToggleExpand);
 
   const examplesSelect = byId("flo-examples") as HTMLSelectElement;

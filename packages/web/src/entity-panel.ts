@@ -1,4 +1,4 @@
-import { escapeXml, type BlockId, type EntityId, type LinkResult } from "@flo/core";
+import { escapeXml, type BlockId, type EntityId, type LinkResult, type QueryEdge } from "@flo/core";
 
 /** "<título o nombre> · <uri>" de un bloque del workspace. */
 export function blockLabel(link: LinkResult, id: BlockId): string {
@@ -29,6 +29,17 @@ export function entityPanelHtml(link: LinkResult, id: EntityId): string {
     `<p class="flo-panel-meta"><code>${escapeXml(entity.id)}</code>${meta ? ` · ${escapeXml(meta)}` : ""}</p>`,
     `<p class="flo-panel-actions"><button type="button" data-flo-definition>${escapeXml(entity.uri)}:${entity.nameRange.start.line}</button> <button type="button" data-flo-rename>Renombrar</button></p>`,
     `<h4>Aparece en ${flows(blocks.length)}</h4>`,
+    flowListHtml(link, blocks),
+  ].join("");
+}
+
+/** Panel de una arista del mapa: los flujos que la contienen. */
+export function edgePanelHtml(link: LinkResult, edge: QueryEdge): string {
+  const label = (id: EntityId) => escapeXml(link.entities.get(id)?.label ?? id);
+  const blocks = edge.blocks ?? [];
+  return [
+    `<h3 class="flo-panel-title">${label(edge.from)} → ${label(edge.to)}</h3>`,
+    `<h4>En ${flows(blocks.length)}</h4>`,
     flowListHtml(link, blocks),
   ].join("");
 }

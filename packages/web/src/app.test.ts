@@ -236,4 +236,24 @@ describe("App navigation", () => {
     expect(el.explorer.querySelector('[data-flo-entity="nuevo"]')).not.toBeNull();
     expect(el.explorer.querySelector('[data-flo-open="catalog.flo"] .flo-dirty')).not.toBeNull();
   });
+
+  it("shows the aggregated map and lists the flows of a clicked edge", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    click(el.toolbar.querySelector("#flo-toggle-map")!);
+    expect(el.preview.innerHTML).toContain("Mapa del sistema");
+    click(el.preview.querySelector('polyline.flo-map-hit[data-flo-from="api"]')!);
+    expect(el.panel.innerHTML).toContain("En 1 flujo");
+    click(el.panel.querySelector('[data-flo-block="login.flo#login"]')!);
+    expect(el.preview.innerHTML).not.toContain("Mapa del sistema");
+    expect(app.selectedBlock).toBe("login.flo#login");
+  });
+
+  it("opens the entity panel from a map node", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    app.toggleMap();
+    click(el.preview.querySelector('[data-flo-entity="db"]')!);
+    expect(el.panel.innerHTML).toContain("<code>db</code>");
+  });
 });

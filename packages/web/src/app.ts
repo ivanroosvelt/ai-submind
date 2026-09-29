@@ -1,8 +1,20 @@
 import type { EditorView } from "@codemirror/view";
-import { blockId, entityAt, renameEntity, type BlockId, type DocumentUri, type EntityId, type Location, type Position } from "@flo/core";
+import {
+  blockId,
+  entityAt,
+  query,
+  renameEntity,
+  renderMap,
+  type BlockId,
+  type DocumentUri,
+  type EntityId,
+  type Location,
+  type Position,
+} from "@flo/core";
 import { createEditor, showDocument, type EditorHost } from "./editor.js";
-import { entityPanelHtml } from "./entity-panel.js";
+import { edgePanelHtml, entityPanelHtml } from "./entity-panel.js";
 import { bindExplorer, explorerHtml, type ExplorerFilter } from "./explorer.js";
+import { addEdgeHitAreas, mapHtml } from "./map-view.js";
 import { nextPreviewState, previewHtml, renderActive, type PreviewState } from "./preview.js";
 import { createToolbar, type DiagramKind } from "./toolbar.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
@@ -36,7 +48,7 @@ function reportActionError(action: string, error: unknown): void {
   window.alert(`No se pudo completar: ${action}. Revisá la consola para más detalle.`);
 }
 
-type PanelState = { kind: "entity"; id: EntityId } | null;
+type PanelState = { kind: "entity"; id: EntityId } | { kind: "edge"; from: EntityId; to: EntityId } | null;
 
 function byData(root: ParentNode, selector: string, attribute: string, value: string): Element[] {
   return Array.from(root.querySelectorAll(selector)).filter((element) => element.getAttribute(attribute) === value);
@@ -50,6 +62,7 @@ export class App {
   private previewState: PreviewState = { lastDiagrams: [] };
   private fileHandle: FileSystemFileHandle | null = null;
   private panel: PanelState = null;
+  private mapMode = false;
   private highlight: EntityId | null = null;
   private filter: ExplorerFilter = { type: null, tag: null };
   private readonly host: EditorHost = {
@@ -84,6 +97,7 @@ export class App {
           }),
         onLoadExample: (id) => this.loadExample(id),
         onToggleExpand: () => void document.body.classList.toggle("flo-expanded"),
+        onToggleMap: () => this.toggleMap(),
       },
       EXAMPLES
     );
@@ -125,16 +139,28 @@ export class App {
 
   /** Todo lo que depende del link, desde un link nuevo; y el borrador. */
   refresh(): void {
-    const uri = this.ws.active;
-    const result = renderActive(this.ws.link(), uri);
-    this.previewState = nextPreviewState(this.previewState, result);
-    this.el.preview.innerHTML = previewHtml(this.previewState, result, uri);
-    enhanceSequencePreview(this.el.preview);
-    this.markSelection();
+    const link = this.ws.link();
+    if (this.mapMode) {
+      this.el.preview.innerHTML = mapHtml(renderMap(link));
+      addEdgeHitAreas(this.el.preview);
+    } else {
+      const uri = this.ws.active;
+      const result = renderActive(link, uri);
+      this.previewState = nextPreviewState(this.previewState, result);
+      this.el.preview.innerHTML = previewHtml(this.previewState, result, uri);
+      enhanceSequencePreview(this.el.preview);
+      this.markSelection();
+    }
     this.renderPanel();
     this.renderExplorer();
     // ponytail: sin IndexedDB (modo privado) el editor sigue, solo sin borrador.
     saveDraft(this.ws.snapshot()).catch(() => {});
+  }
+
+  /** Alterna el preview entre el documento activo y el mapa agregado del workspace (spec §8, #40). */
+  toggleMap(): void {
+    this.mapMode = !this.mapMode;
+    this.refresh();
   }
 
   private confirmDiscard(): boolean {
@@ -199,6 +225,12 @@ export class App {
   }
 
   private onPreviewClick(target: Element): void {
+    const edge = target.closest("[data-flo-from]");
+    if (this.mapMode && edge) {
+      this.panel = { kind: "edge", from: edge.getAttribute("data-flo-from")!, to: edge.getAttribute("data-flo-to")! };
+      this.renderPanel();
+      return;
+    }
     const section = target.closest("section[data-flo-block]");
     if (section && target.closest(".flo-block-title")) {
       this.selectBlock(section.getAttribute("data-flo-block")!);
@@ -230,8 +262,16 @@ export class App {
 
   private renderPanel(): void {
     const link = this.ws.link();
-    if (this.panel?.kind === "entity" && !link.entities.has(this.panel.id)) this.panel = null;
-    this.el.panel.innerHTML = this.panel ? entityPanelHtml(link, this.panel.id) : "";
+    const panel = this.panel;
+    let html = "";
+    if (panel?.kind === "entity" && link.entities.has(panel.id)) {
+      html = entityPanelHtml(link, panel.id);
+    } else if (panel?.kind === "edge") {
+      const edge = query(link).edges.find((e) => e.type === "flow" && e.from === panel.from && e.to === panel.to);
+      if (edge) html = edgePanelHtml(link, edge);
+    }
+    if (html === "") this.panel = null;
+    this.el.panel.innerHTML = html;
   }
 
   private renderExplorer(): void {
@@ -240,6 +280,7 @@ export class App {
 
   /** Abre el documento del bloque y lo selecciona (es el que se exporta); con `entity`, resalta su nodo. */
   selectBlock(id: BlockId, entity: EntityId | null = null): void {
+    this.mapMode = false;
     this.selectedBlock = id;
     this.highlight = entity;
     const uri = id.slice(0, id.lastIndexOf("#"));
@@ -305,6 +346,7 @@ export class App {
 
   /** El SVG que exportan los botones: el bloque seleccionado si está en el preview; si no, el primero (#41). */
   private exportable(): string | undefined {
+    if (this.mapMode) return renderMap(this.ws.link()).svg;
     const diagrams = this.previewState.lastDiagrams;
     const selected = diagrams.find((diagram) => blockId(this.ws.active, diagram.name) === this.selectedBlock);
     return (selected ?? diagrams[0])?.svg;
