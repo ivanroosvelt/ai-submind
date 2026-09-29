@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** completado el 2026-09-28 (`df4e4dd`..`a11a746`, fix de la revisión final `95efb9d`); revisión de la task 1: el test `{ text: "api" }` del fixture chocaba con la cerca ` ```flo ` de `pkce` y se cambió a `"db"` (`text` busca también dentro de las cercas, spec §5). Revisión final: lista para merge; 1 hallazgo importante (`QueryOptions` mal formado desde JSON) y 1 menor quedaron en §11 como pendientes de K3 y K4; CRLF en `floSources`, adyacencia O(grado) y un test de texto dentro de cerca, corregidos.
+**Estado:** completado el 2026-09-28 (`df4e4dd`..`a11a746`, fix de la revisión final `95efb9d`); revisión de la task 1: el test `{ text: "api" }` del fixture chocaba con la cerca ` ```flo ` de `pkce` y se cambió a `"db"` (`text` busca también dentro de las cercas, spec §5). Revisión final: lista para merge; 1 hallazgo importante (`QueryOptions` mal formado desde JSON) y 1 menor quedaron en §11 como pendientes de K3 y K4; CRLF en `floSources`, adyacencia O(grado) y un test de texto dentro de cerca, corregidos. El código y los tests de este plan reflejan lo entregado (incluidos esos fixes).
 
 **Goal:** `query(link, opts)` y `tagCatalog(link)` en `@flo/core`: funciones
 puras sobre un `LinkResult` que filtran entidades por predicados de
@@ -289,7 +289,8 @@ describe("query", () => {
     ["custom key inherited from Object.prototype", { custom: "constructor" }, []],
     ["text in title, ignoring case and keeping accents", { text: "CAÍDA" }, ["incidente"]],
     ["text in body", { text: "12 caracteres" }, ["passwords"]],
-    ["text does not see .flo entities", { text: "api" }, []],
+    ["text inside an embedded flo fence", { text: "validacion" }, ["pkce"]],
+    ["text does not see .flo entities", { text: "db" }, []],
     ["and", { and: [{ memory: "short_term" }, { contextTag: "project:core" }] }, ["passwords"]],
     ["or", { or: [{ typeTag: "incident" }, { memory: "long_term" }] }, ["incidente", "pkce"]],
     ["not also matches .flo entities", { not: { memory: "working" } }, ["api", "db", "cache", "passwords", "pkce", "auth"]],
@@ -396,6 +397,17 @@ describe("query", () => {
     expect(apiFull.diagrams).toEqual([]);
   });
 
+  it("returns embedded flo sources without carriage returns on CRLF files", () => {
+    const crlfWorkspace = linkFiles({
+      [SCHEMA_URI]: "type_tags: []\nrelation_types: []\n",
+      "kb/test.md": ["---", "id: a", "title: A", "memory_type: working", "---", "```flo", "entity x", "```", ""].join(
+        "\r\n"
+      ),
+    });
+    const [node] = query(crlfWorkspace, { from: ["a"], project: "full+diagrams" }).nodes;
+    expect(node.diagrams).toEqual(["entity x"]);
+  });
+
   it("does not share arrays or objects with the linked documents", () => {
     const [pkce] = run({ from: ["pkce"] }).nodes;
     pkce.typeTags.push("x");
@@ -418,7 +430,7 @@ Agregar debajo de `floFences` (que queda privada):
 ```ts
 /** Texto fuente de cada cerca ` ```flo ` de un cuerpo Markdown, sin las líneas de la cerca. */
 export function floSources(body: string): string[] {
-  const lines = body.split("\n");
+  const lines = body.split(/\r?\n/);
   return floFences(lines, 0).map((fence) => lines.slice(fence.start, fence.end).join("\n"));
 }
 ```
@@ -474,6 +486,12 @@ export interface QueryEdge {
 export interface QueryResult {
   nodes: QueryNode[]; // por distancia, luego orden del catálogo
   edges: QueryEdge[]; // todas las aristas entre nodos del resultado
+}
+
+function push<K, V>(map: Map<K, V[]>, key: K, value: V): void {
+  const list = map.get(key);
+  if (list) list.push(value);
+  else map.set(key, [value]);
 }
 
 function matches(entity: EntityDecl, where: Where): boolean {
@@ -571,8 +589,8 @@ export function query(link: LinkResult, opts: QueryOptions = {}): QueryResult {
   const edges = workspaceEdges(link);
   const adjacent = new Map<EntityId, EntityId[]>();
   for (const { from: a, to: b } of edges) {
-    adjacent.set(a, [...(adjacent.get(a) ?? []), b]);
-    adjacent.set(b, [...(adjacent.get(b) ?? []), a]);
+    push(adjacent, a, b);
+    push(adjacent, b, a);
   }
   let frontier = [...distance.keys()];
   for (let d = 1; d <= depth && frontier.length > 0; d++) {
@@ -595,10 +613,6 @@ export function query(link: LinkResult, opts: QueryOptions = {}): QueryResult {
   };
 }
 ```
-
-Nota: `adjacent.set(a, [...])` copia el array por arista; es O(grado²) por
-nodo. Si al implementar preferís `push` sobre un array existente (patrón
-`push()` de `xref.ts`), hacelo: el resultado es el mismo.
 
 - [x] **Step 5: Correr el test y verlo pasar**
 
