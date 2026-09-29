@@ -123,10 +123,12 @@ describe("flo-mcp tools", () => {
     const { folder, call } = await connect();
     const watcher = folder.watch();
     cleanup.push(() => watcher.close());
+    // fs.watch no avisa cuándo está listo: lo escrito enseguida puede perderse mientras arranca.
+    await new Promise((done) => setTimeout(done, 200));
     writeFileSync(join(folder.root, "kb/w.md"), node("w", ["type_tags: [decision]"]));
     await vi.waitFor(
       async () => expect((await call("query", { where: { typeTag: "decision" } })).value.nodes.map((n: { id: string }) => n.id)).toEqual(["a", "w"]),
       { timeout: 5000, interval: 50 }
     );
-  });
+  }, 15000);
 });

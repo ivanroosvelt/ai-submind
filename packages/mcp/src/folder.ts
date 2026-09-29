@@ -69,6 +69,8 @@ export class FloFolder {
   protected sources = new Map<string, string>();
   protected workspace = new Workspace();
   protected linked: LinkResult | null = null;
+  /** Un `fs.watch` no recursivo por directorio mientras se observa (decisión #36); null si no. */
+  private watchers: Map<string, FSWatcher> | null = null;
 
   constructor(root: string) {
     // `.native` devuelve las mayúsculas del disco en macOS (APFS no distingue
@@ -84,10 +86,12 @@ export class FloFolder {
   load(): void {
     const sources = new Map<string, string>();
     const workspace = new Workspace();
-    for (const uri of this.walk().files) this.refresh(uri, sources, workspace);
+    const { dirs, files } = this.walk();
+    for (const uri of files) this.refresh(uri, sources, workspace);
     this.sources = sources;
     this.workspace = workspace;
     this.linked = null;
+    this.syncWatchers(dirs);
   }
 
   /**
@@ -211,24 +215,72 @@ export class FloFolder {
     }
   }
 
-  /** Sigue los cambios del disco (spec §6, decisión #33). Quien llama cierra el watcher. */
-  watch(): FSWatcher {
-    const watcher = watch(this.root, { recursive: true }, (_event, filename) => this.onChange(filename));
-    watcher.on("error", (error) => console.error(`flo-mcp: ${error.message}`));
-    return watcher;
+  /**
+   * Sigue los cambios del disco (spec §6, decisiones #33 y #36): un
+   * `fs.watch` no recursivo por directorio, resincronizado en cada `load()`.
+   * Quien llama cierra con `close()`.
+   */
+  watch(): { close(): void } {
+    this.watchers ??= new Map();
+    this.syncWatchers(this.walk().dirs);
+    return {
+      close: () => {
+        for (const watcher of this.watchers?.values() ?? []) watcher.close();
+        this.watchers = null;
+      },
+    };
   }
 
-  private onChange(filename: string | null): void {
+  /** Abre watchers para los directorios nuevos y cierra los de los que ya no están. */
+  private syncWatchers(dirs: string[]): void {
+    const watchers = this.watchers;
+    if (watchers === null) return;
+    const current = new Set(dirs);
+    for (const [dir, watcher] of watchers) {
+      if (!current.has(dir)) {
+        watcher.close();
+        watchers.delete(dir);
+      }
+    }
+    for (const dir of dirs) {
+      if (watchers.has(dir)) continue;
+      try {
+        const watcher = watch(dir, (_event, filename) =>
+          this.onChange(filename === null ? null : this.uriOf(join(dir, filename)))
+        );
+        // Un directorio observado que se borra puede emitir un error: se cierra su watcher.
+        watcher.on("error", (error) => {
+          console.error(`flo-mcp: ${error.message}`);
+          watcher.close();
+          if (watchers.get(dir) === watcher) watchers.delete(dir);
+        });
+        watchers.set(dir, watcher);
+      } catch (error) {
+        console.error(`flo-mcp: no se pudo observar '${dir}': ${(error as Error).message}`);
+      }
+    }
+  }
+
+  private onChange(uri: string | null): void {
     // Un error de E/S entre el evento y la relectura (borrado, chmod, ENOTDIR,
     // ELOOP) no puede tumbar el proceso del servidor MCP: se loguea y se sigue.
     try {
-      if (filename === null) return void this.load();
-      const uri = filename.split(sep).join("/");
+      if (uri === null) return void this.load();
       if (isIgnored(uri)) return;
       if (isDocumentUri(uri)) return void this.refresh(uri);
       // Un directorio creado, movido o borrado solo avisa por sí mismo, no por sus archivos.
       const isDirectory = statSync(join(this.root, uri), { throwIfNoEntry: false })?.isDirectory() ?? false;
-      if (isDirectory || [...this.sources.keys()].some((known) => known.startsWith(`${uri}/`))) this.load();
+      if (!isDirectory && ![...this.sources.keys()].some((known) => known.startsWith(`${uri}/`))) return;
+      // Un directorio borrado y recreado con la misma ruta (git checkout) deja
+      // muerto el watcher viejo: se cierran los de ese subárbol y `load` los reabre.
+      const path = join(this.root, uri);
+      for (const [dir, watcher] of this.watchers ?? []) {
+        if (dir === path || dir.startsWith(path + sep)) {
+          watcher.close();
+          this.watchers?.delete(dir);
+        }
+      }
+      this.load();
     } catch (error) {
       console.error(`flo-mcp: ${(error as Error).message}`);
     }

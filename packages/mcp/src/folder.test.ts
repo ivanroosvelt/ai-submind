@@ -246,43 +246,85 @@ describe("FloFolder watch", () => {
     for (const watcher of watchers.splice(0)) watcher.close();
   });
 
-  function watched(): FloFolder {
+  /** fs.watch no avisa cuándo está listo: lo escrito enseguida puede perderse mientras arranca. */
+  const settle = (): Promise<void> => new Promise((done) => setTimeout(done, 200));
+
+  async function watched(): Promise<FloFolder> {
     const folder = loaded();
     watchers.push(folder.watch());
+    await settle();
     return folder;
   }
 
   const ids = (folder: FloFolder): string[] => [...folder.link().entities.keys()];
   const eventually = (check: () => void) => vi.waitFor(check, { timeout: 5000, interval: 50 });
+  const TIMEOUT = 15000;
 
   it("picks up a file written on disk", async () => {
-    const folder = watched();
+    const folder = await watched();
     writeFileSync(join(folder.root, "kb/w.md"), node("w"));
     await eventually(() => expect(ids(folder)).toContain("w"));
-  });
+  }, TIMEOUT);
 
   it("picks up an edit and a deletion", async () => {
-    const folder = watched();
+    const folder = await watched();
     writeFileSync(join(folder.root, "kb/b.md"), node("b2"));
     await eventually(() => expect(ids(folder)).toContain("b2"));
     rmSync(join(folder.root, "kb/b.md"));
     await eventually(() => expect(ids(folder)).not.toContain("b2"));
-  });
+  }, TIMEOUT);
+
+  it("still sees edits to a file after it was replaced atomically", async () => {
+    const folder = await watched();
+    expect(folder.write("kb/a.md", node("a").replace("Nodo a", "Otro título"))).toMatchObject({ ok: true });
+    await settle();
+    writeFileSync(join(folder.root, "kb/a.md"), node("a3"));
+    await eventually(() => expect(ids(folder)).toContain("a3"));
+  }, TIMEOUT);
 
   it("reloads when a folder is removed or moved in", async () => {
-    const folder = watched();
+    const folder = await watched();
     rmSync(join(folder.root, "kb"), { recursive: true });
     await eventually(() => expect(ids(folder)).toEqual(["api"]));
     const outside = tempDir({ "y.md": node("y") });
     renameSync(outside, join(folder.root, "nuevo"));
     await eventually(() => expect(ids(folder)).toContain("y"));
-  });
+  }, TIMEOUT);
+
+  it("watches a folder created after watch() started", async () => {
+    const folder = await watched();
+    renameSync(tempDir({ "y.md": node("y") }), join(folder.root, "nuevo"));
+    await eventually(() => expect(ids(folder)).toContain("y"));
+    await settle();
+    writeFileSync(join(folder.root, "nuevo/y2.md"), node("y2"));
+    await eventually(() => expect(ids(folder)).toContain("y2"));
+  }, TIMEOUT);
+
+  it("sees a folder deleted and recreated at the same path", async () => {
+    const folder = await watched();
+    rmSync(join(folder.root, "kb"), { recursive: true });
+    mkdirSync(join(folder.root, "kb"));
+    await eventually(() => expect(ids(folder)).toEqual(["api"]));
+    await settle();
+    writeFileSync(join(folder.root, "kb/w.md"), node("w"));
+    await eventually(() => expect(ids(folder)).toContain("w"));
+  }, TIMEOUT);
 
   it("ignores ignored folders", async () => {
-    const folder = watched();
+    const folder = await watched();
     writeFileSync(join(folder.root, "node_modules/pkg/z.md"), node("z"));
     writeFileSync(join(folder.root, "kb/w.md"), node("w"));
     await eventually(() => expect(ids(folder)).toContain("w"));
     expect(ids(folder)).not.toContain("z");
-  });
+  }, TIMEOUT);
+
+  it("stops following changes after close()", async () => {
+    const folder = loaded();
+    const watcher = folder.watch();
+    await settle();
+    watcher.close();
+    writeFileSync(join(folder.root, "kb/w.md"), node("w"));
+    await settle();
+    expect(ids(folder)).not.toContain("w");
+  }, TIMEOUT);
 });
