@@ -27,6 +27,8 @@ export type { SequenceLayout, SequenceParticipantLayout, SequenceMessageLayout }
 export type { BlockNode } from "./layout/nodes.js";
 export { render, renderBlock } from "./render/index.js";
 export type { RenderResult, RenderedDiagram } from "./render/index.js";
+export { renderMap } from "./render/map.js";
+export type { RenderedMap } from "./render/map.js";
 export type {
   Position,
   Range,

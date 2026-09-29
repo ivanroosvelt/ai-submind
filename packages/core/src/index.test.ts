@@ -14,6 +14,7 @@ import {
   tagCatalog,
   entityAt,
   renameEntity,
+  renderMap,
   type BlockId,
   type FlowchartLayout,
   type LinkResult,
@@ -26,6 +27,7 @@ import {
   type TagCatalog,
   type TextEdit,
   type RenameResult,
+  type RenderedMap,
 } from "./index.js";
 
 describe("index", () => {
@@ -173,5 +175,12 @@ describe("index: navigation surface (Fase E)", () => {
     expect(result.edges).toEqual([{ from: "pkce", to: "api", type: "affects" }]);
     const tags: TagCatalog = tagCatalog(link);
     expect(tags.typeTags).toEqual(["decision"]);
+  });
+
+  it("exposes renderMap", () => {
+    const workspace = new Workspace();
+    workspace.setDocument("a.flo", "entity a\nentity b\nflow f {\n  a -> b\n}\n");
+    const map: RenderedMap = renderMap(workspace.link());
+    expect(map.edges).toHaveLength(1);
   });
 });
