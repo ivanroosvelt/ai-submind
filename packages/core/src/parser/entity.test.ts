@@ -86,6 +86,18 @@ describe("parseEntity", () => {
     expect(parseEntitySource("entity a type:\n").diagnostics.map((d) => d.code)).toEqual(["E043"]);
   });
 
+  it("hints that tags are separated by spaces when a comma follows them", () => {
+    const { diagnostics } = parseEntitySource("entity a tags: x, y\n");
+    expect(diagnostics.map((d) => [d.code, d.message])).toEqual([
+      ["E042", "se esperaba ':' después de 'y'; los tags se separan con espacios, no con comas"],
+    ]);
+  });
+
+  it("keeps the plain E042 message after other properties", () => {
+    const { diagnostics } = parseEntitySource("entity a type: x, y\n");
+    expect(diagnostics.map((d) => d.message)).toEqual(["se esperaba ':' después de 'y'"]);
+  });
+
   it("accepts exactly one identifier for type (a second one is trailing content)", () => {
     const { diagnostics } = parseEntitySource("entity a type: x y\n");
     expect(diagnostics.map((d) => d.code)).toEqual(["E016"]);

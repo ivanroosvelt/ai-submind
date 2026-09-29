@@ -36,6 +36,7 @@ function isOpen(kind: TokenKind): kind is OpenKind {
  * línea (el caller no debe seguir leyéndola).
  */
 function parseProps(cursor: TokenCursor, entity: EntityDecl, diagnostics: Diagnostic[]): boolean {
+  let previous: string | null = null;
   for (;;) {
     const key = cursor.current();
     if (key.kind !== "IDENT") {
@@ -48,7 +49,10 @@ function parseProps(cursor: TokenCursor, entity: EntityDecl, diagnostics: Diagno
     cursor.advance();
 
     if (cursor.current().kind !== "COLON") {
-      diagnostics.push(diagnosticAt("E042", `se esperaba ':' después de '${key.value}'`, cursor.current().range));
+      const hint = previous === "tags" ? "; los tags se separan con espacios, no con comas" : "";
+      diagnostics.push(
+        diagnosticAt("E042", `se esperaba ':' después de '${key.value}'${hint}`, cursor.current().range)
+      );
       cursor.skipToNextLine();
       return false;
     }
@@ -76,6 +80,7 @@ function parseProps(cursor: TokenCursor, entity: EntityDecl, diagnostics: Diagno
       entity.tags = values.map((value) => value.value);
     }
     entity.range.end = values[values.length - 1].range.end;
+    previous = key.value;
 
     if (cursor.current().kind !== "COMMA") return true;
     cursor.advance();

@@ -61,7 +61,7 @@ export function linkDocuments(input: ParsedDocument[], vocabulary: Vocabulary = 
       if (target === null || !documentsByUri.has(target)) {
         diagnostics
           .get(document.uri)!
-          .push(diagnosticAt("E032", `el documento '${use.path}' no existe en el workspace`, use.pathRange));
+          .push(diagnosticAt("E032", missingUseMessage(use.path, target), use.pathRange));
       } else if (!targets.includes(target)) {
         targets.push(target);
       }
@@ -105,6 +105,16 @@ export function linkDocuments(input: ParsedDocument[], vocabulary: Vocabulary = 
 
   for (const list of diagnostics.values()) sortDiagnostics(list);
   return { entities, catalogs, uses, diagnostics };
+}
+
+/** Por qué la ruta de un `use` no llega a un documento (E032). */
+function missingUseMessage(path: string, target: DocumentUri | null): string {
+  if (target === null) return `la ruta '${path}' sale de la raíz del workspace o no nombra un documento`;
+  if (target === SCHEMA_URI) return `'${path}' es el esquema de conocimiento, no un documento del workspace`;
+  if (target.endsWith(".md")) {
+    return `el documento '${path}' no existe en el workspace o no es un documento (un .md necesita frontmatter con '---')`;
+  }
+  return `el documento '${path}' no existe en el workspace`;
 }
 
 /** Post-orden DFS sobre `use`: dependencias primero, `root` al final. Los ciclos se cortan por visitado. */
