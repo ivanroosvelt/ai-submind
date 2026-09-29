@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** completado el 2026-09-29 (`aa23b8c`..`b7ed239`, fixes de la revisión final `f094d80`..`89ef65f`). Las 12 tasks pasaron su revisión sin rondas de fixes. Revisión final: con una carpeta abierta, un archivo nuevo sin guardar se perdía sin confirmación al reemplazar el workspace (`hasUnsavedChanges` cuenta ahora los archivos nunca guardados de la carpeta, decisión #43); cambiar de documento perdía el historial de deshacer (`App` guarda un `EditorState` por uri y lo reusa si la fuente no cambió); `save()` fija el workspace antes de los `await`; `load()` limpia selección, resaltado, panel y mapa; Ctrl/Cmd+click solo con el botón principal. Verificado a mano en Safari (sin selector de carpetas). Suite: 235 core, 109 web, 37 mcp. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase F)". Los pasos de abajo describen el plan original; el código entregado incluye esos fixes.
+**Estado:** completado el 2026-09-29 (`aa23b8c`..`b7ed239`, fixes de la revisión final `f094d80`..`89ef65f`). Las 12 tasks pasaron su revisión sin rondas de fixes. Revisión final: con una carpeta abierta, un archivo nuevo sin guardar se perdía sin confirmación al reemplazar el workspace (`hasUnsavedChanges` cuenta ahora los archivos nunca guardados de la carpeta, decisión #43); cambiar de documento perdía el historial de deshacer (`App` guarda un `EditorState` por uri y lo reusa si la fuente no cambió); `save()` fija el workspace antes de los `await`; `load()` limpia selección, resaltado, panel y mapa; Ctrl/Cmd+click solo con el botón principal. Verificado a mano en Safari (sin selector de carpetas). Suite: 235 core, 109 web, 37 mcp. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase F)". El código y los tests de este plan reflejan lo entregado (incluidos esos fixes).
 
 **Goal:** El editor web pasa de un archivo suelto a un workspace de varios
 documentos (abrir carpeta, guardar todo, borrador del workspace entero) y
@@ -32,8 +32,9 @@ fake-indexeddb, File System Access API (`showDirectoryPicker`) con fallback
 
 **Spec:** `docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`
 (§8 editor web, §10 Fase F). Decisiones vigentes en su §11: #1, #6, #11,
-#21, #24, #25, #26, #27, #29, #30, #32, #33, y las nuevas **#37–#42** de
-esta fase, escritas en §11 junto con este plan. Pendientes de §11 que este
+#21, #24, #25, #26, #27, #29, #30, #32, #33, y las nuevas **#37–#43** de
+esta fase (#37–#42 escritas en §11 junto con este plan, #43 en la revisión
+final). Pendientes de §11 que este
 plan recoge (la tabla completa, con los descartados, está en §11 →
 "Pendientes que resuelve la Fase F"):
 
@@ -609,13 +610,12 @@ resuelve la ruta:
 
 En `packages/core/src/workspace/resolver.test.ts`, junto al test que hoy
 verifica `"el documento './nope.flo' no existe en el workspace"` (línea
-~104), agregar (usa el mismo helper que ese test para linkear documentos;
-si el helper se llama distinto, adaptá solo el nombre):
+~104), agregar (usa el helper `link(files)` del archivo):
 
 ```ts
   it("explains why a use path is not a document", () => {
     const messages = (path: string) =>
-      linkDocuments([parseDocument(`use "${path}"\n`, "dir/a.flo").document]).diagnostics.get("dir/a.flo")!.map((d) => d.message);
+      link({ "dir/a.flo": `use "${path}"\n` }).diagnostics.get("dir/a.flo")!.map((d) => d.message);
     expect(messages("../../x.flo")).toEqual([
       "la ruta '../../x.flo' sale de la raíz del workspace o no nombra un documento",
     ]);
@@ -628,27 +628,23 @@ si el helper se llama distinto, adaptá solo el nombre):
   });
 ```
 
-(Si `resolver.test.ts` no importa `parseDocument`, agregar
-`import { parseDocument } from "../parser/document.js";`.)
-
 En `packages/core/src/parser/entity.test.ts`:
 
 ```ts
   it("hints that tags are separated by spaces when a comma follows them", () => {
-    const { diagnostics } = parse("entity a tags: x, y\n");
+    const { diagnostics } = parseEntitySource("entity a tags: x, y\n");
     expect(diagnostics.map((d) => [d.code, d.message])).toEqual([
       ["E042", "se esperaba ':' después de 'y'; los tags se separan con espacios, no con comas"],
     ]);
   });
 
   it("keeps the plain E042 message after other properties", () => {
-    const { diagnostics } = parse("entity a type: x, y\n");
+    const { diagnostics } = parseEntitySource("entity a type: x, y\n");
     expect(diagnostics.map((d) => d.message)).toEqual(["se esperaba ':' después de 'y'"]);
   });
 ```
 
-(Usar el `parse` que ya importe `entity.test.ts`; si importa otra función
-de entrada, llamar a esa con la misma fuente.)
+(`parseEntitySource` es el helper que ya tiene `entity.test.ts`.)
 
 - [x] **Step 2: Run tests to verify they fail**
 
@@ -687,15 +683,17 @@ En `packages/core/src/parser/entity.ts`, `parseProps`: declarar
 ```ts
     if (cursor.current().kind !== "COLON") {
       const hint = previous === "tags" ? "; los tags se separan con espacios, no con comas" : "";
-      diagnostics.push(diagnosticAt("E042", `se esperaba ':' después de '${key.value}'${hint}`, cursor.current().range));
+      diagnostics.push(
+        diagnosticAt("E042", `se esperaba ':' después de '${key.value}'${hint}`, cursor.current().range)
+      );
       cursor.skipToNextLine();
       return false;
     }
 ```
 
-y asignar `previous = key.value;` justo antes de avanzar la coma que
-separa propiedades (al final del cuerpo del loop, tras el
-`if (cursor.current().kind !== "COMMA") return true;`).
+y asignar `previous = key.value;` al final del cuerpo del loop, justo
+antes del `if (cursor.current().kind !== "COMMA") return true;` (solo se
+lee en la vuelta siguiente, así que da lo mismo antes o después).
 
 - [x] **Step 4: Run tests to verify they pass**
 
@@ -728,9 +726,10 @@ git commit -m "fix(core): E032 dice por qué la ruta no es documento y E042 sugi
 
 Semántica (decisiones #37, #38): `saved[uri]` es lo que hay en disco; un
 archivo sin entrada nunca se guardó. `isDirty` = fuente ≠ guardado (un
-archivo nunca guardado está sucio). `hasUnsavedChanges` solo cuenta
-archivos que están en disco y cambiaron (un ejemplo o un "nuevo" no piden
-confirmación al descartarse). `link()` es perezoso y se invalida en cada
+archivo nunca guardado está sucio). `hasUnsavedChanges` cuenta los
+archivos que están en disco y cambiaron y, con carpeta abierta, también
+los nunca guardados (decisión #43: un `nuevo.flo` de la carpeta pide
+confirmación; sin carpeta, un ejemplo o un "nuevo" no). `link()` es perezoso y se invalida en cada
 `setSource`. `active` se corrige al primer uri si el del snapshot no
 existe. El borrador en IndexedDB es el snapshot entero bajo la clave de
 siempre; un string (borrador de antes de F) se lee como
@@ -814,6 +813,13 @@ describe("EditorWorkspace", () => {
     expect(ws.hasUnsavedChanges()).toBe(true);
     ws.markSaved("a.flo");
     expect(ws.isDirty("a.flo")).toBe(false);
+    expect(ws.hasUnsavedChanges()).toBe(false);
+  });
+
+  it("counts never-saved files of an open folder as unsaved changes", () => {
+    const ws = new EditorWorkspace({ ...snapshot(), dir: {} as FileSystemDirectoryHandle });
+    expect(ws.hasUnsavedChanges()).toBe(true); // b.flo vive en la carpeta pero nunca se guardó
+    ws.markSaved("b.flo");
     expect(ws.hasUnsavedChanges()).toBe(false);
   });
 
@@ -1006,9 +1012,9 @@ export class EditorWorkspace {
     return this.saved.get(uri) !== this.files.get(uri);
   }
 
-  /** Cambios que se perderían: archivos que están en disco y difieren. */
+  /** Cambios que se perderían: archivos que difieren de disco; con carpeta, también los nunca guardados (#43). */
   hasUnsavedChanges(): boolean {
-    return this.uris().some((uri) => this.saved.has(uri) && this.isDirty(uri));
+    return this.uris().some((uri) => this.isDirty(uri) && (this.saved.has(uri) || this.dir !== null));
   }
 
   markSaved(uri: DocumentUri): void {
@@ -1408,13 +1414,16 @@ git commit -m "feat(web): abrir una carpeta como workspace y escribir en ella"
 **Interfaces:**
 - Consumes: `EditorWorkspace`, `WorkspaceSnapshot` (task 4); `openFolder`, `writeWorkspaceFile`, `ensureWritable` (task 5); `openFloFile`, `saveFloFile` (`file-io.ts`); `renderBlock`, `blockId`, `escapeXml`, `LinkResult`, `RenderResult`, `DocumentUri` (`@flo/core`); `parseSvgSize` (`export.ts`); `saveDraft` (task 4).
 - Produces:
-  - `editor.ts`: `interface EditorHost { workspace(): EditorWorkspace; onChange(): void }`, `createEditor(parent: HTMLElement): EditorView`, `showDocument(view: EditorView, host: EditorHost, uri: DocumentUri): void`. Se borran `getEditorSource`/`setEditorSource`.
+  - `editor.ts`: `interface EditorHost { workspace(): EditorWorkspace; onChange(): void }`, `createEditor(parent: HTMLElement): EditorView`, `showDocument(view: EditorView, host: EditorHost, uri: DocumentUri, previous?: EditorState): void`. Se borran `getEditorSource`/`setEditorSource`.
   - `preview.ts`: `renderActive(link: LinkResult, uri: DocumentUri): RenderResult`; `previewHtml(state, result, uri: DocumentUri): string` (cada `<section class="flo-block">` lleva `data-flo-block="<uri>#<nombre>"`). `PreviewState` y `nextPreviewState` no cambian.
   - `toolbar.ts`: `ToolbarActions` suma `onOpenFolder(): void` (botón `#flo-open-folder`, "Abrir carpeta").
-  - `app.ts`: `newWorkspace(kind?: DiagramKind): WorkspaceSnapshot`, `interface AppElements { toolbar; explorer; editor; preview; panel: HTMLElement }`, `class App { ws: EditorWorkspace; readonly view: EditorView; constructor(el: AppElements, snapshot: WorkspaceSnapshot); load(snapshot, fileHandle?): void; openDocument(uri): void; refresh(): void; newDocument(kind): void; openFile(): Promise<void>; openFolder(): Promise<void>; save(): Promise<void>; loadExample(id: string): void }`. Campos privados que las tasks 7–10 extienden: `el`, `host`, `previewState`, `fileHandle`, y el método `exportable(): string | undefined`.
+  - `app.ts`: `newWorkspace(kind?: DiagramKind): WorkspaceSnapshot`, `interface AppElements { toolbar; explorer; editor; preview; panel: HTMLElement }`, `class App { ws: EditorWorkspace; readonly view: EditorView; constructor(el: AppElements, snapshot: WorkspaceSnapshot); load(snapshot, fileHandle?): void; openDocument(uri): void; refresh(): void; newDocument(kind): void; openFile(): Promise<void>; openFolder(): Promise<void>; save(): Promise<void>; loadExample(id: string): void }`. Campos privados que las tasks 7–10 extienden: `el`, `host`, `previewState`, `fileHandle`, `states` (`Map<DocumentUri, EditorState>`), `shown`, y el método `exportable(): string | undefined`.
 
 Semántica: cada documento tiene su `EditorState` (su historial de
-deshacer); cambiar de documento es `view.setState`. Un cambio en el
+deshacer); cambiar de documento es `view.setState`. `App` guarda el estado
+que deja el editor por uri y lo reusa al volver, salvo que la fuente haya
+cambiado por fuera del editor (renombrar), y los olvida al reemplazar el
+workspace (#43). Un cambio en el
 editor llega al workspace en el acto (`setSource`), así el lint (que lee
 `ws.link().diagnostics` del uri) nunca ve una fuente vieja; el preview se
 recalcula 200 ms después del último cambio. El resaltado `.flo` solo se
@@ -1426,8 +1435,9 @@ de ancho 0) → "Bloque vacío"; sin bloques y con errores → solo el banner
 (`nuevo-2.flo`, ...) al workspace; sin carpeta lo reemplaza. Guardar
 (decisión #38): con carpeta, pide permiso y escribe todos los archivos
 modificados, sin validar; sin carpeta, el activo con el picker o la
-descarga de siempre. Reemplazar un workspace con cambios sin guardar
-pide confirmación. Cada `refresh()` guarda el borrador (sus errores se
+descarga de siempre. `save()` fija el workspace al empezar: si se
+reemplaza durante un `await`, no escribe el nuevo en la carpeta vieja.
+Reemplazar un workspace con cambios sin guardar pide confirmación (#43). Cada `refresh()` guarda el borrador (sus errores se
 ignoran: sin IndexedDB el editor sigue funcionando).
 
 - [x] **Step 1: Write the failing tests**
@@ -1494,8 +1504,11 @@ describe("editor", () => {
 ```
 
 En `packages/web/src/preview.test.ts`: las llamadas existentes a
-`previewHtml(state, result)` pasan a `previewHtml(state, result, "")`, el
-test que espera el texto vacío junto a un banner pasa a esperar solo el
+`previewHtml(state, result)` pasan a `previewHtml(state, result, "")` (las
+secciones esperadas suman `data-flo-block="#<nombre>"`), los SVG de prueba
+llevan tamaño (`<svg width="1" height="1">…</svg>`: `parseSvgSize` lanza
+con un SVG sin `width`/`height`, y el render siempre los emite), el test
+que espera el texto vacío junto a un banner pasa a esperar solo el
 banner, y se agregan:
 
 ```ts
@@ -1559,6 +1572,7 @@ En `packages/web/src/toolbar.test.ts`: `mockActions()` suma
 ```ts
 import "fake-indexeddb/auto";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { runScopeHandlers } from "@codemirror/view";
 import { App, newWorkspace, type AppElements } from "./app.js";
 import type { WorkspaceSnapshot } from "./workspace.js";
 
@@ -1635,6 +1649,27 @@ describe("App", () => {
     confirm.mockReturnValue(true);
     app.newDocument("flowchart");
     expect(app.ws.uris()).toEqual(["nuevo.flo"]);
+  });
+
+  it("asks before replacing an open folder whose new file was never saved", () => {
+    const app = new App(elements(), { ...FILES, dir: {} as FileSystemDirectoryHandle });
+    app.newDocument("flowchart");
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    app.loadExample("flowchart");
+    expect(confirm).toHaveBeenCalledWith("Hay cambios sin guardar. ¿Descartarlos?");
+    expect(app.ws.uris()).toContain("nuevo.flo");
+  });
+
+  it("keeps each document's undo history across switches", () => {
+    const app = new App(elements(), FILES);
+    app.openDocument("catalog.flo");
+    app.view.dispatch({ changes: { from: 0, insert: "entity x\n" } });
+    app.openDocument("login.flo");
+    app.openDocument("catalog.flo");
+    // jsdom no es mac: Mod-z es Ctrl-z.
+    runScopeHandlers(app.view, new KeyboardEvent("keydown", { key: "z", ctrlKey: true }), "editor");
+    expect(app.view.state.doc.toString()).toBe(FILES.files["catalog.flo"]);
+    expect(app.ws.source("catalog.flo")).toBe(FILES.files["catalog.flo"]);
   });
 
   it("saves every modified file into the folder", async () => {
@@ -1727,9 +1762,15 @@ function documentExtensions(host: EditorHost, uri: DocumentUri): Extension[] {
   ];
 }
 
-/** Muestra `uri` con un estado propio (su historial de deshacer empieza de cero). */
-export function showDocument(view: EditorView, host: EditorHost, uri: DocumentUri): void {
-  view.setState(EditorState.create({ doc: host.workspace().source(uri), extensions: documentExtensions(host, uri) }));
+/**
+ * Muestra `uri` con su estado anterior (y su historial de deshacer) si su fuente
+ * no cambió por fuera del editor; si no, con uno nuevo (#43).
+ */
+export function showDocument(view: EditorView, host: EditorHost, uri: DocumentUri, previous?: EditorState): void {
+  const doc = host.workspace().source(uri);
+  view.setState(
+    previous?.doc.toString() === doc ? previous : EditorState.create({ doc, extensions: documentExtensions(host, uri) })
+  );
 }
 ```
 
@@ -1784,6 +1825,7 @@ después de `#flo-open`, y
 `packages/web/src/app.ts`:
 
 ```ts
+import type { EditorState } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import type { DocumentUri } from "@flo/core";
 import { createEditor, showDocument, type EditorHost } from "./editor.js";
@@ -1825,6 +1867,9 @@ export class App {
   readonly view: EditorView;
   private previewState: PreviewState = { lastDiagrams: [] };
   private fileHandle: FileSystemFileHandle | null = null;
+  /** El estado de cada documento que dejó el editor, hasta que se reemplace el workspace (#43). */
+  private readonly states = new Map<DocumentUri, EditorState>();
+  private shown: DocumentUri | null = null;
   private readonly host: EditorHost = {
     workspace: () => this.ws,
     onChange: () => this.refresh(),
@@ -1873,13 +1918,17 @@ export class App {
   load(snapshot: WorkspaceSnapshot, fileHandle: FileSystemFileHandle | null = null): void {
     this.ws = new EditorWorkspace(snapshot);
     this.fileHandle = fileHandle;
+    this.states.clear();
+    this.shown = null;
     this.openDocument(this.ws.active);
   }
 
   openDocument(uri: DocumentUri): void {
     this.ws.active = uri;
     this.previewState = { lastDiagrams: [] };
-    showDocument(this.view, this.host, uri);
+    if (this.shown !== null) this.states.set(this.shown, this.view.state);
+    this.shown = uri;
+    showDocument(this.view, this.host, uri, this.states.get(uri));
     this.refresh();
   }
 
@@ -1929,20 +1978,22 @@ export class App {
 
   /** Decisión #38: con carpeta, todos los modificados y sin validar; sin carpeta, el activo. */
   async save(): Promise<void> {
-    const { dir } = this.ws;
+    // El workspace puede reemplazarse durante los await: se guarda el que había al empezar.
+    const ws = this.ws;
+    const { dir } = ws;
     if (dir) {
       if (!(await ensureWritable(dir))) throw new Error("sin permiso de escritura en la carpeta");
-      for (const uri of this.ws.uris()) {
-        if (!this.ws.isDirty(uri)) continue;
-        await writeWorkspaceFile(dir, uri, this.ws.source(uri));
-        this.ws.markSaved(uri);
+      for (const uri of ws.uris()) {
+        if (!ws.isDirty(uri)) continue;
+        await writeWorkspaceFile(dir, uri, ws.source(uri));
+        ws.markSaved(uri);
       }
     } else {
-      const uri = this.ws.active;
-      const handle = await saveFloFile(this.ws.source(uri), this.fileHandle, uri);
+      const uri = ws.active;
+      const handle = await saveFloFile(ws.source(uri), this.fileHandle, uri);
       if (handle) {
-        this.fileHandle = handle;
-        this.ws.markSaved(uri);
+        if (this.ws === ws) this.fileHandle = handle;
+        ws.markSaved(uri);
       }
     }
     this.refresh();
@@ -2274,7 +2325,15 @@ function byData(root: ParentNode, selector: string, attribute: string, value: st
 ```
 
 3. Campos: `selectedBlock: BlockId | null = null;`,
-   `private panel: PanelState = null;`, `private highlight: EntityId | null = null;`.
+   `private panel: PanelState = null;`, `private highlight: EntityId | null = null;`,
+   y `load()` los limpia junto con `states`/`shown` (un workspace nuevo
+   empieza sin selección ni panel):
+
+```ts
+    this.selectedBlock = null;
+    this.highlight = null;
+    this.panel = null;
+```
 4. Al final del constructor, antes de `this.openDocument(this.ws.active);`:
 
 ```ts
@@ -2834,7 +2893,8 @@ function cursor(view: EditorView): Position {
     ]),
     EditorView.domEventHandlers({
       mousedown(event, view) {
-        if (!(event.ctrlKey || event.metaKey)) return false;
+        // Solo el botón principal: en macOS Ctrl+click es el menú contextual.
+        if (event.button !== 0 || !(event.ctrlKey || event.metaKey)) return false;
         const offset = view.posAtCoords({ x: event.clientX, y: event.clientY });
         if (offset === null) return false;
         event.preventDefault();
@@ -3039,6 +3099,18 @@ En `packages/web/src/app.test.ts`, dentro de `describe("App navigation")`:
     click(el.preview.querySelector('[data-flo-entity="db"]')!);
     expect(el.panel.innerHTML).toContain("<code>db</code>");
   });
+
+  it("starts a replaced workspace without selection, panel or map mode", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    app.selectBlock("login.flo#login", "api");
+    app.selectEntity("api");
+    app.toggleMap();
+    app.loadExample("flowchart");
+    expect(app.selectedBlock).toBeNull();
+    expect(el.panel.innerHTML).toBe("");
+    expect(el.preview.innerHTML).not.toContain("Mapa del sistema");
+  });
 ```
 
 - [x] **Step 2: Run tests to verify they fail**
@@ -3097,7 +3169,8 @@ de `#flo-toggle-expand`, y
 1. Imports: `query`, `renderMap` de `@flo/core`; `edgePanelHtml` de
    `./entity-panel.js`; `import { addEdgeHitAreas, mapHtml } from "./map-view.js";`.
 2. `type PanelState = { kind: "entity"; id: EntityId } | { kind: "edge"; from: EntityId; to: EntityId } | null;`
-3. Campo `private mapMode = false;` y en las acciones de la toolbar
+3. Campo `private mapMode = false;` (que `load()` también limpia:
+   `this.mapMode = false;`) y en las acciones de la toolbar
    `onToggleMap: () => this.toggleMap(),`.
 4. `refresh()` (reemplazo completo):
 
