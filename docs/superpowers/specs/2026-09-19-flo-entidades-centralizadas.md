@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-09-19
 - **Rama:** `v2`
-- **Estado:** en implementación: fases A–E completadas (2026-09-28); pendiente la F (navegación en el editor), que va después de K1–K3 del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md)
+- **Estado:** en implementación: fases A–E completadas (2026-09-28); pendiente la F (navegación en el editor), que va después de K3 (K1 y K2 completadas) del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md)
 - **Reemplaza:** las secciones §2 (fila "Gestión de archivos"), §4 y §8 del
   spec [2026-09-17-flo-diagram-tool-design.md](2026-09-17-flo-diagram-tool-design.md).
   El resto de aquel documento (arquitectura de paquetes, manejo de errores,
