@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -16,6 +16,15 @@ const FILES: Record<string, string> = {
   "kb/a.md": node("a", ["type_tags: [decision]", 'use: ["../catalogo.flo"]', "relations:", "  - target: api", "    type: affects"]),
   "kb/c.md": node("c", ['use: ["./a.md"]', "relations:", "  - target: a", "    type: affects"]),
 };
+
+/** Los tests de mayúsculas solo tienen sentido en un FS case-insensitive (macOS/Windows). */
+const CASE_INSENSITIVE_FS = ((): boolean => {
+  const dir = mkdtempSync(join(tmpdir(), "flo-mcp-case-"));
+  writeFileSync(join(dir, "case.txt"), "");
+  const insensitive = existsSync(join(dir, "CASE.txt"));
+  rmSync(dir, { recursive: true, force: true });
+  return insensitive;
+})();
 
 const cleanup: (() => void)[] = [];
 afterEach(() => {
@@ -106,6 +115,11 @@ describe("flo-mcp tools", () => {
     expect(await call("check")).toEqual({ isError: false, value: {} });
     expect(await call("check", { path: "kb/a.md" })).toEqual({ isError: false, value: { "kb/a.md": [] } });
     expect(await call("check", { path: "../fuera.md" })).toEqual({ isError: true, value: { error: "'../fuera.md' no es un documento del workspace" } });
+  });
+
+  it.runIf(CASE_INSENSITIVE_FS)("check canonizes a case-variant path like write_node", async () => {
+    const { call } = await connect();
+    expect(await call("check", { path: "KB/a.md" })).toEqual({ isError: false, value: { "kb/a.md": [] } });
   });
 
   it("write_node rejects invalid content and path escapes, and writes valid content", async () => {

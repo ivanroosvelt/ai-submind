@@ -78,7 +78,7 @@ export function createServer(folder: FloFolder): McpServer {
     },
     async ({ path }) => {
       if (path === undefined) return json(folder.diagnostics());
-      const uri = folder.toUri(path);
+      const uri = folder.canonicalUri(path);
       const found = uri === null ? null : folder.diagnostics(uri);
       return found ? json(found) : failure({ error: `'${path}' no es un documento del workspace` });
     }

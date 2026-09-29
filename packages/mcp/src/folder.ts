@@ -146,20 +146,25 @@ export class FloFolder {
     return rel.split(sep).join("/");
   }
 
+  /**
+   * Ruta de una herramienta → uri con las mayúsculas del disco, o null si
+   * sale de la raíz (por la ruta misma o por un enlace simbólico).
+   * Mayúsculas: en FS case-insensitive (APFS), 'KB/a.md' y 'kb/a.md' son el
+   * mismo archivo en disco pero claves distintas del mapa `sources`; sin
+   * canonizar, `write` vería dos documentos donde el disco solo tiene uno y
+   * `check` no encontraría el archivo.
+   */
+  canonicalUri(path: string): string | null {
+    const uri = this.toUri(path);
+    const file = uri === null ? null : this.canonicalize(join(this.root, uri));
+    return file === null ? null : this.uriOf(file);
+  }
+
   /** `write_node` (spec §6, decisión #34): valida en un workspace de prueba y escribe de forma atómica. */
   write(path: string, content: string): WriteResult {
-    const guard = this.toUri(path);
-    if (guard === null) return fail(`la ruta '${path}' sale de la carpeta raíz`);
-
-    // Mayúsculas: en FS case-insensitive (APFS), 'KB/a.md' y 'kb/a.md' son el
-    // mismo archivo en disco pero claves distintas del mapa `sources`; sin
-    // canonizar, el workspace de prueba vería dos documentos donde el disco
-    // solo tiene uno. `canonicalize` resuelve el ancestro existente más
-    // cercano con las mayúsculas del disco (y de paso hace de guarda de
-    // enlaces simbólicos: reemplaza al viejo `insideRoot`).
-    const file = this.canonicalize(join(this.root, guard));
-    if (file === null) return fail(`la ruta '${path}' sale de la carpeta raíz por un enlace simbólico`);
-    const uri = this.uriOf(file);
+    const uri = this.canonicalUri(path);
+    if (uri === null) return fail(`la ruta '${path}' sale de la carpeta raíz (directamente o por un enlace simbólico)`);
+    const file = join(this.root, uri);
 
     if (!uri.endsWith(".md") && !uri.endsWith(".flo")) return fail(`solo se escriben archivos .md o .flo: '${path}'`);
     if (isIgnored(uri)) return fail(`la ruta '${path}' está en una carpeta ignorada (node_modules, .git)`);
