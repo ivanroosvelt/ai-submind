@@ -1,7 +1,29 @@
 import { describe, it, expect } from "vitest";
 import { parse } from "./index.js";
+import { render } from "../render/index.js";
 
 describe("parse", () => {
+  it("returns an empty document for a uri that is not a workspace document (.md without frontmatter)", () => {
+    const { document, catalog, diagnostics } = parse("# hola\n", "README.md");
+    expect(document).toEqual({ uri: "README.md", uses: [], entities: [], blocks: [] });
+    expect(catalog.size).toBe(0);
+    expect(diagnostics).toEqual([]);
+  });
+
+  it("does not throw for knowledge.schema.yaml and returns its own diagnostics", () => {
+    expect(() => render("type_tags: x\n", "knowledge.schema.yaml")).not.toThrow();
+    const { diagrams, diagnostics } = render("type_tags: x\n", "knowledge.schema.yaml");
+    expect(diagrams).toEqual([]);
+    expect(diagnostics.length).toBeGreaterThan(0);
+    expect(diagnostics.every((d) => d.code === "E068")).toBe(true);
+  });
+
+  it("parses a valid .md as a loose document: one entity, E068 because a workspace of one has no schema", () => {
+    const { document, diagnostics } = parse("---\nid: a\ntitle: A\nmemory_type: working\n---\n", "a.md");
+    expect(document.entities.map((e) => e.id)).toEqual(["a"]);
+    expect(diagnostics.map((d) => d.code)).toEqual(["E068"]);
+  });
+
   it("parses and resolves a document, returning the catalog", () => {
     const { document, catalog, diagnostics } = parse("entity a\nentity b\nflow f {\n  a -> b\n}\n", "f.flo");
     expect(diagnostics).toEqual([]);

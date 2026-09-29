@@ -61,7 +61,10 @@ export function parseMarkdownDocument(
   source: string,
   uri: DocumentUri
 ): { document: ParsedDocument; diagnostics: Diagnostic[] } | null {
-  const lines = source.split("\n");
+  // Editores de Windows escriben BOM al guardar; se descarta antes de
+  // partir en líneas. Las columnas de la línea 1 no cambian: el '---'
+  // sigue en 1:1.
+  const lines = source.replace(/^﻿/, "").split("\n");
   if (!isDelimiter(lines[0])) return null;
 
   const document: ParsedDocument = { uri, uses: [], entities: [], blocks: [] };

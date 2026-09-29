@@ -147,6 +147,13 @@ describe("Workspace with .md documents", () => {
     expect(result.diagnostics.has(SCHEMA_URI)).toBe(false);
   });
 
+  it("does not let clearing a link() result's schema diagnostics corrupt the next link()", () => {
+    const ws = workspace({ [SCHEMA_URI]: "type_tags: x\nrelation_types: []\n", "a.md": note("a") });
+    ws.link().diagnostics.get(SCHEMA_URI)!.length = 0;
+    const second = ws.link();
+    expect(codes(second.diagnostics.get(SCHEMA_URI))).toEqual([["E068", 1, 12]]);
+  });
+
   it("reports an invalid schema on the schema document only", () => {
     const result = workspace({
       [SCHEMA_URI]: "type_tags: x\nrelation_types: []\n",

@@ -455,3 +455,19 @@ Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-0
 | 28 | 2026-09-28 | **Bloques ` ```flo ` embebidos.** Cada cerca se parsea por separado con `parseDocument` (un `flow` sin `}` no se traga la cerca siguiente; su `E052` queda dentro). El contenido se toma sin quitar indentación, así las columnas son las del archivo. Una cerca sin cerrar llega a fin de archivo (CommonMark); lo de adentro de cualquier cerca no abre otra. El info-string se compara por su primera palabra (` ```flo titulo ` cuenta). Se parsean aunque el frontmatter no tenga entidad. | parser (K1), `full+diagrams` (K2) |
 | 29 | 2026-09-28 | **Despacho por uri y esquema.** `Workspace.setDocument` elige el parser por uri: exactamente `knowledge.schema.yaml` → esquema; termina en `.md` → conocimiento (sin `---` inicial el uri deja de ser documento, también si lo era); todo lo demás → `.flo`. El esquema no está en `LinkResult.documents`; sus diagnósticos sí, al final de `LinkResult.diagnostics`. Ambas claves del esquema son obligatorias. Esquema ausente ⇒ un único `E068` en el primer `.md` por uri (decisión #24), anclado en su `---`; esquema con diagnósticos (`E061`/`E068` en él) ⇒ no se valida vocabulario y no se repite `E068` en los `.md`. | workspace (K1), carga de carpeta (K3, F) |
 | 30 | 2026-09-28 | **Targets de relación.** Lo anterior a `#` es la ruta si contiene `/` o termina en `.md`/`.flo`; con `#nombre` resuelve al bloque de ese documento (`.flo` o `.md`), sin `#` debe ser un `.md` con entidad (un `.flo` sin bloque es `E035`). Toda ruta que existe es `use` implícito aunque la relación termine en `E035`. En `XRefIndex`, solo las declaraciones ganadoras (#2) aportan relaciones; `relationsTo` y `referencesTo` solo cuentan targets resueltos a entidad, y `referencesTo` solo la forma id, porque es la única cuyo texto es el id (renombrar en F la edita; una ruta a `.md` no cambia al renombrar). `blockId` vive en `workspace/uri.ts`. | resolver, xref (K1), `query` (K2), renombrar (F) |
+
+### Pendientes diferidos (Fase K1, 2026-09-28)
+
+- **F — renombrar:** los rangos YAML de un escalar entre comillas incluyen
+  las comillas (`id: "a"` da `nameRange` 2:5–2:8; igual `Relation.range` y
+  `typeTagRanges`). Renombrar tiene que reemplazar el escalar completo y
+  citar el nuevo id si hace falta (`null`, `true`, `yes` cambiarían de
+  tipo).
+- **F — mensajes:** un `use` (o `use:`) que apunta a un `.md` sin
+  frontmatter o a `knowledge.schema.yaml` da `E032` "no existe en el
+  workspace", aunque el archivo exista; convendría "no es un documento del
+  workspace".
+- **K3 — carga de carpeta:** falta un test de `use` dentro de una cerca
+  ` ```flo ` (funciona); el relleno `"\n".repeat(fence.start)` relexa
+  líneas vacías por cerca, revisar solo si el re-link por `fs.watch` lo
+  muestra en un perfil.

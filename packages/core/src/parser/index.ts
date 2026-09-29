@@ -9,11 +9,19 @@ export interface ParseResult {
   diagnostics: Diagnostic[];
 }
 
-/** Un documento suelto, como un workspace de uno: sus `use` no encuentran nada (E032). */
+/**
+ * Un documento suelto, como un workspace de uno: sus `use` no encuentran
+ * nada (E032). Un `.md` sin frontmatter o `knowledge.schema.yaml` no son
+ * documentos del workspace: se devuelve un documento vacío con catálogo
+ * vacío (para el esquema, con sus propios diagnósticos). Un `.md` suelto
+ * siempre lleva E068 porque un workspace de uno no tiene esquema.
+ */
 export function parse(source: string, uri: DocumentUri = ""): ParseResult {
   const workspace = new Workspace();
   workspace.setDocument(uri, source);
   const result = workspace.link();
-  const { document, catalog } = result.documents.get(uri)!;
-  return { document, catalog, diagnostics: result.diagnostics.get(uri)! };
+  const linked = result.documents.get(uri);
+  const document = linked?.document ?? { uri, uses: [], entities: [], blocks: [] };
+  const catalog = linked?.catalog ?? new Map();
+  return { document, catalog, diagnostics: result.diagnostics.get(uri) ?? [] };
 }

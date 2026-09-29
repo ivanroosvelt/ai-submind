@@ -73,6 +73,14 @@ describe("parseMarkdownDocument: frontmatter", () => {
     expect(entity.knowledge?.typeTagRanges).toEqual([r(5, 13, 5, 21), r(5, 23, 5, 35)]);
   });
 
+  it("strips a leading UTF-8 BOM before splitting lines", () => {
+    const result = parseMarkdownDocument("﻿---\nid: a\ntitle: A\nmemory_type: working\n---\n", "a.md")!;
+    expect(result).not.toBeNull();
+    expect(result.document.entities[0].id).toBe("a");
+    expect(result.document.entities[0].nameRange).toEqual(r(2, 5, 2, 6));
+    expect(result.diagnostics).toEqual([]);
+  });
+
   it("is not a workspace document without '---' on the first line", () => {
     expect(parseMarkdownDocument("# README\n", "README.md")).toBeNull();
     expect(parseMarkdownDocument("\n---\nid: a\n---\n", "a.md")).toBeNull();

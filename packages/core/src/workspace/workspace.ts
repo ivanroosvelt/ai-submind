@@ -64,7 +64,7 @@ export class Workspace {
       documents.set(document.uri, { document, catalog: linked.catalogs.get(document.uri)! });
       diagnostics.set(document.uri, sortDiagnostics([...parseDiagnostics, ...linked.diagnostics.get(document.uri)!]));
     }
-    if (this.schema) diagnostics.set(SCHEMA_URI, this.schema.diagnostics);
+    if (this.schema) diagnostics.set(SCHEMA_URI, [...this.schema.diagnostics]);
 
     return {
       entities: linked.entities,
