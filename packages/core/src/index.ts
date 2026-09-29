@@ -18,6 +18,8 @@ export type {
   QueryResult,
   TagCatalog,
 } from "./workspace/query.js";
+export { entityAt, renameEntity } from "./workspace/navigation.js";
+export type { TextEdit, RenameResult } from "./workspace/navigation.js";
 export { layoutFlowchart } from "./layout/flowchart.js";
 export type { FlowchartLayout, FlowchartNodeLayout, FlowchartEdgeLayout, LayoutPoint } from "./layout/flowchart.js";
 export { layoutSequence } from "./layout/sequence.js";

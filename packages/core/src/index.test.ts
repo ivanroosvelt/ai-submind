@@ -12,6 +12,8 @@ import {
   SCHEMA_URI,
   query,
   tagCatalog,
+  entityAt,
+  renameEntity,
   type BlockId,
   type FlowchartLayout,
   type LinkResult,
@@ -22,6 +24,8 @@ import {
   type Relation,
   type QueryResult,
   type TagCatalog,
+  type TextEdit,
+  type RenameResult,
 } from "./index.js";
 
 describe("index", () => {
@@ -43,6 +47,16 @@ describe("index", () => {
     const entity = parse("entity start [Inicio]\n").document.entities[0];
     expect(entity.nameRange).toEqual({ start: { line: 1, column: 8 }, end: { line: 1, column: 13 } });
     expect(entity.range).toEqual({ start: { line: 1, column: 1 }, end: { line: 1, column: 22 } });
+  });
+
+  it("exposes entityAt and renameEntity", () => {
+    const workspace = new Workspace();
+    workspace.setDocument("a.flo", "entity a\nflow f {\n  a -> a\n}\n");
+    const linked = workspace.link();
+    expect(entityAt(linked.documents.get("a.flo")!.document, { line: 3, column: 3 })).toBe("a");
+    const result: RenameResult = renameEntity(linked, "a", "b");
+    const edits: TextEdit[] = "edits" in result ? result.edits.get("a.flo")! : [];
+    expect(edits.map((edit) => edit.text)).toEqual(["b", "b", "b"]);
   });
 });
 
