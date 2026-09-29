@@ -38,7 +38,17 @@ function enhanceOne(container: HTMLElement, svg: SVGSVGElement): void {
   background.setAttribute("fill", "#ffffff");
   headerSvg.appendChild(background);
 
-  headerBoxes.forEach((box) => headerSvg.appendChild(box.cloneNode(true)));
+  // Los data-flo-* están en el <g> del participante, no en la caja: el clon
+  // los copia para que un click en el header fijo encuentre su entidad.
+  headerBoxes.forEach((box) => {
+    const clone = box.cloneNode(true) as Element;
+    const participant = box.parentElement;
+    for (const attribute of Array.from(participant?.attributes ?? [])) {
+      if (attribute.name.startsWith("data-flo-")) clone.setAttribute(attribute.name, attribute.value);
+    }
+    if (participant?.classList.contains("flo-unresolved")) clone.classList.add("flo-unresolved");
+    headerSvg.appendChild(clone);
+  });
 
   const sticky = document.createElement("div");
   sticky.className = "flo-seq-sticky";

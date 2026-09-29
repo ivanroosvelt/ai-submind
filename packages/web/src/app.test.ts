@@ -112,3 +112,73 @@ describe("App", () => {
     expect(newWorkspace()).toEqual({ files: { "nuevo.flo": "flow nuevo {\n\n}\n" }, saved: {}, active: "nuevo.flo", dir: null });
   });
 });
+
+function click(element: Element): void {
+  element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+}
+
+describe("App navigation", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    document.body.innerHTML = "";
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("opens the entity panel from a node in the preview", () => {
+    const el = elements();
+    new App(el, FILES);
+    click(el.preview.querySelector('[data-flo-entity="api"] text')!);
+    expect(el.panel.innerHTML).toContain("API Gateway");
+    expect(el.panel.innerHTML).toContain("Aparece en 1 flujo");
+  });
+
+  it("ignores unresolved placeholders", () => {
+    const el = elements();
+    new App(el, { ...FILES, files: { ...FILES.files, "login.flo": "flow f {\n  x -> y\n}\n" } });
+    click(el.preview.querySelector('[data-flo-entity="x"]')!);
+    expect(el.panel.innerHTML).toBe("");
+  });
+
+  it("jumps from a flow in the panel to its block, selecting it and highlighting the node", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    app.openDocument("catalog.flo");
+    app.selectEntity("db");
+    click(el.panel.querySelector('[data-flo-block="login.flo#login"]')!);
+    expect(app.ws.active).toBe("login.flo");
+    expect(app.selectedBlock).toBe("login.flo#login");
+    const section = el.preview.querySelector('section[data-flo-block="login.flo#login"]')!;
+    expect(section.classList.contains("flo-block-selected")).toBe(true);
+    expect(section.querySelector('[data-flo-entity="db"]')!.classList.contains("flo-selected")).toBe(true);
+  });
+
+  it("selects a block by its title", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    click(el.preview.querySelector('section[data-flo-block="login.flo#vacio"] .flo-block-title')!);
+    expect(app.selectedBlock).toBe("login.flo#vacio");
+  });
+
+  it("reveals the definition in the editor", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    app.selectEntity("db");
+    click(el.panel.querySelector("[data-flo-definition]")!);
+    expect(app.ws.active).toBe("catalog.flo");
+    const { from, to } = app.view.state.selection.main;
+    expect(app.view.state.sliceDoc(from, to)).toBe("db");
+  });
+
+  it("closes the panel when the entity disappears", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    app.selectEntity("db");
+    app.ws.setSource("catalog.flo", "entity api\n");
+    app.refresh();
+    expect(el.panel.innerHTML).toBe("");
+  });
+});

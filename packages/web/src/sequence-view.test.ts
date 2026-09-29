@@ -71,4 +71,17 @@ describe("enhanceSequencePreview", () => {
       expect(section.querySelectorAll(".flo-seq-sticky")).toHaveLength(1);
     });
   });
+
+  it("copies the participant's data-flo-* attributes onto the sticky clone", () => {
+    const container = document.createElement("div");
+    container.innerHTML =
+      '<svg width="320" height="170">' +
+      '<g class="flo-unresolved" data-flo-entity="api" data-flo-block="a.flo#s"><g class="flo-seq-header-box"><rect width="140" height="50" /></g><line /></g>' +
+      "</svg>";
+    enhanceSequencePreview(container);
+    const clone = container.querySelector(".flo-seq-sticky .flo-seq-header-box")!;
+    expect(clone.getAttribute("data-flo-entity")).toBe("api");
+    expect(clone.getAttribute("data-flo-block")).toBe("a.flo#s");
+    expect(clone.classList.contains("flo-unresolved")).toBe(true);
+  });
 });

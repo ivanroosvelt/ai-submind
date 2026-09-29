@@ -113,6 +113,42 @@
       .flo-tok-punct {
         color: #6b7280;
       }
+      #preview-pane [data-flo-entity]:not(.flo-unresolved),
+      .flo-block-title {
+        cursor: pointer;
+      }
+      .flo-block-selected > .flo-block-title {
+        color: #1d4ed8;
+      }
+      g.flo-selected > rect,
+      g.flo-selected > polygon,
+      g.flo-selected > .flo-seq-header-box > rect,
+      .flo-seq-header-box.flo-selected > rect {
+        stroke: #2563eb;
+        stroke-width: 4px;
+      }
+      .flo-tree {
+        list-style: none;
+        margin: 0;
+        padding: 0 0 0 8px;
+      }
+      .flo-tree-item {
+        border: 0;
+        background: none;
+        padding: 2px 4px;
+        cursor: pointer;
+        font: inherit;
+        text-align: left;
+      }
+      .flo-tree-item:hover,
+      .flo-tree-item.flo-active,
+      .flo-tree-item.flo-selected {
+        background: #eff6ff;
+      }
+      .flo-panel-title {
+        margin: 0 0 4px;
+        font-size: 14px;
+      }
     </style>
   </head>
   <body>

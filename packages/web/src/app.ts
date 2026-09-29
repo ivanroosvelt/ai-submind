@@ -1,6 +1,7 @@
 import type { EditorView } from "@codemirror/view";
-import type { DocumentUri } from "@flo/core";
+import { blockId, type BlockId, type DocumentUri, type EntityId, type Location } from "@flo/core";
 import { createEditor, showDocument, type EditorHost } from "./editor.js";
+import { entityPanelHtml } from "./entity-panel.js";
 import { nextPreviewState, previewHtml, renderActive, type PreviewState } from "./preview.js";
 import { createToolbar, type DiagramKind } from "./toolbar.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
@@ -9,6 +10,7 @@ import { exportSvg, exportPng } from "./export.js";
 import { saveDraft } from "./storage.js";
 import { EXAMPLES } from "./examples.js";
 import { enhanceSequencePreview } from "./sequence-view.js";
+import { offsetAt } from "./text-edits.js";
 import { EditorWorkspace, type WorkspaceSnapshot } from "./workspace.js";
 
 const NEW_SOURCE: Record<DiagramKind, string> = {
@@ -33,12 +35,21 @@ function reportActionError(action: string, error: unknown): void {
   window.alert(`No se pudo completar: ${action}. Revisá la consola para más detalle.`);
 }
 
+type PanelState = { kind: "entity"; id: EntityId } | null;
+
+function byData(root: ParentNode, selector: string, attribute: string, value: string): Element[] {
+  return Array.from(root.querySelectorAll(selector)).filter((element) => element.getAttribute(attribute) === value);
+}
+
 /** El editor web: un workspace de documentos, el documento activo en el editor y su preview. */
 export class App {
   ws: EditorWorkspace;
   readonly view: EditorView;
+  selectedBlock: BlockId | null = null;
   private previewState: PreviewState = { lastDiagrams: [] };
   private fileHandle: FileSystemFileHandle | null = null;
+  private panel: PanelState = null;
+  private highlight: EntityId | null = null;
   private readonly host: EditorHost = {
     workspace: () => this.ws,
     onChange: () => this.refresh(),
@@ -72,6 +83,8 @@ export class App {
       },
       EXAMPLES
     );
+    el.preview.addEventListener("click", (event) => this.onPreviewClick(event.target as Element));
+    el.panel.addEventListener("click", (event) => this.onPanelClick(event.target as Element));
     this.openDocument(this.ws.active);
   }
 
@@ -104,6 +117,8 @@ export class App {
     this.previewState = nextPreviewState(this.previewState, result);
     this.el.preview.innerHTML = previewHtml(this.previewState, result, uri);
     enhanceSequencePreview(this.el.preview);
+    this.markSelection();
+    this.renderPanel();
     // ponytail: sin IndexedDB (modo privado) el editor sigue, solo sin borrador.
     saveDraft(this.ws.snapshot()).catch(() => {});
   }
@@ -169,8 +184,75 @@ export class App {
     this.load({ files: { [uri]: example.source }, saved: {}, active: uri, dir: null });
   }
 
-  /** El SVG que exportan los botones: el primer bloque del preview. */
+  private onPreviewClick(target: Element): void {
+    const section = target.closest("section[data-flo-block]");
+    if (section && target.closest(".flo-block-title")) {
+      this.selectBlock(section.getAttribute("data-flo-block")!);
+      return;
+    }
+    const node = target.closest("[data-flo-entity]");
+    if (node && !node.classList.contains("flo-unresolved")) this.selectEntity(node.getAttribute("data-flo-entity")!);
+  }
+
+  private onPanelClick(target: Element): void {
+    const button = target.closest("button");
+    const panel = this.panel;
+    if (!button || !panel) return;
+    const block = button.getAttribute("data-flo-block");
+    if (block !== null) {
+      this.selectBlock(block, panel.kind === "entity" ? panel.id : null);
+    } else if (panel.kind === "entity" && button.hasAttribute("data-flo-definition")) {
+      const location = this.ws.link().xref.definitionOf(panel.id);
+      if (location) this.reveal(location);
+    }
+  }
+
+  selectEntity(id: EntityId): void {
+    this.panel = { kind: "entity", id };
+    this.renderPanel();
+  }
+
+  private renderPanel(): void {
+    const link = this.ws.link();
+    if (this.panel?.kind === "entity" && !link.entities.has(this.panel.id)) this.panel = null;
+    this.el.panel.innerHTML = this.panel ? entityPanelHtml(link, this.panel.id) : "";
+  }
+
+  /** Abre el documento del bloque y lo selecciona (es el que se exporta); con `entity`, resalta su nodo. */
+  selectBlock(id: BlockId, entity: EntityId | null = null): void {
+    this.selectedBlock = id;
+    this.highlight = entity;
+    const uri = id.slice(0, id.lastIndexOf("#"));
+    if (uri === this.ws.active) this.refresh();
+    else this.openDocument(uri);
+    byData(this.el.preview, "section[data-flo-block]", "data-flo-block", id)[0]?.scrollIntoView?.({ block: "nearest" });
+  }
+
+  private markSelection(): void {
+    if (!this.selectedBlock) return;
+    const section = byData(this.el.preview, "section[data-flo-block]", "data-flo-block", this.selectedBlock)[0];
+    if (!section) return;
+    section.classList.add("flo-block-selected");
+    if (this.highlight) {
+      for (const node of byData(section, "[data-flo-entity]", "data-flo-entity", this.highlight)) node.classList.add("flo-selected");
+    }
+  }
+
+  /** Abre el documento y selecciona el rango en el editor. */
+  reveal(location: Location): void {
+    if (location.uri !== this.ws.active) this.openDocument(location.uri);
+    const source = this.ws.source(location.uri);
+    this.view.dispatch({
+      selection: { anchor: offsetAt(source, location.range.start), head: offsetAt(source, location.range.end) },
+      scrollIntoView: true,
+    });
+    this.view.focus();
+  }
+
+  /** El SVG que exportan los botones: el bloque seleccionado si está en el preview; si no, el primero (#41). */
   private exportable(): string | undefined {
-    return this.previewState.lastDiagrams[0]?.svg;
+    const diagrams = this.previewState.lastDiagrams;
+    const selected = diagrams.find((diagram) => blockId(this.ws.active, diagram.name) === this.selectedBlock);
+    return (selected ?? diagrams[0])?.svg;
   }
 }
