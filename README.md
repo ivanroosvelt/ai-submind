@@ -5,14 +5,16 @@ gramática determinista, parser con recuperación de errores y diagnósticos
 estructurados en vez de mensajes de texto suelto. Sin compatibilidad con
 sintaxis Mermaid: es un formato nuevo desde cero.
 
-> **Estado actual:** Fases 0-4 completas (monorepo + CI, lenguaje, layout
-> + render SVG, editor web, persistencia y exportación) para los tipos
-> `flowchart` y `sequence`. Fase 5 completa: workflow de deploy a
-> GitHub Pages listo, guía de sintaxis para usuario final en
-> [`docs/SYNTAX.md`](docs/SYNTAX.md), y `@flo/core` preparado para
-> publicarse en npm. Falta un paso manual para activar el deploy
-> (habilitar Pages en Settings) y ejecutar el `npm publish` real —
-> ambos son la Fase 6 (ver [Roadmap](#roadmap)).
+> **Estado actual:** Fases 0-5 completas (monorepo + CI, lenguaje, layout
+> + render SVG, editor web, persistencia y exportación, deploy y docs).
+> Sobre esa base, la rama `v2` implementa las
+> [entidades centralizadas](docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md):
+> fases A–E completas (rangos, lexer dirigido por el parser, catálogo de
+> entidades y bloques nombrados, workspace multi-documento con `use`,
+> índice de referencias cruzadas y atributos `data-flo-*` en el SVG). Del
+> [grafo de conocimiento](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md)
+> está completa la K1: un `.md` con frontmatter tipado es una entidad del
+> catálogo. Pendientes: K2, K3, F, K4 y la Fase 6 (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
@@ -76,6 +78,25 @@ Monorepo con pnpm workspaces:
   `diagrams` trae un elemento por cada bloque que se pudo parsear, con su
   SVG, aunque el documento tenga errores en otras partes.
 
+  Para varios documentos que comparten un catálogo (`use "./catalogo.flo"`),
+  `Workspace` los resuelve juntos y arma el índice de referencias:
+
+  ```ts
+  import { Workspace, renderBlock } from "@flo/core";
+
+  const ws = new Workspace();
+  ws.setDocument("catalogo.flo", catalogo);
+  ws.setDocument("login.flo", login);
+  ws.setDocument("decisiones/pkce.md", nota); // .md con frontmatter
+  const { documents, diagnostics, xref } = ws.link();
+  xref.flowsUsing("api"); // ["login.flo#acceso", ...]
+  ```
+
+  Un `.md` que empieza con `---` es una entidad más del catálogo: su
+  frontmatter YAML declara `id`, `title`, `memory_type`, tags y
+  `relations`, y sus bloques ` ```flo ` embebidos entran al workspace. El
+  vocabulario se valida contra `knowledge.schema.yaml` en la raíz.
+
 - **`@flo/web`** (`packages/web`) — vanilla TypeScript + Vite, consume
   `@flo/core`. Editor split-pane: CodeMirror 6 a la izquierda (resaltado
   de sintaxis `.flo` por tipo de token, diagnósticos del core pintados
@@ -99,7 +120,7 @@ por `packageManager` en el `package.json` raíz).
 pnpm install
 pnpm build      # compila @flo/core y @flo/web, en ese orden
 pnpm typecheck
-pnpm test       # 148 tests (vitest): 98 en @flo/core + 50 en @flo/web
+pnpm test       # 230 tests (vitest): 180 en @flo/core + 50 en @flo/web
 ```
 
 Cada paquete también corre estos scripts individualmente con
@@ -126,10 +147,19 @@ typecheck → test` en cada push y PR.
 - [`docs/superpowers/plans/2026-09-17-flo-layout-render-svg.md`](docs/superpowers/plans/2026-09-17-flo-layout-render-svg.md) — plan de implementación de Fase 2 (layout + render a SVG).
 - [`docs/superpowers/plans/2026-09-18-flo-persistencia-exportacion.md`](docs/superpowers/plans/2026-09-18-flo-persistencia-exportacion.md) — plan de implementación de Fase 4 (persistencia y exportación).
 - [`docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md`](docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md) — plan de implementación de Fase 5 (deploy, docs de usuario, prep de npm).
+- [`docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`](docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md) — entidades centralizadas, workspace y navegación (fases A–F); su §11 registra las decisiones de lenguaje.
+- [`docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md`](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md) — `.md` tipados como grafo de conocimiento (fases K1–K4).
+- Planes de la v2: [A+B](docs/superpowers/plans/2026-09-19-flo-range-y-lexer-dirigido.md), [C](docs/superpowers/plans/2026-09-27-flo-fase-c-entidades-y-bloques.md), [D](docs/superpowers/plans/2026-09-28-flo-fase-d-workspace-multidocumento.md), [E](docs/superpowers/plans/2026-09-28-flo-fase-e-superficie-de-navegacion.md), [K1](docs/superpowers/plans/2026-09-28-flo-fase-k1-md-como-documento.md).
 - [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md) — gramática formal (EBNF), reglas léxicas especiales y tabla de códigos de diagnóstico.
 
 ## Roadmap
 
+Orden de la v2: D → E → K1 → **K2** → K3 → F → K4.
+
+- **K2** — consultas `query` y `tagCatalog` sobre el workspace (core, puras).
+- **K3** — `@flo/mcp`: servidor MCP local que carga una carpeta y expone el grafo a agentes.
+- **F** — navegación en el editor: explorador, panel de entidad, ir a definición, renombrar, mapa agregado.
+- **K4** — vista de grafo de conocimiento en la web.
 - **Fase 6** — `npm publish` real de `@flo/core` (el paquete ya está preparado; falta correr `npm login && npm publish --access public` desde `packages/core` con una cuenta npm autenticada, y habilitar GitHub Pages en Settings → Pages → Source: "GitHub Actions" para que el workflow de deploy quede activo).
 
-Detalle completo de cada fase en el spec enlazado arriba.
+Detalle completo de cada fase en los specs enlazados arriba.
