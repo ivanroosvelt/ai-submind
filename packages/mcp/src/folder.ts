@@ -76,19 +76,45 @@ export class FloFolder {
     this.root = realpathSync.native(resolve(root));
   }
 
-  /** Relee toda la carpeta. No sigue enlaces simbólicos: nada de fuera de la raíz entra. */
+  /**
+   * Relee toda la carpeta. No sigue enlaces simbólicos: nada de fuera de la
+   * raíz entra. El estado nuevo se arma aparte y reemplaza al viejo solo al
+   * final: una relectura nunca deja un workspace a medias.
+   */
   load(): void {
-    this.sources.clear();
-    this.workspace = new Workspace();
+    const sources = new Map<string, string>();
+    const workspace = new Workspace();
+    for (const uri of this.walk().files) this.refresh(uri, sources, workspace);
+    this.sources = sources;
+    this.workspace = workspace;
     this.linked = null;
-    const walk = (dir: string): void => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+  }
+
+  /**
+   * Los directorios de la carpeta (la raíz incluida; sin carpetas ignoradas
+   * ni enlaces simbólicos) y los archivos que cuelgan de ellos, como uris. Un
+   * directorio ilegible se loguea y se salta.
+   */
+  protected walk(): { dirs: string[]; files: string[] } {
+    const dirs: string[] = [];
+    const files: string[] = [];
+    const visit = (dir: string): void => {
+      let entries;
+      try {
+        entries = readdirSync(dir, { withFileTypes: true });
+      } catch (error) {
+        console.error(`flo-mcp: se salta un directorio ilegible: ${(error as Error).message}`);
+        return;
+      }
+      dirs.push(dir);
+      for (const entry of entries) {
         const path = join(dir, entry.name);
-        if (entry.isDirectory() && !IGNORED.has(entry.name)) walk(path);
-        else if (entry.isFile()) this.refresh(this.uriOf(path));
+        if (entry.isDirectory() && !IGNORED.has(entry.name)) visit(path);
+        else if (entry.isFile()) files.push(this.uriOf(path));
       }
     };
-    walk(this.root);
+    visit(this.root);
+    return { dirs, files };
   }
 
   link(): LinkResult {
@@ -214,28 +240,26 @@ export class FloFolder {
 
   /**
    * Relee un archivo; si ya no es un archivo regular (borrado, enlace,
-   * directorio) o no se puede leer (permisos, ENOTDIR, ELOOP entre el
-   * `lstatSync` y el `readFileSync`), sale del workspace en vez de propagar
-   * la excepción.
+   * directorio) o no se puede leer ni hacerle `lstat` (permisos, ENOTDIR,
+   * ELOOP), sale del workspace en vez de propagar la excepción. `load` le
+   * pasa el mapa y el workspace que está armando.
    */
-  protected refresh(uri: string): void {
+  protected refresh(uri: string, sources = this.sources, workspace = this.workspace): void {
     if (!isDocumentUri(uri) || isIgnored(uri)) return;
     this.linked = null;
     const path = join(this.root, uri);
     let source: string | null = null;
-    if (lstatSync(path, { throwIfNoEntry: false })?.isFile()) {
-      try {
-        source = readFileSync(path, "utf8");
-      } catch {
-        source = null;
-      }
+    try {
+      if (lstatSync(path, { throwIfNoEntry: false })?.isFile()) source = readFileSync(path, "utf8");
+    } catch {
+      source = null;
     }
     if (source !== null) {
-      this.sources.set(uri, source);
-      this.workspace.setDocument(uri, source);
+      sources.set(uri, source);
+      workspace.setDocument(uri, source);
     } else {
-      this.sources.delete(uri);
-      this.workspace.removeDocument(uri);
+      sources.delete(uri);
+      workspace.removeDocument(uri);
     }
   }
 }

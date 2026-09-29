@@ -114,6 +114,22 @@ describe("FloFolder load", () => {
       chmodSync(path, 0o644);
     }
   });
+
+  it("skips an unreadable directory instead of throwing, keeping the rest", () => {
+    const root = tempDir(FILES);
+    const hidden = join(root, "privado");
+    mkdirSync(hidden);
+    writeFileSync(join(hidden, "p.md"), node("p"));
+    chmodSync(hidden, 0o000);
+    try {
+      const folder = new FloFolder(root);
+      expect(() => folder.load()).not.toThrow();
+      // Como root, 0o000 no bloquea: no se afirma la ausencia de "p".
+      expect([...folder.link().entities.keys()]).toEqual(expect.arrayContaining(["api", "a", "b", "c"]));
+    } finally {
+      chmodSync(hidden, 0o755);
+    }
+  });
 });
 
 describe("FloFolder toUri", () => {
