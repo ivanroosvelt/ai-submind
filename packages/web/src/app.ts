@@ -2,6 +2,7 @@ import type { EditorView } from "@codemirror/view";
 import { blockId, type BlockId, type DocumentUri, type EntityId, type Location } from "@flo/core";
 import { createEditor, showDocument, type EditorHost } from "./editor.js";
 import { entityPanelHtml } from "./entity-panel.js";
+import { bindExplorer, explorerHtml, type ExplorerFilter } from "./explorer.js";
 import { nextPreviewState, previewHtml, renderActive, type PreviewState } from "./preview.js";
 import { createToolbar, type DiagramKind } from "./toolbar.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
@@ -50,6 +51,7 @@ export class App {
   private fileHandle: FileSystemFileHandle | null = null;
   private panel: PanelState = null;
   private highlight: EntityId | null = null;
+  private filter: ExplorerFilter = { type: null, tag: null };
   private readonly host: EditorHost = {
     workspace: () => this.ws,
     onChange: () => this.refresh(),
@@ -85,6 +87,15 @@ export class App {
     );
     el.preview.addEventListener("click", (event) => this.onPreviewClick(event.target as Element));
     el.panel.addEventListener("click", (event) => this.onPanelClick(event.target as Element));
+    bindExplorer(el.explorer, {
+      onOpenDocument: (uri) => this.openDocument(uri),
+      onSelectBlock: (id) => this.selectBlock(id),
+      onSelectEntity: (id) => this.selectEntity(id),
+      onFilter: (filter) => {
+        this.filter = filter;
+        this.renderExplorer();
+      },
+    });
     this.openDocument(this.ws.active);
   }
 
@@ -119,6 +130,7 @@ export class App {
     enhanceSequencePreview(this.el.preview);
     this.markSelection();
     this.renderPanel();
+    this.renderExplorer();
     // ponytail: sin IndexedDB (modo privado) el editor sigue, solo sin borrador.
     saveDraft(this.ws.snapshot()).catch(() => {});
   }
@@ -216,6 +228,10 @@ export class App {
     const link = this.ws.link();
     if (this.panel?.kind === "entity" && !link.entities.has(this.panel.id)) this.panel = null;
     this.el.panel.innerHTML = this.panel ? entityPanelHtml(link, this.panel.id) : "";
+  }
+
+  private renderExplorer(): void {
+    this.el.explorer.innerHTML = explorerHtml(this.ws, this.filter, this.selectedBlock);
   }
 
   /** Abre el documento del bloque y lo selecciona (es el que se exporta); con `entity`, resalta su nodo. */

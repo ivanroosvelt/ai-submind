@@ -181,4 +181,16 @@ describe("App navigation", () => {
     app.refresh();
     expect(el.panel.innerHTML).toBe("");
   });
+
+  it("keeps the explorer in sync with the workspace", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    expect(el.explorer.querySelector('[data-flo-open="login.flo"]')!.classList.contains("flo-active")).toBe(true);
+    click(el.explorer.querySelector('[data-flo-open="catalog.flo"]')!);
+    expect(app.ws.active).toBe("catalog.flo");
+    app.view.dispatch({ changes: { from: 0, insert: "entity nuevo\n" } });
+    vi.advanceTimersByTime(200);
+    expect(el.explorer.querySelector('[data-flo-entity="nuevo"]')).not.toBeNull();
+    expect(el.explorer.querySelector('[data-flo-open="catalog.flo"] .flo-dirty')).not.toBeNull();
+  });
 });
