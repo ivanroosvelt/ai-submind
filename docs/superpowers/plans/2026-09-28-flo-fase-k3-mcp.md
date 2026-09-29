@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** completado el 2026-09-29 (`df0ff8d`..`a296d3a`, fixes de la revisión final `55c6f11`..`d0b2ffe`). Revisiones por task: task 2 — una ruta con otras mayúsculas (`KB/a.md`) esquivaba la validación en un FS insensible a mayúsculas; `write` canoniza con `realpathSync.native` y el error de E/S solo da el código. Task 3 — una excepción en el callback del watcher tumbaba el servidor; `refresh` trata una lectura fallida como borrado y `onChange` captura y registra. Revisión final: el servidor termina al cerrarse stdin; `load()` tolera directorios ilegibles y reemplaza el estado al final; el `fs.watch` recursivo pasó a un watcher por directorio (decisión #36, por el reemplazo atómico en Linux); `engines` `>=20`, `check` canoniza mayúsculas como `write` (`canonicalUri`) y los tests del watcher esperan a que arranque. Suite: 37 tests en `@flo/mcp`. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase K3)". El código de las tasks de abajo es el del plan original; el entregado incluye esos fixes.
+**Estado:** completado el 2026-09-29 (`df0ff8d`..`a296d3a`, fixes de la revisión final `55c6f11`..`d0b2ffe`). Revisiones por task: task 2 — una ruta con otras mayúsculas (`KB/a.md`) esquivaba la validación en un FS insensible a mayúsculas; `write` canoniza con `realpathSync.native` y el error de E/S solo da el código. Task 3 — una excepción en el callback del watcher tumbaba el servidor; `refresh` trata una lectura fallida como borrado y `onChange` captura y registra. Revisión final: el servidor termina al cerrarse stdin; `load()` tolera directorios ilegibles y reemplaza el estado al final; el `fs.watch` recursivo pasó a un watcher por directorio (decisión #36, por el reemplazo atómico en Linux); `engines` `>=20`, `check` canoniza mayúsculas como `write` (`canonicalUri`) y los tests del watcher esperan a que arranque. Suite: 37 tests en `@flo/mcp`. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase K3)". El código y los tests de este plan reflejan lo entregado (incluidos esos fixes).
 
 **Goal:** Paquete nuevo `@flo/mcp` con el binario `flo-mcp <carpeta>`: carga
 una carpeta del disco en un `Workspace` de `@flo/core`, la sigue con
@@ -17,17 +17,17 @@ enlazar en la siguiente herramienta), la guarda de rutas, la escritura
 validada en un workspace de prueba y el watcher. `tools.ts`
 (`createServer`) registra las herramientas sobre un `McpServer` del SDK con
 esquemas `zod` estrictos y serializa los resultados como JSON. `main.ts` es
-el binario: valida el argumento, carga, observa y conecta por stdio. Todo el
-I/O de `FloFolder` es síncrono (un solo hilo, orden determinista).
+el binario: valida el argumento, carga, observa, conecta por stdio y
+termina al cerrarse stdin. Todo el I/O de `FloFolder` es síncrono (un
+solo hilo, orden determinista).
 
-**Tech Stack:** TypeScript 5 (strict, NodeNext), Node ≥ 22 (`fs.watch`
-recursivo), `@modelcontextprotocol/sdk` 1.31, `zod` 4, Vitest.
+**Tech Stack:** TypeScript 5 (strict, NodeNext), Node ≥ 20, `@modelcontextprotocol/sdk` 1.31, `zod` 4, Vitest.
 
 **Spec:** `docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md`
 (§6 `@flo/mcp`, §10 K3, §11 testing K3). Decisiones vigentes en
 `docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md` §11
-(#21, #24, #25, #27, #29, #30, #31, #32 y las nuevas #33–#35 de esta fase,
-ya escritas en §11 junto con este plan). Pendientes de §11 que este plan
+(#21, #24, #25, #27, #29, #30, #31, #32 y las nuevas #33–#36 de esta fase,
+#33–#35 escritas en §11 junto con este plan, #36 en la revisión final). Pendientes de §11 que este plan
 recoge: **K2 → K3** (validar `QueryOptions` con `zod` estricto: task 4) y
 **K1 → K3** (test de `use` dentro de una cerca ` ```flo `: task 1; el
 relleno de líneas de las cercas no se toca, no hay perfil que lo pida).
@@ -39,6 +39,7 @@ Orden de fases: D → E → K1 → K2 → **K3** → F → K4.
   `@modelcontextprotocol/sdk` `^1.31.0` y `zod` `^4.0.0`; más
   `@types/node` `^22.0.0` como devDependency (un paquete Node lo necesita
   para tipar `node:fs`). Ninguna otra. `@flo/core` no cambia.
+- **Node ≥ 20** (`engines` del paquete).
 - **`@flo/mcp` consume `@flo/core` por `dist/`** (como `@flo/web`): antes
   de correr sus tests, `pnpm --filter @flo/core build`.
 - **Imports relativos con sufijo `.js`** (`"module": "NodeNext"`).
@@ -65,9 +66,10 @@ Orden de fases: D → E → K1 → K2 → **K3** → F → K4.
 3. **`.md` sin frontmatter por `write_node`**: no es documento del
    workspace (#21); se rechaza en vez de escribir un archivo que ningún
    `query` verá. Test en task 2.
-4. **Borrar o mover una carpeta entera en disco**: `fs.watch` solo avisa
-   del directorio; la carpeta se relee completa y las entidades de adentro
-   desaparecen/aparecen. Tests en task 3.
+4. **Borrar, mover o recrear una carpeta entera en disco, o reemplazar un
+   archivo con `rename`**: el watcher del directorio padre avisa por nombre;
+   la carpeta se relee completa, las entidades de adentro
+   desaparecen/aparecen y los watchers se resincronizan. Tests en task 3.
 5. **JSON mal formado desde el agente** (`type_tag` en vez de `typeTag`,
    `depth` negativo, `project` desconocido, clave extra): error de
    validación claro, nunca un `TypeError` de `query`. Tests en task 4.
@@ -100,9 +102,17 @@ Orden de fases: D → E → K1 → K2 → **K3** → F → K4.
 **Interfaces:**
 - Consumes (de `@flo/core`, ya existentes): `Workspace` (`setDocument(uri, source)`, `removeDocument(uri)`, `link(): LinkResult`), `SCHEMA_URI` (`"knowledge.schema.yaml"`), tipos `Diagnostic` (`{ code, message, range, severity }`) y `LinkResult` (`entities: Map<EntityId, EntityDecl>` en orden del catálogo, `diagnostics: Map<uri, Diagnostic[]>`, `xref`).
 - Produces:
-  - `isDocumentUri(uri: string): boolean`
+  - `isDocumentUri(uri: string): boolean`, `isIgnored(uri: string): boolean`, `IGNORED`
   - `class FloFolder { readonly root: string; constructor(root: string); load(): void; link(): LinkResult; diagnostics(uri?: string): Record<string, Diagnostic[]> | null; toUri(path: string): string | null }`
-  - Protegidos para las tasks 2 y 3 (mismo archivo): `sources: Map<string, string>`, `workspace: Workspace`, `linked: LinkResult | null`, `refresh(uri: string): void`, `IGNORED`, `isIgnored(uri)`.
+  - Protegidos para las tasks 2 y 3 (mismo archivo): `sources`, `workspace`, `linked`, `walk(): { dirs: string[]; files: string[] }`, `uriOf(path)`, `refresh(uri, sources?, workspace?)`.
+
+Semántica (decisión #33): la raíz se resuelve con `realpathSync.native`
+(mayúsculas del disco). `load()` arma el estado nuevo aparte y lo
+reemplaza solo al final, así una relectura nunca deja un workspace a
+medias; `walk()` no entra en `node_modules`, `.git` ni enlaces simbólicos,
+y un directorio ilegible se registra con `console.error` y se salta.
+`refresh()` trata un archivo que no se puede leer (o al que no se le puede
+hacer `lstat`) igual que uno borrado: sale del workspace.
 
 - [ ] **Step 1: Crear el paquete**
 
@@ -121,6 +131,9 @@ Orden de fases: D → E → K1 → K2 → **K3** → F → K4.
     "dist"
   ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
@@ -170,7 +183,7 @@ Expected: instala sin errores; `packages/core/dist/index.js` existe.
 
 ```ts
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { FloFolder } from "./folder.js";
@@ -248,6 +261,39 @@ describe("FloFolder load", () => {
     folder.load();
     expect([...folder.link().entities.keys()]).toEqual(["api"]);
   });
+
+  it("does not throw when a file cannot be read (E/S entre lstat y read)", () => {
+    const folder = loaded();
+    const path = join(folder.root, "kb/secreto.md");
+    writeFileSync(path, node("secreto"));
+    chmodSync(path, 0o000);
+    try {
+      expect(() => folder.load()).not.toThrow();
+      const ids = [...folder.link().entities.keys()];
+      // Corriendo como root, 0o000 no bloquea la lectura: no se afirma la
+      // ausencia de "secreto", solo que cargar no revienta y el resto sigue.
+      expect(ids).toContain("api");
+      expect(ids).toContain("a");
+    } finally {
+      chmodSync(path, 0o644);
+    }
+  });
+
+  it("skips an unreadable directory instead of throwing, keeping the rest", () => {
+    const root = tempDir(FILES);
+    const hidden = join(root, "privado");
+    mkdirSync(hidden);
+    writeFileSync(join(hidden, "p.md"), node("p"));
+    chmodSync(hidden, 0o000);
+    try {
+      const folder = new FloFolder(root);
+      expect(() => folder.load()).not.toThrow();
+      // Como root, 0o000 no bloquea: no se afirma la ausencia de "p".
+      expect([...folder.link().entities.keys()]).toEqual(expect.arrayContaining(["api", "a", "b", "c"]));
+    } finally {
+      chmodSync(hidden, 0o755);
+    }
+  });
 });
 
 describe("FloFolder toUri", () => {
@@ -309,22 +355,51 @@ export class FloFolder {
   protected linked: LinkResult | null = null;
 
   constructor(root: string) {
-    this.root = realpathSync(resolve(root));
+    // `.native` devuelve las mayúsculas del disco en macOS (APFS no distingue
+    // mayúsculas); `realpathSync` a secas conserva las que vinieron en `root`.
+    this.root = realpathSync.native(resolve(root));
   }
 
-  /** Relee toda la carpeta. No sigue enlaces simbólicos: nada de fuera de la raíz entra. */
+  /**
+   * Relee toda la carpeta. No sigue enlaces simbólicos: nada de fuera de la
+   * raíz entra. El estado nuevo se arma aparte y reemplaza al viejo solo al
+   * final: una relectura nunca deja un workspace a medias.
+   */
   load(): void {
-    this.sources.clear();
-    this.workspace = new Workspace();
+    const sources = new Map<string, string>();
+    const workspace = new Workspace();
+    const { dirs, files } = this.walk();
+    for (const uri of files) this.refresh(uri, sources, workspace);
+    this.sources = sources;
+    this.workspace = workspace;
     this.linked = null;
-    const walk = (dir: string): void => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+  }
+
+  /**
+   * Los directorios de la carpeta (la raíz incluida; sin carpetas ignoradas
+   * ni enlaces simbólicos) y los archivos que cuelgan de ellos, como uris. Un
+   * directorio ilegible se loguea y se salta.
+   */
+  protected walk(): { dirs: string[]; files: string[] } {
+    const dirs: string[] = [];
+    const files: string[] = [];
+    const visit = (dir: string): void => {
+      let entries;
+      try {
+        entries = readdirSync(dir, { withFileTypes: true });
+      } catch (error) {
+        console.error(`flo-mcp: se salta un directorio ilegible: ${(error as Error).message}`);
+        return;
+      }
+      dirs.push(dir);
+      for (const entry of entries) {
         const path = join(dir, entry.name);
-        if (entry.isDirectory() && !IGNORED.has(entry.name)) walk(path);
-        else if (entry.isFile()) this.refresh(this.uriOf(path));
+        if (entry.isDirectory() && !IGNORED.has(entry.name)) visit(path);
+        else if (entry.isFile()) files.push(this.uriOf(path));
       }
     };
-    walk(this.root);
+    visit(this.root);
+    return { dirs, files };
   }
 
   link(): LinkResult {
@@ -356,18 +431,28 @@ export class FloFolder {
     return relative(this.root, path).split(sep).join("/");
   }
 
-  /** Relee un archivo; si ya no es un archivo regular (borrado, enlace, directorio), sale del workspace. */
-  protected refresh(uri: string): void {
+  /**
+   * Relee un archivo; si ya no es un archivo regular (borrado, enlace,
+   * directorio) o no se puede leer ni hacerle `lstat` (permisos, ENOTDIR,
+   * ELOOP), sale del workspace en vez de propagar la excepción. `load` le
+   * pasa el mapa y el workspace que está armando.
+   */
+  protected refresh(uri: string, sources = this.sources, workspace = this.workspace): void {
     if (!isDocumentUri(uri) || isIgnored(uri)) return;
     this.linked = null;
     const path = join(this.root, uri);
-    if (lstatSync(path, { throwIfNoEntry: false })?.isFile()) {
-      const source = readFileSync(path, "utf8");
-      this.sources.set(uri, source);
-      this.workspace.setDocument(uri, source);
+    let source: string | null = null;
+    try {
+      if (lstatSync(path, { throwIfNoEntry: false })?.isFile()) source = readFileSync(path, "utf8");
+    } catch {
+      source = null;
+    }
+    if (source !== null) {
+      sources.set(uri, source);
+      workspace.setDocument(uri, source);
     } else {
-      this.sources.delete(uri);
-      this.workspace.removeDocument(uri);
+      sources.delete(uri);
+      workspace.removeDocument(uri);
     }
   }
 }
@@ -376,7 +461,7 @@ export class FloFolder {
 - [ ] **Step 5: Run test to verify it passes**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/mcp typecheck`
-Expected: PASS (7 tests), typecheck sin errores.
+Expected: PASS (9 tests), typecheck sin errores.
 
 - [ ] **Step 6: Commit**
 
@@ -396,22 +481,44 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 - Test: `packages/mcp/src/folder.test.ts`
 
 **Interfaces:**
-- Consumes: `FloFolder` de la task 1 (`sources`, `workspace`, `linked`, `link()`, `toUri()`, `isIgnored`).
+- Consumes: `FloFolder` de la task 1 (`sources`, `workspace`, `linked`, `link()`, `toUri()`, `uriOf()`, `isIgnored`).
 - Produces:
   - `type UriDiagnostic = Diagnostic & { uri: string }`
   - `type WriteResult = { ok: true; uri: string } | { ok: false; error: string; diagnostics: UriDiagnostic[] }`
+  - `FloFolder.canonicalUri(path: string): string | null` (la usa también `check` en la task 4)
   - `FloFolder.write(path: string, content: string): WriteResult`
 
-Semántica (decisión #34): guarda de ruta → workspace de prueba (todas
-las fuentes actuales + el archivo nuevo) → rechazo si el archivo escrito
-no es documento, si tiene errores, o si otro archivo tiene un error que
-antes no tenía (multiconjunto por código, rango y mensaje) → escritura en
-un temporal del mismo directorio y `rename` → el estado se actualiza en el
-acto (la siguiente herramienta lo ve sin esperar al watcher).
+Semántica (decisión #34): guarda léxica (`toUri`) → canonización en
+disco: el ancestro existente más cercano del archivo (él incluido) se
+resuelve con `realpathSync.native` y tiene que quedar dentro de la raíz;
+así `KB/a.md` en un FS insensible a mayúsculas es el mismo documento que
+`kb/a.md` y un enlace simbólico hacia afuera se rechaza → extensión y
+carpetas ignoradas sobre el uri canónico → workspace de prueba (todas las
+fuentes actuales + el archivo nuevo) → rechazo si el archivo escrito no es
+documento, si tiene errores, o si otro archivo tiene un error que antes no
+tenía (multiconjunto por código, rango y mensaje) → escritura en un
+temporal del mismo directorio y `rename` → el estado se actualiza en el
+acto. Un fallo de E/S devuelve solo el código de error, sin rutas del
+equipo.
 
 - [ ] **Step 1: Write the failing tests**
 
-Agregar a `packages/mcp/src/folder.test.ts` (y `existsSync`, `readFileSync`, `readdirSync` al import de `node:fs`):
+En `packages/mcp/src/folder.test.ts`, ampliar el import de `node:fs` con
+`existsSync`, `readFileSync` y `readdirSync`; agregar después de
+`loaded()` la detección del FS:
+
+```ts
+/** Detectado una sola vez: los tests de mayúsculas solo tienen sentido en un FS case-insensitive (macOS/Windows). */
+const CASE_INSENSITIVE_FS = ((): boolean => {
+  const dir = mkdtempSync(join(tmpdir(), "flo-mcp-case-"));
+  writeFileSync(join(dir, "case.txt"), "");
+  const insensitive = existsSync(join(dir, "CASE.txt"));
+  rmSync(dir, { recursive: true, force: true });
+  return insensitive;
+})();
+```
+
+y al final del archivo:
 
 ```ts
 describe("FloFolder write", () => {
@@ -451,6 +558,23 @@ describe("FloFolder write", () => {
     const result = folder.write("kb/a.md", node("z"));
     expect(result).toMatchObject({ ok: false, diagnostics: [expect.objectContaining({ uri: "kb/c.md", code: "E035" })] });
     expect(readFileSync(join(folder.root, "kb/a.md"), "utf8")).toBe(before);
+  });
+
+  it.runIf(CASE_INSENSITIVE_FS)(
+    "rejects a case-variant path exactly like the lowercase one, canonized to the on-disk case",
+    () => {
+      const folder = loaded();
+      const before = readFileSync(join(folder.root, "kb/a.md"), "utf8");
+      const result = folder.write("KB/a.md", node("z"));
+      expect(result).toMatchObject({ ok: false, diagnostics: [expect.objectContaining({ uri: "kb/c.md", code: "E035" })] });
+      expect(readFileSync(join(folder.root, "kb/a.md"), "utf8")).toBe(before);
+    },
+  );
+
+  it.runIf(CASE_INSENSITIVE_FS)("writes through a case-variant directory using the on-disk case", () => {
+    const folder = loaded();
+    expect(folder.write("KB/d.md", node("d"))).toMatchObject({ ok: true, uri: "kb/d.md" });
+    expect(folder.link().entities.get("d")?.uri).toBe("kb/d.md");
   });
 
   it("rejects a .md without frontmatter", () => {
@@ -537,17 +661,31 @@ function newErrors(before: LinkResult, after: LinkResult, uri: string): UriDiagn
 }
 ```
 
-Agregar a la clase `FloFolder`:
+Agregar a la clase `FloFolder`, después de `toUri`:
 
 ```ts
+  /**
+   * Ruta de una herramienta → uri con las mayúsculas del disco, o null si
+   * sale de la raíz (por la ruta misma o por un enlace simbólico).
+   * Mayúsculas: en FS case-insensitive (APFS), 'KB/a.md' y 'kb/a.md' son el
+   * mismo archivo en disco pero claves distintas del mapa `sources`; sin
+   * canonizar, `write` vería dos documentos donde el disco solo tiene uno y
+   * `check` no encontraría el archivo.
+   */
+  canonicalUri(path: string): string | null {
+    const uri = this.toUri(path);
+    const file = uri === null ? null : this.canonicalize(join(this.root, uri));
+    return file === null ? null : this.uriOf(file);
+  }
+
   /** `write_node` (spec §6, decisión #34): valida en un workspace de prueba y escribe de forma atómica. */
   write(path: string, content: string): WriteResult {
-    const uri = this.toUri(path);
-    if (uri === null) return fail(`la ruta '${path}' sale de la carpeta raíz`);
+    const uri = this.canonicalUri(path);
+    if (uri === null) return fail(`la ruta '${path}' sale de la carpeta raíz (directamente o por un enlace simbólico)`);
+    const file = join(this.root, uri);
+
     if (!uri.endsWith(".md") && !uri.endsWith(".flo")) return fail(`solo se escriben archivos .md o .flo: '${path}'`);
     if (isIgnored(uri)) return fail(`la ruta '${path}' está en una carpeta ignorada (node_modules, .git)`);
-    const file = join(this.root, uri);
-    if (!this.insideRoot(dirname(file))) return fail(`la ruta '${path}' sale de la carpeta raíz por un enlace simbólico`);
 
     const trial = new Workspace();
     for (const [other, source] of this.sources) if (other !== uri) trial.setDocument(other, source);
@@ -565,8 +703,12 @@ Agregar a la clase `FloFolder`:
       writeFileSync(temp, content);
       renameSync(temp, file);
     } catch (error) {
-      rmSync(temp, { force: true });
-      return fail(`no se pudo escribir '${path}': ${(error as Error).message}`);
+      try {
+        rmSync(temp, { force: true });
+      } catch {
+        // El temporal puede colgar de una ruta que ya no es un directorio (ENOTDIR); no hay nada que limpiar.
+      }
+      return fail(`no se pudo escribir '${path}': ${(error as NodeJS.ErrnoException).code ?? "error de E/S"}`);
     }
     this.sources.set(uri, content);
     this.workspace.setDocument(uri, content);
@@ -574,28 +716,34 @@ Agregar a la clase `FloFolder`:
     return { ok: true, uri };
   }
 
-  /** El ancestro existente más cercano de `dir`, con los enlaces resueltos, sigue dentro de la raíz. */
-  private insideRoot(dir: string): boolean {
+  /**
+   * Sube por los ancestros de `file` (él mismo incluido) hasta uno que
+   * exista, lo resuelve con `realpathSync.native` (mayúsculas del disco) y
+   * reconstruye los segmentos que todavía no existen tal como vinieron.
+   * Null si el ancestro resuelto sale de la raíz (por ejemplo, un enlace
+   * simbólico).
+   */
+  private canonicalize(file: string): string | null {
+    const pending: string[] = [];
+    let dir = file;
     for (;;) {
       try {
-        const real = realpathSync(dir);
-        return real === this.root || real.startsWith(this.root + sep);
+        const real = realpathSync.native(dir);
+        if (real !== this.root && !real.startsWith(this.root + sep)) return null;
+        return pending.length > 0 ? join(real, ...pending) : real;
       } catch {
+        pending.unshift(basename(dir));
         dir = dirname(dir);
       }
     }
   }
 ```
 
-Nota: `rmSync(temp, { force: true })` en el `catch` puede fallar a su vez
-si el directorio no existe (`force` lo ignora) o si `temp` cuelga de un
-archivo (`ENOTDIR`, que `force` no ignora): si el test de I/O lanza desde
-ahí, envolver ese `rmSync` en su propio `try {} catch {}`.
-
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/mcp typecheck`
-Expected: PASS (16 tests).
+Expected: PASS (20 tests; los 2 de mayúsculas se saltan en un FS
+sensible a mayúsculas).
 
 - [ ] **Step 5: Commit**
 
@@ -615,19 +763,26 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 - Test: `packages/mcp/src/folder.test.ts`
 
 **Interfaces:**
-- Consumes: `FloFolder` de las tasks 1–2 (`load`, `refresh`, `sources`, `linked`).
-- Produces: `FloFolder.watch(): FSWatcher` (de `node:fs`; quien llama lo cierra con `close()`).
+- Consumes: `FloFolder` de las tasks 1–2 (`load`, `walk`, `refresh`, `uriOf`, `sources`).
+- Produces: `FloFolder.watch(): { close(): void }`.
 
-Semántica (decisión #33): un evento sobre un documento (`.flo`, `.md`, el
-esquema en la raíz) relee ese archivo; un evento sobre un directorio que
-existe, o sobre una ruta que es prefijo de un documento cargado (una
-carpeta borrada o movida), relee la carpeta entera; un evento sin nombre
-también; el resto (temporales `.tmp` de `write`, `.txt`, carpetas
-ignoradas) se ignora.
+Semántica (decisiones #33 y #36): un `fs.watch` **no recursivo por
+directorio** (los que da `walk()`), resincronizado en cada `load()`; el
+recursivo de Node en Linux vigila cada archivo por inodo y deja de ver un
+archivo tras reemplazarlo con `rename`. Un evento sobre un documento
+(`.flo`, `.md`, el esquema en la raíz) relee ese archivo; sobre un
+directorio que existe, o sobre una ruta que es prefijo de un documento
+cargado (una carpeta borrada o movida), cierra los watchers de ese
+subárbol (una carpeta borrada y recreada deja muerto el viejo) y relee la
+carpeta entera; un evento sin nombre también relee; el resto (temporales
+`.tmp` de `write`, `.txt`, carpetas ignoradas) se ignora. Toda excepción
+dentro del callback se registra con `console.error`: nunca tumba el
+servidor. Un error de un watcher lo cierra.
 
 - [ ] **Step 1: Write the failing tests**
 
-Agregar a `packages/mcp/src/folder.test.ts` (`vi` al import de `vitest`; `renameSync` al de `node:fs`):
+Agregar `vi` al import de `vitest` y `renameSync` al de `node:fs`, y al
+final de `packages/mcp/src/folder.test.ts`:
 
 ```ts
 describe("FloFolder watch", () => {
@@ -636,51 +791,93 @@ describe("FloFolder watch", () => {
     for (const watcher of watchers.splice(0)) watcher.close();
   });
 
-  function watched(): FloFolder {
+  /** fs.watch no avisa cuándo está listo: lo escrito enseguida puede perderse mientras arranca. */
+  const settle = (): Promise<void> => new Promise((done) => setTimeout(done, 200));
+
+  async function watched(): Promise<FloFolder> {
     const folder = loaded();
     watchers.push(folder.watch());
+    await settle();
     return folder;
   }
 
   const ids = (folder: FloFolder): string[] => [...folder.link().entities.keys()];
   const eventually = (check: () => void) => vi.waitFor(check, { timeout: 5000, interval: 50 });
+  const TIMEOUT = 15000;
 
   it("picks up a file written on disk", async () => {
-    const folder = watched();
+    const folder = await watched();
     writeFileSync(join(folder.root, "kb/w.md"), node("w"));
     await eventually(() => expect(ids(folder)).toContain("w"));
-  });
+  }, TIMEOUT);
 
   it("picks up an edit and a deletion", async () => {
-    const folder = watched();
+    const folder = await watched();
     writeFileSync(join(folder.root, "kb/b.md"), node("b2"));
     await eventually(() => expect(ids(folder)).toContain("b2"));
     rmSync(join(folder.root, "kb/b.md"));
     await eventually(() => expect(ids(folder)).not.toContain("b2"));
-  });
+  }, TIMEOUT);
+
+  it("still sees edits to a file after it was replaced atomically", async () => {
+    const folder = await watched();
+    expect(folder.write("kb/a.md", node("a").replace("Nodo a", "Otro título"))).toMatchObject({ ok: true });
+    await settle();
+    writeFileSync(join(folder.root, "kb/a.md"), node("a3"));
+    await eventually(() => expect(ids(folder)).toContain("a3"));
+  }, TIMEOUT);
 
   it("reloads when a folder is removed or moved in", async () => {
-    const folder = watched();
+    const folder = await watched();
     rmSync(join(folder.root, "kb"), { recursive: true });
     await eventually(() => expect(ids(folder)).toEqual(["api"]));
     const outside = tempDir({ "y.md": node("y") });
     renameSync(outside, join(folder.root, "nuevo"));
     await eventually(() => expect(ids(folder)).toContain("y"));
-  });
+  }, TIMEOUT);
+
+  it("watches a folder created after watch() started", async () => {
+    const folder = await watched();
+    renameSync(tempDir({ "y.md": node("y") }), join(folder.root, "nuevo"));
+    await eventually(() => expect(ids(folder)).toContain("y"));
+    await settle();
+    writeFileSync(join(folder.root, "nuevo/y2.md"), node("y2"));
+    await eventually(() => expect(ids(folder)).toContain("y2"));
+  }, TIMEOUT);
+
+  it("sees a folder deleted and recreated at the same path", async () => {
+    const folder = await watched();
+    rmSync(join(folder.root, "kb"), { recursive: true });
+    mkdirSync(join(folder.root, "kb"));
+    await eventually(() => expect(ids(folder)).toEqual(["api"]));
+    await settle();
+    writeFileSync(join(folder.root, "kb/w.md"), node("w"));
+    await eventually(() => expect(ids(folder)).toContain("w"));
+  }, TIMEOUT);
 
   it("ignores ignored folders", async () => {
-    const folder = watched();
+    const folder = await watched();
     writeFileSync(join(folder.root, "node_modules/pkg/z.md"), node("z"));
     writeFileSync(join(folder.root, "kb/w.md"), node("w"));
     await eventually(() => expect(ids(folder)).toContain("w"));
     expect(ids(folder)).not.toContain("z");
-  });
+  }, TIMEOUT);
+
+  it("stops following changes after close()", async () => {
+    const folder = loaded();
+    const watcher = folder.watch();
+    await settle();
+    watcher.close();
+    writeFileSync(join(folder.root, "kb/w.md"), node("w"));
+    await settle();
+    expect(ids(folder)).not.toContain("w");
+  }, TIMEOUT);
 });
 ```
 
-(`renameSync` entre dos directorios de `tmpdir()` está en el mismo
-sistema de archivos; `tempDir` registra `outside` para borrarlo, y
-`rmSync(..., { force: true })` no falla si ya no existe.)
+(`fs.watch` no avisa cuándo está listo: los tests esperan 200 ms tras
+`watch()` y tras un reemplazo atómico, y el timeout por test (15 s) queda
+por encima del de `vi.waitFor` (5 s) para que el fallo diga qué no llegó.)
 
 - [ ] **Step 2: Run tests to verify they fail**
 
@@ -689,40 +886,125 @@ Expected: FAIL — `folder.watch is not a function`.
 
 - [ ] **Step 3: Implement**
 
-En `packages/mcp/src/folder.ts`, agregar `statSync`, `watch` y `type FSWatcher` al import de `node:fs`, y a la clase:
+En `packages/mcp/src/folder.ts`, el import de `node:fs` queda:
 
 ```ts
-  /** Sigue los cambios del disco (spec §6, decisión #33). Quien llama cierra el watcher. */
-  watch(): FSWatcher {
-    const watcher = watch(this.root, { recursive: true }, (_event, filename) => this.onChange(filename));
-    watcher.on("error", (error) => console.error(`flo-mcp: ${error.message}`));
-    return watcher;
+import {
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  statSync,
+  watch,
+  writeFileSync,
+  type FSWatcher,
+} from "node:fs";
+```
+
+Agregar el campo a la clase, después de `linked`:
+
+```ts
+  /** Un `fs.watch` no recursivo por directorio mientras se observa (decisión #36); null si no. */
+  private watchers: Map<string, FSWatcher> | null = null;
+```
+
+En `load()`, después de `this.linked = null;`, resincronizar:
+
+```ts
+    this.syncWatchers(dirs);
+```
+
+y agregar a la clase:
+
+```ts
+  /**
+   * Sigue los cambios del disco (spec §6, decisiones #33 y #36): un
+   * `fs.watch` no recursivo por directorio, resincronizado en cada `load()`.
+   * Quien llama cierra con `close()`.
+   */
+  watch(): { close(): void } {
+    this.watchers ??= new Map();
+    this.syncWatchers(this.walk().dirs);
+    return {
+      close: () => {
+        for (const watcher of this.watchers?.values() ?? []) watcher.close();
+        this.watchers = null;
+      },
+    };
   }
 
-  private onChange(filename: string | null): void {
-    if (filename === null) return this.load();
-    const uri = filename.split(sep).join("/");
-    if (isIgnored(uri)) return;
-    if (isDocumentUri(uri)) return this.refresh(uri);
-    // Un directorio creado, movido o borrado solo avisa por sí mismo, no por sus archivos.
-    const isDirectory = statSync(join(this.root, uri), { throwIfNoEntry: false })?.isDirectory() ?? false;
-    if (isDirectory || [...this.sources.keys()].some((known) => known.startsWith(`${uri}/`))) this.load();
+  /** Abre watchers para los directorios nuevos y cierra los de los que ya no están. */
+  private syncWatchers(dirs: string[]): void {
+    const watchers = this.watchers;
+    if (watchers === null) return;
+    const current = new Set(dirs);
+    for (const [dir, watcher] of watchers) {
+      if (!current.has(dir)) {
+        watcher.close();
+        watchers.delete(dir);
+      }
+    }
+    for (const dir of dirs) {
+      if (watchers.has(dir)) continue;
+      try {
+        const watcher = watch(dir, (_event, filename) =>
+          this.onChange(filename === null ? null : this.uriOf(join(dir, filename)))
+        );
+        // Un directorio observado que se borra puede emitir un error: se cierra su watcher.
+        watcher.on("error", (error) => {
+          console.error(`flo-mcp: ${error.message}`);
+          watcher.close();
+          if (watchers.get(dir) === watcher) watchers.delete(dir);
+        });
+        watchers.set(dir, watcher);
+      } catch (error) {
+        console.error(`flo-mcp: no se pudo observar '${dir}': ${(error as Error).message}`);
+      }
+    }
+  }
+
+  private onChange(uri: string | null): void {
+    // Un error de E/S entre el evento y la relectura (borrado, chmod, ENOTDIR,
+    // ELOOP) no puede tumbar el proceso del servidor MCP: se loguea y se sigue.
+    try {
+      if (uri === null) return void this.load();
+      if (isIgnored(uri)) return;
+      if (isDocumentUri(uri)) return void this.refresh(uri);
+      // Un directorio creado, movido o borrado solo avisa por sí mismo, no por sus archivos.
+      const isDirectory = statSync(join(this.root, uri), { throwIfNoEntry: false })?.isDirectory() ?? false;
+      if (!isDirectory && ![...this.sources.keys()].some((known) => known.startsWith(`${uri}/`))) return;
+      // Un directorio borrado y recreado con la misma ruta (git checkout) deja
+      // muerto el watcher viejo: se cierran los de ese subárbol y `load` los reabre.
+      const path = join(this.root, uri);
+      for (const [dir, watcher] of this.watchers ?? []) {
+        if (dir === path || dir.startsWith(path + sep)) {
+          watcher.close();
+          this.watchers?.delete(dir);
+        }
+      }
+      this.load();
+    } catch (error) {
+      console.error(`flo-mcp: ${(error as Error).message}`);
+    }
   }
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/mcp typecheck`
-Expected: PASS (20 tests). Correr la suite 3 veces seguidas
-(`for i in 1 2 3; do pnpm --filter @flo/mcp test || break; done`): los
-tests del watcher no deben ser intermitentes. Si uno lo es, investigar la
-causa (evento perdido, orden) antes de subir timeouts.
+Expected: PASS (28 tests). Correr la suite 5 veces seguidas
+(`for i in 1 2 3 4 5; do pnpm --filter @flo/mcp test || break; done`):
+los tests del watcher no deben ser intermitentes. Si uno lo es, investigar
+la causa (evento perdido, orden) antes de subir timeouts.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add packages/mcp/src/folder.ts packages/mcp/src/folder.test.ts
-git commit -m "feat(mcp): fs.watch relee archivos y carpetas cambiados en disco
+git commit -m "feat(mcp): un watcher por directorio relee lo que cambia en disco
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ```
@@ -737,7 +1019,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 - Modify: `README.md`
 
 **Interfaces:**
-- Consumes: `FloFolder` (`link()`, `diagnostics(uri?)`, `toUri(path)`, `write(path, content): WriteResult`, `watch()`, `load()`); de `@flo/core`: `query(link, opts): QueryResult`, `tagCatalog(link): TagCatalog`, tipo `Where`; `link.xref.relationsFrom(id): Relation[]`, `link.xref.relationsTo(id): { from, relation }[]`.
+- Consumes: `FloFolder` (`link()`, `diagnostics(uri?)`, `canonicalUri(path)`, `write(path, content): WriteResult`, `watch()`, `load()`); de `@flo/core`: `query(link, opts): QueryResult`, `tagCatalog(link): TagCatalog`, tipo `Where`; `link.xref.relationsFrom(id): Relation[]`, `link.xref.relationsTo(id): { from, relation }[]`.
 - Produces: `createServer(folder: FloFolder): McpServer`; binario `flo-mcp <carpeta>`.
 
 Salidas (decisión #35): cada herramienta devuelve un único contenido
@@ -745,6 +1027,7 @@ Salidas (decisión #35): cada herramienta devuelve un único contenido
 `isError: true` y un JSON con `error` (y `diagnostics` en `write_node`).
 Los errores de validación de entrada los produce el SDK (texto
 `MCP error -32602: Input validation error: ...`, `isError: true`).
+`check` con ruta canoniza mayúsculas igual que `write_node`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -752,7 +1035,7 @@ Los errores de validación de entrada los produce el SDK (texto
 
 ```ts
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -769,6 +1052,15 @@ const FILES: Record<string, string> = {
   "kb/a.md": node("a", ["type_tags: [decision]", 'use: ["../catalogo.flo"]', "relations:", "  - target: api", "    type: affects"]),
   "kb/c.md": node("c", ['use: ["./a.md"]', "relations:", "  - target: a", "    type: affects"]),
 };
+
+/** Los tests de mayúsculas solo tienen sentido en un FS case-insensitive (macOS/Windows). */
+const CASE_INSENSITIVE_FS = ((): boolean => {
+  const dir = mkdtempSync(join(tmpdir(), "flo-mcp-case-"));
+  writeFileSync(join(dir, "case.txt"), "");
+  const insensitive = existsSync(join(dir, "CASE.txt"));
+  rmSync(dir, { recursive: true, force: true });
+  return insensitive;
+})();
 
 const cleanup: (() => void)[] = [];
 afterEach(() => {
@@ -861,6 +1153,11 @@ describe("flo-mcp tools", () => {
     expect(await call("check", { path: "../fuera.md" })).toEqual({ isError: true, value: { error: "'../fuera.md' no es un documento del workspace" } });
   });
 
+  it.runIf(CASE_INSENSITIVE_FS)("check canonizes a case-variant path like write_node", async () => {
+    const { call } = await connect();
+    expect(await call("check", { path: "KB/a.md" })).toEqual({ isError: false, value: { "kb/a.md": [] } });
+  });
+
   it("write_node rejects invalid content and path escapes, and writes valid content", async () => {
     const { call } = await connect();
     const invalid = await call("write_node", { path: "kb/m.md", content: node("m").replace("long_term", "forever") });
@@ -876,12 +1173,14 @@ describe("flo-mcp tools", () => {
     const { folder, call } = await connect();
     const watcher = folder.watch();
     cleanup.push(() => watcher.close());
+    // fs.watch no avisa cuándo está listo: lo escrito enseguida puede perderse mientras arranca.
+    await new Promise((done) => setTimeout(done, 200));
     writeFileSync(join(folder.root, "kb/w.md"), node("w", ["type_tags: [decision]"]));
     await vi.waitFor(
       async () => expect((await call("query", { where: { typeTag: "decision" } })).value.nodes.map((n: { id: string }) => n.id)).toEqual(["a", "w"]),
       { timeout: 5000, interval: 50 }
     );
-  });
+  }, 15000);
 });
 ```
 
@@ -975,7 +1274,7 @@ export function createServer(folder: FloFolder): McpServer {
     },
     async ({ path }) => {
       if (path === undefined) return json(folder.diagnostics());
-      const uri = folder.toUri(path);
+      const uri = folder.canonicalUri(path);
       const found = uri === null ? null : folder.diagnostics(uri);
       return found ? json(found) : failure({ error: `'${path}' no es un documento del workspace` });
     }
@@ -1001,7 +1300,7 @@ export function createServer(folder: FloFolder): McpServer {
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/mcp typecheck`
-Expected: PASS (28 tests).
+Expected: PASS (37 tests).
 
 - [ ] **Step 5: Implement `main.ts` and smoke-test the binary**
 
@@ -1024,23 +1323,30 @@ const folder = new FloFolder(root);
 folder.load();
 folder.watch();
 await createServer(folder).connect(new StdioServerTransport());
+// El watcher mantiene vivo el proceso: sin esto, el servidor sobrevive al
+// cliente que cerró stdin.
+process.stdin.on("end", () => process.exit(0));
+process.stdin.on("close", () => process.exit(0));
 ```
 
 Run: `pnpm --filter @flo/mcp build && node packages/mcp/dist/main.js; echo "exit $?"`
 Expected: `uso: flo-mcp <carpeta>` y `exit 1`.
 
-Smoke por stdio (desde `packages/mcp`, para que resuelva el SDK), con un
-script temporal fuera del repo:
+Run: `mkdir -p <tmp>/vacia && node packages/mcp/dist/main.js <tmp>/vacia < /dev/null; echo "exit $?"`
+Expected: termina enseguida con `exit 0` (el servidor sale al cerrarse stdin).
+
+Smoke por stdio (desde `packages/mcp`, para que resuelva el SDK), con una
+carpeta temporal fuera del repo:
 
 ```bash
-cd packages/mcp && mkdir -p /tmp/flo-smoke && printf 'entity api\n' > /tmp/flo-smoke/a.flo && node --input-type=module -e '
+cd packages/mcp && mkdir -p <tmp>/flo-smoke && printf 'entity api\n' > <tmp>/flo-smoke/a.flo && node --input-type=module -e '
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 const client = new Client({ name: "smoke", version: "0" });
-await client.connect(new StdioClientTransport({ command: "node", args: ["dist/main.js", "/tmp/flo-smoke"] }));
+await client.connect(new StdioClientTransport({ command: "node", args: ["dist/main.js", "<tmp>/flo-smoke"] }));
 console.log((await client.callTool({ name: "query", arguments: {} })).content[0].text);
 await client.close();
-'; cd ../.. && rm -rf /tmp/flo-smoke
+'; cd ../.. && rm -rf <tmp>/flo-smoke
 ```
 
 Expected: un JSON con `"id": "api"` en `nodes`, y el proceso termina.
@@ -1048,26 +1354,22 @@ Expected: un JSON con `"id": "api"` en `nodes`, y el proceso termina.
 - [ ] **Step 6: README**
 
 En `README.md`, en la sección `## Paquetes`, agregar después del último
-paquete una subsección con el mismo formato que las existentes:
+paquete:
 
-````markdown
-### `@flo/mcp`
+```markdown
+- **`@flo/mcp`** (`packages/mcp`) — servidor MCP local (stdio) sobre una
+  carpeta de documentos `.flo`, `.md` con frontmatter y
+  `knowledge.schema.yaml`. Relee lo que cambia en disco.
 
-Servidor MCP local (stdio) sobre una carpeta de documentos `.flo`, `.md`
-con frontmatter y `knowledge.schema.yaml`. Relee lo que cambia en disco.
+  ```bash
+  pnpm --filter @flo/mcp build
+  node packages/mcp/dist/main.js <carpeta>
+  ```
 
-```bash
-pnpm --filter @flo/mcp build
-node packages/mcp/dist/main.js <carpeta>
+  Herramientas: `query`, `get_node`, `list_tags`, `check` y `write_node`
+  (solo escribe `.md`/`.flo` dentro de la carpeta, y solo si el
+  type-checker no encuentra errores nuevos).
 ```
-
-Herramientas: `query`, `get_node`, `list_tags`, `check` y `write_node`
-(solo escribe `.md`/`.flo` dentro de la carpeta, y solo si el type-checker
-no encuentra errores nuevos).
-````
-
-(Si el formato de las subsecciones existentes difiere —por ejemplo usan
-`##`/listas—, seguir el del archivo.)
 
 - [ ] **Step 7: Full verification and commit**
 
