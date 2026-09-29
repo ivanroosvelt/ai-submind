@@ -471,3 +471,10 @@ Tomadas en el diseño de [2026-09-28-flo-grafo-de-conocimiento-design.md](2026-0
   ` ```flo ` (funciona); el relleno `"\n".repeat(fence.start)` relexa
   líneas vacías por cerca, revisar solo si el re-link por `fs.watch` lo
   muestra en un perfil.
+
+### Decisiones de la Fase K2 (2026-09-28)
+
+| # | Fecha | Decisión | Afecta a |
+|---|---|---|---|
+| 31 | 2026-09-28 | **Semántica de `query`.** Los predicados hoja de `Where` solo los cumplen entidades de `.md` (un `memoryType: null` no cumple ningún `memory`); `not` los niega también para entidades `.flo`, `{ and: [] }` es verdadero y `{ or: [] }` falso. `contextTag` terminado en `:` compara por prefijo; `custom` exige clave propia (`Object.hasOwn`) y `equals` compara con `===` (`3` ≠ `"3"`); `text` busca en `label` y `body` por separado con `toLowerCase`. `from` se interseca con `where`, ignora ids desconocidos y `from: []` no da semillas. Orden de `nodes`: distancia y luego orden del catálogo (#1, #22, #24); las semillas son las de distancia 0. `QueryNode` = `id`, `title` (label), `uri`, `distance`, `memoryType`, `typeTags`, `contextTags`, `customTags` (vacíos/null en `.flo`), más `body` en `full` (`""` en `.flo`) y `diagrams` en `full+diagrams` (fuente de cada cerca ` ```flo ` del cuerpo, `[]` en `.flo`). Sin diagnósticos; `depth` negativo = 0. | query (K2), MCP (K3), filtros y vista de grafo (K4) |
+| 32 | 2026-09-28 | **Aristas de `query`.** Una relación entra como arista solo si resolvió a entidad y es de la declaración ganadora (#2); una relación a bloque (`auth.flo#acceso`) no es arista ni expande: el resultado es un grafo de entidades, y K4 la lee de `xref.relationsFrom`. Las aristas de flujo (`flow` y `sequence`, tipo `"flow"`) son dirigidas, una por par `from→to` resuelto, con `blocks` = los `BlockId` que la contienen en orden de aparición; las referencias sin resolver no generan arista. Orden: documentos por uri; dentro de cada uno, relaciones (orden de declaración) y luego aristas de flujo (orden de fuente). La expansión las recorre sin dirección. | query (K2), MCP `get_node` (K3), render de conocimiento (K4) |
