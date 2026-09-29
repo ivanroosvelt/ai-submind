@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { runScopeHandlers } from "@codemirror/view";
 import { createEditor, showDocument, type EditorHost } from "./editor.js";
 import { floHighlightField } from "./flo-highlight-field.js";
 import { EditorWorkspace } from "./workspace.js";
 
 describe("editor", () => {
   let ws: EditorWorkspace;
-  let host: EditorHost & { onChange: ReturnType<typeof vi.fn> };
+  let host: EditorHost & { onChange: ReturnType<typeof vi.fn>; onGoToDefinition: ReturnType<typeof vi.fn>; onRename: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -15,7 +16,7 @@ describe("editor", () => {
       active: "a.flo",
       dir: null,
     });
-    host = { workspace: () => ws, onChange: vi.fn() };
+    host = { workspace: () => ws, onChange: vi.fn(), onGoToDefinition: vi.fn(), onRename: vi.fn() };
   });
 
   afterEach(() => {
@@ -41,6 +42,17 @@ describe("editor", () => {
     expect(host.onChange).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
     expect(host.onChange).toHaveBeenCalledTimes(1);
+    view.destroy();
+  });
+
+  it("binds F12 to go to definition and F2 to rename at the cursor", () => {
+    const view = createEditor(document.createElement("div"));
+    showDocument(view, host, "a.flo");
+    view.dispatch({ selection: { anchor: 20 } }); // línea 3, columna 3: la primera 'a' de 'a -> a'
+    runScopeHandlers(view, new KeyboardEvent("keydown", { key: "F12" }), "editor");
+    runScopeHandlers(view, new KeyboardEvent("keydown", { key: "F2" }), "editor");
+    expect(host.onGoToDefinition).toHaveBeenCalledWith({ line: 3, column: 3 });
+    expect(host.onRename).toHaveBeenCalledWith({ line: 3, column: 3 });
     view.destroy();
   });
 

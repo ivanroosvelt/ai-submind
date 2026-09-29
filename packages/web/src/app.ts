@@ -1,5 +1,5 @@
 import type { EditorView } from "@codemirror/view";
-import { blockId, type BlockId, type DocumentUri, type EntityId, type Location } from "@flo/core";
+import { blockId, entityAt, renameEntity, type BlockId, type DocumentUri, type EntityId, type Location, type Position } from "@flo/core";
 import { createEditor, showDocument, type EditorHost } from "./editor.js";
 import { entityPanelHtml } from "./entity-panel.js";
 import { bindExplorer, explorerHtml, type ExplorerFilter } from "./explorer.js";
@@ -11,7 +11,7 @@ import { exportSvg, exportPng } from "./export.js";
 import { saveDraft } from "./storage.js";
 import { EXAMPLES } from "./examples.js";
 import { enhanceSequencePreview } from "./sequence-view.js";
-import { offsetAt } from "./text-edits.js";
+import { applyTextEdits, offsetAt, toChanges } from "./text-edits.js";
 import { EditorWorkspace, type WorkspaceSnapshot } from "./workspace.js";
 
 const NEW_SOURCE: Record<DiagramKind, string> = {
@@ -55,6 +55,8 @@ export class App {
   private readonly host: EditorHost = {
     workspace: () => this.ws,
     onChange: () => this.refresh(),
+    onGoToDefinition: (position) => this.goToDefinition(position),
+    onRename: (position) => this.renameAt(position),
   };
 
   constructor(
@@ -216,6 +218,8 @@ export class App {
     } else if (panel.kind === "entity" && button.hasAttribute("data-flo-definition")) {
       const location = this.ws.link().xref.definitionOf(panel.id);
       if (location) this.reveal(location);
+    } else if (panel.kind === "entity" && button.hasAttribute("data-flo-rename")) {
+      this.rename(panel.id);
     }
   }
 
@@ -263,6 +267,40 @@ export class App {
       scrollIntoView: true,
     });
     this.view.focus();
+  }
+
+  private entityAtCursor(position: Position): EntityId | null {
+    const document = this.ws.link().documents.get(this.ws.active)?.document;
+    return document ? entityAt(document, position) : null;
+  }
+
+  goToDefinition(position: Position): void {
+    const id = this.entityAtCursor(position);
+    const location = id === null ? null : this.ws.link().xref.definitionOf(id);
+    if (location) this.reveal(location);
+  }
+
+  renameAt(position: Position): void {
+    const id = this.entityAtCursor(position);
+    if (id !== null) this.rename(id);
+  }
+
+  /** Decisión #39: el activo por el editor (queda en su historial), los demás en el workspace. */
+  rename(id: EntityId): void {
+    const answer = window.prompt(`Nuevo id para '${id}':`, id);
+    if (answer === null) return;
+    const newId = answer.trim();
+    const result = renameEntity(this.ws.link(), id, newId);
+    if ("error" in result) {
+      window.alert(result.error);
+      return;
+    }
+    for (const [uri, edits] of result.edits) {
+      if (uri === this.ws.active) this.view.dispatch({ changes: toChanges(this.view.state.doc.toString(), edits) });
+      else this.ws.setSource(uri, applyTextEdits(this.ws.source(uri), edits));
+    }
+    if (this.panel?.kind === "entity" && this.panel.id === id) this.panel = { kind: "entity", id: newId };
+    this.refresh();
   }
 
   /** El SVG que exportan los botones: el bloque seleccionado si está en el preview; si no, el primero (#41). */

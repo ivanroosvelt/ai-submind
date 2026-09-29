@@ -1,10 +1,11 @@
 import { basicSetup } from "codemirror";
 import { EditorState, type Extension } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { EditorView, keymap } from "@codemirror/view";
 import { linter, lintGutter } from "@codemirror/lint";
-import type { DocumentUri } from "@flo/core";
+import type { DocumentUri, Position } from "@flo/core";
 import { floHighlightField } from "./flo-highlight-field.js";
 import { toLintDiagnostics } from "./flo-lint.js";
+import { positionAt } from "./text-edits.js";
 import type { EditorWorkspace } from "./workspace.js";
 
 const PREVIEW_DEBOUNCE_MS = 200;
@@ -14,15 +15,37 @@ export interface EditorHost {
   workspace(): EditorWorkspace;
   /** 200 ms después del último cambio del documento. */
   onChange(): void;
+  /** F12 o Ctrl/Cmd+click. */
+  onGoToDefinition(position: Position): void;
+  /** F2. */
+  onRename(position: Position): void;
 }
 
 export function createEditor(parent: HTMLElement): EditorView {
   return new EditorView({ parent });
 }
 
+function cursor(view: EditorView): Position {
+  return positionAt(view.state.doc.toString(), view.state.selection.main.head);
+}
+
 function documentExtensions(host: EditorHost, uri: DocumentUri): Extension[] {
   let timer: ReturnType<typeof setTimeout> | undefined;
   return [
+    keymap.of([
+      { key: "F12", run: (view) => (host.onGoToDefinition(cursor(view)), true) },
+      { key: "F2", run: (view) => (host.onRename(cursor(view)), true) },
+    ]),
+    EditorView.domEventHandlers({
+      mousedown(event, view) {
+        if (!(event.ctrlKey || event.metaKey)) return false;
+        const offset = view.posAtCoords({ x: event.clientX, y: event.clientY });
+        if (offset === null) return false;
+        event.preventDefault();
+        host.onGoToDefinition(positionAt(view.state.doc.toString(), offset));
+        return true;
+      },
+    }),
     basicSetup,
     uri.endsWith(".flo") ? floHighlightField : [],
     lintGutter(),

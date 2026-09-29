@@ -27,7 +27,7 @@ export function entityPanelHtml(link: LinkResult, id: EntityId): string {
   return [
     `<h3 class="flo-panel-title">${escapeXml(entity.label)}</h3>`,
     `<p class="flo-panel-meta"><code>${escapeXml(entity.id)}</code>${meta ? ` · ${escapeXml(meta)}` : ""}</p>`,
-    `<p class="flo-panel-actions"><button type="button" data-flo-definition>${escapeXml(entity.uri)}:${entity.nameRange.start.line}</button></p>`,
+    `<p class="flo-panel-actions"><button type="button" data-flo-definition>${escapeXml(entity.uri)}:${entity.nameRange.start.line}</button> <button type="button" data-flo-rename>Renombrar</button></p>`,
     `<h4>Aparece en ${flows(blocks.length)}</h4>`,
     flowListHtml(link, blocks),
   ].join("");

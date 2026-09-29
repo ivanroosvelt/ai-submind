@@ -182,6 +182,49 @@ describe("App navigation", () => {
     expect(el.panel.innerHTML).toBe("");
   });
 
+  it("goes to the definition in another file", () => {
+    const app = new App(elements(), FILES);
+    app.goToDefinition({ line: 3, column: 10 }); // 'db' en 'api -> db'
+    expect(app.ws.active).toBe("catalog.flo");
+    const { from, to } = app.view.state.selection.main;
+    expect(app.view.state.sliceDoc(from, to)).toBe("db");
+  });
+
+  it("does nothing on text that names no entity", () => {
+    const app = new App(elements(), FILES);
+    app.goToDefinition({ line: 2, column: 1 });
+    expect(app.ws.active).toBe("login.flo");
+  });
+
+  it("renames across documents: the active one through the editor, the rest in the workspace", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    app.selectEntity("api");
+    vi.spyOn(window, "prompt").mockReturnValue("gateway");
+    click(el.panel.querySelector("[data-flo-rename]")!);
+    expect(app.view.state.doc.toString()).toContain("  gateway -> db");
+    expect(app.ws.source("login.flo")).toContain("  gateway -> db");
+    expect(app.ws.source("catalog.flo")).toBe("entity gateway [API Gateway]\nentity db [Base]\n");
+    expect(app.ws.isDirty("catalog.flo")).toBe(true);
+    expect(el.panel.innerHTML).toContain("<code>gateway</code>");
+  });
+
+  it("shows the rename error and changes nothing", () => {
+    const app = new App(elements(), FILES);
+    vi.spyOn(window, "prompt").mockReturnValue("db");
+    const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+    app.rename("api");
+    expect(alert).toHaveBeenCalledWith("ya existe una entidad 'db'");
+    expect(app.ws.hasUnsavedChanges()).toBe(false);
+  });
+
+  it("renames the entity under the cursor", () => {
+    const app = new App(elements(), FILES);
+    const prompt = vi.spyOn(window, "prompt").mockReturnValue(null);
+    app.renameAt({ line: 3, column: 4 });
+    expect(prompt).toHaveBeenCalledWith("Nuevo id para 'api':", "api");
+  });
+
   it("keeps the explorer in sync with the workspace", () => {
     const el = elements();
     const app = new App(el, FILES);

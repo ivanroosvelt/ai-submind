@@ -22,6 +22,7 @@ describe("entity panel", () => {
     expect(html).toContain("Aparece en 2 flujos");
     expect(html).toContain('data-flo-block="login.flo#login"');
     expect(html).toContain('data-flo-block="login.flo#detalle"');
+    expect(html).toContain("data-flo-rename");
   });
 
   it("uses the singular for one flow and labels blocks by title or name", () => {
