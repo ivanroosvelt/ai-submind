@@ -50,7 +50,7 @@ function floFences(lines: string[], from: number): { start: number; end: number 
 
 /** Texto fuente de cada cerca ` ```flo ` de un cuerpo Markdown, sin las líneas de la cerca. */
 export function floSources(body: string): string[] {
-  const lines = body.split("\n");
+  const lines = body.split(/\r?\n/);
   return floFences(lines, 0).map((fence) => lines.slice(fence.start, fence.end).join("\n"));
 }
 

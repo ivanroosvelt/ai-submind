@@ -3,6 +3,12 @@ import { floSources } from "../parser/markdown.js";
 import { blockId } from "./uri.js";
 import type { LinkResult } from "./workspace.js";
 
+function push<K, V>(map: Map<K, V[]>, key: K, value: V): void {
+  const list = map.get(key);
+  if (list) list.push(value);
+  else map.set(key, [value]);
+}
+
 /** Filtro de semillas (spec de conocimiento §5). Los predicados hoja solo los cumplen entidades de `.md`. */
 export type Where =
   | { and: Where[] }
@@ -149,8 +155,8 @@ export function query(link: LinkResult, opts: QueryOptions = {}): QueryResult {
   const edges = workspaceEdges(link);
   const adjacent = new Map<EntityId, EntityId[]>();
   for (const { from: a, to: b } of edges) {
-    adjacent.set(a, [...(adjacent.get(a) ?? []), b]);
-    adjacent.set(b, [...(adjacent.get(b) ?? []), a]);
+    push(adjacent, a, b);
+    push(adjacent, b, a);
   }
   let frontier = [...distance.keys()];
   for (let d = 1; d <= depth && frontier.length > 0; d++) {

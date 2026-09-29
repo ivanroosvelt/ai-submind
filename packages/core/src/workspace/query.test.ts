@@ -166,6 +166,7 @@ describe("query", () => {
     ["custom key inherited from Object.prototype", { custom: "constructor" }, []],
     ["text in title, ignoring case and keeping accents", { text: "CAÍDA" }, ["incidente"]],
     ["text in body", { text: "12 caracteres" }, ["passwords"]],
+    ["text inside an embedded flo fence", { text: "validacion" }, ["pkce"]],
     ["text does not see .flo entities", { text: "db" }, []],
     ["and", { and: [{ memory: "short_term" }, { contextTag: "project:core" }] }, ["passwords"]],
     ["or", { or: [{ typeTag: "incident" }, { memory: "long_term" }] }, ["incidente", "pkce"]],
@@ -279,6 +280,17 @@ describe("query", () => {
     pkce.customTags.status = "x";
     expect(run({ from: ["pkce"] }).nodes[0].typeTags).toEqual(["decision"]);
     expect(link.entities.get("pkce")!.knowledge!.customTags.status).toBe("approved");
+  });
+
+  it("returns embedded flo sources without carriage returns on CRLF files", () => {
+    const crlfWorkspace = linkFiles({
+      [SCHEMA_URI]: "type_tags: []\nrelation_types: []\n",
+      "kb/test.md": ["---", "id: a", "title: A", "memory_type: working", "---", "```flo", "entity x", "```", ""].join(
+        "\r\n"
+      ),
+    });
+    const [node] = query(crlfWorkspace, { from: ["a"], project: "full+diagrams" }).nodes;
+    expect(node.diagrams).toEqual(["entity x"]);
   });
 });
 
