@@ -1,5 +1,15 @@
-import { lstatSync, readFileSync, readdirSync, realpathSync } from "node:fs";
-import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { randomBytes } from "node:crypto";
+import {
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { SCHEMA_URI, Workspace, type Diagnostic, type LinkResult } from "@flo/core";
 
 /** Carpetas que ni la carga ni el watcher recorren (spec de conocimiento §6). */
@@ -12,6 +22,37 @@ export function isDocumentUri(uri: string): boolean {
 
 export function isIgnored(uri: string): boolean {
   return uri.split("/").some((segment) => IGNORED.has(segment));
+}
+
+export type UriDiagnostic = Diagnostic & { uri: string };
+
+export type WriteResult = { ok: true; uri: string } | { ok: false; error: string; diagnostics: UriDiagnostic[] };
+
+const fail = (error: string, diagnostics: UriDiagnostic[] = []): WriteResult => ({ ok: false, error, diagnostics });
+
+const errorKey = (d: Diagnostic): string =>
+  `${d.code} ${d.range.start.line}:${d.range.start.column}-${d.range.end.line}:${d.range.end.column} ${d.message}`;
+
+/**
+ * Errores que `write_node` no acepta (decisión #34): todos los del archivo
+ * escrito, y en los demás los que `before` no tenía (multiconjunto).
+ */
+function newErrors(before: LinkResult, after: LinkResult, uri: string): UriDiagnostic[] {
+  const found: UriDiagnostic[] = [];
+  for (const [other, list] of after.diagnostics) {
+    const errors = list.filter((d) => d.severity === "error");
+    if (other === uri) {
+      found.push(...errors.map((d) => ({ uri: other, ...d })));
+      continue;
+    }
+    const previous = (before.diagnostics.get(other) ?? []).filter((d) => d.severity === "error").map(errorKey);
+    for (const d of errors) {
+      const index = previous.indexOf(errorKey(d));
+      if (index >= 0) previous.splice(index, 1);
+      else found.push({ uri: other, ...d });
+    }
+  }
+  return found;
 }
 
 /**
@@ -68,6 +109,56 @@ export class FloFolder {
     const rel = relative(this.root, resolve(this.root, path));
     if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) return null;
     return rel.split(sep).join("/");
+  }
+
+  /** `write_node` (spec §6, decisión #34): valida en un workspace de prueba y escribe de forma atómica. */
+  write(path: string, content: string): WriteResult {
+    const uri = this.toUri(path);
+    if (uri === null) return fail(`la ruta '${path}' sale de la carpeta raíz`);
+    if (!uri.endsWith(".md") && !uri.endsWith(".flo")) return fail(`solo se escriben archivos .md o .flo: '${path}'`);
+    if (isIgnored(uri)) return fail(`la ruta '${path}' está en una carpeta ignorada (node_modules, .git)`);
+    const file = join(this.root, uri);
+    if (!this.insideRoot(dirname(file))) return fail(`la ruta '${path}' sale de la carpeta raíz por un enlace simbólico`);
+
+    const trial = new Workspace();
+    for (const [other, source] of this.sources) if (other !== uri) trial.setDocument(other, source);
+    trial.setDocument(uri, content);
+    const after = trial.link();
+    if (!after.diagnostics.has(uri)) {
+      return fail(`'${path}' no es un documento del workspace: un .md tiene que empezar con '---'`);
+    }
+    const errors = newErrors(this.link(), after, uri);
+    if (errors.length > 0) return fail(`'${path}' no se escribió: tiene errores o rompe otros archivos`, errors);
+
+    const temp = join(dirname(file), `.${basename(file)}.${randomBytes(6).toString("hex")}.tmp`);
+    try {
+      mkdirSync(dirname(file), { recursive: true });
+      writeFileSync(temp, content);
+      renameSync(temp, file);
+    } catch (error) {
+      try {
+        rmSync(temp, { force: true });
+      } catch {
+        // El temporal puede colgar de una ruta que ya no es un directorio (ENOTDIR); no hay nada que limpiar.
+      }
+      return fail(`no se pudo escribir '${path}': ${(error as Error).message}`);
+    }
+    this.sources.set(uri, content);
+    this.workspace.setDocument(uri, content);
+    this.linked = null;
+    return { ok: true, uri };
+  }
+
+  /** El ancestro existente más cercano de `dir`, con los enlaces resueltos, sigue dentro de la raíz. */
+  private insideRoot(dir: string): boolean {
+    for (;;) {
+      try {
+        const real = realpathSync(dir);
+        return real === this.root || real.startsWith(this.root + sep);
+      } catch {
+        dir = dirname(dir);
+      }
+    }
   }
 
   protected uriOf(path: string): string {

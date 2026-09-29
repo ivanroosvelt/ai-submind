@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { FloFolder } from "./folder.js";
@@ -95,5 +95,77 @@ describe("FloFolder toUri", () => {
     expect(folder.toUri("/etc/passwd")).toBeNull();
     expect(folder.toUri("")).toBeNull();
     expect(folder.toUri(".")).toBeNull();
+  });
+});
+
+describe("FloFolder write", () => {
+  it("writes a valid new .md atomically, creating folders, and links it at once", () => {
+    const folder = loaded();
+    const content = node("n", ["relations:", "  - target: ../a.md", "    type: affects"]);
+    expect(folder.write("kb/nuevo/n.md", content)).toEqual({ ok: true, uri: "kb/nuevo/n.md" });
+    expect(readFileSync(join(folder.root, "kb/nuevo/n.md"), "utf8")).toBe(content);
+    expect(readdirSync(join(folder.root, "kb/nuevo"))).toEqual(["n.md"]);
+    expect(folder.link().entities.has("n")).toBe(true);
+  });
+
+  it("writes a valid .flo, and overwrites an existing file", () => {
+    const folder = loaded();
+    expect(folder.write("flujos/f.flo", 'use "../catalogo.flo"\nflow f {\n  api -> api\n}\n')).toMatchObject({ ok: true });
+    expect(folder.write("kb/a.md", node("a", ["type_tags: [decision]"]))).toMatchObject({ ok: true });
+    expect(folder.link().xref.relationsFrom("a")).toEqual([]);
+  });
+
+  it("is not blocked by errors other files already had", () => {
+    const folder = loaded();
+    expect(folder.diagnostics()).toHaveProperty("roto.flo");
+    expect(folder.write("kb/d.md", node("d"))).toMatchObject({ ok: true });
+  });
+
+  it("rejects a file with errors and leaves the disk untouched", () => {
+    const folder = loaded();
+    const result = folder.write("kb/m.md", node("m").replace("long_term", "forever"));
+    expect(result).toMatchObject({ ok: false, diagnostics: [expect.objectContaining({ uri: "kb/m.md", code: "E064" })] });
+    expect(existsSync(join(folder.root, "kb/m.md"))).toBe(false);
+    expect(folder.link().entities.has("m")).toBe(false);
+  });
+
+  it("rejects an edit that breaks another file", () => {
+    const folder = loaded();
+    const before = readFileSync(join(folder.root, "kb/a.md"), "utf8");
+    const result = folder.write("kb/a.md", node("z"));
+    expect(result).toMatchObject({ ok: false, diagnostics: [expect.objectContaining({ uri: "kb/c.md", code: "E035" })] });
+    expect(readFileSync(join(folder.root, "kb/a.md"), "utf8")).toBe(before);
+  });
+
+  it("rejects a .md without frontmatter", () => {
+    const folder = loaded();
+    expect(folder.write("kb/nota.md", "# Hola\n")).toMatchObject({ ok: false, error: expect.stringMatching(/no es un documento/) });
+    expect(existsSync(join(folder.root, "kb/nota.md"))).toBe(false);
+  });
+
+  it("rejects paths outside the root, other extensions and ignored folders", () => {
+    const folder = loaded();
+    const rejected = (path: string, pattern: RegExp): void =>
+      expect(folder.write(path, node("q"))).toEqual({ ok: false, error: expect.stringMatching(pattern), diagnostics: [] });
+    rejected("../fuera.md", /sale de la carpeta raíz/);
+    rejected(join(tmpdir(), "fuera.md"), /sale de la carpeta raíz/);
+    rejected("kb/x.txt", /solo se escriben archivos \.md o \.flo/);
+    rejected("knowledge.schema.yaml", /solo se escriben archivos \.md o \.flo/);
+    rejected("node_modules/q.md", /carpeta ignorada/);
+    expect(existsSync(join(folder.root, "node_modules/q.md"))).toBe(false);
+  });
+
+  it("rejects a path that leaves the root through a symbolic link", () => {
+    const outside = tempDir({});
+    const folder = loaded();
+    symlinkSync(outside, join(folder.root, "enlace"));
+    expect(folder.write("enlace/sub/q.md", node("q"))).toMatchObject({ ok: false, error: expect.stringMatching(/enlace simbólico/) });
+    expect(readdirSync(outside)).toEqual([]);
+  });
+
+  it("reports an I/O failure instead of throwing", () => {
+    const folder = loaded();
+    // kb/a.md es un archivo: no puede ser directorio de otro.
+    expect(folder.write("kb/a.md/q.md", node("q"))).toMatchObject({ ok: false, error: expect.stringMatching(/no se pudo escribir/) });
   });
 });
