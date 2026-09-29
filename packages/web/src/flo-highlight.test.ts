@@ -55,4 +55,26 @@ describe("buildHighlightRanges", () => {
       .map((r) => source.slice(r.from, r.to));
     expect(idents).toEqual(["entity", "as"]);
   });
+
+  it("colors block titles and commas", () => {
+    const source = 'flow f "Inicio" {\n}\nentity a type: x, tags: y\n';
+    const ranges = buildHighlightRanges(Text.of(source.split("\n")));
+    const classOf = (text: string) => ranges.find((r) => source.slice(r.from, r.to) === text)?.className;
+    expect(classOf('"Inicio"')).toBe("flo-tok-string");
+    expect(classOf(",")).toBe("flo-tok-punct");
+  });
+
+  it("keeps entity properties as identifiers after ':'", () => {
+    const source = "entity a type: service, tags: http\n";
+    const ranges = buildHighlightRanges(Text.of(source.split("\n")));
+    const texts = ranges.map((r) => [source.slice(r.from, r.to), r.className]);
+    expect(texts).toContainEqual(["service", "flo-tok-ident"]);
+    expect(texts).toContainEqual(["http", "flo-tok-ident"]);
+  });
+
+  it("still reads an edge label after '->' and ':' as text", () => {
+    const source = "flow f {\n  a -> b : sí, claro\n}\n";
+    const ranges = buildHighlightRanges(Text.of(source.split("\n")));
+    expect(ranges.map((r) => [source.slice(r.from, r.to), r.className])).toContainEqual([" sí, claro", "flo-tok-text"]);
+  });
 });
