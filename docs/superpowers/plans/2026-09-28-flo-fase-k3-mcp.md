@@ -114,7 +114,7 @@ y un directorio ilegible se registra con `console.error` y se salta.
 `refresh()` trata un archivo que no se puede leer (o al que no se le puede
 hacer `lstat`) igual que uno borrado: sale del workspace.
 
-- [ ] **Step 1: Crear el paquete**
+- [x] **Step 1: Crear el paquete**
 
 `packages/mcp/package.json`:
 
@@ -177,7 +177,7 @@ hacer `lstat`) igual que uno borrado: sale del workspace.
 Run: `pnpm install && pnpm --filter @flo/core build`
 Expected: instala sin errores; `packages/core/dist/index.js` existe.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `packages/mcp/src/folder.test.ts`:
 
@@ -316,12 +316,12 @@ describe("FloFolder toUri", () => {
 });
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `pnpm --filter @flo/mcp test`
 Expected: FAIL — `Failed to resolve import "./folder.js"`.
 
-- [ ] **Step 4: Write minimal implementation**
+- [x] **Step 4: Write minimal implementation**
 
 `packages/mcp/src/folder.ts`:
 
@@ -458,12 +458,12 @@ export class FloFolder {
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/mcp typecheck`
 Expected: PASS (9 tests), typecheck sin errores.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/mcp pnpm-lock.yaml
@@ -501,7 +501,7 @@ temporal del mismo directorio y `rename` → el estado se actualiza en el
 acto. Un fallo de E/S devuelve solo el código de error, sin rutas del
 equipo.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/mcp/src/folder.test.ts`, ampliar el import de `node:fs` con
 `existsSync`, `readFileSync` y `readdirSync`; agregar después de
@@ -611,12 +611,12 @@ describe("FloFolder write", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/mcp test`
 Expected: FAIL — `folder.write is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 En `packages/mcp/src/folder.ts`, ampliar los imports:
 
@@ -739,13 +739,13 @@ Agregar a la clase `FloFolder`, después de `toUri`:
   }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/mcp typecheck`
 Expected: PASS (20 tests; los 2 de mayúsculas se saltan en un FS
 sensible a mayúsculas).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/mcp/src/folder.ts packages/mcp/src/folder.test.ts
@@ -779,7 +779,7 @@ carpeta entera; un evento sin nombre también relee; el resto (temporales
 dentro del callback se registra con `console.error`: nunca tumba el
 servidor. Un error de un watcher lo cierra.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Agregar `vi` al import de `vitest` y `renameSync` al de `node:fs`, y al
 final de `packages/mcp/src/folder.test.ts`:
@@ -879,12 +879,12 @@ describe("FloFolder watch", () => {
 `watch()` y tras un reemplazo atómico, y el timeout por test (15 s) queda
 por encima del de `vi.waitFor` (5 s) para que el fallo diga qué no llegó.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/mcp test`
 Expected: FAIL — `folder.watch is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 En `packages/mcp/src/folder.ts`, el import de `node:fs` queda:
 
@@ -992,7 +992,7 @@ y agregar a la clase:
   }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/mcp typecheck`
 Expected: PASS (28 tests). Correr la suite 5 veces seguidas
@@ -1000,7 +1000,7 @@ Expected: PASS (28 tests). Correr la suite 5 veces seguidas
 los tests del watcher no deben ser intermitentes. Si uno lo es, investigar
 la causa (evento perdido, orden) antes de subir timeouts.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/mcp/src/folder.ts packages/mcp/src/folder.test.ts
@@ -1029,7 +1029,7 @@ Los errores de validación de entrada los produce el SDK (texto
 `MCP error -32602: Input validation error: ...`, `isError: true`).
 `check` con ruta canoniza mayúsculas igual que `write_node`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/mcp/src/tools.test.ts`:
 
@@ -1184,12 +1184,12 @@ describe("flo-mcp tools", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @flo/mcp test`
 Expected: FAIL — `Failed to resolve import "./tools.js"`.
 
-- [ ] **Step 3: Implement `tools.ts`**
+- [x] **Step 3: Implement `tools.ts`**
 
 `packages/mcp/src/tools.ts`:
 
@@ -1297,12 +1297,12 @@ export function createServer(folder: FloFolder): McpServer {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/mcp typecheck`
 Expected: PASS (37 tests).
 
-- [ ] **Step 5: Implement `main.ts` and smoke-test the binary**
+- [x] **Step 5: Implement `main.ts` and smoke-test the binary**
 
 `packages/mcp/src/main.ts`:
 
@@ -1351,7 +1351,7 @@ await client.close();
 
 Expected: un JSON con `"id": "api"` en `nodes`, y el proceso termina.
 
-- [ ] **Step 6: README**
+- [x] **Step 6: README**
 
 En `README.md`, en la sección `## Paquetes`, agregar después del último
 paquete:
@@ -1371,7 +1371,7 @@ paquete:
   type-checker no encuentra errores nuevos).
 ```
 
-- [ ] **Step 7: Full verification and commit**
+- [x] **Step 7: Full verification and commit**
 
 Run: `pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: todo en verde; ningún `.snap` modificado (`git status` no
