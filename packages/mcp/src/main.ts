@@ -14,3 +14,7 @@ const folder = new FloFolder(root);
 folder.load();
 folder.watch();
 await createServer(folder).connect(new StdioServerTransport());
+// El watcher mantiene vivo el proceso: sin esto, el servidor sobrevive al
+// cliente que cerró stdin.
+process.stdin.on("end", () => process.exit(0));
+process.stdin.on("close", () => process.exit(0));
