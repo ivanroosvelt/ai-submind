@@ -37,6 +37,13 @@ describe("EditorWorkspace", () => {
     expect(ws.hasUnsavedChanges()).toBe(false);
   });
 
+  it("counts never-saved files of an open folder as unsaved changes", () => {
+    const ws = new EditorWorkspace({ ...snapshot(), dir: {} as FileSystemDirectoryHandle });
+    expect(ws.hasUnsavedChanges()).toBe(true); // b.flo vive en la carpeta pero nunca se guardó
+    ws.markSaved("b.flo");
+    expect(ws.hasUnsavedChanges()).toBe(false);
+  });
+
   it("falls back to the first uri when the active one does not exist", () => {
     expect(new EditorWorkspace({ ...snapshot(), active: "zzz.flo" }).active).toBe("a.flo");
   });

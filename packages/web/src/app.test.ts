@@ -1,5 +1,6 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { runScopeHandlers } from "@codemirror/view";
 import { App, newWorkspace, type AppElements } from "./app.js";
 import type { WorkspaceSnapshot } from "./workspace.js";
 
@@ -76,6 +77,39 @@ describe("App", () => {
     confirm.mockReturnValue(true);
     app.newDocument("flowchart");
     expect(app.ws.uris()).toEqual(["nuevo.flo"]);
+  });
+
+  it("asks before replacing an open folder whose new file was never saved", () => {
+    const app = new App(elements(), { ...FILES, dir: {} as FileSystemDirectoryHandle });
+    app.newDocument("flowchart");
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    app.loadExample("flowchart");
+    expect(confirm).toHaveBeenCalledWith("Hay cambios sin guardar. ¿Descartarlos?");
+    expect(app.ws.uris()).toContain("nuevo.flo");
+  });
+
+  it("keeps each document's undo history across switches", () => {
+    const app = new App(elements(), FILES);
+    app.openDocument("catalog.flo");
+    app.view.dispatch({ changes: { from: 0, insert: "entity x\n" } });
+    app.openDocument("login.flo");
+    app.openDocument("catalog.flo");
+    // jsdom no es mac: Mod-z es Ctrl-z.
+    runScopeHandlers(app.view, new KeyboardEvent("keydown", { key: "z", ctrlKey: true }), "editor");
+    expect(app.view.state.doc.toString()).toBe(FILES.files["catalog.flo"]);
+    expect(app.ws.source("catalog.flo")).toBe(FILES.files["catalog.flo"]);
+  });
+
+  it("starts a replaced workspace without selection, panel or map mode", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    app.selectBlock("login.flo#login", "api");
+    app.selectEntity("api");
+    app.toggleMap();
+    app.loadExample("flowchart");
+    expect(app.selectedBlock).toBeNull();
+    expect(el.panel.innerHTML).toBe("");
+    expect(el.preview.innerHTML).not.toContain("Mapa del sistema");
   });
 
   it("saves every modified file into the folder", async () => {

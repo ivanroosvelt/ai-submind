@@ -38,7 +38,7 @@ function documentExtensions(host: EditorHost, uri: DocumentUri): Extension[] {
     ]),
     EditorView.domEventHandlers({
       mousedown(event, view) {
-        if (!(event.ctrlKey || event.metaKey)) return false;
+        if (event.button !== 0 || !(event.ctrlKey || event.metaKey)) return false;
         const offset = view.posAtCoords({ x: event.clientX, y: event.clientY });
         if (offset === null) return false;
         event.preventDefault();
@@ -62,7 +62,13 @@ function documentExtensions(host: EditorHost, uri: DocumentUri): Extension[] {
   ];
 }
 
-/** Muestra `uri` con un estado propio (su historial de deshacer empieza de cero). */
-export function showDocument(view: EditorView, host: EditorHost, uri: DocumentUri): void {
-  view.setState(EditorState.create({ doc: host.workspace().source(uri), extensions: documentExtensions(host, uri) }));
+/**
+ * Muestra `uri` con su estado anterior (y su historial de deshacer) si su fuente
+ * no cambió por fuera del editor; si no, con uno nuevo (#43).
+ */
+export function showDocument(view: EditorView, host: EditorHost, uri: DocumentUri, previous?: EditorState): void {
+  const doc = host.workspace().source(uri);
+  view.setState(
+    previous?.doc.toString() === doc ? previous : EditorState.create({ doc, extensions: documentExtensions(host, uri) })
+  );
 }

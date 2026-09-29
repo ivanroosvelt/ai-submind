@@ -1,3 +1,4 @@
+import type { EditorState } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import {
   blockId,
@@ -65,6 +66,9 @@ export class App {
   private mapMode = false;
   private highlight: EntityId | null = null;
   private filter: ExplorerFilter = { type: null, tag: null };
+  /** El estado de cada documento que dejó el editor, hasta que se reemplace el workspace (#43). */
+  private readonly states = new Map<DocumentUri, EditorState>();
+  private shown: DocumentUri | null = null;
   private readonly host: EditorHost = {
     workspace: () => this.ws,
     onChange: () => this.refresh(),
@@ -127,13 +131,21 @@ export class App {
   load(snapshot: WorkspaceSnapshot, fileHandle: FileSystemFileHandle | null = null): void {
     this.ws = new EditorWorkspace(snapshot);
     this.fileHandle = fileHandle;
+    this.states.clear();
+    this.shown = null;
+    this.selectedBlock = null;
+    this.highlight = null;
+    this.panel = null;
+    this.mapMode = false;
     this.openDocument(this.ws.active);
   }
 
   openDocument(uri: DocumentUri): void {
     this.ws.active = uri;
     this.previewState = { lastDiagrams: [] };
-    showDocument(this.view, this.host, uri);
+    if (this.shown !== null) this.states.set(this.shown, this.view.state);
+    this.shown = uri;
+    showDocument(this.view, this.host, uri, this.states.get(uri));
     this.refresh();
   }
 
@@ -198,20 +210,22 @@ export class App {
 
   /** Decisión #38: con carpeta, todos los modificados y sin validar; sin carpeta, el activo. */
   async save(): Promise<void> {
-    const { dir } = this.ws;
+    // El workspace puede reemplazarse durante los await: se guarda el que había al empezar.
+    const ws = this.ws;
+    const { dir } = ws;
     if (dir) {
       if (!(await ensureWritable(dir))) throw new Error("sin permiso de escritura en la carpeta");
-      for (const uri of this.ws.uris()) {
-        if (!this.ws.isDirty(uri)) continue;
-        await writeWorkspaceFile(dir, uri, this.ws.source(uri));
-        this.ws.markSaved(uri);
+      for (const uri of ws.uris()) {
+        if (!ws.isDirty(uri)) continue;
+        await writeWorkspaceFile(dir, uri, ws.source(uri));
+        ws.markSaved(uri);
       }
     } else {
-      const uri = this.ws.active;
-      const handle = await saveFloFile(this.ws.source(uri), this.fileHandle, uri);
+      const uri = ws.active;
+      const handle = await saveFloFile(ws.source(uri), this.fileHandle, uri);
       if (handle) {
-        this.fileHandle = handle;
-        this.ws.markSaved(uri);
+        if (this.ws === ws) this.fileHandle = handle;
+        ws.markSaved(uri);
       }
     }
     this.refresh();
