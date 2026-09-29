@@ -7,7 +7,10 @@ import {
   realpathSync,
   renameSync,
   rmSync,
+  statSync,
+  watch,
   writeFileSync,
+  type FSWatcher,
 } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { SCHEMA_URI, Workspace, type Diagnostic, type LinkResult } from "@flo/core";
@@ -180,6 +183,23 @@ export class FloFolder {
         dir = dirname(dir);
       }
     }
+  }
+
+  /** Sigue los cambios del disco (spec §6, decisión #33). Quien llama cierra el watcher. */
+  watch(): FSWatcher {
+    const watcher = watch(this.root, { recursive: true }, (_event, filename) => this.onChange(filename));
+    watcher.on("error", (error) => console.error(`flo-mcp: ${error.message}`));
+    return watcher;
+  }
+
+  private onChange(filename: string | null): void {
+    if (filename === null) return this.load();
+    const uri = filename.split(sep).join("/");
+    if (isIgnored(uri)) return;
+    if (isDocumentUri(uri)) return this.refresh(uri);
+    // Un directorio creado, movido o borrado solo avisa por sí mismo, no por sus archivos.
+    const isDirectory = statSync(join(this.root, uri), { throwIfNoEntry: false })?.isDirectory() ?? false;
+    if (isDirectory || [...this.sources.keys()].some((known) => known.startsWith(`${uri}/`))) this.load();
   }
 
   protected uriOf(path: string): string {

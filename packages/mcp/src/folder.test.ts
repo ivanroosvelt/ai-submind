@@ -1,5 +1,15 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { FloFolder } from "./folder.js";
@@ -193,5 +203,52 @@ describe("FloFolder write", () => {
     const folder = loaded();
     // kb/a.md es un archivo: no puede ser directorio de otro.
     expect(folder.write("kb/a.md/q.md", node("q"))).toMatchObject({ ok: false, error: expect.stringMatching(/no se pudo escribir/) });
+  });
+});
+
+describe("FloFolder watch", () => {
+  const watchers: { close(): void }[] = [];
+  afterEach(() => {
+    for (const watcher of watchers.splice(0)) watcher.close();
+  });
+
+  function watched(): FloFolder {
+    const folder = loaded();
+    watchers.push(folder.watch());
+    return folder;
+  }
+
+  const ids = (folder: FloFolder): string[] => [...folder.link().entities.keys()];
+  const eventually = (check: () => void) => vi.waitFor(check, { timeout: 5000, interval: 50 });
+
+  it("picks up a file written on disk", async () => {
+    const folder = watched();
+    writeFileSync(join(folder.root, "kb/w.md"), node("w"));
+    await eventually(() => expect(ids(folder)).toContain("w"));
+  });
+
+  it("picks up an edit and a deletion", async () => {
+    const folder = watched();
+    writeFileSync(join(folder.root, "kb/b.md"), node("b2"));
+    await eventually(() => expect(ids(folder)).toContain("b2"));
+    rmSync(join(folder.root, "kb/b.md"));
+    await eventually(() => expect(ids(folder)).not.toContain("b2"));
+  });
+
+  it("reloads when a folder is removed or moved in", async () => {
+    const folder = watched();
+    rmSync(join(folder.root, "kb"), { recursive: true });
+    await eventually(() => expect(ids(folder)).toEqual(["api"]));
+    const outside = tempDir({ "y.md": node("y") });
+    renameSync(outside, join(folder.root, "nuevo"));
+    await eventually(() => expect(ids(folder)).toContain("y"));
+  });
+
+  it("ignores ignored folders", async () => {
+    const folder = watched();
+    writeFileSync(join(folder.root, "node_modules/pkg/z.md"), node("z"));
+    writeFileSync(join(folder.root, "kb/w.md"), node("w"));
+    await eventually(() => expect(ids(folder)).toContain("w"));
+    expect(ids(folder)).not.toContain("z");
   });
 });
