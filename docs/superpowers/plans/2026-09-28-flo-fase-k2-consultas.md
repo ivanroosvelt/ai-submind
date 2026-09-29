@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-28 (`df4e4dd`..`a11a746`, fix de la revisión final `95efb9d`); revisión de la task 1: el test `{ text: "api" }` del fixture chocaba con la cerca ` ```flo ` de `pkce` y se cambió a `"db"` (`text` busca también dentro de las cercas, spec §5). Revisión final: lista para merge; 1 hallazgo importante (`QueryOptions` mal formado desde JSON) y 1 menor quedaron en §11 como pendientes de K3 y K4; CRLF en `floSources`, adyacencia O(grado) y un test de texto dentro de cerca, corregidos.
+
 **Goal:** `query(link, opts)` y `tagCatalog(link)` en `@flo/core`: funciones
 puras sobre un `LinkResult` que filtran entidades por predicados de
 conocimiento, expanden por relaciones y flujos hasta `depth`, proyectan
@@ -114,7 +116,7 @@ F → K4.
   export function floSources(body: string): string[];
   ```
 
-- [ ] **Step 1: Escribir el test (fixture + tabla de consultas)**
+- [x] **Step 1: Escribir el test (fixture + tabla de consultas)**
 
 Crear `packages/core/src/workspace/query.test.ts`:
 
@@ -404,12 +406,12 @@ describe("query", () => {
 });
 ````
 
-- [ ] **Step 2: Correr el test y verlo fallar**
+- [x] **Step 2: Correr el test y verlo fallar**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/query.test.ts`
 Expected: FAIL — `Failed to resolve import "./query.js"`.
 
-- [ ] **Step 3: `floSources` en `parser/markdown.ts`**
+- [x] **Step 3: `floSources` en `parser/markdown.ts`**
 
 Agregar debajo de `floFences` (que queda privada):
 
@@ -421,7 +423,7 @@ export function floSources(body: string): string[] {
 }
 ```
 
-- [ ] **Step 4: Implementar `workspace/query.ts`**
+- [x] **Step 4: Implementar `workspace/query.ts`**
 
 ```ts
 import type { BlockId, CustomTagValue, DocumentUri, EntityDecl, EntityId, MemoryType } from "../ast.js";
@@ -598,7 +600,7 @@ Nota: `adjacent.set(a, [...])` copia el array por arista; es O(grado²) por
 nodo. Si al implementar preferís `push` sobre un array existente (patrón
 `push()` de `xref.ts`), hacelo: el resultado es el mismo.
 
-- [ ] **Step 5: Correr el test y verlo pasar**
+- [x] **Step 5: Correr el test y verlo pasar**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/query.test.ts`
 Expected: PASS (todas).
@@ -606,7 +608,7 @@ Expected: PASS (todas).
 Si el primer test (diagnósticos del fixture) falla, **no** ajustar las
 expectativas de las otras: el fixture está mal escrito; reportarlo.
 
-- [ ] **Step 6: Registrar las decisiones #31 y #32**
+- [x] **Step 6: Registrar las decisiones #31 y #32**
 
 Al final de §11 de `docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`
 (después de "Pendientes diferidos (Fase K1, 2026-09-28)"), agregar:
@@ -620,13 +622,13 @@ Al final de §11 de `docs/superpowers/specs/2026-09-19-flo-entidades-centralizad
 | 32 | 2026-09-28 | **Aristas de `query`.** Una relación entra como arista solo si resolvió a entidad y es de la declaración ganadora (#2); una relación a bloque (`auth.flo#acceso`) no es arista ni expande: el resultado es un grafo de entidades, y K4 la lee de `xref.relationsFrom`. Las aristas de flujo (`flow` y `sequence`, tipo `"flow"`) son dirigidas, una por par `from→to` resuelto, con `blocks` = los `BlockId` que la contienen en orden de aparición; las referencias sin resolver no generan arista. Orden: documentos por uri; dentro de cada uno, relaciones (orden de declaración) y luego aristas de flujo (orden de fuente). La expansión las recorre sin dirección. | query (K2), MCP `get_node` (K3), render de conocimiento (K4) |
 ```
 
-- [ ] **Step 7: Suite y typecheck del core**
+- [x] **Step 7: Suite y typecheck del core**
 
 Run: `pnpm --filter @flo/core typecheck && pnpm --filter @flo/core test`
 Expected: sin errores; ningún `.snap` cambia (`git status` no lista
 `__snapshots__`).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/core/src/workspace/query.ts packages/core/src/workspace/query.test.ts \
@@ -662,7 +664,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
   y en `@flo/core`: `query`, `tagCatalog` y los tipos `Where`, `Projection`,
   `QueryOptions`, `QueryNode`, `QueryEdge`, `QueryResult`, `TagCatalog`.
 
-- [ ] **Step 1: Escribir los tests**
+- [x] **Step 1: Escribir los tests**
 
 Agregar al final de `packages/core/src/workspace/query.test.ts` (y sumar
 `tagCatalog` al import de `./query.js`):
@@ -717,12 +719,12 @@ the public API"):
   });
 ```
 
-- [ ] **Step 2: Correr y verlos fallar**
+- [x] **Step 2: Correr y verlos fallar**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/query.test.ts src/index.test.ts`
 Expected: FAIL — `tagCatalog` no se exporta / `query` no está en `./index.js`.
 
-- [ ] **Step 3: Implementar `tagCatalog` en `workspace/query.ts`**
+- [x] **Step 3: Implementar `tagCatalog` en `workspace/query.ts`**
 
 ```ts
 export interface TagCatalog {
@@ -751,7 +753,7 @@ export function tagCatalog(link: LinkResult): TagCatalog {
 }
 ```
 
-- [ ] **Step 4: Exportar en `packages/core/src/index.ts`**
+- [x] **Step 4: Exportar en `packages/core/src/index.ts`**
 
 Después de la línea `export type { XRefIndex, BlockId, Location } from "./workspace/xref.js";`:
 
@@ -768,7 +770,7 @@ export type {
 } from "./workspace/query.js";
 ```
 
-- [ ] **Step 5: Correr y verlos pasar**
+- [x] **Step 5: Correr y verlos pasar**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/query.test.ts src/index.test.ts`
 Expected: PASS.
@@ -777,12 +779,12 @@ Si el test de `constructor` falla porque K1 no guarda la clave
 `constructor`/`toString` en `customTags` (lo parsea `parser/markdown.ts`),
 reportarlo como hallazgo en vez de cambiar el parser en esta task.
 
-- [ ] **Step 6: Verificación completa (desde la raíz)**
+- [x] **Step 6: Verificación completa (desde la raíz)**
 
 Run: `pnpm --filter @flo/core build && pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: todo verde; `git status` no lista `__snapshots__`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/core/src/workspace/query.ts packages/core/src/workspace/query.test.ts \
