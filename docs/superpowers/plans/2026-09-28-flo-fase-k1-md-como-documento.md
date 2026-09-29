@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-28 (`dd7d274`..`088f153`, fix de la revisión final `ad3b9ce`); revisión final: 1 hallazgo importante (`parse()` con uris que no son documentos) y 2 menores, corregidos; el resto quedó en §11 como pendientes diferidos de F y K3.
+
 **Goal:** Que un `.md` con frontmatter tipado sea una entidad más del
 catálogo del workspace: se parsea y valida (`E060`–`E068`), sus bloques
 ` ```flo ` embebidos entran al workspace, sus `use:` y rutas de
@@ -154,12 +156,12 @@ F → K4.
   ): { document: ParsedDocument; diagnostics: Diagnostic[] } | null; // null = no es documento del workspace
   ```
 
-- [ ] **Step 1: Agregar la dependencia**
+- [x] **Step 1: Agregar la dependencia**
 
 Run (desde la raíz): `pnpm --filter @flo/core add yaml@^2.9.1`
 Expected: `packages/core/package.json` lista `"yaml": "^2.9.1"` en `dependencies`; `pnpm-lock.yaml` actualizado.
 
-- [ ] **Step 2: Escribir los tests que fallan**
+- [x] **Step 2: Escribir los tests que fallan**
 
 `packages/core/src/parser/markdown.test.ts`:
 
@@ -313,12 +315,12 @@ describe("parseMarkdownDocument: frontmatter", () => {
 
 En `packages/core/src/parser/entity.test.ts`, el primer test (`parses the short form with shape and properties, with exact ranges`): agregar `knowledge: null,` después de la línea `nameRange: ...` del objeto esperado.
 
-- [ ] **Step 3: Correr los tests y verificar que fallan**
+- [x] **Step 3: Correr los tests y verificar que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/parser/markdown.test.ts src/parser/entity.test.ts`
 Expected: FAIL (`./markdown.js` no existe; la entidad `.flo` no tiene `knowledge`).
 
-- [ ] **Step 4: Implementar**
+- [x] **Step 4: Implementar**
 
 `packages/core/src/ast.ts` — agregar después de `export type DocumentUri = string;`:
 
@@ -683,13 +685,13 @@ function readRelation(yaml: YamlSource, item: unknown, knowledge: KnowledgeMeta,
 }
 ```
 
-- [ ] **Step 5: Correr la suite del core**
+- [x] **Step 5: Correr la suite del core**
 
 Run: `pnpm --filter @flo/core exec vitest run && pnpm --filter @flo/core typecheck`
 Expected: PASS. Si otro test compara una `EntityDecl` completa con `toEqual`
 y falla por `knowledge`, agregarle `knowledge: null` (nada más).
 
-- [ ] **Step 6: GRAMMAR.md y §11**
+- [x] **Step 6: GRAMMAR.md y §11**
 
 `packages/core/GRAMMAR.md` — antes de `## Fuera de esta gramática`, agregar:
 
@@ -741,7 +743,7 @@ Al final de `docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`:
 | 27 | 2026-09-28 | **Recuperación del frontmatter.** Cada campo inválido da un diagnóstico y no impide validar los demás. Hay entidad si y solo si `id` es válido; `title` inválido ⇒ label = id; `memory_type` inválido (cualquier valor fuera del enum, también no-strings: `E064`) ⇒ `memoryType: null`. Con un `E061` no se valida nada del frontmatter; con `E060` no se parsea nada del archivo. `E062` (y el `E068` por esquema ausente) se anclan en el `---` de apertura (1:1–1:4); a una relación sin `target`/`type` le corresponde `E062` en el rango del ítem, y una clave desconocida en una relación es `E067`. Rangos: `Relation.range` = valor de `target`, `Relation.typeRange` = valor de `type`, `KnowledgeMeta.typeTagRanges` paralelo a `typeTags`. | parser (K1), MCP `write_node` (K3), renombrar (F) |
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/core pnpm-lock.yaml docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
@@ -763,7 +765,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 - Consumes: `parseDocument(source, uri): { document: ParsedDocument; diagnostics: Diagnostic[] }` de `src/parser/document.ts`; `parseMarkdownDocument` de la task 1.
 - Produces: `parseMarkdownDocument` agrega a `document.uses`/`entities`/`blocks` lo de cada cerca ` ```flo `, en orden de aparición, después de la entidad del frontmatter. Sin cambios de firma.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 Agregar a `packages/core/src/parser/markdown.test.ts`:
 
@@ -832,12 +834,12 @@ describe("parseMarkdownDocument: embedded flo blocks", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests y verificar que fallan**
+- [x] **Step 2: Correr los tests y verificar que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/parser/markdown.test.ts`
 Expected: FAIL (las cercas se ignoran: solo aparece la entidad del frontmatter).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 En `packages/core/src/parser/markdown.ts`, agregar el import:
 
@@ -891,12 +893,12 @@ y en `parseMarkdownDocument`, entre `if (entity) document.entities.push(entity);
   }
 ```
 
-- [ ] **Step 4: Correr la suite del core**
+- [x] **Step 4: Correr la suite del core**
 
 Run: `pnpm --filter @flo/core exec vitest run && pnpm --filter @flo/core typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: GRAMMAR.md y §11**
+- [x] **Step 5: GRAMMAR.md y §11**
 
 En `packages/core/GRAMMAR.md`, al final de la sección `## Documentos .md de conocimiento`:
 
@@ -913,7 +915,7 @@ En la tabla "Decisiones de la Fase K1" de §11, agregar la fila:
 | 28 | 2026-09-28 | **Bloques ` ```flo ` embebidos.** Cada cerca se parsea por separado con `parseDocument` (un `flow` sin `}` no se traga la cerca siguiente; su `E052` queda dentro). El contenido se toma sin quitar indentación, así las columnas son las del archivo. Una cerca sin cerrar llega a fin de archivo (CommonMark); lo de adentro de cualquier cerca no abre otra. El info-string se compara por su primera palabra (` ```flo titulo ` cuenta). Se parsean aunque el frontmatter no tenga entidad. | parser (K1), `full+diagrams` (K2) |
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
@@ -954,7 +956,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
   documento); resto → `parseDocument`. `LinkResult.diagnostics` incluye
   `SCHEMA_URI` (al final) si hay esquema cargado; `LinkResult.documents` no.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 `packages/core/src/workspace/schema.test.ts`:
 
@@ -1098,12 +1100,12 @@ describe("Workspace with .md documents", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests y verificar que fallan**
+- [x] **Step 2: Correr los tests y verificar que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace`
 Expected: FAIL (`./schema.js` no existe; los `.md` se parsean como `.flo`).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `packages/core/src/workspace/schema.ts`:
 
@@ -1256,12 +1258,12 @@ export function checkVocabulary(document: ParsedDocument, schema: KnowledgeSchem
   - `const linked = linkDocuments(parsed.map((p) => p.document), this.schema === null ? "missing" : (this.schema.schema ?? "invalid"));`
   - después del `for` que llena `documents`/`diagnostics`: `if (this.schema) diagnostics.set(SCHEMA_URI, this.schema.diagnostics);`
 
-- [ ] **Step 4: Correr la suite del core**
+- [x] **Step 4: Correr la suite del core**
 
 Run: `pnpm --filter @flo/core exec vitest run && pnpm --filter @flo/core typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: GRAMMAR.md y §11**
+- [x] **Step 5: GRAMMAR.md y §11**
 
 En `packages/core/GRAMMAR.md`, al final de la sección de `.md`:
 
@@ -1298,7 +1300,7 @@ En la tabla "Decisiones de la Fase K1" de §11:
 | 29 | 2026-09-28 | **Despacho por uri y esquema.** `Workspace.setDocument` elige el parser por uri: exactamente `knowledge.schema.yaml` → esquema; termina en `.md` → conocimiento (sin `---` inicial el uri deja de ser documento, también si lo era); todo lo demás → `.flo`. El esquema no está en `LinkResult.documents`; sus diagnósticos sí, al final de `LinkResult.diagnostics`. Ambas claves del esquema son obligatorias. Esquema ausente ⇒ un único `E068` en el primer `.md` por uri (decisión #24), anclado en su `---`; esquema con diagnósticos (`E061`/`E068` en él) ⇒ no se valida vocabulario y no se repite `E068` en los `.md`. | workspace (K1), carga de carpeta (K3, F) |
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
@@ -1343,7 +1345,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
   relationsTo(id: EntityId): { from: EntityId; relation: Relation }[];
   ```
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 `packages/core/src/workspace/knowledge.test.ts`:
 
@@ -1460,12 +1462,12 @@ describe("Workspace relations", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests y verificar que fallan**
+- [x] **Step 2: Correr los tests y verificar que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace`
 Expected: FAIL (`./knowledge.js` no existe; sin `E035`; `relationsFrom` no existe).
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 `packages/core/src/workspace/uri.ts` — agregar al final (y `BlockId` al import de tipos: `import type { BlockId, DocumentUri } from "../ast.js";`):
 
@@ -1616,12 +1618,12 @@ function resolveTarget(
   ```
 - en el doc-comment de `linkDocuments`: agregar "las rutas de `relations` cuentan como `use` implícito y cada `relations.target` se resuelve (E035)". En `LinkedDocuments.uses`: "incluye los `use` implícitos de `relations`"; en `diagnostics`: "(E030–E033, E035, E065, E066, E068)".
 
-- [ ] **Step 4: Correr la suite del core**
+- [x] **Step 4: Correr la suite del core**
 
 Run: `pnpm --filter @flo/core exec vitest run && pnpm --filter @flo/core typecheck`
 Expected: PASS (incluido `xref.test.ts` sin cambios de expectativas: `blockId` sigue exportado desde `xref.ts`).
 
-- [ ] **Step 5: GRAMMAR.md y §11**
+- [x] **Step 5: GRAMMAR.md y §11**
 
 En `packages/core/GRAMMAR.md`, en la sección de `.md`, agregar:
 
@@ -1645,7 +1647,7 @@ En la tabla "Decisiones de la Fase K1" de §11:
 | 30 | 2026-09-28 | **Targets de relación.** Lo anterior a `#` es la ruta si contiene `/` o termina en `.md`/`.flo`; con `#nombre` resuelve al bloque de ese documento (`.flo` o `.md`), sin `#` debe ser un `.md` con entidad (un `.flo` sin bloque es `E035`). Toda ruta que existe es `use` implícito aunque la relación termine en `E035`. En `XRefIndex`, solo las declaraciones ganadoras (#2) aportan relaciones; `relationsTo` y `referencesTo` solo cuentan targets resueltos a entidad, y `referencesTo` solo la forma id, porque es la única cuyo texto es el id (renombrar en F la edita; una ruta a `.md` no cambia al renombrar). `blockId` vive en `workspace/uri.ts`. | resolver, xref (K1), `query` (K2), renombrar (F) |
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
@@ -1666,7 +1668,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 - Consumes: todo lo anterior.
 - Produces: `@flo/core` exporta `SCHEMA_URI` y los tipos `BlockId` (ahora desde `ast.ts`, sin cambio para consumidores), `MemoryType`, `CustomTagValue`, `KnowledgeMeta`, `Relation`. `parseMarkdownDocument` **no** se exporta: la entrada es `Workspace.setDocument`.
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 En `packages/core/src/index.test.ts`, agregar `SCHEMA_URI`, `type KnowledgeMeta`,
 `type MemoryType` y `type Relation` al import de `./index.js`, y el test:
@@ -1719,12 +1721,12 @@ En `packages/core/src/index.test.ts`, agregar `SCHEMA_URI`, `type KnowledgeMeta`
   });
 ```
 
-- [ ] **Step 2: Verificar que falla**
+- [x] **Step 2: Verificar que falla**
 
 Run: `pnpm --filter @flo/core exec vitest run src/index.test.ts`
 Expected: FAIL (`SCHEMA_URI` no se exporta).
 
-- [ ] **Step 3: Exportar**
+- [x] **Step 3: Exportar**
 
 `packages/core/src/index.ts`:
 
@@ -1733,12 +1735,12 @@ Expected: FAIL (`SCHEMA_URI` no se exporta).
 - en `export type { XRefIndex, BlockId, Location } from "./workspace/xref.js";` dejar `BlockId` (xref lo re-exporta).
 - al bloque `export type { ... } from "./ast.js";` agregar `MemoryType`, `CustomTagValue`, `KnowledgeMeta`, `Relation`.
 
-- [ ] **Step 4: Verificar que pasa**
+- [x] **Step 4: Verificar que pasa**
 
 Run: `pnpm --filter @flo/core exec vitest run src/index.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Verificación completa (core build + web contra el `dist/` nuevo)**
+- [x] **Step 5: Verificación completa (core build + web contra el `dist/` nuevo)**
 
 Run (desde la raíz del repo):
 `pnpm --filter @flo/core build && pnpm -r typecheck && pnpm -r test && pnpm -r build`
@@ -1746,7 +1748,7 @@ Expected: todo PASS (la web empaqueta `yaml` a través de `@flo/core` sin
 cambios propios); `git status --short packages/core/src/render/__snapshots__ packages/web`
 no lista nada.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core/src/index.ts packages/core/src/index.test.ts
