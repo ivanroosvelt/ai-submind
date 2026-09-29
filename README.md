@@ -9,13 +9,15 @@ sintaxis Mermaid: es un formato nuevo desde cero.
 > + render SVG, editor web, persistencia y exportación, deploy y docs).
 > Sobre esa base, la rama `v2` implementa las
 > [entidades centralizadas](docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md):
-> fases A–E completas (rangos, lexer dirigido por el parser, catálogo de
+> fases A–F completas (rangos, lexer dirigido por el parser, catálogo de
 > entidades y bloques nombrados, workspace multi-documento con `use`,
-> índice de referencias cruzadas y atributos `data-flo-*` en el SVG). Del
+> índice de referencias cruzadas, atributos `data-flo-*` en el SVG y
+> navegación en el editor: explorador, panel de entidad, ir a definición,
+> renombrar y mapa agregado). Del
 > [grafo de conocimiento](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md)
 > están completas K1, K2 y K3: un `.md` con frontmatter tipado es una entidad del
 > catálogo, `query`/`tagCatalog` lo consultan y `@flo/mcp` lo expone a agentes
-> por MCP. Pendientes: F, K4 y la Fase 6 (ver [Roadmap](#roadmap)).
+> por MCP. Pendientes: K4 y la Fase 6 (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
@@ -123,6 +125,23 @@ Monorepo con pnpm workspaces:
   independiente del archivo real en disco — se restaura al recargar la
   página.
 
+  **Workspace y navegación:** "Abrir carpeta" (File System Access API) carga
+  los `.flo`, `.md` y el `knowledge.schema.yaml` de la raíz (sin
+  `node_modules` ni `.git`); sin esa API el navegador cae a un
+  `<input webkitdirectory>` de solo lectura, y "Guardar" descarga el
+  archivo activo en vez de escribirlo. Con una carpeta abierta, "Nuevo"
+  agrega `nuevo.flo` a ella; "Guardar" escribe todos los archivos
+  modificados (marcados con `●`) sin validarlos, y el borrador
+  autosaveado en IndexedDB es el workspace entero. El explorador lista el
+  catálogo de entidades (filtrable por `type` y tag) y los archivos con
+  sus bloques. El panel de entidad muestra "Aparece en N flujos", salta
+  al flujo con el nodo resaltado, linkea a su definición y ofrece
+  "Renombrar". Ctrl/Cmd+click o F12 van a la definición; F2 renombra en
+  todos los archivos del workspace. "Mapa" arma el grafo agregado de
+  todos los flujos, con aristas clickeables que listan los flujos que las
+  originan. Exportar SVG/PNG toma el bloque seleccionado (click en su
+  título o en el explorador), o el mapa si está visible.
+
 - **`@flo/mcp`** (`packages/mcp`) — servidor MCP local (stdio) sobre una
   carpeta de documentos `.flo`, `.md` con frontmatter y
   `knowledge.schema.yaml`. Relee lo que cambia en disco.
@@ -174,14 +193,13 @@ typecheck → test` en cada push y PR.
 - [`docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md`](docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md) — plan de implementación de Fase 5 (deploy, docs de usuario, prep de npm).
 - [`docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`](docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md) — entidades centralizadas, workspace y navegación (fases A–F); su §11 registra las decisiones de lenguaje.
 - [`docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md`](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md) — `.md` tipados como grafo de conocimiento (fases K1–K4).
-- Planes de la v2: [A+B](docs/superpowers/plans/2026-09-19-flo-range-y-lexer-dirigido.md), [C](docs/superpowers/plans/2026-09-27-flo-fase-c-entidades-y-bloques.md), [D](docs/superpowers/plans/2026-09-28-flo-fase-d-workspace-multidocumento.md), [E](docs/superpowers/plans/2026-09-28-flo-fase-e-superficie-de-navegacion.md), [K1](docs/superpowers/plans/2026-09-28-flo-fase-k1-md-como-documento.md), [K2](docs/superpowers/plans/2026-09-28-flo-fase-k2-consultas.md), [K3](docs/superpowers/plans/2026-09-28-flo-fase-k3-mcp.md).
+- Planes de la v2: [A+B](docs/superpowers/plans/2026-09-19-flo-range-y-lexer-dirigido.md), [C](docs/superpowers/plans/2026-09-27-flo-fase-c-entidades-y-bloques.md), [D](docs/superpowers/plans/2026-09-28-flo-fase-d-workspace-multidocumento.md), [E](docs/superpowers/plans/2026-09-28-flo-fase-e-superficie-de-navegacion.md), [K1](docs/superpowers/plans/2026-09-28-flo-fase-k1-md-como-documento.md), [K2](docs/superpowers/plans/2026-09-28-flo-fase-k2-consultas.md), [K3](docs/superpowers/plans/2026-09-28-flo-fase-k3-mcp.md), [F](docs/superpowers/plans/2026-09-29-flo-fase-f-navegacion-en-el-editor.md).
 - [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md) — gramática formal (EBNF), reglas léxicas especiales y tabla de códigos de diagnóstico.
 
 ## Roadmap
 
-Orden de la v2: D → E → K1 → K2 → K3 → **F** → K4.
+Orden de la v2: D → E → K1 → K2 → K3 → F → **K4**.
 
-- **F** — navegación en el editor: explorador, panel de entidad, ir a definición, renombrar, mapa agregado.
 - **K4** — vista de grafo de conocimiento en la web.
 - **Fase 6** — `npm publish` real de `@flo/core` (el paquete ya está preparado; falta correr `npm login && npm publish --access public` desde `packages/core` con una cuenta npm autenticada, y habilitar GitHub Pages en Settings → Pages → Source: "GitHub Actions" para que el workflow de deploy quede activo).
 
