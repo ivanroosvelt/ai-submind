@@ -1,0 +1,132 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { FloFolder } from "./folder.js";
+import { createServer } from "./tools.js";
+
+const node = (id: string, extra: string[] = []): string =>
+  ["---", `id: ${id}`, `title: Nodo ${id}`, "memory_type: long_term", ...extra, "---", "Cuerpo.", ""].join("\n");
+
+const FILES: Record<string, string> = {
+  "knowledge.schema.yaml": "type_tags: [decision]\nrelation_types: [affects]\n",
+  "catalogo.flo": "entity api\n",
+  "kb/a.md": node("a", ["type_tags: [decision]", 'use: ["../catalogo.flo"]', "relations:", "  - target: api", "    type: affects"]),
+  "kb/c.md": node("c", ['use: ["./a.md"]', "relations:", "  - target: a", "    type: affects"]),
+};
+
+const cleanup: (() => void)[] = [];
+afterEach(() => {
+  for (const undo of cleanup.splice(0)) undo();
+});
+
+async function connect(): Promise<{ folder: FloFolder; client: Client; call: (name: string, args?: Record<string, unknown>) => Promise<{ isError: boolean; value: any }> }> {
+  const root = mkdtempSync(join(tmpdir(), "flo-mcp-"));
+  cleanup.push(() => rmSync(root, { recursive: true, force: true }));
+  for (const [path, content] of Object.entries(FILES)) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), content);
+  }
+  const folder = new FloFolder(root);
+  folder.load();
+  const [serverSide, clientSide] = InMemoryTransport.createLinkedPair();
+  await createServer(folder).connect(serverSide);
+  const client = new Client({ name: "test", version: "0.0.0" });
+  await client.connect(clientSide);
+  cleanup.push(() => void client.close());
+  const call = async (name: string, args: Record<string, unknown> = {}) => {
+    const result = await client.callTool({ name, arguments: args });
+    const text = (result.content as { text: string }[])[0].text;
+    let value: unknown;
+    try {
+      value = JSON.parse(text);
+    } catch {
+      value = text;
+    }
+    return { isError: result.isError === true, value };
+  };
+  return { folder, client, call };
+}
+
+describe("flo-mcp tools", () => {
+  it("lists the five tools", async () => {
+    const { client } = await connect();
+    expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["query", "get_node", "list_tags", "check", "write_node"]);
+  });
+
+  it("query runs the core query", async () => {
+    const { call } = await connect();
+    const { isError, value } = await call("query", { where: { typeTag: "decision" }, depth: 1 });
+    expect(isError).toBe(false);
+    expect(value.nodes.map((n: { id: string }) => n.id)).toEqual(["a", "api", "c"]);
+    expect(value.edges).toEqual([
+      { from: "a", to: "api", type: "affects" },
+      { from: "c", to: "a", type: "affects" },
+    ]);
+  });
+
+  it("query rejects malformed options before reaching the core", async () => {
+    const { call } = await connect();
+    for (const args of [
+      { where: { type_tag: "decision" } },
+      { where: {} },
+      { where: { and: { text: "x" } } },
+      { where: { text: 3 } },
+      { depth: -1 },
+      { depth: 1.5 },
+      { project: "todo" },
+      { from: "a" },
+      { bogus: 1 },
+    ]) {
+      const { isError, value } = await call("query", args);
+      expect(isError, JSON.stringify(args)).toBe(true);
+      expect(value).toMatch(/Input validation error/);
+    }
+  });
+
+  it("get_node returns the node with its outgoing and incoming relations", async () => {
+    const { call } = await connect();
+    const a = await call("get_node", { id: "a", project: "full" });
+    expect(a.value.node).toMatchObject({ id: "a", distance: 0, body: "Cuerpo.\n" });
+    expect(a.value.outgoing).toEqual([{ type: "affects", target: "api", resolved: { kind: "entity", id: "api" } }]);
+    expect(a.value.incoming).toEqual([{ from: "c", type: "affects", target: "a" }]);
+    const missing = await call("get_node", { id: "nada" });
+    expect(missing).toEqual({ isError: true, value: { error: "no existe la entidad 'nada'" } });
+  });
+
+  it("list_tags returns the tag catalog", async () => {
+    const { call } = await connect();
+    expect((await call("list_tags")).value).toEqual({ typeTags: ["decision"], contextTags: [], customTags: {} });
+  });
+
+  it("check returns the workspace or one file's diagnostics", async () => {
+    const { call } = await connect();
+    expect(await call("check")).toEqual({ isError: false, value: {} });
+    expect(await call("check", { path: "kb/a.md" })).toEqual({ isError: false, value: { "kb/a.md": [] } });
+    expect(await call("check", { path: "../fuera.md" })).toEqual({ isError: true, value: { error: "'../fuera.md' no es un documento del workspace" } });
+  });
+
+  it("write_node rejects invalid content and path escapes, and writes valid content", async () => {
+    const { call } = await connect();
+    const invalid = await call("write_node", { path: "kb/m.md", content: node("m").replace("long_term", "forever") });
+    expect(invalid.isError).toBe(true);
+    expect(invalid.value.diagnostics).toEqual([expect.objectContaining({ uri: "kb/m.md", code: "E064" })]);
+    const outside = await call("write_node", { path: "../m.md", content: node("m") });
+    expect(outside).toMatchObject({ isError: true, value: { ok: false, error: expect.stringMatching(/sale de la carpeta raíz/) } });
+    expect(await call("write_node", { path: "kb/m.md", content: node("m") })).toEqual({ isError: false, value: { ok: true, uri: "kb/m.md" } });
+    expect((await call("query", { from: ["m"] })).value.nodes).toHaveLength(1);
+  });
+
+  it("a change on disk shows up in the next query", async () => {
+    const { folder, call } = await connect();
+    const watcher = folder.watch();
+    cleanup.push(() => watcher.close());
+    writeFileSync(join(folder.root, "kb/w.md"), node("w", ["type_tags: [decision]"]));
+    await vi.waitFor(
+      async () => expect((await call("query", { where: { typeTag: "decision" } })).value.nodes.map((n: { id: string }) => n.id)).toEqual(["a", "w"]),
+      { timeout: 5000, interval: 50 }
+    );
+  });
+});

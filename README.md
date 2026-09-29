@@ -122,6 +122,19 @@ Monorepo con pnpm workspaces:
   independiente del archivo real en disco — se restaura al recargar la
   página.
 
+- **`@flo/mcp`** (`packages/mcp`) — servidor MCP local (stdio) sobre una
+  carpeta de documentos `.flo`, `.md` con frontmatter y
+  `knowledge.schema.yaml`. Relee lo que cambia en disco.
+
+  ```bash
+  pnpm --filter @flo/mcp build
+  node packages/mcp/dist/main.js <carpeta>
+  ```
+
+  Herramientas: `query`, `get_node`, `list_tags`, `check` y `write_node`
+  (solo escribe `.md`/`.flo` dentro de la carpeta, y solo si el
+  type-checker no encuentra errores nuevos).
+
 ## Uso
 
 Requiere Node 20+ y pnpm (via `corepack enable`, la versión queda fijada
