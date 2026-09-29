@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** pendiente.
+**Estado:** completado el 2026-09-29 (`aa23b8c`..`b7ed239`, fixes de la revisión final `f094d80`..`89ef65f`). Las 12 tasks pasaron su revisión sin rondas de fixes. Revisión final: con una carpeta abierta, un archivo nuevo sin guardar se perdía sin confirmación al reemplazar el workspace (`hasUnsavedChanges` cuenta ahora los archivos nunca guardados de la carpeta, decisión #43); cambiar de documento perdía el historial de deshacer (`App` guarda un `EditorState` por uri y lo reusa si la fuente no cambió); `save()` fija el workspace antes de los `await`; `load()` limpia selección, resaltado, panel y mapa; Ctrl/Cmd+click solo con el botón principal. Verificado a mano en Safari (sin selector de carpetas). Suite: 235 core, 109 web, 37 mcp. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase F)". Los pasos de abajo describen el plan original; el código entregado incluye esos fixes.
 
 **Goal:** El editor web pasa de un archivo suelto a un workspace de varios
 documentos (abrir carpeta, guardar todo, borrador del workspace entero) y
@@ -158,7 +158,7 @@ otro tipo; en `.flo`, nunca. Declaraciones perdedoras (`E031`) y
 referencias sin resolver no se tocan. Ediciones de cada uri en orden de
 posición.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/core/src/workspace/navigation.test.ts`:
 
@@ -307,12 +307,12 @@ caso dentro del `describe("index")`:
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/navigation.test.ts src/index.test.ts`
 Expected: FAIL — `Cannot find module './navigation.js'` / `entityAt` no exportado.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/core/src/workspace/navigation.ts`:
 
@@ -419,12 +419,12 @@ export { entityAt, renameEntity } from "./workspace/navigation.js";
 export type { TextEdit, RenameResult } from "./workspace/navigation.js";
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/core test && pnpm --filter @flo/core typecheck && pnpm --filter @flo/core build`
 Expected: PASS; ningún snapshot cambia.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/workspace/navigation.ts packages/core/src/workspace/navigation.test.ts packages/core/src/index.ts packages/core/src/index.test.ts
@@ -453,7 +453,7 @@ entran entidades con alguna arista; las relaciones de `.md` no (son de
 K4). `edges` = las aristas de flujo, para que la web liste los bloques de
 cada una.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/core/src/render/map.test.ts`:
 
@@ -519,12 +519,12 @@ En `packages/core/src/index.test.ts`, sumar `renderMap` y
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/core exec vitest run src/render/map.test.ts src/index.test.ts`
 Expected: FAIL — `Cannot find module './map.js'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/core/src/render/map.ts`:
 
@@ -570,12 +570,12 @@ export { renderMap } from "./render/map.js";
 export type { RenderedMap } from "./render/map.js";
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/core test && pnpm --filter @flo/core typecheck && pnpm --filter @flo/core build`
 Expected: PASS; ningún snapshot cambia.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/render/map.ts packages/core/src/render/map.test.ts packages/core/src/index.ts packages/core/src/index.test.ts
@@ -605,7 +605,7 @@ resuelve la ruta:
 `E042` tras una propiedad `tags` (pendiente C):
 `se esperaba ':' después de '<key>'; los tags se separan con espacios, no con comas`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/core/src/workspace/resolver.test.ts`, junto al test que hoy
 verifica `"el documento './nope.flo' no existe en el workspace"` (línea
@@ -650,12 +650,12 @@ En `packages/core/src/parser/entity.test.ts`:
 (Usar el `parse` que ya importe `entity.test.ts`; si importa otra función
 de entrada, llamar a esa con la misma fuente.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/resolver.test.ts src/parser/entity.test.ts`
 Expected: FAIL — los mensajes nuevos no coinciden.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 En `packages/core/src/workspace/resolver.ts`, importar
 `import { SCHEMA_URI } from "./schema.js";`, agregar la función:
@@ -697,12 +697,12 @@ y asignar `previous = key.value;` justo antes de avanzar la coma que
 separa propiedades (al final del cuerpo del loop, tras el
 `if (cursor.current().kind !== "COMMA") return true;`).
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/core test && pnpm --filter @flo/core typecheck && pnpm --filter @flo/core build`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/workspace/resolver.ts packages/core/src/workspace/resolver.test.ts packages/core/src/parser/entity.ts packages/core/src/parser/entity.test.ts
@@ -737,7 +737,7 @@ siempre; un string (borrador de antes de F) se lee como
 `{ files: { "diagrama.flo": s }, saved: {}, active: "diagrama.flo", dir: null }`,
 y un snapshot sin archivos se lee como `null`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/web/src/text-edits.test.ts`:
 
@@ -901,12 +901,12 @@ describe("drafts", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/core build && pnpm --filter @flo/web exec vitest run src/text-edits.test.ts src/workspace.test.ts src/storage.test.ts`
 Expected: FAIL — módulos inexistentes / `LEGACY_DRAFT_URI` no exportado.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/text-edits.ts`:
 
@@ -1067,13 +1067,13 @@ export async function loadDraft(): Promise<WorkspaceSnapshot | null> {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web exec vitest run src/text-edits.test.ts src/workspace.test.ts src/storage.test.ts`
 Expected: PASS. (`main.ts` todavía llama a `saveDraft(source)`: el
 typecheck de web se arregla en la task 6; no correrlo ahora.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/workspace.ts packages/web/src/workspace.test.ts packages/web/src/text-edits.ts packages/web/src/text-edits.test.ts packages/web/src/storage.ts packages/web/src/storage.test.ts
@@ -1111,7 +1111,7 @@ si hace falta, pide el permiso de escritura (un handle restaurado del
 borrador lo pierde al recargar); si el navegador no tiene esos métodos,
 devuelve `true`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/web/src/folder-io.test.ts`:
 
@@ -1245,12 +1245,12 @@ describe("ensureWritable", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/folder-io.test.ts`
 Expected: FAIL — `Cannot find module './folder-io.js'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/tsconfig.json`: `"lib": ["ES2022", "DOM", "DOM.Iterable", "DOM.AsyncIterable"]`
 (`FileSystemDirectoryHandle.values()` vive en `DOM.AsyncIterable`).
@@ -1381,13 +1381,13 @@ export async function ensureWritable(dir: FileSystemDirectoryHandle): Promise<bo
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web exec vitest run src/folder-io.test.ts src/file-io.test.ts`
 Expected: PASS. (Si un test de `file-io.test.ts` verifica el texto de
 `accept` o `description`, actualizar solo esa expectativa al valor nuevo.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/folder-io.ts packages/web/src/folder-io.test.ts packages/web/src/file-io.ts packages/web/src/file-io.test.ts packages/web/src/file-system-access.d.ts packages/web/tsconfig.json
@@ -1430,7 +1430,7 @@ descarga de siempre. Reemplazar un workspace con cambios sin guardar
 pide confirmación. Cada `refresh()` guarda el borrador (sus errores se
 ignoran: sin IndexedDB el editor sigue funcionando).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Reescribir `packages/web/src/editor.test.ts`:
 
@@ -1676,12 +1676,12 @@ describe("App", () => {
 (Los helpers `elements` y `FILES` se exportan para que los tests de las
 tasks 7–10, que viven en este mismo archivo, los reusen.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/editor.test.ts src/preview.test.ts src/toolbar.test.ts src/app.test.ts`
 Expected: FAIL — `showDocument`, `renderActive`, `./app.js` no existen.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/editor.ts` (reemplazo completo):
 
@@ -2013,12 +2013,12 @@ y en el `<style>`:
       }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck && pnpm --filter @flo/web build`
 Expected: PASS.
 
-- [ ] **Step 5: Verificar en el navegador**
+- [x] **Step 5: Verificar en el navegador**
 
 Run: `pnpm --filter @flo/web dev`. Con Chrome: "Abrir carpeta" sobre
 `examples/` (o una carpeta con dos `.flo` donde uno usa al otro), editar
@@ -2027,7 +2027,7 @@ el catálogo, volver al otro archivo y ver el label nuevo en el preview;
 borrador y "Guardar" pide permiso. Anotar en el reporte de la task si
 algo de esto no funciona.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/web/src/app.ts packages/web/src/app.test.ts packages/web/src/editor.ts packages/web/src/editor.test.ts packages/web/src/preview.ts packages/web/src/preview.test.ts packages/web/src/toolbar.ts packages/web/src/toolbar.test.ts packages/web/src/main.ts packages/web/index.html
@@ -2063,7 +2063,7 @@ marcado y es el que exportan SVG/PNG, cierra #11) y resalta el nodo de la
 entidad. El panel se redibuja en cada `refresh()` desde el link nuevo; si
 la entidad dejó de existir, se cierra.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/web/src/entity-panel.test.ts`:
 
@@ -2194,12 +2194,12 @@ describe("App navigation", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/entity-panel.test.ts src/sequence-view.test.ts src/app.test.ts`
 Expected: FAIL — `./entity-panel.js` no existe; `selectEntity` no existe; el clon no lleva atributos.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/entity-panel.ts`:
 
@@ -2405,12 +2405,12 @@ function byData(root: ParentNode, selector: string, attribute: string, value: st
       }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/entity-panel.ts packages/web/src/entity-panel.test.ts packages/web/src/app.ts packages/web/src/app.test.ts packages/web/src/sequence-view.ts packages/web/src/sequence-view.test.ts packages/web/index.html
@@ -2444,7 +2444,7 @@ modificado, y debajo sus bloques (título o nombre), el seleccionado
 marcado. Click en un archivo lo abre; en un bloque, `selectBlock`; en
 una entidad, el panel.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/web/src/explorer.test.ts`:
 
@@ -2544,12 +2544,12 @@ En `packages/web/src/app.test.ts`, dentro de `describe("App navigation")`:
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/explorer.test.ts src/app.test.ts`
 Expected: FAIL — `./explorer.js` no existe.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/explorer.ts`:
 
@@ -2688,12 +2688,12 @@ export function bindExplorer(container: HTMLElement, actions: ExplorerActions): 
       }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/explorer.ts packages/web/src/explorer.test.ts packages/web/src/app.ts packages/web/src/app.test.ts packages/web/index.html
@@ -2727,7 +2727,7 @@ Las ediciones del documento activo van por el editor en un solo
 workspace, que los marca modificados. Si el panel mostraba la entidad,
 pasa a mostrar el id nuevo.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/web/src/editor.test.ts`, `host` suma
 `onGoToDefinition: vi.fn()` y `onRename: vi.fn()` (y su tipo), y:
@@ -2797,12 +2797,12 @@ En `packages/web/src/app.test.ts`, dentro de `describe("App navigation")`:
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/editor.test.ts src/entity-panel.test.ts src/app.test.ts`
 Expected: FAIL — `goToDefinition`, `rename` no existen; F12/F2 no están ligados.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/editor.ts`:
 
@@ -2908,18 +2908,18 @@ function cursor(view: EditorView): Position {
   }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Verificar en el navegador**
+- [x] **Step 5: Verificar en el navegador**
 
 `pnpm --filter @flo/web dev`: Cmd/Ctrl+click sobre una referencia salta a
 la declaración en otro archivo; F2 renombra y Cmd/Ctrl+Z en el archivo
 activo deshace su parte. Anotar en el reporte si no funciona.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/web/src/editor.ts packages/web/src/editor.test.ts packages/web/src/app.ts packages/web/src/app.test.ts packages/web/src/entity-panel.ts packages/web/src/entity-panel.test.ts
@@ -2955,7 +2955,7 @@ de la entidad, como en el preview. Sin aristas de flujo: "Ningún flujo
 conecta entidades todavía". Con el mapa visible, Exportar SVG/PNG exporta
 el mapa.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/web/src/map-view.test.ts`:
 
@@ -3041,12 +3041,12 @@ En `packages/web/src/app.test.ts`, dentro de `describe("App navigation")`:
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/map-view.test.ts src/entity-panel.test.ts src/toolbar.test.ts src/app.test.ts`
 Expected: FAIL — `./map-view.js` no existe; `#flo-toggle-map` no existe.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/map-view.ts`:
 
@@ -3174,12 +3174,12 @@ de `#flo-toggle-expand`, y
       }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/map-view.ts packages/web/src/map-view.test.ts packages/web/src/entity-panel.ts packages/web/src/entity-panel.test.ts packages/web/src/toolbar.ts packages/web/src/toolbar.test.ts packages/web/src/app.ts packages/web/src/app.test.ts packages/web/index.html
@@ -3203,7 +3203,7 @@ las comas son puntuación. Tras `:` solo se lee texto libre si en la línea
 ya hubo un `->` (la etiqueta de una arista o un mensaje); en
 `type: x, tags: a b` el resto sigue lexándose como identificadores.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/web/src/flo-highlight.test.ts` (usa el helper que ya tenga
 para armar un `Text` de CodeMirror; si no hay, `Text.of(source.split("\n"))`
@@ -3237,12 +3237,12 @@ de `@codemirror/state`):
 > inicial, ajustar solo ese string esperado (`"sí, claro"`); lo que se
 > verifica es que la etiqueta entera es un único rango `flo-tok-text`.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/flo-highlight.test.ts`
 Expected: FAIL — `STRING` y `COMMA` sin clase; `service` coloreado como texto.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 En `packages/web/src/flo-highlight.ts`:
 
@@ -3284,14 +3284,14 @@ En `packages/web/src/flo-highlight.ts`:
       }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck`
 Expected: PASS. Si un test existente esperaba el texto tras `type:`,
 actualizar esa expectativa: es el comportamiento que el pendiente pidió
 cambiar.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/flo-highlight.ts packages/web/src/flo-highlight.test.ts packages/web/index.html
@@ -3308,7 +3308,7 @@ git commit -m "fix(web): el resaltado colorea títulos y comas y no trata propie
 
 **Interfaces:** ninguna.
 
-- [ ] **Step 1: README**
+- [x] **Step 1: README**
 
 En `README.md`, en la sección que describe el editor web (la que habla
 de persistencia local, autosave e IndexedDB), agregar una subsección
@@ -3330,20 +3330,20 @@ Actualizar el párrafo "Estado actual" (F completa; pendientes K4 y Fase
 6) y el Roadmap (quitar F). Sumar el plan de F a la lista "Planes de la
 v2".
 
-- [ ] **Step 2: GRAMMAR**
+- [x] **Step 2: GRAMMAR**
 
 Run: `grep -n "no existe en el workspace\|después de la propiedad" packages/core/GRAMMAR.md`
 Si alguna línea cita el texto literal de un mensaje que cambió en la
 task 3, actualizarla; la tabla de códigos no cambia (los significados son
 los mismos).
 
-- [ ] **Step 3: Verificación completa**
+- [x] **Step 3: Verificación completa**
 
 Run: `pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: PASS en los tres paquetes; `git status` no muestra `.snap`
 modificados.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add README.md packages/core/GRAMMAR.md

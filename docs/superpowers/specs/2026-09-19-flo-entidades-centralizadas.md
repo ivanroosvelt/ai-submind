@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-09-19
 - **Rama:** `v2`
-- **Estado:** en implementación: fases A–E completadas (2026-09-28); la F (navegación en el editor) tiene [plan](../plans/2026-09-29-flo-fase-f-navegacion-en-el-editor.md) y va ahora: K1, K2 y K3 del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md) están completadas
+- **Estado:** fases A–F completadas (A–E el 2026-09-28, F el 2026-09-29, [plan](../plans/2026-09-29-flo-fase-f-navegacion-en-el-editor.md)); K1, K2 y K3 del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md) también; queda K4
 - **Reemplaza:** las secciones §2 (fila "Gestión de archivos"), §4 y §8 del
   spec [2026-09-17-flo-diagram-tool-design.md](2026-09-17-flo-diagram-tool-design.md).
   El resto de aquel documento (arquitectura de paquetes, manejo de errores,
@@ -541,4 +541,22 @@ Descartados o reasignados:
 - **K3 "F / CI — watcher en Linux"** y **K3 "F — watcher"**: son de
   `@flo/mcp`, no del editor (el navegador no tiene watcher, #37); pasan a
   **Cualquiera — MCP** sin cambios de contenido.
+
+### Pendientes diferidos (Fase F, 2026-09-29)
+
+- **F / release — navegador real:** la verificación manual se hizo en
+  Safari (sin `showDirectoryPicker`); falta un smoke test en Chromium de
+  "Abrir carpeta → editar → Guardar → recargar → Guardar (pide permiso)"
+  y de Ctrl/Cmd+click para ir a definición.
+- **Cualquiera — editor:** el debounce de 200 ms es un `setTimeout` suelto:
+  si se cambia de documento durante la espera, un `onChange` tardío
+  refresca el documento que esté activo (inofensivo, un refresh de más).
+  Los `EditorState` guardados por uri (#43) no se podan hasta el siguiente
+  `load()`.
+- **K4 — mapa:** el botón "Mapa" no muestra si está activo
+  (`aria-pressed`); el panel de una arista queda visible al salir del mapa
+  por uno de sus flujos.
+- **Cualquiera — tests:** sin test de que Exportar toma el bloque
+  seleccionado (`exportable()`), ni del guard de botón del Ctrl/Cmd+click
+  (jsdom no da posición al click).
 
