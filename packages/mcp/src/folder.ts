@@ -68,7 +68,9 @@ export class FloFolder {
   protected linked: LinkResult | null = null;
 
   constructor(root: string) {
-    this.root = realpathSync(resolve(root));
+    // `.native` devuelve las mayúsculas del disco en macOS (APFS no distingue
+    // mayúsculas); `realpathSync` a secas conserva las que vinieron en `root`.
+    this.root = realpathSync.native(resolve(root));
   }
 
   /** Relee toda la carpeta. No sigue enlaces simbólicos: nada de fuera de la raíz entra. */
@@ -113,12 +115,21 @@ export class FloFolder {
 
   /** `write_node` (spec §6, decisión #34): valida en un workspace de prueba y escribe de forma atómica. */
   write(path: string, content: string): WriteResult {
-    const uri = this.toUri(path);
-    if (uri === null) return fail(`la ruta '${path}' sale de la carpeta raíz`);
+    const guard = this.toUri(path);
+    if (guard === null) return fail(`la ruta '${path}' sale de la carpeta raíz`);
+
+    // Mayúsculas: en FS case-insensitive (APFS), 'KB/a.md' y 'kb/a.md' son el
+    // mismo archivo en disco pero claves distintas del mapa `sources`; sin
+    // canonizar, el workspace de prueba vería dos documentos donde el disco
+    // solo tiene uno. `canonicalize` resuelve el ancestro existente más
+    // cercano con las mayúsculas del disco (y de paso hace de guarda de
+    // enlaces simbólicos: reemplaza al viejo `insideRoot`).
+    const file = this.canonicalize(join(this.root, guard));
+    if (file === null) return fail(`la ruta '${path}' sale de la carpeta raíz por un enlace simbólico`);
+    const uri = this.uriOf(file);
+
     if (!uri.endsWith(".md") && !uri.endsWith(".flo")) return fail(`solo se escriben archivos .md o .flo: '${path}'`);
     if (isIgnored(uri)) return fail(`la ruta '${path}' está en una carpeta ignorada (node_modules, .git)`);
-    const file = join(this.root, uri);
-    if (!this.insideRoot(dirname(file))) return fail(`la ruta '${path}' sale de la carpeta raíz por un enlace simbólico`);
 
     const trial = new Workspace();
     for (const [other, source] of this.sources) if (other !== uri) trial.setDocument(other, source);
@@ -141,7 +152,7 @@ export class FloFolder {
       } catch {
         // El temporal puede colgar de una ruta que ya no es un directorio (ENOTDIR); no hay nada que limpiar.
       }
-      return fail(`no se pudo escribir '${path}': ${(error as Error).message}`);
+      return fail(`no se pudo escribir '${path}': ${(error as NodeJS.ErrnoException).code ?? "error de E/S"}`);
     }
     this.sources.set(uri, content);
     this.workspace.setDocument(uri, content);
@@ -149,13 +160,23 @@ export class FloFolder {
     return { ok: true, uri };
   }
 
-  /** El ancestro existente más cercano de `dir`, con los enlaces resueltos, sigue dentro de la raíz. */
-  private insideRoot(dir: string): boolean {
+  /**
+   * Sube por los ancestros de `file` (él mismo incluido) hasta uno que
+   * exista, lo resuelve con `realpathSync.native` (mayúsculas del disco) y
+   * reconstruye los segmentos que todavía no existen tal como vinieron.
+   * Null si el ancestro resuelto sale de la raíz (por ejemplo, un enlace
+   * simbólico).
+   */
+  private canonicalize(file: string): string | null {
+    const pending: string[] = [];
+    let dir = file;
     for (;;) {
       try {
-        const real = realpathSync(dir);
-        return real === this.root || real.startsWith(this.root + sep);
+        const real = realpathSync.native(dir);
+        if (real !== this.root && !real.startsWith(this.root + sep)) return null;
+        return pending.length > 0 ? join(real, ...pending) : real;
       } catch {
+        pending.unshift(basename(dir));
         dir = dirname(dir);
       }
     }

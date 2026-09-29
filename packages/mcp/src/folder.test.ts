@@ -40,6 +40,15 @@ function loaded(files: Record<string, string> = FILES): FloFolder {
   return folder;
 }
 
+/** Detectado una sola vez: los tests de mayúsculas solo tienen sentido en un FS case-insensitive (macOS/Windows). */
+const CASE_INSENSITIVE_FS = ((): boolean => {
+  const dir = mkdtempSync(join(tmpdir(), "flo-mcp-case-"));
+  writeFileSync(join(dir, "case.txt"), "");
+  const insensitive = existsSync(join(dir, "CASE.txt"));
+  rmSync(dir, { recursive: true, force: true });
+  return insensitive;
+})();
+
 afterEach(() => {
   for (const root of temps.splice(0)) rmSync(root, { recursive: true, force: true });
 });
@@ -135,6 +144,23 @@ describe("FloFolder write", () => {
     const result = folder.write("kb/a.md", node("z"));
     expect(result).toMatchObject({ ok: false, diagnostics: [expect.objectContaining({ uri: "kb/c.md", code: "E035" })] });
     expect(readFileSync(join(folder.root, "kb/a.md"), "utf8")).toBe(before);
+  });
+
+  it.runIf(CASE_INSENSITIVE_FS)(
+    "rejects a case-variant path exactly like the lowercase one, canonized to the on-disk case",
+    () => {
+      const folder = loaded();
+      const before = readFileSync(join(folder.root, "kb/a.md"), "utf8");
+      const result = folder.write("KB/a.md", node("z"));
+      expect(result).toMatchObject({ ok: false, diagnostics: [expect.objectContaining({ uri: "kb/c.md", code: "E035" })] });
+      expect(readFileSync(join(folder.root, "kb/a.md"), "utf8")).toBe(before);
+    },
+  );
+
+  it.runIf(CASE_INSENSITIVE_FS)("writes through a case-variant directory using the on-disk case", () => {
+    const folder = loaded();
+    expect(folder.write("KB/d.md", node("d"))).toMatchObject({ ok: true, uri: "kb/d.md" });
+    expect(folder.link().entities.get("d")?.uri).toBe("kb/d.md");
   });
 
   it("rejects a .md without frontmatter", () => {
