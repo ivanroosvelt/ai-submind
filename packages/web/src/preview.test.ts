@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
+import { Workspace } from "@flo/core";
 import type { Diagnostic, RenderResult, RenderedDiagram } from "@flo/core";
-import { nextPreviewState, previewHtml, type PreviewState } from "./preview.js";
+import { nextPreviewState, previewHtml, renderActive, type PreviewState } from "./preview.js";
 
 const ERROR: Diagnostic = {
   code: "E040",
@@ -11,6 +12,12 @@ const ERROR: Diagnostic = {
 
 function diagram(name: string, svg: string, title: string | null = null): RenderedDiagram {
   return { name, title, kind: "flow", svg };
+}
+
+function linked(files: Record<string, string>) {
+  const workspace = new Workspace();
+  for (const [uri, source] of Object.entries(files)) workspace.setDocument(uri, source);
+  return workspace.link();
 }
 
 describe("nextPreviewState", () => {
@@ -32,39 +39,81 @@ describe("nextPreviewState", () => {
   });
 });
 
+describe("renderActive", () => {
+  it("renders the active document's blocks against its reachable catalog", () => {
+    const link = linked({ "a.flo": "entity x [Equis]\nentity y\n", "b.flo": 'use "./a.flo"\nflow f {\n  x -> y\n}\n' });
+    const result = renderActive(link, "b.flo");
+    expect(result.diagnostics).toEqual([]);
+    expect(result.diagrams[0].svg).toContain(">Equis<");
+    expect(result.diagrams[0].svg).toContain('data-flo-uri="b.flo"');
+  });
+
+  it("renders the flo fences of a .md and nothing for the schema", () => {
+    const link = linked({
+      "n.md": "---\nid: n\ntitle: N\nmemory_type: working\n---\n```flo\nentity a\nflow f {\n  a -> a\n}\n```\n",
+      "knowledge.schema.yaml": "type_tags: []\nrelation_types: []\n",
+    });
+    expect(renderActive(link, "n.md").diagrams).toHaveLength(1);
+    expect(renderActive(link, "knowledge.schema.yaml").diagrams).toEqual([]);
+  });
+});
+
 describe("previewHtml", () => {
   it("renders each diagram in its own section, titled with its title or its name", () => {
     const result: RenderResult = {
-      diagrams: [diagram("login", "<svg>1</svg>", "Inicio de sesión"), diagram("detalle", "<svg>2</svg>")],
+      diagrams: [
+        diagram("login", '<svg width="1" height="1">1</svg>', "Inicio de sesión"),
+        diagram("detalle", '<svg width="1" height="1">2</svg>'),
+      ],
       diagnostics: [],
     };
-    expect(previewHtml({ lastDiagrams: [] }, result)).toBe(
-      '<section class="flo-block"><h2 class="flo-block-title">Inicio de sesión</h2><svg>1</svg></section>' +
-        '<section class="flo-block"><h2 class="flo-block-title">detalle</h2><svg>2</svg></section>'
+    expect(previewHtml({ lastDiagrams: [] }, result, "")).toBe(
+      '<section class="flo-block" data-flo-block="#login"><h2 class="flo-block-title">Inicio de sesión</h2><svg width="1" height="1">1</svg></section>' +
+        '<section class="flo-block" data-flo-block="#detalle"><h2 class="flo-block-title">detalle</h2><svg width="1" height="1">2</svg></section>'
     );
   });
 
   it("escapes the block title (it comes from user source)", () => {
     const result: RenderResult = {
-      diagrams: [diagram("x", "<svg></svg>", '<img src=x onerror="alert(1)">')],
+      diagrams: [diagram("x", '<svg width="1" height="1"></svg>', '<img src=x onerror="alert(1)">')],
       diagnostics: [],
     };
-    const html = previewHtml({ lastDiagrams: [] }, result);
+    const html = previewHtml({ lastDiagrams: [] }, result, "");
     expect(html).not.toContain("<img");
     expect(html).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
   });
 
   it("prefixes an error banner over the last valid diagrams when the current render has none", () => {
-    const state: PreviewState = { lastDiagrams: [diagram("a", "<svg>OLD</svg>")] };
-    const html = previewHtml(state, { diagrams: [], diagnostics: [ERROR, ERROR] });
+    const state: PreviewState = { lastDiagrams: [diagram("a", '<svg width="1" height="1">OLD</svg>')] };
+    const html = previewHtml(state, { diagrams: [], diagnostics: [ERROR, ERROR] }, "");
     expect(html).toBe(
-      '<div class="flo-banner">2 errores</div><section class="flo-block"><h2 class="flo-block-title">a</h2><svg>OLD</svg></section>'
+      '<div class="flo-banner">2 errores</div><section class="flo-block" data-flo-block="#a"><h2 class="flo-block-title">a</h2><svg width="1" height="1">OLD</svg></section>'
     );
   });
 
-  it("shows the empty-state placeholder when there is nothing to show", () => {
-    expect(previewHtml({ lastDiagrams: [] }, { diagrams: [], diagnostics: [ERROR] })).toBe(
-      '<div class="flo-banner">1 error</div><div class="flo-empty">Escribí un diagrama .flo para ver el preview</div>'
+  it("shows only the banner when there are errors and nothing to draw", () => {
+    const html = previewHtml({ lastDiagrams: [] }, { diagrams: [], diagnostics: [ERROR] }, "a.flo");
+    expect(html).toBe('<div class="flo-banner">1 error</div>');
+  });
+});
+
+describe("previewHtml (workspace)", () => {
+  it("tags each section with its block id", () => {
+    const html = previewHtml(
+      { lastDiagrams: [] },
+      { diagrams: [diagram("f", '<svg width="10" height="10"></svg>')], diagnostics: [] },
+      "dir/a.flo"
     );
+    expect(html).toContain('<section class="flo-block" data-flo-block="dir/a.flo#f">');
+  });
+
+  it("says 'Bloque vacío' instead of a zero-size svg", () => {
+    const html = previewHtml(
+      { lastDiagrams: [] },
+      { diagrams: [diagram("f", '<svg width="0" height="0"></svg>')], diagnostics: [] },
+      "a.flo"
+    );
+    expect(html).toContain("Bloque vacío");
+    expect(html).not.toContain("<svg");
   });
 });

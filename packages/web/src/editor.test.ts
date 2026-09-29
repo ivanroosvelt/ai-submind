@@ -1,103 +1,56 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { RenderResult } from "@flo/core";
-import { createEditor, getEditorSource, setEditorSource } from "./editor.js";
+import { createEditor, showDocument, type EditorHost } from "./editor.js";
 import { floHighlightField } from "./flo-highlight-field.js";
+import { EditorWorkspace } from "./workspace.js";
 
-describe("createEditor", () => {
-  let container: HTMLDivElement;
+describe("editor", () => {
+  let ws: EditorWorkspace;
+  let host: EditorHost & { onChange: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     vi.useFakeTimers();
-    container = document.createElement("div");
+    ws = new EditorWorkspace({
+      files: { "a.flo": "entity a\nflow f {\n  a -> a\n}\n", "n.md": "---\nid: n\n---\n" },
+      saved: {},
+      active: "a.flo",
+      dir: null,
+    });
+    host = { workspace: () => ws, onChange: vi.fn() };
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("calls onPreview immediately with the initial source, then again ~200ms after an edit", () => {
-    const results: RenderResult[] = [];
-    const view = createEditor(
-      container,
-      "entity start [Inicio]\nentity check [Otro]\n\nflow f {\n  start -> check\n}\n",
-      (result) => {
-        results.push(result);
-      }
-    );
+  it("shows a document and pushes each change to the workspace at once", () => {
+    const view = createEditor(document.createElement("div"));
+    showDocument(view, host, "a.flo");
+    expect(view.state.doc.toString()).toBe(ws.source("a.flo"));
 
-    expect(results).toHaveLength(1);
-    expect(results[0].diagrams[0].svg).toContain(">Inicio<");
-    expect(results[0].diagnostics).toEqual([]);
+    view.dispatch({ changes: { from: 0, insert: "// hola\n" } });
+    expect(ws.source("a.flo")).toBe("// hola\nentity a\nflow f {\n  a -> a\n}\n");
+    view.destroy();
+  });
 
-    view.dispatch({ changes: { from: view.state.doc.length, insert: "flow g {\n  check -> start\n}\n" } });
-    expect(results).toHaveLength(1);
-
+  it("calls onChange 200ms after the last edit, not for selection changes", () => {
+    const view = createEditor(document.createElement("div"));
+    showDocument(view, host, "a.flo");
+    view.dispatch({ selection: { anchor: 1 } });
+    view.dispatch({ changes: { from: 0, insert: "x" } });
     vi.advanceTimersByTime(199);
-    expect(results).toHaveLength(1);
+    expect(host.onChange).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
-    expect(results).toHaveLength(2);
-    expect(results[1].diagrams[0].svg).toContain(">Inicio<");
-    expect(results[1].diagnostics).toEqual([]);
-
+    expect(host.onChange).toHaveBeenCalledTimes(1);
     view.destroy();
   });
 
-  it("does not schedule a preview update for non-doc changes (e.g. selection only)", () => {
-    const results: RenderResult[] = [];
-    const view = createEditor(
-      container,
-      "entity start [Inicio]\nentity check [Otro]\n\nflow f {\n  start -> check\n}\n",
-      (result) => {
-        results.push(result);
-      }
-    );
-
-    view.dispatch({ selection: { anchor: 0 } });
-    vi.advanceTimersByTime(200);
-
-    expect(results).toHaveLength(1);
-    view.destroy();
-  });
-
-  it("highlights tokens in the mounted view via floHighlightField", () => {
-    const view = createEditor(container, "start[Inicio]\n", () => {});
-
-    const decorated: string[] = [];
-    view.state.field(floHighlightField).between(0, view.state.doc.length, (from, to) => {
-      decorated.push(view.state.doc.sliceString(from, to));
-    });
-
-    expect(decorated).toEqual(["start", "[", "Inicio", "]"]);
-    view.destroy();
-  });
-});
-
-it("passes the current source alongside the render result", () => {
-  vi.useFakeTimers();
-  const container = document.createElement("div");
-  const sources: string[] = [];
-  const view = createEditor(container, "start[Inicio]\n", (_result, source) => {
-    sources.push(source);
-  });
-
-  view.dispatch({ changes: { from: view.state.doc.length, insert: "check[Otro]\n" } });
-  vi.advanceTimersByTime(200);
-
-  expect(sources).toEqual(["start[Inicio]\n", "start[Inicio]\ncheck[Otro]\n"]);
-  view.destroy();
-  vi.useRealTimers();
-});
-
-describe("getEditorSource / setEditorSource", () => {
-  it("reads and replaces the full document", () => {
-    const container = document.createElement("div");
-    const view = createEditor(container, "start[Inicio]\n", () => {});
-
-    expect(getEditorSource(view)).toBe("start[Inicio]\n");
-
-    setEditorSource(view, "diagram sequence\n");
-    expect(getEditorSource(view)).toBe("diagram sequence\n");
-
+  it("gives each document its own state and highlights only .flo", () => {
+    const view = createEditor(document.createElement("div"));
+    showDocument(view, host, "a.flo");
+    expect(view.state.field(floHighlightField, false)).toBeDefined();
+    showDocument(view, host, "n.md");
+    expect(view.state.doc.toString()).toBe("---\nid: n\n---\n");
+    expect(view.state.field(floHighlightField, false)).toBeUndefined();
     view.destroy();
   });
 });

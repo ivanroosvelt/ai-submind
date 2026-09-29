@@ -5,6 +5,7 @@ function mockActions(): ToolbarActions {
   return {
     onNew: vi.fn(),
     onOpen: vi.fn(),
+    onOpenFolder: vi.fn(),
     onSave: vi.fn(),
     onExportSvg: vi.fn(),
     onExportPng: vi.fn(),
@@ -27,6 +28,9 @@ describe("createToolbar", () => {
 
     container.querySelector<HTMLButtonElement>("#flo-open")!.click();
     expect(actions.onOpen).toHaveBeenCalledTimes(1);
+
+    container.querySelector<HTMLButtonElement>("#flo-open-folder")!.click();
+    expect(actions.onOpenFolder).toHaveBeenCalledTimes(1);
 
     container.querySelector<HTMLButtonElement>("#flo-save")!.click();
     expect(actions.onSave).toHaveBeenCalledTimes(1);

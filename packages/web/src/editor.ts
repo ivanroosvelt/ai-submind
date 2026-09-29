@@ -1,52 +1,45 @@
 import { basicSetup } from "codemirror";
-import { EditorState } from "@codemirror/state";
+import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { linter, lintGutter } from "@codemirror/lint";
-import { parse, render, type RenderResult } from "@flo/core";
+import type { DocumentUri } from "@flo/core";
 import { floHighlightField } from "./flo-highlight-field.js";
 import { toLintDiagnostics } from "./flo-lint.js";
+import type { EditorWorkspace } from "./workspace.js";
 
 const PREVIEW_DEBOUNCE_MS = 200;
 
-export function createEditor(
-  parent: HTMLElement,
-  initialSource: string,
-  onPreview: (result: RenderResult, source: string) => void
-): EditorView {
+export interface EditorHost {
+  /** El workspace vigente: la app lo reemplaza al abrir otra carpeta. */
+  workspace(): EditorWorkspace;
+  /** 200 ms después del último cambio del documento. */
+  onChange(): void;
+}
+
+export function createEditor(parent: HTMLElement): EditorView {
+  return new EditorView({ parent });
+}
+
+function documentExtensions(host: EditorHost, uri: DocumentUri): Extension[] {
   let timer: ReturnType<typeof setTimeout> | undefined;
-
-  const view = new EditorView({
-    state: EditorState.create({
-      doc: initialSource,
-      extensions: [
-        basicSetup,
-        floHighlightField,
-        lintGutter(),
-        linter((v) => toLintDiagnostics(parse(v.state.doc.toString()).diagnostics, v.state.doc), {
-          delay: PREVIEW_DEBOUNCE_MS,
-        }),
-        EditorView.updateListener.of((update) => {
-          if (!update.docChanged) return;
-          clearTimeout(timer);
-          timer = setTimeout(() => {
-            const source = update.state.doc.toString();
-            onPreview(render(source), source);
-          }, PREVIEW_DEBOUNCE_MS);
-        }),
-      ],
+  return [
+    basicSetup,
+    uri.endsWith(".flo") ? floHighlightField : [],
+    lintGutter(),
+    linter((v) => toLintDiagnostics(host.workspace().link().diagnostics.get(uri) ?? [], v.state.doc), {
+      delay: PREVIEW_DEBOUNCE_MS,
     }),
-    parent,
-  });
-
-  onPreview(render(initialSource), initialSource);
-
-  return view;
+    EditorView.updateListener.of((update) => {
+      if (!update.docChanged) return;
+      // En el acto: el lint lee el workspace y no puede ver una fuente vieja.
+      host.workspace().setSource(uri, update.state.doc.toString());
+      clearTimeout(timer);
+      timer = setTimeout(() => host.onChange(), PREVIEW_DEBOUNCE_MS);
+    }),
+  ];
 }
 
-export function getEditorSource(view: EditorView): string {
-  return view.state.doc.toString();
-}
-
-export function setEditorSource(view: EditorView, source: string): void {
-  view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: source } });
+/** Muestra `uri` con un estado propio (su historial de deshacer empieza de cero). */
+export function showDocument(view: EditorView, host: EditorHost, uri: DocumentUri): void {
+  view.setState(EditorState.create({ doc: host.workspace().source(uri), extensions: documentExtensions(host, uri) }));
 }

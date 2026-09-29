@@ -1,7 +1,16 @@
-import { escapeXml, type RenderResult, type RenderedDiagram } from "@flo/core";
+import { blockId, escapeXml, renderBlock, type DocumentUri, type LinkResult, type RenderResult, type RenderedDiagram } from "@flo/core";
+import { parseSvgSize } from "./export.js";
 
 export interface PreviewState {
   lastDiagrams: RenderedDiagram[];
+}
+
+/** Los bloques del documento contra su catálogo alcanzable; el esquema y un `.md` sin frontmatter no tienen. */
+export function renderActive(link: LinkResult, uri: DocumentUri): RenderResult {
+  const diagnostics = link.diagnostics.get(uri) ?? [];
+  const linked = link.documents.get(uri);
+  if (!linked) return { diagrams: [], diagnostics };
+  return { diagrams: linked.document.blocks.map((block) => renderBlock(block, linked.catalog, uri)), diagnostics };
 }
 
 // Sin bloques y con errores = el documento no se pudo usar (p. ej. mientras
@@ -12,18 +21,17 @@ export function nextPreviewState(state: PreviewState, result: RenderResult): Pre
   return { lastDiagrams: result.diagrams };
 }
 
-export function previewHtml(state: PreviewState, result: RenderResult): string {
+function sectionHtml(diagram: RenderedDiagram, uri: DocumentUri): string {
+  // Un bloque sin aristas da un SVG de ancho 0: se dice en vez de dibujar nada.
+  const body = parseSvgSize(diagram.svg).width === 0 ? '<p class="flo-empty">Bloque vacío</p>' : diagram.svg;
+  const id = escapeXml(blockId(uri, diagram.name));
+  return `<section class="flo-block" data-flo-block="${id}"><h2 class="flo-block-title">${escapeXml(diagram.title ?? diagram.name)}</h2>${body}</section>`;
+}
+
+export function previewHtml(state: PreviewState, result: RenderResult, uri: DocumentUri): string {
   const diagrams = nextPreviewState(state, result).lastDiagrams;
   const count = result.diagnostics.length;
   const banner = count > 0 ? `<div class="flo-banner">${count} error${count === 1 ? "" : "es"}</div>` : "";
-  const body =
-    diagrams.length > 0
-      ? diagrams
-          .map(
-            (diagram) =>
-              `<section class="flo-block"><h2 class="flo-block-title">${escapeXml(diagram.title ?? diagram.name)}</h2>${diagram.svg}</section>`
-          )
-          .join("")
-      : '<div class="flo-empty">Escribí un diagrama .flo para ver el preview</div>';
-  return `${banner}${body}`;
+  if (diagrams.length > 0) return banner + diagrams.map((diagram) => sectionHtml(diagram, uri)).join("");
+  return banner || '<div class="flo-empty">Escribí un diagrama .flo para ver el preview</div>';
 }

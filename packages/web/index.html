@@ -46,6 +46,19 @@
       #editor-pane {
         border-right: 1px solid #d1d5db;
       }
+      #side-pane {
+        flex: 0 0 240px;
+        overflow: auto;
+        border-right: 1px solid #d1d5db;
+        font-size: 13px;
+      }
+      #panel:not(:empty) {
+        border-top: 1px solid #d1d5db;
+        padding: 8px 12px;
+      }
+      body.flo-expanded #side-pane {
+        display: none;
+      }
       #preview-pane {
         padding: 16px;
       }
@@ -105,6 +118,10 @@
   <body>
     <div id="toolbar"></div>
     <div id="app">
+      <aside id="side-pane">
+        <nav id="explorer"></nav>
+        <div id="panel"></div>
+      </aside>
       <div id="editor-pane"></div>
       <div id="preview-pane"></div>
     </div>
