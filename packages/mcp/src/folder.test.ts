@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -95,6 +96,23 @@ describe("FloFolder load", () => {
     rmSync(join(folder.root, "kb"), { recursive: true });
     folder.load();
     expect([...folder.link().entities.keys()]).toEqual(["api"]);
+  });
+
+  it("does not throw when a file cannot be read (E/S entre lstat y read)", () => {
+    const folder = loaded();
+    const path = join(folder.root, "kb/secreto.md");
+    writeFileSync(path, node("secreto"));
+    chmodSync(path, 0o000);
+    try {
+      expect(() => folder.load()).not.toThrow();
+      const ids = [...folder.link().entities.keys()];
+      // Corriendo como root, 0o000 no bloquea la lectura: no se afirma la
+      // ausencia de "secreto", solo que cargar no revienta y el resto sigue.
+      expect(ids).toContain("api");
+      expect(ids).toContain("a");
+    } finally {
+      chmodSync(path, 0o644);
+    }
   });
 });
 

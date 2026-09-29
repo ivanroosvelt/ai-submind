@@ -193,26 +193,44 @@ export class FloFolder {
   }
 
   private onChange(filename: string | null): void {
-    if (filename === null) return this.load();
-    const uri = filename.split(sep).join("/");
-    if (isIgnored(uri)) return;
-    if (isDocumentUri(uri)) return this.refresh(uri);
-    // Un directorio creado, movido o borrado solo avisa por sí mismo, no por sus archivos.
-    const isDirectory = statSync(join(this.root, uri), { throwIfNoEntry: false })?.isDirectory() ?? false;
-    if (isDirectory || [...this.sources.keys()].some((known) => known.startsWith(`${uri}/`))) this.load();
+    // Un error de E/S entre el evento y la relectura (borrado, chmod, ENOTDIR,
+    // ELOOP) no puede tumbar el proceso del servidor MCP: se loguea y se sigue.
+    try {
+      if (filename === null) return void this.load();
+      const uri = filename.split(sep).join("/");
+      if (isIgnored(uri)) return;
+      if (isDocumentUri(uri)) return void this.refresh(uri);
+      // Un directorio creado, movido o borrado solo avisa por sí mismo, no por sus archivos.
+      const isDirectory = statSync(join(this.root, uri), { throwIfNoEntry: false })?.isDirectory() ?? false;
+      if (isDirectory || [...this.sources.keys()].some((known) => known.startsWith(`${uri}/`))) this.load();
+    } catch (error) {
+      console.error(`flo-mcp: ${(error as Error).message}`);
+    }
   }
 
   protected uriOf(path: string): string {
     return relative(this.root, path).split(sep).join("/");
   }
 
-  /** Relee un archivo; si ya no es un archivo regular (borrado, enlace, directorio), sale del workspace. */
+  /**
+   * Relee un archivo; si ya no es un archivo regular (borrado, enlace,
+   * directorio) o no se puede leer (permisos, ENOTDIR, ELOOP entre el
+   * `lstatSync` y el `readFileSync`), sale del workspace en vez de propagar
+   * la excepción.
+   */
   protected refresh(uri: string): void {
     if (!isDocumentUri(uri) || isIgnored(uri)) return;
     this.linked = null;
     const path = join(this.root, uri);
+    let source: string | null = null;
     if (lstatSync(path, { throwIfNoEntry: false })?.isFile()) {
-      const source = readFileSync(path, "utf8");
+      try {
+        source = readFileSync(path, "utf8");
+      } catch {
+        source = null;
+      }
+    }
+    if (source !== null) {
       this.sources.set(uri, source);
       this.workspace.setDocument(uri, source);
     } else {
