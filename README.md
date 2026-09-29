@@ -13,8 +13,8 @@ sintaxis Mermaid: es un formato nuevo desde cero.
 > entidades y bloques nombrados, workspace multi-documento con `use`,
 > índice de referencias cruzadas y atributos `data-flo-*` en el SVG). Del
 > [grafo de conocimiento](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md)
-> está completa la K1: un `.md` con frontmatter tipado es una entidad del
-> catálogo. Pendientes: K2, K3, F, K4 y la Fase 6 (ver [Roadmap](#roadmap)).
+> están completas K1 y K2: un `.md` con frontmatter tipado es una entidad del
+> catálogo, y `query`/`tagCatalog` lo consultan. Pendientes: K3, F, K4 y la Fase 6 (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
@@ -97,6 +97,17 @@ Monorepo con pnpm workspaces:
   `relations`, y sus bloques ` ```flo ` embebidos entran al workspace. El
   vocabulario se valida contra `knowledge.schema.yaml` en la raíz.
 
+  `query` filtra y expande el grafo; `tagCatalog` lista los tags en uso:
+
+  ```ts
+  import { query, tagCatalog } from "@flo/core";
+
+  const link = ws.link();
+  query(link, { where: { typeTag: "decision" }, depth: 1, project: "full" });
+  // { nodes: [{ id: "pkce", distance: 0, body, ... }, { id: "api", distance: 1, ... }], edges: [...] }
+  tagCatalog(link); // { typeTags, contextTags, customTags }
+  ```
+
 - **`@flo/web`** (`packages/web`) — vanilla TypeScript + Vite, consume
   `@flo/core`. Editor split-pane: CodeMirror 6 a la izquierda (resaltado
   de sintaxis `.flo` por tipo de token, diagnósticos del core pintados
@@ -149,14 +160,13 @@ typecheck → test` en cada push y PR.
 - [`docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md`](docs/superpowers/plans/2026-09-18-flo-fase5-deploy-docs.md) — plan de implementación de Fase 5 (deploy, docs de usuario, prep de npm).
 - [`docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`](docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md) — entidades centralizadas, workspace y navegación (fases A–F); su §11 registra las decisiones de lenguaje.
 - [`docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md`](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md) — `.md` tipados como grafo de conocimiento (fases K1–K4).
-- Planes de la v2: [A+B](docs/superpowers/plans/2026-09-19-flo-range-y-lexer-dirigido.md), [C](docs/superpowers/plans/2026-09-27-flo-fase-c-entidades-y-bloques.md), [D](docs/superpowers/plans/2026-09-28-flo-fase-d-workspace-multidocumento.md), [E](docs/superpowers/plans/2026-09-28-flo-fase-e-superficie-de-navegacion.md), [K1](docs/superpowers/plans/2026-09-28-flo-fase-k1-md-como-documento.md).
+- Planes de la v2: [A+B](docs/superpowers/plans/2026-09-19-flo-range-y-lexer-dirigido.md), [C](docs/superpowers/plans/2026-09-27-flo-fase-c-entidades-y-bloques.md), [D](docs/superpowers/plans/2026-09-28-flo-fase-d-workspace-multidocumento.md), [E](docs/superpowers/plans/2026-09-28-flo-fase-e-superficie-de-navegacion.md), [K1](docs/superpowers/plans/2026-09-28-flo-fase-k1-md-como-documento.md), [K2](docs/superpowers/plans/2026-09-28-flo-fase-k2-consultas.md).
 - [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md) — gramática formal (EBNF), reglas léxicas especiales y tabla de códigos de diagnóstico.
 
 ## Roadmap
 
-Orden de la v2: D → E → K1 → **K2** → K3 → F → K4.
+Orden de la v2: D → E → K1 → K2 → **K3** → F → K4.
 
-- **K2** — consultas `query` y `tagCatalog` sobre el workspace (core, puras).
 - **K3** — `@flo/mcp`: servidor MCP local que carga una carpeta y expone el grafo a agentes.
 - **F** — navegación en el editor: explorador, panel de entidad, ir a definición, renombrar, mapa agregado.
 - **K4** — vista de grafo de conocimiento en la web.
