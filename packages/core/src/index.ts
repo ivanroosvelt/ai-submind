@@ -8,6 +8,16 @@ export type { LinkResult, LinkedDocument } from "./workspace/workspace.js";
 export { SCHEMA_URI } from "./workspace/schema.js";
 export { blockId } from "./workspace/xref.js";
 export type { XRefIndex, BlockId, Location } from "./workspace/xref.js";
+export { query, tagCatalog } from "./workspace/query.js";
+export type {
+  Where,
+  Projection,
+  QueryOptions,
+  QueryNode,
+  QueryEdge,
+  QueryResult,
+  TagCatalog,
+} from "./workspace/query.js";
 export { layoutFlowchart } from "./layout/flowchart.js";
 export type { FlowchartLayout, FlowchartNodeLayout, FlowchartEdgeLayout, LayoutPoint } from "./layout/flowchart.js";
 export { layoutSequence } from "./layout/sequence.js";

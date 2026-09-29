@@ -10,6 +10,8 @@ import {
   layoutFlowchart,
   layoutSequence,
   SCHEMA_URI,
+  query,
+  tagCatalog,
   type BlockId,
   type FlowchartLayout,
   type LinkResult,
@@ -18,6 +20,8 @@ import {
   type KnowledgeMeta,
   type MemoryType,
   type Relation,
+  type QueryResult,
+  type TagCatalog,
 } from "./index.js";
 
 describe("index", () => {
@@ -138,5 +142,22 @@ describe("index: navigation surface (Fase E)", () => {
     const svg = renderBlock(document.blocks[0], catalog, document.uri).svg;
     expect(svg).toContain('data-flo-entity="pkce"');
     expect(svg).toContain("Decisión: PKCE");
+  });
+
+  it("queries a knowledge workspace through the public API", () => {
+    const workspace = new Workspace();
+    workspace.setDocument(SCHEMA_URI, "type_tags: [decision]\nrelation_types: [affects]\n");
+    workspace.setDocument("catalogo.flo", "entity api\n");
+    workspace.setDocument(
+      "pkce.md",
+      '---\nid: pkce\ntitle: PKCE\nmemory_type: long_term\ntype_tags: [decision]\nuse: ["./catalogo.flo"]\nrelations:\n  - target: api\n    type: affects\n---\n'
+    );
+    const link = workspace.link();
+
+    const result: QueryResult = query(link, { where: { typeTag: "decision" }, depth: 1 });
+    expect(result.nodes.map((node) => [node.id, node.distance])).toEqual([["pkce", 0], ["api", 1]]);
+    expect(result.edges).toEqual([{ from: "pkce", to: "api", type: "affects" }]);
+    const tags: TagCatalog = tagCatalog(link);
+    expect(tags.typeTags).toEqual(["decision"]);
   });
 });

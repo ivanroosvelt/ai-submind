@@ -48,6 +48,12 @@ export interface QueryResult {
   edges: QueryEdge[]; // todas las aristas entre nodos del resultado
 }
 
+export interface TagCatalog {
+  typeTags: string[];
+  contextTags: string[];
+  customTags: Record<string, CustomTagValue[]>; // valores distintos por clave
+}
+
 function matches(entity: EntityDecl, where: Where): boolean {
   if ("and" in where) return where.and.every((w) => matches(entity, w));
   if ("or" in where) return where.or.some((w) => matches(entity, w));
@@ -165,4 +171,23 @@ export function query(link: LinkResult, opts: QueryOptions = {}): QueryResult {
     nodes: ids.map((id) => toNode(link.entities.get(id)!, distance.get(id)!, project)),
     edges: edges.filter((edge) => distance.has(edge.from) && distance.has(edge.to)),
   };
+}
+
+/** Vocabulario en uso por las declaraciones ganadoras, en orden del catálogo y sin repetir. */
+export function tagCatalog(link: LinkResult): TagCatalog {
+  const typeTags = new Set<string>();
+  const contextTags = new Set<string>();
+  // Map y no objeto: una clave "constructor" no debe leer Object.prototype.
+  const customTags = new Map<string, CustomTagValue[]>();
+  for (const { knowledge } of link.entities.values()) {
+    if (!knowledge) continue;
+    for (const tag of knowledge.typeTags) typeTags.add(tag);
+    for (const tag of knowledge.contextTags) contextTags.add(tag);
+    for (const [key, value] of Object.entries(knowledge.customTags)) {
+      const values = customTags.get(key) ?? [];
+      if (!values.includes(value)) values.push(value);
+      customTags.set(key, values);
+    }
+  }
+  return { typeTags: [...typeTags], contextTags: [...contextTags], customTags: Object.fromEntries(customTags) };
 }

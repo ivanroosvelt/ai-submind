@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Workspace, type LinkResult } from "./workspace.js";
 import { SCHEMA_URI } from "./schema.js";
-import { query, type QueryOptions, type QueryResult } from "./query.js";
+import { query, tagCatalog, type QueryOptions, type QueryResult } from "./query.js";
 
 const md = (lines: string[]): string => [...lines, ""].join("\n");
 
@@ -279,5 +279,28 @@ describe("query", () => {
     pkce.customTags.status = "x";
     expect(run({ from: ["pkce"] }).nodes[0].typeTags).toEqual(["decision"]);
     expect(link.entities.get("pkce")!.knowledge!.customTags.status).toBe("approved");
+  });
+});
+
+describe("tagCatalog", () => {
+  it("lists the tags in use by winning declarations, in catalog order without repeats", () => {
+    expect(tagCatalog(link)).toEqual({
+      typeTags: ["incident", "business_rule", "decision"],
+      contextTags: ["project:ops", "project:core", "flow:authentication"],
+      customTags: { security_level: ["3", 3], urgent: [true], status: ["draft", "approved"] },
+    });
+  });
+
+  it("handles custom tag keys named like Object.prototype members", () => {
+    const tagged = linkFiles({
+      [SCHEMA_URI]: "type_tags: []\nrelation_types: []\n",
+      "a.md": md(["---", "id: a", "title: A", "memory_type: working", "custom_tags:", "  constructor: x", "  toString: 1", "---"]),
+    });
+    expect(tagCatalog(tagged).customTags).toEqual({ constructor: ["x"], toString: [1] });
+    expect(ids(query(tagged, { where: { custom: "constructor", equals: "x" } }))).toEqual(["a"]);
+  });
+
+  it("is empty for a workspace without knowledge", () => {
+    expect(tagCatalog(linkFiles({ "a.flo": "entity a\n" }))).toEqual({ typeTags: [], contextTags: [], customTags: {} });
   });
 });
