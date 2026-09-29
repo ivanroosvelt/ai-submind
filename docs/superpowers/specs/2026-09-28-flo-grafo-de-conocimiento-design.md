@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-09-28
 - **Rama:** `v2`
-- **Estado:** diseño aprobado, pendiente de plan de implementación
+- **Estado:** en implementación: K1 completada el 2026-09-28 ([plan](../plans/2026-09-28-flo-fase-k1-md-como-documento.md)); pendientes K2, K3, F y K4
 - **Origen:** SRS `REQ-KG-2026-01`, recortado en la sesión de diseño (ver §2).
 - **Depende de:** las Fases D y E del spec
   [2026-09-19-flo-entidades-centralizadas.md](2026-09-19-flo-entidades-centralizadas.md),
