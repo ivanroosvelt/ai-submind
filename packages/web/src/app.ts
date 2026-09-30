@@ -5,17 +5,22 @@ import {
   entityAt,
   query,
   renameEntity,
+  renderKnowledge,
   renderMap,
+  tagCatalog,
   type BlockId,
   type DocumentUri,
   type EntityId,
+  type LinkResult,
   type Location,
   type Position,
 } from "@flo/core";
 import { createEditor, showDocument, type EditorHost } from "./editor.js";
 import { edgePanelHtml, entityPanelHtml } from "./entity-panel.js";
 import { bindExplorer, explorerHtml, type ExplorerFilter } from "./explorer.js";
+import { DEFAULT_GRAPH, graphBarHtml, graphHtml, readBar, whereOf, type GraphQuery } from "./knowledge-view.js";
 import { addEdgeHitAreas, mapHtml } from "./map-view.js";
+import { bindPanZoom } from "./pan-zoom.js";
 import { nextPreviewState, previewHtml, renderActive, type PreviewState } from "./preview.js";
 import { createToolbar, type DiagramKind } from "./toolbar.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
@@ -63,7 +68,9 @@ export class App {
   private previewState: PreviewState = { lastDiagrams: [] };
   private fileHandle: FileSystemFileHandle | null = null;
   private panel: PanelState = null;
-  private mapMode = false;
+  private mode: "document" | "map" | "graph" = "document";
+  /** La consulta de la vista de grafo (#45); se reemplaza, nunca se muta. */
+  graph: GraphQuery = DEFAULT_GRAPH;
   private highlight: EntityId | null = null;
   private filter: ExplorerFilter = { type: null, tag: null };
   /** El estado de cada documento que dejó el editor, hasta que se reemplace el workspace (#43). */
@@ -102,10 +109,12 @@ export class App {
         onLoadExample: (id) => this.loadExample(id),
         onToggleExpand: () => void document.body.classList.toggle("flo-expanded"),
         onToggleMap: () => this.toggleMap(),
+        onToggleGraph: () => this.toggleGraph(),
       },
       EXAMPLES
     );
     el.preview.addEventListener("click", (event) => this.onPreviewClick(event.target as Element));
+    el.preview.addEventListener("change", (event) => this.onPreviewChange(event.target as Element));
     el.panel.addEventListener("click", (event) => this.onPanelClick(event.target as Element));
     bindExplorer(el.explorer, {
       onOpenDocument: (uri) => this.openDocument(uri),
@@ -136,7 +145,8 @@ export class App {
     this.selectedBlock = null;
     this.highlight = null;
     this.panel = null;
-    this.mapMode = false;
+    this.mode = "document";
+    this.graph = DEFAULT_GRAPH;
     this.openDocument(this.ws.active);
   }
 
@@ -152,9 +162,11 @@ export class App {
   /** Todo lo que depende del link, desde un link nuevo; y el borrador. */
   refresh(): void {
     const link = this.ws.link();
-    if (this.mapMode) {
+    if (this.mode === "map") {
       this.el.preview.innerHTML = mapHtml(renderMap(link));
       addEdgeHitAreas(this.el.preview);
+    } else if (this.mode === "graph") {
+      this.renderGraph(link);
     } else {
       const uri = this.ws.active;
       const result = renderActive(link, uri);
@@ -163,7 +175,8 @@ export class App {
       enhanceSequencePreview(this.el.preview);
       this.markSelection();
     }
-    this.el.toolbar.querySelector("#flo-toggle-map")?.setAttribute("aria-pressed", String(this.mapMode));
+    this.el.toolbar.querySelector("#flo-toggle-map")?.setAttribute("aria-pressed", String(this.mode === "map"));
+    this.el.toolbar.querySelector("#flo-toggle-graph")?.setAttribute("aria-pressed", String(this.mode === "graph"));
     this.renderPanel();
     this.renderExplorer();
     // ponytail: sin IndexedDB (modo privado) el editor sigue, solo sin borrador.
@@ -172,8 +185,68 @@ export class App {
 
   /** Alterna el preview entre el documento activo y el mapa agregado del workspace (spec §8, #40). */
   toggleMap(): void {
-    this.mapMode = !this.mapMode;
+    this.mode = this.mode === "map" ? "document" : "map";
     this.refresh();
+  }
+
+  /** Alterna el preview entre el documento activo y la vista de grafo (spec de conocimiento §7, #45). */
+  toggleGraph(): void {
+    if (this.mode === "graph") {
+      this.mode = "document";
+      this.refresh();
+    } else {
+      this.showGraph(this.graph);
+    }
+  }
+
+  private showGraph(graph: GraphQuery): void {
+    this.mode = "graph";
+    this.graph = graph;
+    this.refresh();
+  }
+
+  private renderGraph(link: LinkResult): void {
+    const { where, from, depth, viewBox } = this.graph;
+    const result = query(link, { where, from: from ?? undefined, depth });
+    this.el.preview.innerHTML =
+      `<div class="flo-kg-bar">${graphBarHtml(link, tagCatalog(link), this.graph, null)}</div>` +
+      graphHtml(renderKnowledge(link, result), result.nodes.length === 0);
+    const svg = this.el.preview.querySelector<SVGSVGElement>(".flo-kg svg");
+    if (!svg) return;
+    if (viewBox) svg.setAttribute("viewBox", viewBox.join(" "));
+    // Las aristas a un bloque se clickean (drill-down): franja ancha como en el mapa.
+    addEdgeHitAreas(this.el.preview);
+    bindPanZoom(svg, (next) => (this.graph = { ...this.graph, viewBox: next }));
+  }
+
+  private onPreviewChange(target: Element): void {
+    if (this.mode !== "graph" || !target.hasAttribute("data-flo-kg")) return;
+    const { filter, depth } = readBar(this.el.preview);
+    this.graph = { where: whereOf(filter), from: this.graph.from, depth, viewBox: null };
+    this.refresh();
+  }
+
+  private onGraphClick(target: Element): void {
+    if (target.closest("[data-flo-kg-clear-from]")) {
+      this.graph = { ...this.graph, from: null, viewBox: null };
+      this.refresh();
+      return;
+    }
+    const block = target.closest("[data-flo-block]");
+    if (block) {
+      this.selectBlock(block.getAttribute("data-flo-block")!, block.getAttribute("data-flo-from"));
+      return;
+    }
+    const node = target.closest("[data-flo-entity]");
+    if (!node) return;
+    const id = node.getAttribute("data-flo-entity")!;
+    const link = this.ws.link();
+    if (!link.entities.get(id)?.knowledge) {
+      this.selectEntity(id);
+      return;
+    }
+    const location = link.xref.definitionOf(id);
+    if (location) this.reveal(location);
   }
 
   private confirmDiscard(): boolean {
@@ -240,8 +313,9 @@ export class App {
   }
 
   private onPreviewClick(target: Element): void {
+    if (this.mode === "graph") return this.onGraphClick(target);
     const edge = target.closest("[data-flo-from]");
-    if (this.mapMode && edge) {
+    if (this.mode === "map" && edge) {
       this.panel = { kind: "edge", from: edge.getAttribute("data-flo-from")!, to: edge.getAttribute("data-flo-to")! };
       this.renderPanel();
       return;
@@ -252,7 +326,14 @@ export class App {
       return;
     }
     const node = target.closest("[data-flo-entity]");
-    if (node && !node.classList.contains("flo-unresolved")) this.selectEntity(node.getAttribute("data-flo-entity")!);
+    if (!node || node.classList.contains("flo-unresolved")) return;
+    const id = node.getAttribute("data-flo-entity")!;
+    // Una nota vuelve a la vista de grafo centrada en ella (spec de conocimiento §7).
+    if (this.ws.link().entities.get(id)?.knowledge) {
+      this.showGraph({ ...DEFAULT_GRAPH, from: [id], depth: this.graph.depth });
+    } else {
+      this.selectEntity(id);
+    }
   }
 
   private onPanelClick(target: Element): void {
@@ -295,7 +376,7 @@ export class App {
 
   /** Abre el documento del bloque y lo selecciona (es el que se exporta); con `entity`, resalta su nodo. */
   selectBlock(id: BlockId, entity: EntityId | null = null): void {
-    this.mapMode = false;
+    this.mode = "document";
     // La arista del panel ya no está a la vista; el panel de una entidad sí sigue valiendo.
     if (this.panel?.kind === "edge") this.panel = null;
     this.selectedBlock = id;
@@ -363,7 +444,13 @@ export class App {
 
   /** El SVG que exportan los botones: el bloque seleccionado si está en el preview; si no, el primero (#41). */
   private exportable(): string | undefined {
-    if (this.mapMode) return renderMap(this.ws.link()).svg;
+    if (this.mode === "map") return renderMap(this.ws.link()).svg;
+    if (this.mode === "graph") {
+      // Lo que se ve, con su viewBox (#45), sin las franjas de click.
+      const svg = this.el.preview.querySelector(".flo-kg svg")?.cloneNode(true) as Element | undefined;
+      svg?.querySelectorAll(".flo-map-hit").forEach((hit) => hit.remove());
+      return svg?.outerHTML;
+    }
     const diagrams = this.previewState.lastDiagrams;
     const selected = diagrams.find((diagram) => blockId(this.ws.active, diagram.name) === this.selectedBlock);
     return (selected ?? diagrams[0])?.svg;

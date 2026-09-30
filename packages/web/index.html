@@ -130,6 +130,37 @@
       .flo-map polyline[data-flo-from] {
         cursor: pointer;
       }
+      .flo-kg-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        font-size: 13px;
+      }
+      .flo-kg-note {
+        color: #b45309;
+      }
+      .flo-kg-legend {
+        display: inline-flex;
+        gap: 8px;
+        color: #6b7280;
+      }
+      .flo-kg-swatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 3px;
+        border: 1px solid #9ca3af;
+      }
+      .flo-kg svg {
+        cursor: grab;
+        max-width: 100%;
+      }
+      .flo-kg [data-flo-block],
+      .flo-kg .flo-map-hit[data-flo-block] {
+        cursor: pointer;
+      }
       g.flo-selected > rect,
       g.flo-selected > polygon,
       g.flo-selected > .flo-seq-header-box > rect,

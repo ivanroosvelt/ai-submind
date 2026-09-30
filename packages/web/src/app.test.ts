@@ -29,6 +29,43 @@ export const FILES: WorkspaceSnapshot = {
   dir: null,
 };
 
+const KG_SOURCES: Record<string, string> = {
+  "knowledge.schema.yaml": "type_tags: [decision, rule]\nrelation_types: [affects, enforces, visualized_by]\n",
+  "catalog.flo": 'entity api [API]\nentity db\nflow acceso "Acceso" {\n  api -> db\n}\n',
+  "login.flo": 'use "./catalog.flo"\nuse "./kb/pkce.md"\nflow login {\n  api -> pkce\n}\n',
+  "kb/pkce.md": [
+    "---",
+    "id: pkce",
+    "title: PKCE",
+    "memory_type: long_term",
+    "type_tags: [decision]",
+    'context_tags: ["project:core"]',
+    'use: ["../catalog.flo"]',
+    "relations:",
+    "  - target: api",
+    "    type: affects",
+    "  - target: ../catalog.flo#acceso",
+    "    type: visualized_by",
+    "  - target: rule.md",
+    "    type: enforces",
+    "---",
+    "Texto de PKCE.",
+    "",
+  ].join("\n"),
+  "kb/rule.md": "---\nid: rule\ntitle: Regla\nmemory_type: working\ntype_tags: [rule]\n---\nContraseñas largas.\n",
+};
+
+export const KG_FILES: WorkspaceSnapshot = { files: KG_SOURCES, saved: { ...KG_SOURCES }, active: "login.flo", dir: null };
+
+const graphNodes = (el: AppElements) =>
+  [...el.preview.querySelectorAll(".flo-kg g[data-flo-entity]")].map((g) => g.getAttribute("data-flo-entity"));
+
+function change(root: ParentNode, name: string, value: string): void {
+  const control = root.querySelector<HTMLInputElement | HTMLSelectElement>(`[data-flo-kg="${name}"]`)!;
+  control.value = value;
+  control.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
 describe("App", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -328,5 +365,162 @@ describe("App navigation", () => {
     click(el.preview.querySelector('polyline.flo-map-hit[data-flo-from="api"]')!);
     click(el.panel.querySelector('[data-flo-block="login.flo#login"]')!);
     expect(el.panel.innerHTML).toBe("");
+  });
+});
+
+describe("App knowledge graph", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    document.body.innerHTML = "";
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("uses a fixture without diagnostics", () => {
+    const app = new App(elements(), KG_FILES);
+    expect([...app.ws.link().diagnostics.values()].flat()).toEqual([]);
+  });
+
+  it("shows the notes and their neighbours, with the graph button pressed", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    expect(el.preview.querySelector(".flo-kg-bar")).not.toBeNull();
+    expect(graphNodes(el)).toEqual(["pkce", "rule", "api"]);
+    expect(el.preview.innerHTML).toContain('data-flo-block="catalog.flo#acceso"');
+    expect(el.toolbar.querySelector("#flo-toggle-graph")!.getAttribute("aria-pressed")).toBe("true");
+    expect(el.toolbar.querySelector("#flo-toggle-map")!.getAttribute("aria-pressed")).toBe("false");
+    app.toggleGraph();
+    expect(el.preview.querySelector(".flo-kg")).toBeNull();
+  });
+
+  it("filters with the bar", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    change(el.preview, "memory", "working");
+    change(el.preview, "depth", "0");
+    expect(graphNodes(el)).toEqual(["rule"]);
+    expect(app.graph).toEqual({ where: { and: [{ text: "" }, { memory: "working" }] }, from: null, depth: 0, viewBox: null });
+    change(el.preview, "memory", "");
+    change(el.preview, "text", "pkce");
+    expect(graphNodes(el)).toEqual(["pkce"]);
+  });
+
+  it("says so when nothing matches, and exporting does not throw", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    change(el.preview, "text", "no existe");
+    expect(el.preview.textContent).toContain("Ninguna nota coincide con el filtro");
+    vi.mocked(exportSvg).mockClear();
+    click(el.toolbar.querySelector("#flo-export-svg")!);
+    expect(exportSvg).not.toHaveBeenCalled();
+  });
+
+  it("opens a note in the editor and stays in the graph", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    click(el.preview.querySelector('.flo-kg g[data-flo-entity="rule"] text')!);
+    expect(app.ws.active).toBe("kb/rule.md");
+    expect(app.view.state.doc.toString()).toBe(KG_SOURCES["kb/rule.md"]);
+    expect(el.preview.querySelector(".flo-kg")).not.toBeNull();
+  });
+
+  it("opens the entity panel for a .flo entity", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    click(el.preview.querySelector('.flo-kg g[data-flo-entity="api"] text')!);
+    expect(el.panel.innerHTML).toContain("<code>api</code>");
+  });
+
+  it("opens the flow of a visualized_by edge, highlighting its source when present", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    click(el.preview.querySelector('polyline.flo-map-hit[data-flo-type="visualized_by"]')!);
+    expect(app.ws.active).toBe("catalog.flo");
+    expect(app.selectedBlock).toBe("catalog.flo#acceso");
+    expect(el.preview.querySelector(".flo-kg")).toBeNull();
+    expect(el.toolbar.querySelector("#flo-toggle-graph")!.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("opens the flow from its block node", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    click(el.preview.querySelector('.flo-kg g[data-flo-block="catalog.flo#acceso"] text')!);
+    expect(app.selectedBlock).toBe("catalog.flo#acceso");
+  });
+
+  it("centers the graph on a note clicked in a flow, until cleared", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    click(el.preview.querySelector('[data-flo-entity="pkce"] text')!);
+    expect(app.graph.from).toEqual(["pkce"]);
+    expect(graphNodes(el)).toEqual(["pkce", "api", "rule"]);
+    expect(el.preview.querySelector("[data-flo-kg-clear-from]")!.textContent).toBe("Centrado en PKCE ×");
+    click(el.preview.querySelector("[data-flo-kg-clear-from]")!);
+    expect(app.graph.from).toBeNull();
+    expect(graphNodes(el)).toEqual(["pkce", "rule", "api"]);
+  });
+
+  it("still opens the entity panel for a .flo entity clicked in a flow", () => {
+    const el = elements();
+    new App(el, KG_FILES);
+    click(el.preview.querySelector('[data-flo-entity="api"] text')!);
+    expect(el.panel.innerHTML).toContain("<code>api</code>");
+    expect(el.preview.querySelector(".flo-kg")).toBeNull();
+  });
+
+  it("survives editing away the note it is centered on", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    click(el.preview.querySelector('[data-flo-entity="pkce"] text')!);
+    app.openDocument("kb/pkce.md");
+    app.view.dispatch({ changes: { from: 0, to: app.view.state.doc.length, insert: "" } });
+    vi.advanceTimersByTime(500);
+    expect(el.preview.textContent).toContain("Ninguna nota coincide con el filtro");
+    expect(el.preview.querySelector("[data-flo-kg-clear-from]")!.textContent).toBe("Centrado en pkce ×");
+  });
+
+  it("keeps the pan/zoom across edits and drops it when the query changes", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    const svg = () => el.preview.querySelector(".flo-kg svg")!;
+    svg().dispatchEvent(new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: -100 }));
+    const zoomed = svg().getAttribute("viewBox");
+    expect(app.graph.viewBox).not.toBeNull();
+    app.refresh();
+    expect(svg().getAttribute("viewBox")).toBe(zoomed);
+    change(el.preview, "depth", "2");
+    expect(app.graph.viewBox).toBeNull();
+    expect(svg().getAttribute("viewBox")).not.toBe(zoomed);
+  });
+
+  it("exports the graph as shown", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    vi.mocked(exportSvg).mockClear();
+    click(el.toolbar.querySelector("#flo-export-svg")!);
+    const svg = vi.mocked(exportSvg).mock.calls[0][0];
+    expect(svg).toContain('data-flo-entity="pkce"');
+    expect(svg).not.toContain("flo-map-hit");
+  });
+
+  it("goes back to the document view when another workspace is loaded", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    app.load(FILES);
+    expect(el.preview.querySelector(".flo-kg")).toBeNull();
+    expect(app.graph).toEqual({ where: { and: [{ text: "" }] }, from: null, depth: 1, viewBox: null });
   });
 });

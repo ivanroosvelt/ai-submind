@@ -12,6 +12,7 @@ function mockActions(): ToolbarActions {
     onLoadExample: vi.fn(),
     onToggleExpand: vi.fn(),
     onToggleMap: vi.fn(),
+    onToggleGraph: vi.fn(),
   };
 }
 
@@ -47,6 +48,9 @@ describe("createToolbar", () => {
 
     container.querySelector<HTMLButtonElement>("#flo-toggle-map")!.click();
     expect(actions.onToggleMap).toHaveBeenCalledTimes(1);
+
+    container.querySelector<HTMLButtonElement>("#flo-toggle-graph")!.click();
+    expect(actions.onToggleGraph).toHaveBeenCalledTimes(1);
   });
 
   it("lists the given examples and loads the selected one", () => {
