@@ -2,6 +2,7 @@ import "fake-indexeddb/auto";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { runScopeHandlers } from "@codemirror/view";
 import { App, newWorkspace, type AppElements } from "./app.js";
+import { memoryDir, type MemoryTree } from "./test-dir.js";
 import type { WorkspaceSnapshot } from "./workspace.js";
 
 // jsdom no descarga archivos: se observa qué SVG recibe la exportación.
@@ -522,5 +523,88 @@ describe("App knowledge graph", () => {
     app.load(FILES);
     expect(el.preview.querySelector(".flo-kg")).toBeNull();
     expect(app.graph).toEqual({ where: { and: [{ text: "" }] }, from: null, depth: 1, viewBox: null });
+  });
+
+  const decisiones = {
+    name: "decisiones",
+    where: { and: [{ text: "" }, { typeTag: "decision" }] },
+    from: null,
+    depth: 0,
+    viewBox: [0, 0, 50, 50],
+  };
+
+  function withViews(views: MemoryTree): { tree: MemoryTree; snapshot: WorkspaceSnapshot } {
+    const tree: MemoryTree = { ".flo": { views } };
+    return { tree, snapshot: { ...KG_FILES, dir: memoryDir(tree) } };
+  }
+
+  const presetNames = (el: AppElements) =>
+    [...el.preview.querySelectorAll('[data-flo-kg="preset"] option')].map((option) => option.textContent);
+
+  it("lists the folder's views when entering the graph and applies one", async () => {
+    const el = elements();
+    const app = new App(el, withViews({ "decisiones.json": JSON.stringify(decisiones) }).snapshot);
+    app.toggleGraph();
+    await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas", "decisiones"]));
+    change(el.preview, "preset", "decisiones");
+    expect(app.graph).toEqual({ where: decisiones.where, from: null, depth: 0, viewBox: [0, 0, 50, 50] });
+    expect(graphNodes(el)).toEqual(["pkce"]);
+    expect(el.preview.querySelector(".flo-kg svg")!.getAttribute("viewBox")).toBe("0 0 50 50");
+  });
+
+  it("saves the current graph as a view", async () => {
+    const el = elements();
+    const { tree, snapshot } = withViews({});
+    const app = new App(el, snapshot);
+    app.toggleGraph();
+    await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas"]));
+    change(el.preview, "depth", "2");
+    vi.spyOn(window, "prompt").mockReturnValue(" mia ");
+    click(el.preview.querySelector("[data-flo-kg-save]")!);
+    await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas", "mia"]));
+    const views = (tree[".flo"] as MemoryTree).views as MemoryTree;
+    expect(JSON.parse(views["mia.json"] as string)).toEqual({ name: "mia", ...app.graph });
+  });
+
+  it("rejects a view name that is not a plain file name", async () => {
+    const el = elements();
+    const { tree, snapshot } = withViews({});
+    const app = new App(el, snapshot);
+    app.toggleGraph();
+    await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas"]));
+    vi.spyOn(window, "prompt").mockReturnValue("../fuera");
+    const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+    click(el.preview.querySelector("[data-flo-kg-save]")!);
+    await vi.waitFor(() => expect(alert).toHaveBeenCalled());
+    expect((tree[".flo"] as MemoryTree).views).toEqual({});
+    expect(app.graph.depth).toBe(1);
+  });
+
+  it("asks before replacing an existing view", async () => {
+    const el = elements();
+    const original = JSON.stringify(decisiones);
+    const { tree, snapshot } = withViews({ "decisiones.json": original });
+    const app = new App(el, snapshot);
+    app.toggleGraph();
+    await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas", "decisiones"]));
+    vi.spyOn(window, "prompt").mockReturnValue("decisiones");
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    click(el.preview.querySelector("[data-flo-kg-save]")!);
+    await vi.waitFor(() => expect(confirm).toHaveBeenCalled());
+    expect(((tree[".flo"] as MemoryTree).views as MemoryTree)["decisiones.json"]).toBe(original);
+  });
+
+  it("skips broken views and offers no views without a folder", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const el = elements();
+    const app = new App(el, withViews({ "roto.json": "{", "decisiones.json": JSON.stringify(decisiones) }).snapshot);
+    app.toggleGraph();
+    await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas", "decisiones"]));
+
+    const other = elements();
+    const plain = new App(other, KG_FILES);
+    plain.toggleGraph();
+    expect(other.preview.querySelector('[data-flo-kg="preset"]')).toBeNull();
+    expect(other.preview.querySelector("[data-flo-kg-save]")).toBeNull();
   });
 });

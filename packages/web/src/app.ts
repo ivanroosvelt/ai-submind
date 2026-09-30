@@ -21,6 +21,7 @@ import { bindExplorer, explorerHtml, type ExplorerFilter } from "./explorer.js";
 import { DEFAULT_GRAPH, graphBarHtml, graphHtml, readBar, whereOf, type GraphQuery } from "./knowledge-view.js";
 import { addEdgeHitAreas, mapHtml } from "./map-view.js";
 import { bindPanZoom } from "./pan-zoom.js";
+import { byName, isPresetName, listPresets, savePreset, type Preset } from "./presets.js";
 import { nextPreviewState, previewHtml, renderActive, type PreviewState } from "./preview.js";
 import { createToolbar, type DiagramKind } from "./toolbar.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
@@ -71,6 +72,8 @@ export class App {
   private mode: "document" | "map" | "graph" = "document";
   /** La consulta de la vista de grafo (#45); se reemplaza, nunca se muta. */
   graph: GraphQuery = DEFAULT_GRAPH;
+  /** Las vistas guardadas de la carpeta (#46); null = sin cargar o sin carpeta. */
+  private presets: Preset[] | null = null;
   private highlight: EntityId | null = null;
   private filter: ExplorerFilter = { type: null, tag: null };
   /** El estado de cada documento que dejó el editor, hasta que se reemplace el workspace (#43). */
@@ -147,6 +150,7 @@ export class App {
     this.panel = null;
     this.mode = "document";
     this.graph = DEFAULT_GRAPH;
+    this.presets = null;
     this.openDocument(this.ws.active);
   }
 
@@ -203,13 +207,44 @@ export class App {
     this.mode = "graph";
     this.graph = graph;
     this.refresh();
+    if (this.presets === null) void this.run("Leer vistas", () => this.loadPresets());
+  }
+
+  /** Las vistas de `.flo/views` (#46); sin permiso de lectura, ninguna. */
+  private async loadPresets(): Promise<void> {
+    const ws = this.ws;
+    if (!ws.dir) return;
+    const presets = (await ensurePermission(ws.dir, "read")) ? await listPresets(ws.dir) : [];
+    if (this.ws !== ws) return;
+    this.presets = presets;
+    if (this.mode === "graph") this.refresh();
+  }
+
+  private async savePreset(): Promise<void> {
+    const ws = this.ws;
+    if (!ws.dir) return;
+    const answer = window.prompt("Nombre de la vista:");
+    if (answer === null) return;
+    const name = answer.trim();
+    if (!isPresetName(name)) {
+      window.alert("El nombre de una vista solo puede tener letras, números, '-' y '_'.");
+      return;
+    }
+    const presets = this.presets ?? [];
+    if (presets.some((preset) => preset.name === name) && !window.confirm(`Ya existe la vista '${name}'. ¿Reemplazarla?`)) return;
+    if (!(await ensurePermission(ws.dir, "readwrite"))) throw new Error("sin permiso de escritura en la carpeta");
+    const preset: Preset = { name, ...this.graph };
+    await savePreset(ws.dir, preset);
+    if (this.ws !== ws) return;
+    this.presets = [...presets.filter((other) => other.name !== name), preset].sort(byName);
+    this.refresh();
   }
 
   private renderGraph(link: LinkResult): void {
     const { where, from, depth, viewBox } = this.graph;
     const result = query(link, { where, from: from ?? undefined, depth });
     this.el.preview.innerHTML =
-      `<div class="flo-kg-bar">${graphBarHtml(link, tagCatalog(link), this.graph, null)}</div>` +
+      `<div class="flo-kg-bar">${graphBarHtml(link, tagCatalog(link), this.graph, this.presets?.map((preset) => preset.name) ?? null)}</div>` +
       graphHtml(renderKnowledge(link, result), result.nodes.length === 0);
     const svg = this.el.preview.querySelector<SVGSVGElement>(".flo-kg svg");
     if (!svg) return;
@@ -221,12 +256,25 @@ export class App {
 
   private onPreviewChange(target: Element): void {
     if (this.mode !== "graph" || !target.hasAttribute("data-flo-kg")) return;
+    if (target.getAttribute("data-flo-kg") === "preset") {
+      const preset = this.presets?.find((candidate) => candidate.name === (target as HTMLSelectElement).value);
+      if (preset) {
+        const { name: _name, ...graph } = preset;
+        this.graph = graph;
+        this.refresh();
+      }
+      return;
+    }
     const { filter, depth } = readBar(this.el.preview);
     this.graph = { where: whereOf(filter), from: this.graph.from, depth, viewBox: null };
     this.refresh();
   }
 
   private onGraphClick(target: Element): void {
+    if (target.closest("[data-flo-kg-save]")) {
+      void this.run("Guardar vista", () => this.savePreset());
+      return;
+    }
     if (target.closest("[data-flo-kg-clear-from]")) {
       this.graph = { ...this.graph, from: null, viewBox: null };
       this.refresh();
