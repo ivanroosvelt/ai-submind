@@ -14,11 +14,16 @@ import {
 // flujo se siga leyendo y el hueco del catálogo salte a la vista.
 const UNRESOLVED_DASH = ' stroke-dasharray="4 4"';
 
-function shapeElement(node: FlowchartNodeLayout): string {
+/** La forma de un nodo; `fill` lo cambia la vista de grafo (decisión #44). */
+export function shapeElement(
+  node: Pick<FlowchartNodeLayout, "x" | "y" | "width" | "height" | "shape">,
+  dashed = false,
+  fill = FILL_COLOR
+): string {
   const { x, y, width, height } = node;
   const left = x - width / 2;
   const top = y - height / 2;
-  const dash = node.resolved ? "" : UNRESOLVED_DASH;
+  const dash = dashed ? UNRESOLVED_DASH : "";
 
   if (node.shape === "decision") {
     const points = [
@@ -27,17 +32,17 @@ function shapeElement(node: FlowchartNodeLayout): string {
       `${x},${top + height}`,
       `${x - width / 2},${y}`,
     ].join(" ");
-    return `<polygon points="${points}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2"${dash} />`;
+    return `<polygon points="${points}" fill="${fill}" stroke="${STROKE_COLOR}" stroke-width="2"${dash} />`;
   }
 
   const rx = node.shape === "rounded" ? 12 : 0;
-  return `<rect x="${left}" y="${top}" width="${width}" height="${height}" rx="${rx}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2"${dash} />`;
+  return `<rect x="${left}" y="${top}" width="${width}" height="${height}" rx="${rx}" fill="${fill}" stroke="${STROKE_COLOR}" stroke-width="2"${dash} />`;
 }
 
 export function renderFlowchartToSvg(layout: FlowchartLayout, origin: BlockOrigin): string {
   const nodeElements = layout.nodes.map((node) => {
     const data = dataAttributes({ entity: node.id, block: origin.block, uri: origin.uri, line: node.range.start.line });
-    return `<g${node.resolved ? "" : ' class="flo-unresolved"'}${data}>${shapeElement(node)}${svgText(node.x, node.y, node.label)}</g>`;
+    return `<g${node.resolved ? "" : ' class="flo-unresolved"'}${data}>${shapeElement(node, !node.resolved)}${svgText(node.x, node.y, node.label)}</g>`;
   });
 
   const edgeElements = layout.edges.map((edge) => {

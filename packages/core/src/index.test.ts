@@ -15,6 +15,8 @@ import {
   entityAt,
   renameEntity,
   renderMap,
+  renderKnowledge,
+  MEMORY_FILL,
   type BlockId,
   type FlowchartLayout,
   type LinkResult,
@@ -182,5 +184,13 @@ describe("index: navigation surface (Fase E)", () => {
     workspace.setDocument("a.flo", "entity a\nentity b\nflow f {\n  a -> b\n}\n");
     const map: RenderedMap = renderMap(workspace.link());
     expect(map.edges).toHaveLength(1);
+  });
+
+  it("exposes renderKnowledge", () => {
+    const workspace = new Workspace();
+    workspace.setDocument("knowledge.schema.yaml", "type_tags: []\nrelation_types: []\n");
+    workspace.setDocument("n.md", "---\nid: n\ntitle: N\nmemory_type: working\n---\n");
+    const link = workspace.link();
+    expect(renderKnowledge(link, query(link))).toContain(`fill="${MEMORY_FILL.working}"`);
   });
 });

@@ -29,6 +29,7 @@ export { render, renderBlock } from "./render/index.js";
 export type { RenderResult, RenderedDiagram } from "./render/index.js";
 export { renderMap } from "./render/map.js";
 export type { RenderedMap } from "./render/map.js";
+export { renderKnowledge, MEMORY_FILL } from "./render/knowledge.js";
 export type {
   Position,
   Range,
