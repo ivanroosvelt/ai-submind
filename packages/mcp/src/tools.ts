@@ -27,6 +27,17 @@ const where: z.ZodType<Where> = z.lazy(() =>
 const json = (value: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }] });
 const failure = (value: unknown) => ({ ...json(value), isError: true });
 
+/** Una excepción del core dentro de una herramienta sale como `{ error }` (#35, #47), no como texto del SDK. */
+function guarded<A extends unknown[], R>(handler: (...args: A) => Promise<R>) {
+  return async (...args: A) => {
+    try {
+      return await handler(...args);
+    } catch (error) {
+      return failure({ error: error instanceof Error ? error.message : String(error) });
+    }
+  };
+}
+
 /** Las cinco herramientas del spec de conocimiento §6 sobre una carpeta (decisión #35). */
 export function createServer(folder: FloFolder): McpServer {
   const server = new McpServer({ name: "flo-mcp", version: "0.1.0" });
@@ -43,7 +54,7 @@ export function createServer(folder: FloFolder): McpServer {
         project: projection.optional(),
       }),
     },
-    async (opts) => json(query(folder.link(), opts))
+    guarded(async (opts) => json(query(folder.link(), opts)))
   );
 
   server.registerTool(
@@ -52,7 +63,7 @@ export function createServer(folder: FloFolder): McpServer {
       description: "Una entidad por id, con sus relaciones salientes y entrantes.",
       inputSchema: z.strictObject({ id: z.string(), project: projection.optional() }),
     },
-    async ({ id, project }) => {
+    guarded(async ({ id, project }) => {
       const link = folder.link();
       const [node] = query(link, { from: [id], project }).nodes;
       if (!node) return failure({ error: `no existe la entidad '${id}'` });
@@ -61,13 +72,16 @@ export function createServer(folder: FloFolder): McpServer {
         outgoing: link.xref.relationsFrom(id).map(({ type, target, resolved }) => ({ type, target, resolved })),
         incoming: link.xref.relationsTo(id).map(({ from, relation }) => ({ from, type: relation.type, target: relation.target })),
       });
-    }
+    })
   );
 
   server.registerTool(
     "list_tags",
-    { description: "El vocabulario en uso: type_tags, context_tags y los valores de cada custom_tag." },
-    async () => json(tagCatalog(folder.link()))
+    {
+      description: "El vocabulario en uso: type_tags, context_tags y los valores de cada custom_tag.",
+      inputSchema: z.strictObject({}),
+    },
+    guarded(async () => json(tagCatalog(folder.link())))
   );
 
   server.registerTool(
@@ -76,12 +90,12 @@ export function createServer(folder: FloFolder): McpServer {
       description: "Diagnósticos del workspace (solo los archivos que tienen alguno), o de un archivo si se da `path`.",
       inputSchema: z.strictObject({ path: z.string().optional() }),
     },
-    async ({ path }) => {
+    guarded(async ({ path }) => {
       if (path === undefined) return json(folder.diagnostics());
       const uri = folder.canonicalUri(path);
       const found = uri === null ? null : folder.diagnostics(uri);
       return found ? json(found) : failure({ error: `'${path}' no es un documento del workspace` });
-    }
+    })
   );
 
   server.registerTool(
@@ -91,10 +105,10 @@ export function createServer(folder: FloFolder): McpServer {
         "Crea o reemplaza un archivo .md o .flo (ruta relativa a la carpeta raíz). Solo escribe si el archivo no tiene errores y no aparecen errores nuevos en otros archivos; si no, devuelve los diagnósticos.",
       inputSchema: z.strictObject({ path: z.string(), content: z.string() }),
     },
-    async ({ path, content }) => {
+    guarded(async ({ path, content }) => {
       const result = folder.write(path, content);
       return result.ok ? json(result) : failure(result);
-    }
+    })
   );
 
   return server;

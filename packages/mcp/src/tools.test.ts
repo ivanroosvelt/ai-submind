@@ -110,6 +110,21 @@ describe("flo-mcp tools", () => {
     expect((await call("list_tags")).value).toEqual({ typeTags: ["decision"], contextTags: [], customTags: {} });
   });
 
+  it("rejects unknown arguments to list_tags", async () => {
+    const { call } = await connect();
+    expect((await call("list_tags", { extra: 1 })).isError).toBe(true);
+  });
+
+  it("reports an error thrown inside a tool as JSON", async () => {
+    const { folder, call } = await connect();
+    vi.spyOn(folder, "link").mockImplementation(() => {
+      throw new Error("se rompió el link");
+    });
+    for (const name of ["query", "list_tags", "check"]) {
+      expect(await call(name), name).toEqual({ isError: true, value: { error: "se rompió el link" } });
+    }
+  });
+
   it("check returns the workspace or one file's diagnostics", async () => {
     const { call } = await connect();
     expect(await call("check")).toEqual({ isError: false, value: {} });
