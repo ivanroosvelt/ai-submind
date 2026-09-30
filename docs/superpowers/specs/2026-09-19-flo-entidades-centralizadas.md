@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-09-19
 - **Rama:** `v2`
-- **Estado:** fases A–F completadas (A–E el 2026-09-28, F el 2026-09-29, [plan](../plans/2026-09-29-flo-fase-f-navegacion-en-el-editor.md)); K1, K2 y K3 del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md) también; queda K4
+- **Estado:** fases A–F completadas (A–E el 2026-09-28, F el 2026-09-29, [plan](../plans/2026-09-29-flo-fase-f-navegacion-en-el-editor.md)); K1, K2 y K3 del [spec de conocimiento](2026-09-28-flo-grafo-de-conocimiento-design.md) también; K4 también (2026-09-30, [plan](../plans/2026-09-30-flo-fase-k4-vista-de-grafo.md))
 - **Reemplaza:** las secciones §2 (fila "Gestión de archivos"), §4 y §8 del
   spec [2026-09-17-flo-diagram-tool-design.md](2026-09-17-flo-diagram-tool-design.md).
   El resto de aquel documento (arquitectura de paquetes, manejo de errores,
@@ -567,3 +567,20 @@ Descartados o reasignados:
 | 45 | 2026-09-30 | **Vista de grafo en la web.** El preview tiene tres modos, documento, "Mapa" y "Grafo" (toolbar, `aria-pressed`); elegir un bloque vuelve a documento. El estado de la vista es `GraphQuery = { where, from, depth, viewBox }`. La barra arma `where = { and: [{ text }, memory?, typeTag?, contextTag?] }`: el `{ text: "" }` base hace que las semillas sean siempre entidades de `.md` (#31) y las `.flo` entren solo por expansión; `depth` 0–3, 1 por defecto; los valores de tags salen de `tagCatalog`; los controles aplican en `change`. Un `where` que la barra no sabe leer (preset escrito a mano) se ejecuta tal cual y la barra lo dice ("Filtro de la vista"); tocar un control lo reemplaza. Drill-down: click en un nodo de `.md` abre su declaración en el editor sin salir del grafo; en una entidad `.flo`, su panel; en un nodo de bloque o una arista a bloque, ese flujo con el nodo de origen resaltado (si aparece). Desde un flujo o el mapa, click en una entidad de `.md` abre el grafo con `from: [id]`, `where` base y la misma `depth` ("Centrado en X ×" lo quita). Pan/zoom editan el `viewBox` (rueda ×1,1 alrededor del puntero, arrastre con el botón principal; un arrastre de más de 3 px no cuenta como click); el `viewBox` se conserva entre ediciones del documento y se descarta al cambiar la consulta. Exportar SVG/PNG en el grafo exporta lo que se ve (con su `viewBox`). Sin resultados: "Ninguna nota coincide con el filtro". | web (K4) |
 | 46 | 2026-09-30 | **Presets de vista** en `.flo/views/<nombre>.json` de la carpeta abierta, con `{ name, where, from, depth, viewBox }` (JSON con 2 espacios y `\n` final). Solo con carpeta con File System Access; sin ella la barra no muestra vistas. El nombre es `[A-Za-z0-9_-]+` y manda el del archivo (el campo `name` se reescribe con él al leer). Se listan al entrar al grafo (pidiendo permiso de lectura si hace falta; negado = lista vacía), ordenadas por nombre; un archivo que no es JSON o no tiene la forma (`where` validado estricto como en MCP, `depth` entero ≥ 0, `from` lista de strings o null, `viewBox` null o cuatro números finitos con ancho y alto > 0) se salta con un aviso en la consola. Guardar pide nombre, confirma si ya existe y escribe con `writeWorkspaceFile` (pide permiso de escritura); no se borran desde el editor. Aplicar un preset reemplaza el `GraphQuery` entero. | web (K4) |
 | 47 | 2026-09-30 | **Errores en las herramientas MCP** (cierra el pendiente de K3): `list_tags` declara `inputSchema` estricto vacío, y toda excepción dentro de una herramienta se devuelve como `isError: true` con `{ error: <mensaje> }` (#35) en vez del texto del SDK. | MCP |
+
+### Pendientes diferidos (Fase K4, 2026-09-30)
+
+- **release — navegador real:** pan/zoom, arrastre y "Guardar vista"
+  (permiso de escritura tras un `prompt`) sin verificar en Chromium;
+  tampoco se verificó que el `viewBox` exportado se vea igual en el PNG.
+- **Cualquiera — pan/zoom:** `bindPanZoom` usa una sola escala para x e y
+  (supone que el SVG no tiene bandas por `preserveAspectRatio`); sin test
+  del zoom hacia afuera en `bindPanZoom`.
+- **Cualquiera — vista de grafo:** el texto de búsqueda aplica en `change`
+  (#45): si se escribe y se hace click en un nodo, el blur re-renderiza y
+  el primer click puede perderse. `showGraph` puede leer `.flo/views` dos
+  veces si se reentra antes de terminar la primera lectura (inofensivo).
+  Faltan tests de: `viewBox` en lo exportado tras un zoom, centrar desde
+  el mapa.
+- **Cualquiera — presets:** `savePreset` no valida el nombre por sí mismo
+  (lo valida `App` con `isPresetName`).

@@ -2,7 +2,7 @@
 
 - **Fecha:** 2026-09-28
 - **Rama:** `v2`
-- **Estado:** en implementación: K1 y K2 completadas el 2026-09-28 y K3 el 2026-09-29 ([K1](../plans/2026-09-28-flo-fase-k1-md-como-documento.md), [K2](../plans/2026-09-28-flo-fase-k2-consultas.md), [K3](../plans/2026-09-28-flo-fase-k3-mcp.md)); F (del spec de entidades) completada el 2026-09-29; pendiente K4
+- **Estado:** completado: K1 y K2 el 2026-09-28, K3 el 2026-09-29 y K4 el 2026-09-30 ([K1](../plans/2026-09-28-flo-fase-k1-md-como-documento.md), [K2](../plans/2026-09-28-flo-fase-k2-consultas.md), [K3](../plans/2026-09-28-flo-fase-k3-mcp.md), [K4](../plans/2026-09-30-flo-fase-k4-vista-de-grafo.md)); F (del spec de entidades) completada el 2026-09-29
 - **Origen:** SRS `REQ-KG-2026-01`, recortado en la sesión de diseño (ver §2).
 - **Depende de:** las Fases D y E del spec
   [2026-09-19-flo-entidades-centralizadas.md](2026-09-19-flo-entidades-centralizadas.md),

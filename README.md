@@ -142,6 +142,18 @@ Monorepo con pnpm workspaces:
   originan. Exportar SVG/PNG toma el bloque seleccionado (click en su
   título o en el explorador), o el mapa si está visible.
 
+  **Grafo de conocimiento:** "Grafo" dibuja las notas `.md` del workspace
+  (color por `memory_type`, con leyenda) y lo que las conecta: relaciones
+  con su tipo como etiqueta, flujos entre entidades y los bloques que
+  `visualized_by` señala. La barra filtra por memoria, `type_tag`,
+  `context_tag` y texto, y elige la profundidad de la expansión. Se
+  desplaza arrastrando y se acerca con la rueda. Click en una nota la abre
+  en el editor; en un bloque o en una arista hacia él, abre ese flujo; desde
+  un flujo, click en una nota vuelve al grafo centrado en ella. Con una
+  carpeta abierta, "Guardar vista" guarda filtros, profundidad y encuadre en
+  `.flo/views/<nombre>.json` (versionable), y el selector "Vistas" los
+  vuelve a aplicar.
+
 - **`@flo/mcp`** (`packages/mcp`) — servidor MCP local (stdio) sobre una
   carpeta de documentos `.flo`, `.md` con frontmatter y
   `knowledge.schema.yaml`. Relee lo que cambia en disco.
