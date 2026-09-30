@@ -2,12 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** completado el 2026-09-30 (`161a297`..`3b95408`).
+**Estado:** completado el 2026-09-30 (`161a297`..`e16081d`).
 
 - Las tres tasks pasaron su revisión sin rondas de fixes.
 - Revisión final (whole-branch): lista para mergear con dos minors —
   comentarios de doc desactualizados en
-  `packages/core/src/parser/cursor.ts` — corregidos en este mismo commit.
+  `packages/core/src/parser/cursor.ts` — corregidos en `e16081d`.
 - **Queda** (pre-existente, fuera de alcance de #48): tipear y hacer click
   en un nodo antes de que venzan los 200 ms de debounce todavía
   re-renderiza en el `change` del blur y puede comerse el click; #48 solo
@@ -86,7 +86,7 @@ Docs (task 4): §11 del spec (pendientes cerrados) y el estado de este plan.
 **Interfaces:**
 - Produces: `Lexer.closeTrailingBraceOnLine(): boolean`. La firma no cambia; ahora también reconoce `} // comentario` al final de la línea.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/core/src/parser/document.test.ts`, junto a "un bloque en una sola línea reporta un solo E016...":
 
@@ -118,13 +118,13 @@ En `packages/core/src/parser/document.test.ts`, junto a "un bloque en una sola l
     });
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `pnpm --filter @flo/core exec vitest run src/parser/document.test.ts`
 
 Expected: FAIL. Hoy los dos primeros casos dan `["E052","E016"]` y `["E045","E016"]`. En el tercero fallan los que tienen comentario.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 En `packages/core/src/lexer.ts`, reemplazar el cuerpo de `closeTrailingBraceOnLine` (el guard del buffer queda igual) y actualizar su doc comment:
 
@@ -155,13 +155,13 @@ En `packages/core/src/lexer.ts`, reemplazar el cuerpo de `closeTrailingBraceOnLi
 
 Sin comentario, esto se comporta igual que antes: la primera `}` seguida solo de espacio es la última carácter no blanco.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `pnpm --filter @flo/core exec vitest run`
 
 Expected: PASS, toda la suite. Si algún test existente de `lexer.test.ts` o `block.test.ts` cambia de resultado, leerlo antes de tocarlo. Solo puede cambiar un caso que tenga `} // ...` al final de una línea con `{`; cualquier otro cambio es un bug de este regex.
 
-- [ ] **Step 5: Build y commit**
+- [x] **Step 5: Build y commit**
 
 ```bash
 pnpm --filter @flo/core typecheck && pnpm --filter @flo/core build
@@ -180,7 +180,7 @@ git commit -m "fix(core): un cuerpo de una línea puede terminar en comentario"
 **Interfaces:**
 - Produces: `layoutFlowchart(block, catalog)`, misma firma. `edges[i]` corresponde a `block.edges[i]`, y dos aristas con el mismo par tienen `points` distintos.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/core/src/layout/flowchart.test.ts`, dentro de `describe("layoutFlowchart", ...)`:
 
@@ -207,13 +207,13 @@ En `packages/core/src/render/flowchart.test.ts`, un caso que use el helper de re
   });
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `pnpm --filter @flo/core exec vitest run src/layout/flowchart.test.ts src/render/flowchart.test.ts`
 
 Expected: FAIL. Los dos recorridos son iguales porque dagre funde la arista.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 En `packages/core/src/layout/flowchart.ts`, dentro de `layoutFlowchart`:
 
@@ -241,13 +241,13 @@ y reemplazar el alta de aristas y su lectura:
 
 Conservar el comentario existente sobre el orden de inserción (nodos primero, aristas después): sigue valiendo.
 
-- [ ] **Step 4: Run the whole core suite**
+- [x] **Step 4: Run the whole core suite**
 
 Run: `pnpm --filter @flo/core exec vitest run`
 
 Expected: PASS, y **`reference-diagrams.test.ts` pasa sin escribir ni actualizar snapshots** (`git status` no muestra `.snap` modificados). Si algún snapshot difiere, parar y reportar BLOCKED: no se regenera.
 
-- [ ] **Step 5: Build y commit**
+- [x] **Step 5: Build y commit**
 
 ```bash
 pnpm --filter @flo/core typecheck && pnpm --filter @flo/core build
@@ -267,7 +267,7 @@ git commit -m "fix(core): aristas repetidas de un flow con recorrido propio"
 - Consumes: `readBar`, `whereOf` (`knowledge-view.ts`); `renderGraph`, `onPreviewChange`, `mode`, `graph` (`app.ts`); en los tests, `KG_FILES`, `graphNodes`, `change`, `click`, `elements`, `withViews` y `presetNames` de `app.test.ts`.
 - Produces: el `App` privado `applyBar(): void` y `SEARCH_DEBOUNCE_MS = 200` (constante del módulo `app.ts`).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/web/src/app.test.ts`, dentro de `describe("App knowledge graph", ...)` (usa timers falsos):
 
@@ -346,13 +346,13 @@ Notas para los tests:
 - `withViews`, `decisiones` y `presetNames` ya existen en el `describe` (task 6 de K4). Si están definidos dentro de otro bloque, moverlos al nivel del `describe` o del módulo.
 - `vi.waitFor` avanza los timers falsos, así que en el test de las vistas el debounce puede vencer antes o después de que resuelvan. Por eso ese test fija solo el foco y el texto de la búsqueda, no cuándo se aplica.
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/app.test.ts`
 
 Expected: FAIL. No hay listener de `input`, y el re-render pierde el foco y el texto.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 En `packages/web/src/app.ts`:
 
@@ -423,13 +423,13 @@ En `packages/web/src/app.ts`:
 
 7. `load()`: `clearTimeout(this.searchTimer);` junto a los demás reseteos.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `pnpm --filter @flo/web exec vitest run && pnpm --filter @flo/web typecheck`
 
 Expected: PASS, incluidos todos los tests previos del grafo. "filters with the bar" usa `change` sobre la búsqueda: sigue aplicando al instante por `applyBar`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/app.ts packages/web/src/app.test.ts
@@ -444,22 +444,22 @@ git commit -m "fix(web): la búsqueda del grafo aplica al escribir y no pierde t
 - Modify: `docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md` (§11)
 - Modify: este plan (línea **Estado**)
 
-- [ ] **Step 1: §11**
+- [x] **Step 1: §11**
 
 - En "Pendientes diferidos (Fase C, 2026-09-27)", agregar al final de los bullets **Cualquiera — render** y **Cualquiera — parser** la marca ` Resuelto en 2026-09-30 (#49)` y ` Resuelto en 2026-09-30 (#50)` respectivamente. No se borra nada: §11 solo se agrega.
 - En "Pendientes diferidos (Fase K4, 2026-09-30)", en el bullet **Cualquiera — vista de grafo**, agregar al final: `Resuelto en 2026-09-30 (#48): el texto aplica al escribir, un control que no cambia la consulta no re-renderiza y el re-render conserva la búsqueda enfocada.` Si queda una parte sin resolver, la marca dice cuál.
 
-- [ ] **Step 2: Estado de este plan**
+- [x] **Step 2: Estado de este plan**
 
 Debajo del header: `**Estado:** completado el <fecha> (<primer commit>..<último commit>).`, más lo que haya encontrado la revisión, con el formato del plan de K4.
 
-- [ ] **Step 3: Verificación completa**
+- [x] **Step 3: Verificación completa**
 
 Run: `pnpm -r typecheck && pnpm -r test && pnpm -r build`
 
 Expected: todo en verde, sin `.snap` modificados.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md docs/superpowers/plans/2026-09-30-flo-arreglos-post-k4.md
