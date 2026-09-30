@@ -587,3 +587,11 @@ Descartados o reasignados:
   zoom, centrar desde el mapa.
 - **Cualquiera — presets:** `savePreset` no valida el nombre por sí mismo
   (lo valida `App` con `isPresetName`).
+
+### Decisiones de los arreglos posteriores a K4 (2026-09-30)
+
+| # | Fecha | Decisión | Afecta a |
+|---|---|---|---|
+| 48 | 2026-09-30 | **Enmienda a #45: la búsqueda aplica mientras se escribe.** El texto del grafo aplica 200 ms después del último `input` (mismo debounce que el preview del editor) y también en `change`; los selects siguen aplicando en `change`. Un control que no cambia la consulta (`where`, `from`, `depth` iguales) no re-renderiza, así un blur tras la búsqueda ya aplicada no reemplaza el nodo que se está clickeando. Un re-render con la búsqueda enfocada (edición en otro documento, fin de la carga de vistas) la vuelve a enfocar con su texto y su selección, aunque ese texto todavía no se haya aplicado. | web (vista de grafo) |
+| 49 | 2026-09-30 | **Aristas repetidas en un `flow`** (cierra el pendiente de C): el layout usa dagre en modo multigrafo, una arista por línea `a -> b`, y cada una se dibuja con su propio recorrido y su etiqueta. Los snapshots existentes no cambian (no tienen pares repetidos). | layout, render |
+| 50 | 2026-09-30 | **Enmienda a #14: un cuerpo de una sola línea puede terminar en comentario.** `flow a { x -> y } // c` (y lo mismo en un cuerpo de entidad) cierra el cuerpo en esa línea con un único `E016`, como sin el comentario: la `}` que cierra es la primera seguida solo de espacio y, opcionalmente, un comentario `//` hasta el fin de línea. | parser, lexer |
