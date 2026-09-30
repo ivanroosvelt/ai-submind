@@ -2,17 +2,25 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** completado el 2026-09-30 (`adc67d3`..hasta este fix).
+**Estado:** completado el 2026-09-30 (`adc67d3`..`87270c1`; plan y decisiones #44–#47 en `ee7ae77`).
 
 - Tasks 1, 3–7 pasaron su revisión sin rondas de fixes. La task 2 tuvo una
   ronda (`91ee3c0`): un click con jitter dejó de contar como arrastre
   (desplazamiento neto desde el `mousedown`, no longitud del recorrido).
 - Revisión final (opus, whole-branch): un Important — `max-width` sin
   `height: auto` dejaba bandas en grafos anchos y desplazaba el centro del
-  zoom de rueda — corregido en este commit junto con el zoom-out al
+  zoom de rueda — corregido en `87270c1` junto con el zoom-out al
   scrollear solo horizontal y una vista ilegible que hacía fallar
-  `listPresets` entera en vez de saltarse.
-- **Suite:** 244 tests en core, 159 en web, 39 en mcp.
+  `listPresets` entera en vez de saltarse. Re-revisión del fix limpia.
+- **Queda** (en §11 del spec de entidades, "Pendientes diferidos (Fase K4)"):
+  el smoke test en Chromium de pan/zoom, arrastre, "Guardar vista" y el PNG
+  exportado; el texto de búsqueda que se pierde en un re-render (blur o fin
+  de la carga de vistas); tests de `viewBox` exportado tras un zoom, de
+  centrar desde el mapa y del zoom hacia afuera; `App.graph` público y
+  `savePreset` sin validar el nombre por sí mismo.
+- **Suite:** 244 tests en core, 159 en web, 39 en mcp. El código y los
+  tests de este plan reflejan lo entregado salvo los fixes de revisión
+  (`91ee3c0`, `87270c1`), que viven solo en el código.
 
 **Goal:** El editor web suma un tercer modo de preview, "Grafo": el
 resultado de `query` dibujado como SVG (color por tipo de memoria, tipo de
@@ -143,7 +151,7 @@ Docs (task 8): `README.md`, estado de los dos specs y de este plan.
   - `shapeElement(node: { x; y; width; height; shape }, dashed = false, fill = FILL_COLOR): string` exportada desde `render/flowchart.ts`.
   - Atributos del SVG: nodo de entidad `<g [class="flo-mem-<tipo>"] data-flo-entity data-flo-uri>`; nodo de bloque `<g class="flo-kg-block" data-flo-block data-flo-uri>`; arista `<polyline data-flo-from data-flo-to data-flo-type [data-flo-block]>`, en ese orden.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/core/src/render/knowledge.test.ts`:
 
@@ -264,12 +272,12 @@ Y en `packages/core/src/index.test.ts`, sumar `renderKnowledge` y
   });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @flo/core exec vitest run src/render/knowledge.test.ts src/index.test.ts`
 Expected: FAIL — no existe `./knowledge.js` / `renderKnowledge` no está exportado.
 
-- [ ] **Step 3: Make `shapeElement` reusable**
+- [x] **Step 3: Make `shapeElement` reusable**
 
 En `packages/core/src/render/flowchart.ts`, reemplazar `shapeElement` por
 la versión exportada y actualizar su única llamada. Los bytes de salida del
@@ -304,7 +312,7 @@ export function shapeElement(
 
 y en `renderFlowchartToSvg`: `${shapeElement(node, !node.resolved)}`.
 
-- [ ] **Step 4: Write `renderKnowledge`**
+- [x] **Step 4: Write `renderKnowledge`**
 
 `packages/core/src/render/knowledge.ts`:
 
@@ -455,7 +463,7 @@ En `packages/core/src/index.ts`, debajo de `renderMap`:
 export { renderKnowledge, MEMORY_FILL } from "./render/knowledge.js";
 ```
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 Run: `pnpm --filter @flo/core exec vitest run`
 Expected: PASS, con `1 snapshot written` para `knowledge.test.ts` y
@@ -465,12 +473,12 @@ diagnósticos, corregir la fixture (no el código) hasta que el primer test
 pase, y revisar a ojo que el `.snap` escrito tenga los tres nodos de
 entidad, el de bloque y las cinco aristas.
 
-- [ ] **Step 6: Typecheck y build**
+- [x] **Step 6: Typecheck y build**
 
 Run: `pnpm --filter @flo/core typecheck && pnpm --filter @flo/core build`
 Expected: sin errores; `packages/core/dist/index.d.ts` exporta `renderKnowledge` y `MEMORY_FILL`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/core/src/render/knowledge.ts packages/core/src/render/knowledge.test.ts packages/core/src/render/__snapshots__/knowledge.test.ts.snap packages/core/src/render/flowchart.ts packages/core/src/index.ts packages/core/src/index.test.ts
@@ -493,7 +501,7 @@ git commit -m "feat(core): renderKnowledge, el grafo de conocimiento como SVG"
   - `panViewBox(viewBox: ViewBox, dx: number, dy: number): ViewBox` — `dx`/`dy` en unidades del SVG; arrastrar a la derecha mueve el contenido a la derecha (x baja).
   - `bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => void): void`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/web/src/pan-zoom.test.ts`:
 
@@ -572,12 +580,12 @@ describe("bindPanZoom", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @flo/web exec vitest run src/pan-zoom.test.ts`
 Expected: FAIL — no existe `./pan-zoom.js`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `packages/web/src/pan-zoom.ts`:
 
@@ -662,12 +670,12 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @flo/web exec vitest run src/pan-zoom.test.ts`
 Expected: PASS (7 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/pan-zoom.ts packages/web/src/pan-zoom.test.ts
@@ -694,7 +702,7 @@ git commit -m "feat(web): pan y zoom de un SVG por su viewBox"
   - `graphBarHtml(link: LinkResult, tags: TagCatalog, graph: GraphQuery, presets: string[] | null): string` — controles con `data-flo-kg="memory|typeTag|contextTag|text|depth|preset"`, botones `data-flo-kg-clear-from` y `data-flo-kg-save`, leyenda `.flo-kg-legend`.
   - `graphHtml(svg: string, empty: boolean): string` — `<section class="flo-block flo-kg">`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `packages/web/src/knowledge-view.test.ts`:
 
@@ -793,12 +801,12 @@ describe("graphHtml", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @flo/web exec vitest run src/knowledge-view.test.ts`
 Expected: FAIL — no existe `./knowledge-view.js`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `packages/web/src/knowledge-view.ts`:
 
@@ -919,12 +927,12 @@ export function graphHtml(svg: string, empty: boolean): string {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @flo/web exec vitest run src/knowledge-view.test.ts`
 Expected: PASS. (Si falla por `MEMORY_FILL` indefinido, falta `pnpm --filter @flo/core build`.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/knowledge-view.ts packages/web/src/knowledge-view.test.ts
@@ -957,7 +965,7 @@ git commit -m "feat(web): barra de filtros y HTML de la vista de grafo"
   - `ensurePermission(dir: FileSystemDirectoryHandle, mode: "read" | "readwrite"): Promise<boolean>` (reemplaza `ensureWritable`).
   - `memoryDir(tree: MemoryTree, name?: string): FileSystemDirectoryHandle` y `type MemoryTree = { [name: string]: string | MemoryTree }` en `test-dir.ts`: `getDirectoryHandle`/`getFileHandle` con `{ create }`, `values()`, `getFile()` y `createWritable()`; lo escrito queda en `tree`; lo que no existe lanza `DOMException` `NotFoundError`.
 
-- [ ] **Step 1: Write the test helper**
+- [x] **Step 1: Write the test helper**
 
 `packages/web/src/test-dir.ts` (no es un test: lo importan los tests de
 presets y de `App`; `main.ts` no lo importa, así que no entra al build):
@@ -1013,7 +1021,7 @@ export function memoryDir(tree: MemoryTree, name = ""): FileSystemDirectoryHandl
 }
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `packages/web/src/presets.test.ts`:
 
@@ -1161,12 +1169,12 @@ describe("ensurePermission", () => {
 (Si el `describe` actual tiene casos que este no cubre, conservarlos con el
 nuevo nombre y `"readwrite"`.)
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/presets.test.ts src/folder-io.test.ts`
 Expected: FAIL — no existe `./presets.js`; `ensurePermission` no está exportada.
 
-- [ ] **Step 4: Rename `ensureWritable`**
+- [x] **Step 4: Rename `ensureWritable`**
 
 En `packages/web/src/folder-io.ts`:
 
@@ -1183,7 +1191,7 @@ export async function ensurePermission(dir: FileSystemDirectoryHandle, mode: "re
 En `packages/web/src/app.ts`, el import pasa a `ensurePermission` y
 `save()` llama `ensurePermission(dir, "readwrite")`.
 
-- [ ] **Step 5: Write `presets.ts`**
+- [x] **Step 5: Write `presets.ts`**
 
 `packages/web/src/presets.ts`:
 
@@ -1294,14 +1302,14 @@ export async function savePreset(dir: FileSystemDirectoryHandle, preset: Preset)
 }
 ```
 
-- [ ] **Step 6: Run the web tests and typecheck**
+- [x] **Step 6: Run the web tests and typecheck**
 
 Run: `pnpm --filter @flo/web exec vitest run && pnpm --filter @flo/web typecheck`
 Expected: PASS; sin errores de tipos (`Number.isFinite` acepta `unknown`
 en `lib.es2015`; si el `tsconfig` de web no lo acepta, usar
 `value.every((n) => typeof n === "number" && Number.isFinite(n))`).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/web/src/presets.ts packages/web/src/presets.test.ts packages/web/src/test-dir.ts packages/web/src/folder-io.ts packages/web/src/folder-io.test.ts packages/web/src/app.ts
@@ -1329,7 +1337,7 @@ git commit -m "feat(web): presets de la vista de grafo en .flo/views"
   - `App` pasa de `mapMode: boolean` a `private mode: "document" | "map" | "graph"`; `toggleMap()` conserva su firma.
   - `private showGraph(graph: GraphQuery): void` — la usa la task 6 para cargar presets al entrar.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/web/src/toolbar.test.ts`, sumar `onToggleGraph: vi.fn()` a
 `mockActions()` y, dentro de "wires each button to its action":
@@ -1553,12 +1561,12 @@ Notas para los tests:
 - En "exports the graph as shown": las franjas `flo-map-hit` no deben
   exportarse; por eso `exportable()` serializa un clon sin ellas (Step 3).
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/toolbar.test.ts src/app.test.ts`
 Expected: FAIL — no existe `#flo-toggle-graph` ni `app.toggleGraph`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/toolbar.ts`: `onToggleGraph(): void` en
 `ToolbarActions`; el botón después de "Mapa":
@@ -1753,12 +1761,12 @@ y `byId("flo-toggle-graph").addEventListener("click", actions.onToggleGraph);`.
       }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web exec vitest run && pnpm --filter @flo/web typecheck`
 Expected: PASS, incluidos todos los tests previos de mapa y exportar.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/toolbar.ts packages/web/src/toolbar.test.ts packages/web/src/app.ts packages/web/src/app.test.ts packages/web/index.html
@@ -1781,7 +1789,7 @@ git commit -m "feat(web): vista de grafo de conocimiento con filtros, pan/zoom y
 - Produces: `App` con `private presets: Preset[] | null` (null = sin
   cargar o sin carpeta); la barra recibe `this.presets?.map((p) => p.name) ?? null`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/web/src/app.test.ts` (import de
 `memoryDir, type MemoryTree` desde `./test-dir.js`), dentro de
@@ -1876,12 +1884,12 @@ En `packages/web/src/app.test.ts` (import de
 vitest no lo hace, envolver con `vi.useRealTimers()` al inicio de estos
 tests.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/app.test.ts`
 Expected: FAIL — no hay select de vistas.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 En `packages/web/src/app.ts`:
 
@@ -1958,12 +1966,12 @@ En `packages/web/src/app.ts`:
    }
    ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web exec vitest run && pnpm --filter @flo/web typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/app.ts packages/web/src/app.test.ts
@@ -1983,7 +1991,7 @@ git commit -m "feat(web): guardar y aplicar vistas del grafo desde la carpeta ab
 - Produces: toda herramienta registrada pasa por `guarded(handler)`; una
   excepción da `isError: true` con `{ error: <mensaje> }` (#47).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/mcp/src/tools.test.ts`, dentro de `describe("flo-mcp tools", ...)`:
 
@@ -2007,12 +2015,12 @@ En `packages/mcp/src/tools.test.ts`, dentro de `describe("flo-mcp tools", ...)`:
 (Si `check` sin ruta no pasa por `folder.link()` sino por
 `folder.diagnostics()`, espiar también ese método con el mismo `throw`.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/mcp exec vitest run src/tools.test.ts`
 Expected: FAIL — `list_tags` acepta `extra`; el error llega como texto del SDK, no como JSON `{ error }`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 En `packages/mcp/src/tools.ts`, debajo de `failure`:
 
@@ -2050,12 +2058,12 @@ genericidad de `guarded`, tipar el handler de cada herramienta en su sitio
 o convertir `guarded` en un `try/catch` dentro de cada handler; lo que
 importa es el comportamiento del test.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/mcp exec vitest run && pnpm --filter @flo/mcp typecheck`
 Expected: PASS (39 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/mcp/src/tools.ts packages/mcp/src/tools.test.ts
@@ -2072,7 +2080,7 @@ git commit -m "fix(mcp): list_tags estricto y errores de las herramientas como {
 - Modify: `docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md` (línea de **Estado**; §11 "Pendientes diferidos (Fase K4)" si queda alguno)
 - Modify: este plan (línea **Estado** debajo del header)
 
-- [ ] **Step 1: README**
+- [x] **Step 1: README**
 
 Después del párrafo que termina en "o el mapa si está visible.", agregar:
 
@@ -2090,19 +2098,19 @@ Después del párrafo que termina en "o el mapa si está visible.", agregar:
   vuelve a aplicar.
 ```
 
-- [ ] **Step 2: Estado de los specs y del plan**
+- [x] **Step 2: Estado de los specs y del plan**
 
 - Spec de conocimiento, **Estado**: `completado: K1 y K2 el 2026-09-28, K3 el 2026-09-29 y K4 el <fecha>` con el link al plan de K4 junto a los otros.
 - Spec de entidades, **Estado**: reemplazar "queda K4" por "K4 también (<fecha>, [plan](../plans/2026-09-30-flo-fase-k4-vista-de-grafo.md))".
 - Este plan: debajo del header, `**Estado:** completado el <fecha> (<primer commit>..<último commit>).` con lo que haya encontrado la revisión.
 - Lo que la revisión final deje sin hacer va a §11 del spec de entidades como `### Pendientes diferidos (Fase K4, <fecha>)`, con el mismo formato que las fases anteriores. Pendiente conocido de antemano, a anotar ahí: **release — navegador real:** pan/zoom, arrastre y "Guardar vista" (permiso de escritura tras un `prompt`) sin verificar en Chromium.
 
-- [ ] **Step 3: Verificación completa**
+- [x] **Step 3: Verificación completa**
 
 Run: `pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: todo en verde; `git status` sin snapshots modificados salvo el nuevo de la task 1 (ya commiteado).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add README.md docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md docs/superpowers/plans/2026-09-30-flo-fase-k4-vista-de-grafo.md
