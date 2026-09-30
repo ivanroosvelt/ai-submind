@@ -226,11 +226,13 @@ export class Lexer {
   }
 
   /**
-   * Si lo que resta de la línea actual, ignorando espacio en blanco final,
-   * termina en '}', descarta los caracteres crudos hasta justo antes de esa
-   * '}' (que el próximo next()/peek() tokenizará) y devuelve true. Si no
-   * termina en '}', no consume nada y devuelve false. Lo usa el parser para
-   * cerrar en la misma línea un cuerpo abierto con contenido detrás del '{'.
+   * Si lo que resta de la línea actual termina en '}' —ignorando espacio en
+   * blanco y un comentario `//` final (decisiones #14 y #50)—, descarta los
+   * caracteres crudos hasta justo antes de la primera '}' seguida solo de
+   * eso (que el próximo next()/peek() tokenizará, y el comentario detrás se
+   * lexa como siempre) y devuelve true. Si no, no consume nada y devuelve
+   * false. Lo usa el parser para cerrar en la misma línea un cuerpo abierto
+   * con contenido detrás del '{'.
    */
   closeTrailingBraceOnLine(): boolean {
     if (this.buffered) {
@@ -238,9 +240,10 @@ export class Lexer {
     }
     let j = this.i;
     while (j < this.source.length && this.source[j] !== "\n") j += 1;
-    let k = j - 1;
-    while (k >= this.i && (this.source[k] === " " || this.source[k] === "\t" || this.source[k] === "\r")) k -= 1;
-    if (k < this.i || this.source[k] !== "}") return false;
+    // `[^\n]` y no `.`: `.` no matchea el `\r` de un fin de línea CRLF.
+    const match = /\}[ \t\r]*(?:\/\/[^\n]*)?$/.exec(this.source.slice(this.i, j));
+    if (!match) return false;
+    const k = this.i + match.index;
     while (this.i < k) this.advance();
     return true;
   }

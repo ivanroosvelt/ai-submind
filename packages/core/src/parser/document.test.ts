@@ -121,6 +121,32 @@ describe("parseDocument", () => {
       expect(document.blocks[0].edges).toHaveLength(1);
     });
 
+    it("un bloque en una sola línea con comentario final reporta un solo E016 (#50)", () => {
+      const source = "entity x\nflow a { x -> x } // comentario\nflow b {\n  x -> x\n}\n";
+      const { diagnostics, document } = parse(source);
+      expect(diagnostics.map((d) => d.code)).toEqual(["E016"]);
+      expect(document.blocks.map((b) => b.name)).toEqual(["a", "b"]);
+    });
+
+    it("un cuerpo de entidad en una sola línea con comentario final reporta un solo E016 (#50)", () => {
+      const source = "entity x [X] { type: a } // c\nflow f {\n  x -> x\n}\n";
+      const { diagnostics, document } = parse(source);
+      expect(diagnostics.map((d) => d.code)).toEqual(["E016"]);
+      expect(document.blocks[0].edges).toHaveLength(1);
+    });
+
+    it("cierra en la primera '}' seguida solo de un comentario, aunque haya otras antes o dentro de la etiqueta", () => {
+      for (const line of [
+        "flow a { x -> x : a } b } // c",
+        "flow a { x -> x : ver http://h }",
+        "flow a { x -> x : ver http://h } // c",
+        "flow a { x -> x } // c\r",
+      ]) {
+        const { diagnostics } = parse(`entity x\n${line}\nentity y\n`);
+        expect(diagnostics.map((d) => d.code), JSON.stringify(line)).toEqual(["E016"]);
+      }
+    });
+
     it("'entity e {}' es un cuerpo vacío sin diagnósticos", () => {
       const { diagnostics } = parse("entity e {}\n");
       expect(diagnostics).toEqual([]);
