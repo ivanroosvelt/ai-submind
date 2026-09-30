@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { ensureWritable, isWorkspaceFile, openFolder, writeWorkspaceFile } from "./folder-io.js";
+import { ensurePermission, isWorkspaceFile, openFolder, writeWorkspaceFile } from "./folder-io.js";
 
 type Tree = { [name: string]: string | Tree };
 
@@ -110,18 +110,18 @@ describe("writeWorkspaceFile", () => {
   });
 });
 
-describe("ensureWritable", () => {
-  it("asks for permission only when it is not granted yet", async () => {
+describe("ensurePermission", () => {
+  it("asks for the requested mode only when it is not granted yet", async () => {
     const granted = { queryPermission: vi.fn().mockResolvedValue("granted"), requestPermission: vi.fn() };
-    expect(await ensureWritable(granted as unknown as FileSystemDirectoryHandle)).toBe(true);
+    expect(await ensurePermission(granted as unknown as FileSystemDirectoryHandle, "read")).toBe(true);
+    expect(granted.queryPermission).toHaveBeenCalledWith({ mode: "read" });
     expect(granted.requestPermission).not.toHaveBeenCalled();
-
     const denied = { queryPermission: vi.fn().mockResolvedValue("prompt"), requestPermission: vi.fn().mockResolvedValue("denied") };
-    expect(await ensureWritable(denied as unknown as FileSystemDirectoryHandle)).toBe(false);
+    expect(await ensurePermission(denied as unknown as FileSystemDirectoryHandle, "readwrite")).toBe(false);
     expect(denied.requestPermission).toHaveBeenCalledWith({ mode: "readwrite" });
   });
 
-  it("assumes permission when the browser has no permission methods", async () => {
-    expect(await ensureWritable({} as FileSystemDirectoryHandle)).toBe(true);
+  it("assumes permission when the browser has no permission API", async () => {
+    expect(await ensurePermission({} as FileSystemDirectoryHandle, "readwrite")).toBe(true);
   });
 });

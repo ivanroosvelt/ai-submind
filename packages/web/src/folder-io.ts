@@ -81,9 +81,9 @@ export async function writeWorkspaceFile(dir: FileSystemDirectoryHandle, uri: st
 }
 
 /** Un handle restaurado del borrador pierde el permiso al recargar la página: se vuelve a pedir. */
-export async function ensureWritable(dir: FileSystemDirectoryHandle): Promise<boolean> {
+export async function ensurePermission(dir: FileSystemDirectoryHandle, mode: "read" | "readwrite"): Promise<boolean> {
   if (!dir.queryPermission || !dir.requestPermission) return true;
-  const descriptor = { mode: "readwrite" } as const;
+  const descriptor = { mode };
   if ((await dir.queryPermission(descriptor)) === "granted") return true;
   return (await dir.requestPermission(descriptor)) === "granted";
 }

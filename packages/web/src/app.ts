@@ -19,7 +19,7 @@ import { addEdgeHitAreas, mapHtml } from "./map-view.js";
 import { nextPreviewState, previewHtml, renderActive, type PreviewState } from "./preview.js";
 import { createToolbar, type DiagramKind } from "./toolbar.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
-import { ensureWritable, openFolder, writeWorkspaceFile } from "./folder-io.js";
+import { ensurePermission, openFolder, writeWorkspaceFile } from "./folder-io.js";
 import { exportSvg, exportPng } from "./export.js";
 import { saveDraft } from "./storage.js";
 import { EXAMPLES } from "./examples.js";
@@ -215,7 +215,7 @@ export class App {
     const ws = this.ws;
     const { dir } = ws;
     if (dir) {
-      if (!(await ensureWritable(dir))) throw new Error("sin permiso de escritura en la carpeta");
+      if (!(await ensurePermission(dir, "readwrite"))) throw new Error("sin permiso de escritura en la carpeta");
       for (const uri of ws.uris()) {
         if (!ws.isDirty(uri)) continue;
         await writeWorkspaceFile(dir, uri, ws.source(uri));
