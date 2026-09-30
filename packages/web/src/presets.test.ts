@@ -113,4 +113,29 @@ describe("listPresets / savePreset", () => {
     expect((await listPresets(memoryDir(tree))).map((preset) => preset.name)).toEqual(["a", "b"]);
     expect(warn).toHaveBeenCalledTimes(2);
   });
+
+  it("skips a file whose getFile() rejects, keeps the rest and warns once", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const okPreset = JSON.stringify({ ...PRESET, name: "ok" });
+    const okHandle = { kind: "file", name: "ok.json", getFile: async () => new File([okPreset], "ok.json") };
+    const brokenHandle = {
+      kind: "file",
+      name: "roto.json",
+      getFile: async () => {
+        throw new Error("no se pudo leer");
+      },
+    };
+    const views = {
+      kind: "directory",
+      name: "views",
+      async *values() {
+        yield brokenHandle;
+        yield okHandle;
+      },
+    } as unknown as FileSystemDirectoryHandle;
+    const flo = { kind: "directory", name: ".flo", getDirectoryHandle: async () => views } as unknown as FileSystemDirectoryHandle;
+    const dir = { kind: "directory", name: "", getDirectoryHandle: async () => flo } as unknown as FileSystemDirectoryHandle;
+    expect((await listPresets(dir)).map((preset) => preset.name)).toEqual(["ok"]);
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
 });

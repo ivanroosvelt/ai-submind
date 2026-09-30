@@ -88,9 +88,13 @@ export async function listPresets(dir: FileSystemDirectoryHandle): Promise<Prese
   for await (const handle of views.values()) {
     if (handle.kind !== "file" || !handle.name.endsWith(".json")) continue;
     const name = handle.name.slice(0, -".json".length);
-    const preset = isPresetName(name)
-      ? parsePreset(name, await readFileAsText(await (handle as FileSystemFileHandle).getFile()))
-      : null;
+    let preset: Preset | null = null;
+    try {
+      if (isPresetName(name)) preset = parsePreset(name, await readFileAsText(await (handle as FileSystemFileHandle).getFile()));
+    } catch {
+      // Archivo ilegible (permisos, I/O): se salta igual que uno inválido.
+      preset = null;
+    }
     if (preset) presets.push(preset);
     else console.warn(`flo: se ignora la vista ${PRESETS_DIR}/${handle.name} (nombre o contenido inválido)`);
   }

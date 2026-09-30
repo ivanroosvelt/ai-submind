@@ -42,6 +42,13 @@ describe("bindPanZoom", () => {
     expect(onChange).toHaveBeenLastCalledWith(expected);
   });
 
+  it("ignores a horizontal-only wheel scroll (deltaY 0)", () => {
+    const { svg, onChange } = setup();
+    svg.dispatchEvent(new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaX: 50, deltaY: 0, clientX: 0, clientY: 0 }));
+    expect(svg.getAttribute("viewBox")).toBe("0 0 100 50");
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it("pans while dragging with the main button", () => {
     const { svg, onChange } = setup();
     mouse(svg, "mousedown", 10);

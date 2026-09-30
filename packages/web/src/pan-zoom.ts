@@ -36,6 +36,8 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
   svg.addEventListener(
     "wheel",
     (event) => {
+      // Scroll puramente horizontal (trackpad): no es gesto de zoom.
+      if (event.deltaY === 0) return;
       event.preventDefault();
       const rect = svg.getBoundingClientRect();
       const viewBox = current();

@@ -574,13 +574,16 @@ Descartados o reasignados:
   (permiso de escritura tras un `prompt`) sin verificar en Chromium;
   tampoco se verificó que el `viewBox` exportado se vea igual en el PNG.
 - **Cualquiera — pan/zoom:** `bindPanZoom` usa una sola escala para x e y
-  (supone que el SVG no tiene bandas por `preserveAspectRatio`); sin test
-  del zoom hacia afuera en `bindPanZoom`.
+  (con `height: auto` el SVG mantiene su aspect ratio, así que ya no hay
+  bandas); sin test del zoom hacia afuera en `bindPanZoom`.
 - **Cualquiera — vista de grafo:** el texto de búsqueda aplica en `change`
   (#45): si se escribe y se hace click en un nodo, el blur re-renderiza y
   el primer click puede perderse. `showGraph` puede leer `.flo/views` dos
   veces si se reentra antes de terminar la primera lectura (inofensivo).
-  Faltan tests de: `viewBox` en lo exportado tras un zoom, centrar desde
-  el mapa.
+  Cuando terminan de cargar las vistas (`loadPresets` → `refresh()`) la
+  barra se reconstruye y el texto de búsqueda que se haya escrito pero no
+  aplicado todavía se pierde. `App.graph` es público solo para que los
+  tests puedan leerlo. Faltan tests de: `viewBox` en lo exportado tras un
+  zoom, centrar desde el mapa.
 - **Cualquiera — presets:** `savePreset` no valida el nombre por sí mismo
   (lo valida `App` con `isPresetName`).

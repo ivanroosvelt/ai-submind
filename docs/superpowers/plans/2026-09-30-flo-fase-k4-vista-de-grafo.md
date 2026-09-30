@@ -2,14 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** completado el 2026-09-30 (`adc67d3`..`fb30b21` y este cierre de
-docs).
+**Estado:** completado el 2026-09-30 (`adc67d3`..hasta este fix).
 
 - Tasks 1, 3–7 pasaron su revisión sin rondas de fixes. La task 2 tuvo una
   ronda (`91ee3c0`): un click con jitter dejó de contar como arrastre
   (desplazamiento neto desde el `mousedown`, no longitud del recorrido).
-- Revisión final: pendiente (el controller actualiza esta línea).
-- **Suite:** 244 tests en core, 157 en web, 39 en mcp.
+- Revisión final (opus, whole-branch): un Important — `max-width` sin
+  `height: auto` dejaba bandas en grafos anchos y desplazaba el centro del
+  zoom de rueda — corregido en este commit junto con el zoom-out al
+  scrollear solo horizontal y una vista ilegible que hacía fallar
+  `listPresets` entera en vez de saltarse.
+- **Suite:** 244 tests en core, 159 en web, 39 en mcp.
 
 **Goal:** El editor web suma un tercer modo de preview, "Grafo": el
 resultado de `query` dibujado como SVG (color por tipo de memoria, tipo de
