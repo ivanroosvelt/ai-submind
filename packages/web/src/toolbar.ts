@@ -34,7 +34,7 @@ export function createToolbar(
     <button id="flo-save" type="button">Guardar</button>
     <button id="flo-export-svg" type="button">Exportar SVG</button>
     <button id="flo-export-png" type="button">Exportar PNG</button>
-    <button id="flo-toggle-map" type="button">Mapa</button>
+    <button id="flo-toggle-map" type="button" aria-pressed="false">Mapa</button>
     <button id="flo-toggle-expand" type="button">Ampliar</button>
     <select id="flo-examples">
       <option value="" selected disabled>Ejemplos</option>

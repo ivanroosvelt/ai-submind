@@ -553,10 +553,8 @@ Descartados o reasignados:
   refresca el documento que esté activo (inofensivo, un refresh de más).
   Los `EditorState` guardados por uri (#43) no se podan hasta el siguiente
   `load()`.
-- **K4 — mapa:** el botón "Mapa" no muestra si está activo
-  (`aria-pressed`); el panel de una arista queda visible al salir del mapa
-  por uno de sus flujos.
-- **Cualquiera — tests:** sin test de que Exportar toma el bloque
-  seleccionado (`exportable()`), ni del guard de botón del Ctrl/Cmd+click
-  (jsdom no da posición al click).
+- **Cualquiera — tests:** sin test del guard de botón del Ctrl/Cmd+click
+  (jsdom no da posición al click). (El `aria-pressed` del botón "Mapa",
+  el panel de arista al salir del mapa y el test de exportar el bloque
+  seleccionado se resolvieron en la task 13 del plan de F.)
 

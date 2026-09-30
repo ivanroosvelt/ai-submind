@@ -163,6 +163,7 @@ export class App {
       enhanceSequencePreview(this.el.preview);
       this.markSelection();
     }
+    this.el.toolbar.querySelector("#flo-toggle-map")?.setAttribute("aria-pressed", String(this.mapMode));
     this.renderPanel();
     this.renderExplorer();
     // ponytail: sin IndexedDB (modo privado) el editor sigue, solo sin borrador.
@@ -295,6 +296,8 @@ export class App {
   /** Abre el documento del bloque y lo selecciona (es el que se exporta); con `entity`, resalta su nodo. */
   selectBlock(id: BlockId, entity: EntityId | null = null): void {
     this.mapMode = false;
+    // La arista del panel ya no está a la vista; el panel de una entidad sí sigue valiendo.
+    if (this.panel?.kind === "edge") this.panel = null;
     this.selectedBlock = id;
     this.highlight = entity;
     const uri = id.slice(0, id.lastIndexOf("#"));

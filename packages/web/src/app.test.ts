@@ -4,6 +4,13 @@ import { runScopeHandlers } from "@codemirror/view";
 import { App, newWorkspace, type AppElements } from "./app.js";
 import type { WorkspaceSnapshot } from "./workspace.js";
 
+// jsdom no descarga archivos: se observa qué SVG recibe la exportación.
+vi.mock("./export.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./export.js")>()),
+  exportSvg: vi.fn(),
+}));
+import { exportSvg } from "./export.js";
+
 export function elements(): AppElements {
   const el = () => document.body.appendChild(document.createElement("div"));
   return { toolbar: el(), explorer: el(), editor: el(), preview: el(), panel: el() };
@@ -289,5 +296,37 @@ describe("App navigation", () => {
     app.toggleMap();
     click(el.preview.querySelector('[data-flo-entity="db"]')!);
     expect(el.panel.innerHTML).toContain("<code>db</code>");
+  });
+
+  it("exports the selected block, or the map when it is visible", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    vi.mocked(exportSvg).mockClear();
+    app.selectBlock("login.flo#vacio");
+    click(el.toolbar.querySelector("#flo-export-svg")!);
+    expect(vi.mocked(exportSvg).mock.calls[0][0]).not.toContain("API Gateway"); // no el primero
+    app.toggleMap();
+    click(el.toolbar.querySelector("#flo-export-svg")!);
+    expect(vi.mocked(exportSvg).mock.calls[1][0]).toContain('data-flo-block="#mapa"');
+  });
+
+  it("marks the map button as pressed while the map is visible", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    const button = el.toolbar.querySelector("#flo-toggle-map")!;
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+    app.toggleMap();
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+    app.selectBlock("login.flo#login");
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("closes an edge panel when leaving the map through one of its flows", () => {
+    const el = elements();
+    new App(el, FILES);
+    click(el.toolbar.querySelector("#flo-toggle-map")!);
+    click(el.preview.querySelector('polyline.flo-map-hit[data-flo-from="api"]')!);
+    click(el.panel.querySelector('[data-flo-block="login.flo#login"]')!);
+    expect(el.panel.innerHTML).toBe("");
   });
 });
