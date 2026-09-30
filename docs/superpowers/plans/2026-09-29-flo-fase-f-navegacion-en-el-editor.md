@@ -2,7 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** completado el 2026-09-29 (`aa23b8c`..`b7ed239`, fixes de la revisión final `f094d80`..`89ef65f`). Las 12 tasks pasaron su revisión sin rondas de fixes. Revisión final: con una carpeta abierta, un archivo nuevo sin guardar se perdía sin confirmación al reemplazar el workspace (`hasUnsavedChanges` cuenta ahora los archivos nunca guardados de la carpeta, decisión #43); cambiar de documento perdía el historial de deshacer (`App` guarda un `EditorState` por uri y lo reusa si la fuente no cambió); `save()` fija el workspace antes de los `await`; `load()` limpia selección, resaltado, panel y mapa; Ctrl/Cmd+click solo con el botón principal. Verificado a mano en Safari (sin selector de carpetas). Suite: 235 core, 109 web, 37 mcp. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase F)"; la task 13 (segunda vuelta, `3447ef7`, revisión limpia) recogió de ahí lo que tenía arreglo en código; queda el smoke test en Chromium, el debounce suelto y los `EditorState` sin podar (inofensivos), y el test del guard de botón del Ctrl/Cmd+click. Suite: 235 core, 112 web, 37 mcp. El código y los tests de este plan reflejan lo entregado (incluidos esos fixes).
+**Estado:** completado el 2026-09-29, en dos vueltas.
+
+- **Primera vuelta (tasks 1–12):** `aa23b8c`..`b7ed239`; las 12 tasks pasaron su revisión sin rondas de fixes. La revisión final encontró y se arregló en `f094d80`..`89ef65f`: con una carpeta abierta, un archivo nuevo sin guardar se perdía sin confirmación al reemplazar el workspace (`hasUnsavedChanges` cuenta ahora los nunca guardados de la carpeta, decisión #43); cambiar de documento perdía el historial de deshacer (`App` guarda un `EditorState` por uri y lo reusa si la fuente no cambió); `save()` fija el workspace antes de los `await`; `load()` limpia selección, resaltado, panel y mapa; Ctrl/Cmd+click solo con el botón principal. Verificado a mano en Safari (sin selector de carpetas).
+- **Segunda vuelta (task 13):** `3447ef7`, revisión limpia. Recoge de §11 "Pendientes diferidos (Fase F)" lo que tenía arreglo en código: `aria-pressed` en "Mapa", el panel de arista se cierra al salir del mapa y el test de exportar el bloque seleccionado.
+- **Queda** (en §11, "Pendientes diferidos (Fase F)"): el smoke test en Chromium de la carpeta y de Ctrl/Cmd+click, el `setTimeout` suelto del debounce y los `EditorState` sin podar (inofensivos), y el test del guard de botón del Ctrl/Cmd+click.
+- **Suite:** 235 tests en core, 112 en web, 37 en mcp. El código y los tests de este plan reflejan lo entregado, incluidos los fixes de ambas vueltas.
 
 **Goal:** El editor web pasa de un archivo suelto a un workspace de varios
 documentos (abrir carpeta, guardar todo, borrador del workspace entero) y
@@ -128,6 +133,8 @@ Orden de fases: D → E → K1 → K2 → K3 → **F** → K4.
 - Modify `src/file-system-access.d.ts`, `tsconfig.json` — tipos de `showDirectoryPicker`, permisos y `values()`.
 - Modify `src/main.ts`, `index.html` — columna del explorador y del panel.
 - Modify `README.md` (task 12).
+
+La task 13 (segunda vuelta) no crea archivos: toca `app.ts`, `app.test.ts`, `toolbar.ts`, `index.html` y §11 del spec.
 
 ---
 
