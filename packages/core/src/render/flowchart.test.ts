@@ -34,4 +34,13 @@ describe("renderFlowchartToSvg", () => {
     expect(svg).toContain(">ghost<");
     expect(svg).not.toContain("NaN");
   });
+
+  it("draws each repeated edge with its own label (#49)", () => {
+    const svg = renderFirst("entity a\nentity b\nflow f {\n  a -> b : si\n  a -> b : no\n}\n");
+    const lines = svg.match(/<polyline points="[^"]*"/g) ?? [];
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).not.toBe(lines[1]);
+    expect(svg).toContain(">si<");
+    expect(svg).toContain(">no<");
+  });
 });

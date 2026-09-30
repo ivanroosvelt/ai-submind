@@ -94,4 +94,11 @@ describe("layoutFlowchart", () => {
       ["ghost", { start: { line: 4, column: 8 }, end: { line: 4, column: 13 } }],
     ]);
   });
+
+  it("gives repeated edges between the same pair their own route (#49)", () => {
+    const { block, catalog } = firstBlock("entity a\nentity b\nflow f {\n  a -> b : si\n  a -> b : no\n}\n");
+    const { edges } = layoutFlowchart(block, catalog);
+    expect(edges.map((edge) => edge.label)).toEqual(["si", "no"]);
+    expect(edges[0].points).not.toEqual(edges[1].points);
+  });
 });

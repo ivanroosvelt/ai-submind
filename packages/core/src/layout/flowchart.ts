@@ -46,7 +46,9 @@ function finiteOrZero(value: number | undefined): number {
 }
 
 export function layoutFlowchart(block: DiagramBlock, catalog: Catalog): FlowchartLayout {
-  const graph = new dagre.graphlib.Graph();
+  // Multigrafo (decisión #49): una arista con nombre por línea del bloque,
+  // así dos `a -> b` repetidas tienen recorridos propios.
+  const graph = new dagre.graphlib.Graph({ multigraph: true });
   graph.setGraph({ ...GRAPH_OPTIONS });
   graph.setDefaultEdgeLabel(() => ({}));
 
@@ -57,9 +59,7 @@ export function layoutFlowchart(block: DiagramBlock, catalog: Catalog): Flowchar
   for (const node of nodes) {
     graph.setNode(node.id, measureFlowchartNode(node.shape, node.label));
   }
-  for (const edge of block.edges) {
-    graph.setEdge(nodeId(edge.from), nodeId(edge.to));
-  }
+  block.edges.forEach((edge, index) => graph.setEdge(nodeId(edge.from), nodeId(edge.to), {}, String(index)));
 
   dagre.layout(graph);
 
@@ -71,11 +71,11 @@ export function layoutFlowchart(block: DiagramBlock, catalog: Catalog): Flowchar
       const laidOut = graph.node(node.id);
       return { ...node, x: laidOut.x, y: laidOut.y, width: laidOut.width, height: laidOut.height };
     }),
-    edges: block.edges.map((edge) => ({
+    edges: block.edges.map((edge, index) => ({
       from: nodeId(edge.from),
       to: nodeId(edge.to),
       label: edge.label,
-      points: graph.edge(nodeId(edge.from), nodeId(edge.to)).points,
+      points: graph.edge({ v: nodeId(edge.from), w: nodeId(edge.to), name: String(index) }).points,
       range: edge.range,
     })),
   };
