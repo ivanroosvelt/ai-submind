@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** completado el 2026-09-29 (`aa23b8c`..`b7ed239`, fixes de la revisión final `f094d80`..`89ef65f`). Las 12 tasks pasaron su revisión sin rondas de fixes. Revisión final: con una carpeta abierta, un archivo nuevo sin guardar se perdía sin confirmación al reemplazar el workspace (`hasUnsavedChanges` cuenta ahora los archivos nunca guardados de la carpeta, decisión #43); cambiar de documento perdía el historial de deshacer (`App` guarda un `EditorState` por uri y lo reusa si la fuente no cambió); `save()` fija el workspace antes de los `await`; `load()` limpia selección, resaltado, panel y mapa; Ctrl/Cmd+click solo con el botón principal. Verificado a mano en Safari (sin selector de carpetas). Suite: 235 core, 109 web, 37 mcp. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase F)"; la task 13 (segunda vuelta) recoge de ahí lo que tiene arreglo en código. El código y los tests de este plan reflejan lo entregado (incluidos esos fixes).
+**Estado:** completado el 2026-09-29 (`aa23b8c`..`b7ed239`, fixes de la revisión final `f094d80`..`89ef65f`). Las 12 tasks pasaron su revisión sin rondas de fixes. Revisión final: con una carpeta abierta, un archivo nuevo sin guardar se perdía sin confirmación al reemplazar el workspace (`hasUnsavedChanges` cuenta ahora los archivos nunca guardados de la carpeta, decisión #43); cambiar de documento perdía el historial de deshacer (`App` guarda un `EditorState` por uri y lo reusa si la fuente no cambió); `save()` fija el workspace antes de los `await`; `load()` limpia selección, resaltado, panel y mapa; Ctrl/Cmd+click solo con el botón principal. Verificado a mano en Safari (sin selector de carpetas). Suite: 235 core, 109 web, 37 mcp. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase F)"; la task 13 (segunda vuelta, `3447ef7`, revisión limpia) recogió de ahí lo que tenía arreglo en código; queda el smoke test en Chromium, el debounce suelto y los `EditorState` sin podar (inofensivos), y el test del guard de botón del Ctrl/Cmd+click. Suite: 235 core, 112 web, 37 mcp. El código y los tests de este plan reflejan lo entregado (incluidos esos fixes).
 
 **Goal:** El editor web pasa de un archivo suelto a un workspace de varios
 documentos (abrir carpeta, guardar todo, borrador del workspace entero) y
@@ -3450,7 +3450,7 @@ arista cierra ese panel (la arista ya no está a la vista); el panel de
 una entidad se conserva. Exportar SVG toma el bloque seleccionado, o el
 mapa si está visible (#41), ahora con test.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/web/src/app.test.ts`, después de los imports:
 
@@ -3502,13 +3502,13 @@ y dentro de `describe("App navigation")`:
 (El test del panel de entidad que salta a un flujo — "jumps from a flow in
 the panel…" — ya verifica que ese panel se conserva.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/app.test.ts`
 Expected: FAIL — `aria-pressed` es null y el panel de arista sigue visible.
 (El de exportar puede pasar ya: es el test que faltaba, no un bug.)
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/toolbar.ts`: el botón pasa a
 `<button id="flo-toggle-map" type="button" aria-pressed="false">Mapa</button>`.
@@ -3548,12 +3548,12 @@ Expected: FAIL — `aria-pressed` es null y el panel de arista sigue visible.
   seleccionado se resolvieron en la task 13 del plan de F.)
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: PASS; ningún `.snap` modificado.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/app.ts packages/web/src/app.test.ts packages/web/src/toolbar.ts packages/web/index.html docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
