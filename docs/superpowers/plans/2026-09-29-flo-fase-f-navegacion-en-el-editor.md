@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Estado:** completado el 2026-09-29 (`aa23b8c`..`b7ed239`, fixes de la revisión final `f094d80`..`89ef65f`). Las 12 tasks pasaron su revisión sin rondas de fixes. Revisión final: con una carpeta abierta, un archivo nuevo sin guardar se perdía sin confirmación al reemplazar el workspace (`hasUnsavedChanges` cuenta ahora los archivos nunca guardados de la carpeta, decisión #43); cambiar de documento perdía el historial de deshacer (`App` guarda un `EditorState` por uri y lo reusa si la fuente no cambió); `save()` fija el workspace antes de los `await`; `load()` limpia selección, resaltado, panel y mapa; Ctrl/Cmd+click solo con el botón principal. Verificado a mano en Safari (sin selector de carpetas). Suite: 235 core, 109 web, 37 mcp. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase F)". El código y los tests de este plan reflejan lo entregado (incluidos esos fixes).
+**Estado:** completado el 2026-09-29 (`aa23b8c`..`b7ed239`, fixes de la revisión final `f094d80`..`89ef65f`). Las 12 tasks pasaron su revisión sin rondas de fixes. Revisión final: con una carpeta abierta, un archivo nuevo sin guardar se perdía sin confirmación al reemplazar el workspace (`hasUnsavedChanges` cuenta ahora los archivos nunca guardados de la carpeta, decisión #43); cambiar de documento perdía el historial de deshacer (`App` guarda un `EditorState` por uri y lo reusa si la fuente no cambió); `save()` fija el workspace antes de los `await`; `load()` limpia selección, resaltado, panel y mapa; Ctrl/Cmd+click solo con el botón principal. Verificado a mano en Safari (sin selector de carpetas). Suite: 235 core, 109 web, 37 mcp. Lo que quedó sin hacer está en §11, "Pendientes diferidos (Fase F)"; la task 13 (segunda vuelta) recoge de ahí lo que tiene arreglo en código. El código y los tests de este plan reflejan lo entregado (incluidos esos fixes).
 
 **Goal:** El editor web pasa de un archivo suelto a un workspace de varios
 documentos (abrir carpeta, guardar todo, borrador del workspace entero) y
@@ -3421,4 +3421,141 @@ modificados.
 ```bash
 git add README.md packages/core/GRAMMAR.md
 git commit -m "docs: workspace y navegación del editor web (Fase F)"
+```
+
+---
+
+### Task 13: Pendientes de la revisión final (segunda vuelta)
+
+Recoge de §11 "Pendientes diferidos (Fase F)" lo que tiene arreglo en
+código. Queda fuera: el smoke test en Chromium (manual), el `setTimeout`
+suelto del debounce y los `EditorState` sin podar (inofensivos: un refresh
+de más y unos pocos estados hasta el siguiente `load()`), y el test del
+guard de botón del Ctrl/Cmd+click (jsdom no da posición al click).
+
+**Files:**
+- Modify: `packages/web/src/app.ts`, `packages/web/src/app.test.ts`
+- Modify: `packages/web/src/toolbar.ts`
+- Modify: `packages/web/index.html` (estilo)
+- Modify: `docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md` (§11)
+
+**Interfaces:**
+- Consumes: `App.refresh()`, `App.selectBlock()`, `App.panel` (tasks 7–10); `exportSvg` de `./export.js`.
+- Produces: el botón `#flo-toggle-map` lleva `aria-pressed="true|false"` según el modo; ninguna firma cambia.
+
+Semántica: el botón "Mapa" muestra si el mapa está visible
+(`aria-pressed`, actualizado en cada `refresh()`, así también lo apagan
+`selectBlock` y `load()`). Salir del mapa por un flujo del panel de una
+arista cierra ese panel (la arista ya no está a la vista); el panel de
+una entidad se conserva. Exportar SVG toma el bloque seleccionado, o el
+mapa si está visible (#41), ahora con test.
+
+- [ ] **Step 1: Write the failing tests**
+
+En `packages/web/src/app.test.ts`, después de los imports:
+
+```ts
+// jsdom no descarga archivos: se observa qué SVG recibe la exportación.
+vi.mock("./export.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./export.js")>()),
+  exportSvg: vi.fn(),
+}));
+import { exportSvg } from "./export.js";
+```
+
+y dentro de `describe("App navigation")`:
+
+```ts
+  it("exports the selected block, or the map when it is visible", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    vi.mocked(exportSvg).mockClear();
+    app.selectBlock("login.flo#vacio");
+    click(el.toolbar.querySelector("#flo-export-svg")!);
+    expect(vi.mocked(exportSvg).mock.calls[0][0]).not.toContain("API Gateway"); // no el primero
+    app.toggleMap();
+    click(el.toolbar.querySelector("#flo-export-svg")!);
+    expect(vi.mocked(exportSvg).mock.calls[1][0]).toContain('data-flo-block="#mapa"');
+  });
+
+  it("marks the map button as pressed while the map is visible", () => {
+    const el = elements();
+    const app = new App(el, FILES);
+    const button = el.toolbar.querySelector("#flo-toggle-map")!;
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+    app.toggleMap();
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+    app.selectBlock("login.flo#login");
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("closes an edge panel when leaving the map through one of its flows", () => {
+    const el = elements();
+    new App(el, FILES);
+    click(el.toolbar.querySelector("#flo-toggle-map")!);
+    click(el.preview.querySelector('polyline.flo-map-hit[data-flo-from="api"]')!);
+    click(el.panel.querySelector('[data-flo-block="login.flo#login"]')!);
+    expect(el.panel.innerHTML).toBe("");
+  });
+```
+
+(El test del panel de entidad que salta a un flujo — "jumps from a flow in
+the panel…" — ya verifica que ese panel se conserva.)
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `pnpm --filter @flo/web exec vitest run src/app.test.ts`
+Expected: FAIL — `aria-pressed` es null y el panel de arista sigue visible.
+(El de exportar puede pasar ya: es el test que faltaba, no un bug.)
+
+- [ ] **Step 3: Implement**
+
+`packages/web/src/toolbar.ts`: el botón pasa a
+`<button id="flo-toggle-map" type="button" aria-pressed="false">Mapa</button>`.
+
+`packages/web/src/app.ts`:
+
+1. En `refresh()`, antes de `this.renderPanel();`:
+
+```ts
+    this.el.toolbar.querySelector("#flo-toggle-map")?.setAttribute("aria-pressed", String(this.mapMode));
+```
+
+2. En `selectBlock`, después de `this.mapMode = false;`:
+
+```ts
+    // La arista del panel ya no está a la vista; el panel de una entidad sí sigue valiendo.
+    if (this.panel?.kind === "edge") this.panel = null;
+```
+
+`packages/web/index.html`, estilos:
+
+```css
+      #toolbar button[aria-pressed="true"] {
+        background: #dbeafe;
+        border-color: #93c5fd;
+      }
+```
+
+`docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md`: en
+"Pendientes diferidos (Fase F)", reemplazar el ítem **K4 — mapa** y el
+ítem **Cualquiera — tests** por:
+
+```markdown
+- **Cualquiera — tests:** sin test del guard de botón del Ctrl/Cmd+click
+  (jsdom no da posición al click). (El `aria-pressed` del botón "Mapa",
+  el panel de arista al salir del mapa y el test de exportar el bloque
+  seleccionado se resolvieron en la task 13 del plan de F.)
+```
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `pnpm -r typecheck && pnpm -r test && pnpm -r build`
+Expected: PASS; ningún `.snap` modificado.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/web/src/app.ts packages/web/src/app.test.ts packages/web/src/toolbar.ts packages/web/index.html docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md
+git commit -m "fix(web): el botón Mapa muestra su estado, el panel de arista se cierra al salir del mapa y test de exportar el bloque seleccionado"
 ```
