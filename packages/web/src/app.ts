@@ -38,6 +38,9 @@ const NEW_SOURCE: Record<DiagramKind, string> = {
   sequence: ["sequence nuevo {", "", "}", ""].join("\n"),
 };
 
+// Mismo debounce que el preview del editor (decisión #48).
+const SEARCH_DEBOUNCE_MS = 200;
+
 export function newWorkspace(kind: DiagramKind = "flowchart"): WorkspaceSnapshot {
   return { files: { "nuevo.flo": NEW_SOURCE[kind] }, saved: {}, active: "nuevo.flo", dir: null };
 }
@@ -79,6 +82,8 @@ export class App {
   /** El estado de cada documento que dejó el editor, hasta que se reemplace el workspace (#43). */
   private readonly states = new Map<DocumentUri, EditorState>();
   private shown: DocumentUri | null = null;
+  /** El debounce de la búsqueda de la barra del grafo (#48). */
+  private searchTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly host: EditorHost = {
     workspace: () => this.ws,
     onChange: () => this.refresh(),
@@ -118,6 +123,7 @@ export class App {
     );
     el.preview.addEventListener("click", (event) => this.onPreviewClick(event.target as Element));
     el.preview.addEventListener("change", (event) => this.onPreviewChange(event.target as Element));
+    el.preview.addEventListener("input", (event) => this.onPreviewInput(event.target as Element));
     el.panel.addEventListener("click", (event) => this.onPanelClick(event.target as Element));
     bindExplorer(el.explorer, {
       onOpenDocument: (uri) => this.openDocument(uri),
@@ -151,6 +157,7 @@ export class App {
     this.mode = "document";
     this.graph = DEFAULT_GRAPH;
     this.presets = null;
+    clearTimeout(this.searchTimer);
     this.openDocument(this.ws.active);
   }
 
@@ -241,11 +248,25 @@ export class App {
   }
 
   private renderGraph(link: LinkResult): void {
+    // Un re-render con la búsqueda enfocada la vuelve a enfocar con su texto (#48).
+    const active = document.activeElement;
+    const typing =
+      active instanceof HTMLInputElement && active.getAttribute("data-flo-kg") === "text" && this.el.preview.contains(active)
+        ? { value: active.value, start: active.selectionStart, end: active.selectionEnd }
+        : null;
     const { where, from, depth, viewBox } = this.graph;
     const result = query(link, { where, from: from ?? undefined, depth });
     this.el.preview.innerHTML =
       `<div class="flo-kg-bar">${graphBarHtml(link, tagCatalog(link), this.graph, this.presets?.map((preset) => preset.name) ?? null)}</div>` +
       graphHtml(renderKnowledge(link, result), result.nodes.length === 0);
+    if (typing) {
+      const input = this.el.preview.querySelector<HTMLInputElement>('[data-flo-kg="text"]');
+      if (input) {
+        input.value = typing.value;
+        input.focus();
+        input.setSelectionRange(typing.start, typing.end);
+      }
+    }
     const svg = this.el.preview.querySelector<SVGSVGElement>(".flo-kg svg");
     if (!svg) return;
     if (viewBox) svg.setAttribute("viewBox", viewBox.join(" "));
@@ -265,8 +286,25 @@ export class App {
       }
       return;
     }
+    this.applyBar();
+  }
+
+  /** La búsqueda aplica mientras se escribe, con debounce (#48); los selects, en `change`. */
+  private onPreviewInput(target: Element): void {
+    if (this.mode !== "graph" || target.getAttribute("data-flo-kg") !== "text") return;
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.applyBar(), SEARCH_DEBOUNCE_MS);
+  }
+
+  /** Lleva la barra a la consulta; si no cambia nada, no re-renderiza (un click en curso sobrevive, #48). */
+  private applyBar(): void {
+    clearTimeout(this.searchTimer);
+    if (this.mode !== "graph") return;
     const { filter, depth } = readBar(this.el.preview);
-    this.graph = { where: whereOf(filter), from: this.graph.from, depth, viewBox: null };
+    const next: GraphQuery = { where: whereOf(filter), from: this.graph.from, depth, viewBox: null };
+    const key = (graph: GraphQuery) => JSON.stringify([graph.where, graph.from, graph.depth]);
+    if (key(next) === key(this.graph)) return;
+    this.graph = next;
     this.refresh();
   }
 

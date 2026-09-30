@@ -607,4 +607,73 @@ describe("App knowledge graph", () => {
     expect(other.preview.querySelector('[data-flo-kg="preset"]')).toBeNull();
     expect(other.preview.querySelector("[data-flo-kg-save]")).toBeNull();
   });
+
+  const search = (el: AppElements) => el.preview.querySelector<HTMLInputElement>('[data-flo-kg="text"]')!;
+
+  function type(el: AppElements, value: string): void {
+    const input = search(el);
+    input.focus();
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  it("applies the search while typing, after the debounce", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    type(el, "pkce");
+    expect(graphNodes(el)).toEqual(["pkce", "rule", "api"]); // todavía no
+    vi.advanceTimersByTime(200);
+    expect(graphNodes(el)[0]).toBe("pkce");
+    expect(app.graph.where).toEqual({ and: [{ text: "pkce" }] });
+  });
+
+  it("does not re-render when a control leaves the query unchanged, so a click in progress survives", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    type(el, "pkce");
+    vi.advanceTimersByTime(200);
+    const node = el.preview.querySelector('.flo-kg g[data-flo-entity="pkce"]')!;
+    search(el).dispatchEvent(new Event("change", { bubbles: true })); // el blur al ir al nodo
+    expect(el.preview.contains(node)).toBe(true);
+    click(node.querySelector("text")!);
+    expect(app.ws.active).toBe("kb/pkce.md");
+  });
+
+  it("keeps focus and unapplied text in the search across a re-render", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    type(el, "regl");
+    search(el).setSelectionRange(1, 3);
+    app.refresh(); // p. ej. una edición en otro documento
+    expect(search(el).value).toBe("regl");
+    expect(document.activeElement).toBe(search(el));
+    expect([search(el).selectionStart, search(el).selectionEnd]).toEqual([1, 3]);
+    vi.advanceTimersByTime(200);
+    expect(app.graph.where).toEqual({ and: [{ text: "regl" }] });
+    expect(graphNodes(el)[0]).toBe("rule");
+  });
+
+  it("keeps the search being typed when the folder's views finish loading", async () => {
+    const el = elements();
+    const app = new App(el, withViews({ "decisiones.json": JSON.stringify(decisiones) }).snapshot);
+    app.toggleGraph();
+    type(el, "reg");
+    await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas", "decisiones"]));
+    expect(search(el).value).toBe("reg");
+    expect(document.activeElement).toBe(search(el));
+  });
+
+  it("drops a pending search when leaving the graph", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    type(el, "pkce");
+    app.toggleGraph();
+    vi.advanceTimersByTime(200);
+    expect(el.preview.querySelector(".flo-kg")).toBeNull();
+    expect(app.graph.where).toEqual({ and: [{ text: "" }] });
+  });
 });
