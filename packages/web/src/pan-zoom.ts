@@ -47,31 +47,40 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
     { passive: false }
   );
 
+  let down: { x: number; y: number } | null = null;
   let last: { x: number; y: number } | null = null;
-  let travelled = 0;
+  let isDrag = false;
   svg.addEventListener("mousedown", (event) => {
     if (event.button !== 0) return;
+    down = { x: event.clientX, y: event.clientY };
     last = { x: event.clientX, y: event.clientY };
-    travelled = 0;
+    isDrag = false;
   });
   svg.addEventListener("mousemove", (event) => {
-    if (!last) return;
+    if (!last || !down) return;
     const dx = event.clientX - last.x;
     const dy = event.clientY - last.y;
     last = { x: event.clientX, y: event.clientY };
-    travelled += Math.abs(dx) + Math.abs(dy);
+    // Marcamos como arrastre si el desplazamiento neto desde mousedown supera el umbral.
+    if (!isDrag) {
+      const netDistance = Math.hypot(event.clientX - down.x, event.clientY - down.y);
+      isDrag = netDistance > DRAG_THRESHOLD;
+    }
     const s = scale();
     set(panViewBox(current(), dx * s, dy * s));
   });
-  const end = () => (last = null);
+  const end = () => {
+    down = null;
+    last = null;
+  };
   svg.addEventListener("mouseup", end);
   svg.addEventListener("mouseleave", end);
   // Captura en el SVG: el click que cierra un arrastre no llega al preview (drill-down).
   svg.addEventListener(
     "click",
     (event) => {
-      if (travelled > DRAG_THRESHOLD) event.stopPropagation();
-      travelled = 0;
+      if (isDrag) event.stopPropagation();
+      isDrag = false;
     },
     true
   );

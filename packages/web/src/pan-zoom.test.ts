@@ -69,4 +69,15 @@ describe("bindPanZoom", () => {
     mouse(svg, "mousemove", 30);
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it("jitter that returns to origin is not a drag", () => {
+    const { svg, parentClick, node } = setup();
+    mouse(node, "mousedown", 0);
+    mouse(svg, "mousemove", 3);
+    mouse(svg, "mousemove", 0);
+    mouse(svg, "mousemove", 2);
+    mouse(node, "mouseup", 2);
+    mouse(node, "click", 2);
+    expect(parentClick).toHaveBeenCalledTimes(1);
+  });
 });
