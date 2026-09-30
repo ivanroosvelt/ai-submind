@@ -2,6 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-30 (`161a297`..`3b95408`).
+
+- Las tres tasks pasaron su revisión sin rondas de fixes.
+- Revisión final (whole-branch): lista para mergear con dos minors —
+  comentarios de doc desactualizados en
+  `packages/core/src/parser/cursor.ts` — corregidos en este mismo commit.
+- **Queda** (pre-existente, fuera de alcance de #48): tipear y hacer click
+  en un nodo antes de que venzan los 200 ms de debounce todavía
+  re-renderiza en el `change` del blur y puede comerse el click; #48 solo
+  cubre el caso ya aplicado.
+
 **Goal:** Cerrar los tres pendientes de §11 que un usuario nota:
 1. la búsqueda del grafo que pierde texto o se come un click;
 2. las aristas `a -> b` repetidas que se dibujan una encima de otra;

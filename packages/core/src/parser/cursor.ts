@@ -38,10 +38,11 @@ export class TokenCursor {
   /**
    * Si lo que resta de la línea actual (desde donde va el lexer, incluido el
    * token ya cacheado como current()) termina en '}' ignorando espacio en
-   * blanco, descarta ese current() y los caracteres crudos previos a esa '}'
-   * sin tokenizarlos, dejando la '}' como próximo current(). No toca nada si
-   * no encuentra esa '}' al final: repone el token para que el caller siga
-   * igual que si esto no se hubiera llamado.
+   * blanco y un comentario `//` final (#50), descarta ese current() y los
+   * caracteres crudos previos a esa '}' sin tokenizarlos, dejando la '}'
+   * como próximo current(). No toca nada si no encuentra esa '}' al final:
+   * repone el token para que el caller siga igual que si esto no se hubiera
+   * llamado.
    */
   closeTrailingBraceOnLine(): boolean {
     const pending = this.buffered;
@@ -124,10 +125,11 @@ export function reportTrailing(cursor: TokenCursor, diagnostics: Diagnostic[]): 
  * cuerpo (bloque o entidad) en la misma línea. Un '}' inmediato (cuerpo
  * vacío en una línea) no es contenido sobrante: el caller lo ve como
  * current() y lo cierra él mismo. Si hay contenido y la línea cruda termina
- * en '}', reporta un único E016 en ese primer token y deja la '}' como
- * próximo current(), sin escanear el resto como tokens de código (evita
- * E002 espurios por texto de etiqueta). Si no termina en '}', cae en
- * reportTrailing de siempre: E016 y se descarta el resto de la línea.
+ * en '}' (opcionalmente seguida de un comentario `//` final, #50), reporta
+ * un único E016 en ese primer token y deja la '}' como próximo current(),
+ * sin escanear el resto como tokens de código (evita E002 espurios por
+ * texto de etiqueta). Si no termina en '}', cae en reportTrailing de
+ * siempre: E016 y se descarta el resto de la línea.
  */
 export function reportTrailingAfterOpenBrace(cursor: TokenCursor, diagnostics: Diagnostic[]): void {
   if (cursor.atLineEnd() || cursor.current().kind === "RBRACE") return;

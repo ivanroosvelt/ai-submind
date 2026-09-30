@@ -401,8 +401,10 @@ explícitamente.
   convendría sugerir que los tags se separan con espacios.
 - **Cualquiera — render:** dos aristas `a -> b` repetidas se dibujan
   superpuestas (dagre no es multigrafo); comportamiento previo a la Fase C.
+  Resuelto en 2026-09-30 (#49)
 - **Cualquiera — parser:** `flow a { x -> y } // comentario` da `E016` +
-  `E052` en vez de un solo `E016` (no se pierde contenido).
+  `E052` en vez de un solo `E016` (no se pierde contenido). Resuelto en
+  2026-09-30 (#50)
 
 ### Decisiones del grafo de conocimiento (2026-09-28)
 
@@ -584,7 +586,9 @@ Descartados o reasignados:
   barra se reconstruye y el texto de búsqueda que se haya escrito pero no
   aplicado todavía se pierde. `App.graph` es público solo para que los
   tests puedan leerlo. Faltan tests de: `viewBox` en lo exportado tras un
-  zoom, centrar desde el mapa.
+  zoom, centrar desde el mapa. Resuelto en 2026-09-30 (#48): el texto
+  aplica al escribir, un control que no cambia la consulta no re-renderiza
+  y el re-render conserva la búsqueda enfocada.
 - **Cualquiera — presets:** `savePreset` no valida el nombre por sí mismo
   (lo valida `App` con `isPresetName`).
 
