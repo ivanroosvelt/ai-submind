@@ -2,7 +2,6 @@ import type { DocumentUri } from "@flo/core";
 import flowchart from "../../../examples/01-flowchart.flo?raw";
 import sequence from "../../../examples/02-sequence.flo?raw";
 import catalogo from "../../../examples/03-catalogo.flo?raw";
-import kgSchema from "../../../examples/04-conocimiento/knowledge.schema.yaml?raw";
 import kgLogin from "../../../examples/04-conocimiento/login.flo?raw";
 import kgPkce from "../../../examples/04-conocimiento/decisiones/pkce.md?raw";
 import kgPasswords from "../../../examples/04-conocimiento/reglas/passwords.md?raw";
@@ -34,7 +33,6 @@ export const EXAMPLES: Example[] = [
     id: "conocimiento",
     title: "Grafo de conocimiento",
     files: {
-      "knowledge.schema.yaml": kgSchema,
       "login.flo": kgLogin,
       "decisiones/pkce.md": kgPkce,
       "reglas/passwords.md": kgPasswords,
