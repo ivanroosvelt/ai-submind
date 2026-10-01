@@ -1,13 +1,10 @@
-import { SCHEMA_URI } from "@flo/core";
+import { IGNORED_DIRS, SCHEMA_URI, isDocumentUri, isIgnoredUri } from "@flo/core";
 import { isAbortError, readFileAsText } from "./file-io.js";
 import type { WorkspaceSnapshot } from "./workspace.js";
 
-const IGNORED = new Set(["node_modules", ".git"]);
-
 /** Decisión #37 (la regla de carga de #33 en el navegador): .flo, .md y el esquema solo en la raíz. */
 export function isWorkspaceFile(uri: string): boolean {
-  if (uri.split("/").some((segment) => IGNORED.has(segment))) return false;
-  return uri === SCHEMA_URI || uri.endsWith(".flo") || uri.endsWith(".md");
+  return !isIgnoredUri(uri) && isDocumentUri(uri);
 }
 
 export function hasDirectoryAccess(): boolean {
@@ -27,7 +24,7 @@ async function readDirectory(
   for await (const handle of dir.values()) {
     const uri = `${prefix}${handle.name}`;
     if (handle.kind === "directory") {
-      if (!IGNORED.has(handle.name)) await readDirectory(handle as FileSystemDirectoryHandle, `${uri}/`, files);
+      if (!IGNORED_DIRS.has(handle.name)) await readDirectory(handle as FileSystemDirectoryHandle, `${uri}/`, files);
     } else if (isWorkspaceFile(uri)) {
       files[uri] = await readFileAsText(await (handle as FileSystemFileHandle).getFile());
     }

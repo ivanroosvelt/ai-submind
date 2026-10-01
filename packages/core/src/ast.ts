@@ -17,7 +17,8 @@ export type DocumentUri = string;
 /** Identidad de un bloque en el workspace: `uri#nombre` (decisión #25). */
 export type BlockId = string;
 
-export type MemoryType = "working" | "short_term" | "long_term";
+export const MEMORY_TYPES = ["working", "short_term", "long_term"] as const;
+export type MemoryType = (typeof MEMORY_TYPES)[number];
 export type CustomTagValue = string | number | boolean;
 
 /** Una entrada de `relations` en el frontmatter de un `.md`. */

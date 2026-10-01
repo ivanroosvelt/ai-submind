@@ -1,10 +1,8 @@
-import { escapeXml, type BlockId, type EntityId, type LinkResult, type QueryEdge } from "@flo/core";
+import { escapeXml, parseBlockId, type BlockId, type EntityId, type LinkResult, type QueryEdge } from "@flo/core";
 
 /** "<título o nombre> · <uri>" de un bloque del workspace. */
 export function blockLabel(link: LinkResult, id: BlockId): string {
-  const hash = id.lastIndexOf("#");
-  const uri = id.slice(0, hash);
-  const name = id.slice(hash + 1);
+  const { uri, name } = parseBlockId(id);
   const block = link.documents.get(uri)?.document.blocks.find((candidate) => candidate.name === name);
   return `${block?.title ?? name} · ${uri}`;
 }

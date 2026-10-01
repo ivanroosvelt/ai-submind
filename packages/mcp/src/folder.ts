@@ -13,19 +13,7 @@ import {
   type FSWatcher,
 } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { SCHEMA_URI, Workspace, type Diagnostic, type LinkResult } from "@flo/core";
-
-/** Carpetas que ni la carga ni el watcher recorren (spec de conocimiento §6). */
-export const IGNORED = new Set(["node_modules", ".git"]);
-
-/** Los documentos del workspace: `.flo`, `.md` y el esquema en la raíz (decisión #29). */
-export function isDocumentUri(uri: string): boolean {
-  return uri === SCHEMA_URI || uri.endsWith(".flo") || uri.endsWith(".md");
-}
-
-export function isIgnored(uri: string): boolean {
-  return uri.split("/").some((segment) => IGNORED.has(segment));
-}
+import { IGNORED_DIRS, Workspace, isDocumentUri, isIgnoredUri, type Diagnostic, type LinkResult } from "@flo/core";
 
 export type UriDiagnostic = Diagnostic & { uri: string };
 
@@ -112,7 +100,7 @@ export class FloFolder {
       dirs.push(dir);
       for (const entry of entries) {
         const path = join(dir, entry.name);
-        if (entry.isDirectory() && !IGNORED.has(entry.name)) visit(path);
+        if (entry.isDirectory() && !IGNORED_DIRS.has(entry.name)) visit(path);
         else if (entry.isFile()) files.push(this.uriOf(path));
       }
     };
@@ -166,7 +154,7 @@ export class FloFolder {
     const file = join(this.root, uri);
 
     if (!uri.endsWith(".md") && !uri.endsWith(".flo")) return fail(`solo se escriben archivos .md o .flo: '${path}'`);
-    if (isIgnored(uri)) return fail(`la ruta '${path}' está en una carpeta ignorada (node_modules, .git)`);
+    if (isIgnoredUri(uri)) return fail(`la ruta '${path}' está en una carpeta ignorada (node_modules, .git)`);
 
     const trial = new Workspace();
     for (const [other, source] of this.sources) if (other !== uri) trial.setDocument(other, source);
@@ -270,7 +258,7 @@ export class FloFolder {
     // ELOOP) no puede tumbar el proceso del servidor MCP: se loguea y se sigue.
     try {
       if (uri === null) return void this.load();
-      if (isIgnored(uri)) return;
+      if (isIgnoredUri(uri)) return;
       if (isDocumentUri(uri)) return void this.refresh(uri);
       // Un directorio creado, movido o borrado solo avisa por sí mismo, no por sus archivos.
       const isDirectory = statSync(join(this.root, uri), { throwIfNoEntry: false })?.isDirectory() ?? false;
@@ -301,7 +289,7 @@ export class FloFolder {
    * pasa el mapa y el workspace que está armando.
    */
   protected refresh(uri: string, sources = this.sources, workspace = this.workspace): void {
-    if (!isDocumentUri(uri) || isIgnored(uri)) return;
+    if (!isDocumentUri(uri) || isIgnoredUri(uri)) return;
     this.linked = null;
     const path = join(this.root, uri);
     let source: string | null = null;

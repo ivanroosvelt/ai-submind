@@ -1,4 +1,5 @@
 import type { BlockId, DocumentUri } from "../ast.js";
+import { SCHEMA_URI } from "./schema.js";
 
 /**
  * Resuelve la ruta de un `use` relativa al documento que la declara. Las
@@ -23,4 +24,22 @@ export function resolveUse(from: DocumentUri, path: string): DocumentUri | null 
 /** Identidad de un bloque en el workspace: `uri#nombre` (decisión #25). */
 export function blockId(uri: DocumentUri, name: string): BlockId {
   return `${uri}#${name}`;
+}
+
+/** Inverso de `blockId`: el nombre es un identificador (sin '#'), así que va después del último '#'. */
+export function parseBlockId(id: BlockId): { uri: DocumentUri; name: string } {
+  const hash = id.lastIndexOf("#");
+  return { uri: id.slice(0, hash), name: id.slice(hash + 1) };
+}
+
+/** Carpetas que ni la carga ni el watcher recorren (#33, #37). */
+export const IGNORED_DIRS: ReadonlySet<string> = new Set(["node_modules", ".git"]);
+
+/** Los documentos del workspace: `.flo`, `.md` y el esquema en la raíz (decisión #29). */
+export function isDocumentUri(uri: string): boolean {
+  return uri === SCHEMA_URI || uri.endsWith(".flo") || uri.endsWith(".md");
+}
+
+export function isIgnoredUri(uri: string): boolean {
+  return uri.split("/").some((segment) => IGNORED_DIRS.has(segment));
 }

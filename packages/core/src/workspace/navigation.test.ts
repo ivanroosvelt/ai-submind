@@ -111,6 +111,18 @@ describe("renameEntity", () => {
     expect(lines).toEqual([...lines].sort((a, b) => a - b));
   });
 
+  it("returns each document's edits in source order, also within one line", () => {
+    const workspace = new Workspace();
+    workspace.setDocument("a.flo", "entity api\nflow f {\n  api -> api\n}\n");
+    const result = renameEntity(workspace.link(), "api", "gw");
+    if ("error" in result) throw new Error(result.error);
+    expect(result.edits.get("a.flo")!.map((edit) => edit.range.start)).toEqual([
+      { line: 1, column: 8 },
+      { line: 3, column: 3 },
+      { line: 3, column: 10 },
+    ]);
+  });
+
   it("rejects unknown ids, invalid identifiers and existing ids", () => {
     const linked = link(files);
     expect(renameEntity(linked, "ghost", "x")).toEqual({ error: "no existe la entidad 'ghost'" });

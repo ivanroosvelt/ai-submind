@@ -1,7 +1,8 @@
 import dagre from "dagre";
 import type { MemoryType, NodeShape } from "../ast.js";
-import { measureFlowchartNode } from "../layout/flowchart.js";
+import { GRAPH_OPTIONS, finiteOrZero, measureFlowchartNode } from "../layout/flowchart.js";
 import type { QueryResult } from "../workspace/query.js";
+import { parseBlockId } from "../workspace/uri.js";
 import type { LinkResult } from "../workspace/workspace.js";
 import type { BlockId } from "../workspace/xref.js";
 import { shapeElement } from "./flowchart.js";
@@ -22,8 +23,6 @@ export const MEMORY_FILL: Record<MemoryType, string> = {
   long_term: "#dcfce7",
 };
 
-const GRAPH_OPTIONS = { rankdir: "TB", nodesep: 40, ranksep: 60, marginx: 20, marginy: 20 };
-
 interface GraphNode {
   id: string; // EntityId o BlockId: un BlockId lleva '#', así que no chocan
   label: string;
@@ -40,11 +39,9 @@ interface GraphEdge {
   data: Record<string, string>;
 }
 
-const uriOf = (id: BlockId) => id.slice(0, id.lastIndexOf("#"));
-
 function blockTitle(link: LinkResult, id: BlockId): string {
-  const name = id.slice(id.lastIndexOf("#") + 1);
-  const block = link.documents.get(uriOf(id))?.document.blocks.find((candidate) => candidate.name === name);
+  const { uri, name } = parseBlockId(id);
+  const block = link.documents.get(uri)?.document.blocks.find((candidate) => candidate.name === name);
   return block?.title ?? name;
 }
 
@@ -90,7 +87,7 @@ function graphOf(link: LinkResult, result: QueryResult): { nodes: GraphNode[]; e
           shape: "rounded",
           fill: FILL_COLOR,
           className: "flo-kg-block",
-          data: { block, uri: uriOf(block) },
+          data: { block, uri: parseBlockId(block).uri },
         });
       }
       addEdge({
@@ -103,8 +100,6 @@ function graphOf(link: LinkResult, result: QueryResult): { nodes: GraphNode[]; e
   }
   return { nodes, edges };
 }
-
-const finiteOrZero = (value: number | undefined) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
 
 /** Vista de grafo de conocimiento (spec de conocimiento §7, decisión #44). */
 export function renderKnowledge(link: LinkResult, result: QueryResult): string {

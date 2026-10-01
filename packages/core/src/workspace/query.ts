@@ -1,13 +1,8 @@
 import type { BlockId, CustomTagValue, DocumentUri, EntityDecl, EntityId, MemoryType } from "../ast.js";
 import { floSources } from "../parser/markdown.js";
 import { blockId } from "./uri.js";
+import { push } from "./xref.js";
 import type { LinkResult } from "./workspace.js";
-
-function push<K, V>(map: Map<K, V[]>, key: K, value: V): void {
-  const list = map.get(key);
-  if (list) list.push(value);
-  else map.set(key, [value]);
-}
 
 /** Filtro de semillas (spec de conocimiento §5). Los predicados hoja solo los cumplen entidades de `.md`. */
 export type Where =

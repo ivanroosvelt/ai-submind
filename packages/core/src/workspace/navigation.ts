@@ -1,6 +1,7 @@
 import type { DocumentUri, EntityId, ParsedDocument, Position, Range } from "../ast.js";
 import { isIdentifier } from "../parser/yaml.js";
 import { relationPath } from "./knowledge.js";
+import { push } from "./xref.js";
 import type { LinkResult } from "./workspace.js";
 
 export interface TextEdit {
@@ -64,30 +65,27 @@ export function renameEntity(link: LinkResult, id: EntityId, newId: string): Ren
   if (link.entities.has(newId)) return { error: `ya existe una entidad '${newId}'` };
 
   const yaml = YAML_NON_STRING.test(newId) ? `"${newId}"` : newId;
-  const add = (uri: DocumentUri, range: Range, text: string): void => {
-    const list = edits.get(uri);
-    if (list) list.push({ range, text });
-    else edits.set(uri, [{ range, text }]);
-  };
 
-  add(declaration.uri, declaration.nameRange, declaration.knowledge ? yaml : newId);
+  push(edits, declaration.uri, { range: declaration.nameRange, text: declaration.knowledge ? yaml : newId });
   for (const { document } of link.documents.values()) {
     for (const entity of document.entities) {
       if (!entity.knowledge || link.entities.get(entity.id) !== entity) continue;
       for (const relation of entity.knowledge.relations) {
         const named = relation.resolved?.kind === "entity" && relation.resolved.id === id;
-        if (named && relationPath(relation.target) === null) add(document.uri, relation.range, yaml);
+        if (named && relationPath(relation.target) === null) push(edits, document.uri, { range: relation.range, text: yaml });
       }
     }
     for (const block of document.blocks) {
       for (const edge of block.edges) {
         for (const ref of [edge.from, edge.to]) {
-          if (ref.target === id) add(document.uri, ref.range, newId);
+          if (ref.target === id) push(edits, document.uri, { range: ref.range, text: newId });
         }
       }
     }
   }
 
-  for (const list of edits.values()) list.sort((a, b) => (before(a.range.start, b.range.start) ? -1 : 1));
+  for (const list of edits.values()) {
+    list.sort((a, b) => a.range.start.line - b.range.start.line || a.range.start.column - b.range.start.column);
+  }
   return { edits };
 }

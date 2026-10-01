@@ -7,6 +7,7 @@ export { Workspace } from "./workspace/workspace.js";
 export type { LinkResult, LinkedDocument } from "./workspace/workspace.js";
 export { SCHEMA_URI } from "./workspace/schema.js";
 export { blockId } from "./workspace/xref.js";
+export { parseBlockId, IGNORED_DIRS, isDocumentUri, isIgnoredUri } from "./workspace/uri.js";
 export type { XRefIndex, BlockId, Location } from "./workspace/xref.js";
 export { query, tagCatalog } from "./workspace/query.js";
 export type {
@@ -30,6 +31,7 @@ export type { RenderResult, RenderedDiagram } from "./render/index.js";
 export { renderMap } from "./render/map.js";
 export type { RenderedMap } from "./render/map.js";
 export { renderKnowledge, MEMORY_FILL } from "./render/knowledge.js";
+export { MEMORY_TYPES } from "./ast.js";
 export type {
   Position,
   Range,

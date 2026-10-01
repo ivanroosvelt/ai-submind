@@ -1,4 +1,13 @@
-import { MEMORY_FILL, escapeXml, type EntityId, type LinkResult, type MemoryType, type TagCatalog, type Where } from "@flo/core";
+import {
+  MEMORY_FILL,
+  MEMORY_TYPES,
+  escapeXml,
+  type EntityId,
+  type LinkResult,
+  type MemoryType,
+  type TagCatalog,
+  type Where,
+} from "@flo/core";
 import type { ViewBox } from "./pan-zoom.js";
 
 /** Lo que muestra la vista de grafo (decisión #45); un preset es esto con nombre (#46). */
@@ -17,7 +26,6 @@ export interface GraphFilter {
   text: string;
 }
 
-const MEMORY_TYPES = Object.keys(MEMORY_FILL) as MemoryType[];
 const DEPTHS = [0, 1, 2, 3];
 
 // `{ text: "" }` lo cumple toda entidad de `.md` y ninguna `.flo` (#31): las
@@ -64,7 +72,7 @@ export function readBar(root: ParentNode): { filter: GraphFilter; depth: number 
 }
 
 /** Opciones de un select; un valor elegido que ya no está en uso se conserva (lo pidió una vista). */
-function options(values: string[], selected: string | null, all: string): string {
+function options(values: readonly string[], selected: string | null, all: string): string {
   const list = selected !== null && !values.includes(selected) ? [...values, selected] : values;
   const items = list.map(
     (value) => `<option value="${escapeXml(value)}"${value === selected ? " selected" : ""}>${escapeXml(value)}</option>`
