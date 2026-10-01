@@ -98,7 +98,8 @@ Monorepo con pnpm workspaces:
   Un `.md` que empieza con `---` es una entidad más del catálogo: su
   frontmatter YAML declara `id`, `title`, `memory_type`, tags y
   `relations`, y sus bloques ` ```flo ` embebidos entran al workspace. El
-  vocabulario se valida contra `knowledge.schema.yaml` en la raíz.
+  vocabulario es libre: si hay un `knowledge.schema.yaml` en la raíz, se
+  valida contra él; si no, no hay nada que validar.
 
   `query` filtra y expande el grafo; `tagCatalog` lista los tags en uso:
 
@@ -108,7 +109,7 @@ Monorepo con pnpm workspaces:
   const link = ws.link();
   query(link, { where: { typeTag: "decision" }, depth: 1, project: "full" });
   // { nodes: [{ id: "pkce", distance: 0, body, ... }, { id: "api", distance: 1, ... }], edges: [...] }
-  tagCatalog(link); // { typeTags, contextTags, customTags }
+  tagCatalog(link); // { typeTags, contextTags, customTags, relationTypes }
   ```
 
 - **`@flo/web`** (`packages/web`) — vanilla TypeScript + Vite, consume
@@ -126,7 +127,7 @@ Monorepo con pnpm workspaces:
   página.
 
   **Workspace y navegación:** "Abrir carpeta" (File System Access API) carga
-  los `.flo`, `.md` y el `knowledge.schema.yaml` de la raíz (sin
+  los `.flo`, `.md` y, si existe, el `knowledge.schema.yaml` de la raíz (sin
   `node_modules` ni `.git`); sin esa API el navegador cae a un
   `<input webkitdirectory>` de solo lectura, y "Guardar" descarga el
   archivo activo en vez de escribirlo. Con una carpeta abierta, "Nuevo"
@@ -155,15 +156,16 @@ Monorepo con pnpm workspaces:
   vuelve a aplicar.
 
 - **`@flo/mcp`** (`packages/mcp`) — servidor MCP local (stdio) sobre una
-  carpeta de documentos `.flo`, `.md` con frontmatter y
-  `knowledge.schema.yaml`. Relee lo que cambia en disco.
+  carpeta de documentos `.flo` y `.md` con frontmatter (el
+  `knowledge.schema.yaml` es opcional). Relee lo que cambia en disco.
 
   ```bash
   pnpm --filter @flo/mcp build
   node packages/mcp/dist/main.js <carpeta>
   ```
 
-  Herramientas: `query`, `get_node`, `list_tags`, `check` y `write_node`
+  Herramientas: `query`, `get_node`, `list_tags` (vocabulario en uso, con
+  tipos de relación), `check` y `write_node`
   (solo escribe `.md`/`.flo` dentro de la carpeta, y solo si el
   type-checker no encuentra errores nuevos).
 

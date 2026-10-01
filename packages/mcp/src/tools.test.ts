@@ -31,10 +31,10 @@ afterEach(() => {
   for (const undo of cleanup.splice(0)) undo();
 });
 
-async function connect(): Promise<{ folder: FloFolder; client: Client; call: (name: string, args?: Record<string, unknown>) => Promise<{ isError: boolean; value: any }> }> {
+async function connect(files: Record<string, string> = FILES): Promise<{ folder: FloFolder; client: Client; call: (name: string, args?: Record<string, unknown>) => Promise<{ isError: boolean; value: any }> }> {
   const root = mkdtempSync(join(tmpdir(), "flo-mcp-"));
   cleanup.push(() => rmSync(root, { recursive: true, force: true }));
-  for (const [path, content] of Object.entries(FILES)) {
+  for (const [path, content] of Object.entries(files)) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     writeFileSync(join(root, path), content);
   }
@@ -113,7 +113,7 @@ describe("flo-mcp tools", () => {
 
   it("list_tags returns the tag catalog", async () => {
     const { call } = await connect();
-    expect((await call("list_tags")).value).toEqual({ typeTags: ["decision"], contextTags: [], customTags: {} });
+    expect((await call("list_tags")).value).toEqual({ typeTags: ["decision"], contextTags: [], customTags: {}, relationTypes: ["affects"] });
   });
 
   it("rejects unknown arguments to list_tags", async () => {
@@ -152,6 +152,13 @@ describe("flo-mcp tools", () => {
     expect(outside).toMatchObject({ isError: true, value: { ok: false, error: expect.stringMatching(/sale de la carpeta raíz/) } });
     expect(await call("write_node", { path: "kb/m.md", content: node("m") })).toEqual({ isError: false, value: { ok: true, uri: "kb/m.md" } });
     expect((await call("query", { from: ["m"] })).value.nodes).toHaveLength(1);
+  });
+
+  it("write_node accepts a valid note in a folder without knowledge.schema.yaml", async () => {
+    const { "knowledge.schema.yaml": _schema, ...sinEsquema } = FILES;
+    const { call } = await connect(sinEsquema);
+    expect((await call("check")).value).toEqual({});
+    expect(await call("write_node", { path: "kb/m.md", content: node("m", ["type_tags: [cualquiera]"]) })).toEqual({ isError: false, value: { ok: true, uri: "kb/m.md" } });
   });
 
   it("a change on disk shows up in the next query", async () => {
