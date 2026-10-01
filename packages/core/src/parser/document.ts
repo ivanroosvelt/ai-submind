@@ -44,7 +44,9 @@ export function parseDocument(
   source: string,
   uri: DocumentUri
 ): { document: ParsedDocument; diagnostics: Diagnostic[] } {
-  const lexer = new Lexer(source);
+  // Editores de Windows escriben BOM al guardar (#51, como en un .md): se
+  // descarta, y las columnas de la línea 1 son las que ve el editor.
+  const lexer = new Lexer(source.replace(/^﻿/, ""));
   const cursor = new TokenCursor(lexer);
   const diagnostics: Diagnostic[] = [];
   const document: ParsedDocument = { uri, uses: [], entities: [], blocks: [] };

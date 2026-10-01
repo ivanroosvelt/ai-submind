@@ -116,12 +116,23 @@ export class Lexer {
         while (this.i < this.source.length && /[A-Za-z0-9_]/.test(this.source[this.i])) {
           value += this.advance();
         }
+        // Si el siguiente carácter es una letra no ASCII, reportar E002 y consumirlo (#51)
+        if (this.i < this.source.length && /\p{L}/u.test(this.source[this.i])) {
+          const errStart: Position = { line: this.line, column: this.column };
+          const errCh = this.source[this.i];
+          this.advance();
+          this.diagnostics.push(
+            diagnosticAt("E002", `carácter inesperado '${errCh}': los ids solo admiten letras ASCII, dígitos y '_'`, { start: errStart, end: { line: this.line, column: this.column } })
+          );
+        }
         return this.makeToken("IDENT", value, start);
       }
 
       this.advance();
+      // Los ids son ASCII (GRAMMAR); con una letra como 'é' se dice por qué (#51).
+      const reason = /\p{L}/u.test(ch) ? ": los ids solo admiten letras ASCII, dígitos y '_'" : "";
       this.diagnostics.push(
-        diagnosticAt("E002", `carácter inesperado '${ch}'`, { start, end: { line: this.line, column: this.column } })
+        diagnosticAt("E002", `carácter inesperado '${ch}'${reason}`, { start, end: { line: this.line, column: this.column } })
       );
     }
 

@@ -37,6 +37,17 @@ describe("parseDocument", () => {
     expect(parseDocument("entity a\nentity b\n", "a.flo").document.entities).toHaveLength(2);
   });
 
+  it("ignores a leading BOM, keeping the editor's columns on line 1", () => {
+    const { document, diagnostics } = parseDocument("﻿entity a\nflow f {\n  a -> a\n}\n", "x.flo");
+    expect(diagnostics).toEqual([]);
+    expect(document.entities[0].nameRange.start).toEqual({ line: 1, column: 8 });
+  });
+
+  it("reports a line-1 error at the column the editor shows when there is a BOM", () => {
+    const { diagnostics } = parseDocument("﻿nope\n", "x.flo");
+    expect(diagnostics[0].range.start).toEqual({ line: 1, column: 1 });
+  });
+
   it("reports E040 for an unknown top-level line and resumes at the next statement", () => {
     const { document, diagnostics } = parseDocument('import "./catalog.flo"\nentity a\n', "a.flo");
     expect(diagnostics.map((d) => d.code)).toEqual(["E040"]);

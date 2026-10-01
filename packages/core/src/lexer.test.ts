@@ -48,6 +48,14 @@ describe("Lexer", () => {
     ]);
   });
 
+  it("explains the ASCII rule when E002 is a non-ASCII letter", () => {
+    const lexer = new Lexer("Café\n");
+    expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "Caf" });
+    expect(lexer.diagnostics.map((d) => d.message)).toEqual([
+      "carácter inesperado 'é': los ids solo admiten letras ASCII, dígitos y '_'",
+    ]);
+  });
+
   it("does not enter text mode on '{' by itself", () => {
     const lexer = new Lexer("flow login {");
     expect(lexer.next().kind).toBe("IDENT"); // flow
