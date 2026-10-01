@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { Workspace } from "@flo/core";
+import { Workspace, render } from "@flo/core";
 import type { Diagnostic, RenderResult, RenderedDiagram } from "@flo/core";
-import { nextPreviewState, previewHtml, renderActive, type PreviewState } from "./preview.js";
+import { nextPreviewState, previewHtml, renderActive, scopeMarkerIds, type PreviewState } from "./preview.js";
 
 const ERROR: Diagnostic = {
   code: "E040",
@@ -114,5 +114,18 @@ describe("previewHtml (workspace)", () => {
     );
     expect(html).toContain("Bloque vacío");
     expect(html).not.toContain("<svg");
+  });
+});
+
+describe("scopeMarkerIds", () => {
+  it("gives each SVG of the page its own arrow marker (#58)", () => {
+    const div = document.createElement("div");
+    div.innerHTML = render("entity a\nentity b\nflow f {\n  a -> b\n}\nflow g {\n  b -> a\n}\n")
+      .diagrams.map((d) => d.svg)
+      .join("");
+    scopeMarkerIds(div);
+    expect([...div.querySelectorAll("marker")].map((m) => m.id)).toEqual(["flo-arrow-0", "flo-arrow-1"]);
+    const second = div.querySelectorAll("svg")[1].querySelector("polyline")!;
+    expect(second.getAttribute("marker-end")).toBe("url(#flo-arrow-1)");
   });
 });

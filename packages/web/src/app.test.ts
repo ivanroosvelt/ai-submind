@@ -730,4 +730,12 @@ describe("App knowledge graph", () => {
     app.onBeforeUnload(dirty);
     expect(dirty.defaultPrevented).toBe(true);
   });
+
+  it("never repeats an element id in the preview (#58)", () => {
+    const el = elements();
+    new App(el, { ...FILES, files: { ...FILES.files, "login.flo": 'use "./catalog.flo"\nflow a {\n  api -> db\n}\nflow b {\n  db -> api\n}\n' } });
+    const ids = [...el.preview.querySelectorAll("[id]")].map((node) => node.id);
+    expect(ids.length).toBeGreaterThan(1);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
 });

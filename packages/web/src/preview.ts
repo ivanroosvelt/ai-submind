@@ -35,3 +35,17 @@ export function previewHtml(state: PreviewState, result: RenderResult, uri: Docu
   if (diagrams.length > 0) return banner + diagrams.map((diagram) => sectionHtml(diagram, uri)).join("");
   return banner || '<div class="flo-empty">Escribí un diagrama .flo para ver el preview</div>';
 }
+
+/**
+ * Ids de marcador únicos en la página (#58): el core repite `flo-arrow` en
+ * cada SVG (los exportados son archivos sueltos y lo necesitan así).
+ */
+export function scopeMarkerIds(container: ParentNode): void {
+  container.querySelectorAll("svg").forEach((svg, index) => {
+    const marker = svg.querySelector("marker[id]");
+    if (!marker) return;
+    const ref = `url(#${marker.id})`;
+    marker.id = `${marker.id}-${index}`;
+    svg.querySelectorAll(`[marker-end="${ref}"]`).forEach((line) => line.setAttribute("marker-end", `url(#${marker.id})`));
+  });
+}
