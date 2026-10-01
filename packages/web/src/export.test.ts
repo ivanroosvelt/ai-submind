@@ -26,15 +26,19 @@ describe("svgDataUrl", () => {
 });
 
 describe("exportSvg", () => {
-  it("downloads the svg as a diagrama.svg file", () => {
-    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  it("downloads the svg named after the block (#57)", () => {
+    let file: string | null = null;
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      file = this.download;
+    });
     const createUrlSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
 
-    exportSvg("<svg>x</svg>");
+    exportSvg("<svg>x</svg>", "login");
 
     expect(createUrlSpy).toHaveBeenCalledTimes(1);
     const blob = createUrlSpy.mock.calls[0][0] as Blob;
     expect(blob.type).toBe("image/svg+xml");
     expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(file).toBe("login.svg");
   });
 });

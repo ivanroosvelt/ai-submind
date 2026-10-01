@@ -12,15 +12,15 @@ export function svgDataUrl(svg: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-export function exportSvg(svg: string): void {
-  downloadText(svg, "diagrama.svg", "image/svg+xml");
+export function exportSvg(svg: string, name: string): void {
+  downloadText(svg, `${name}.svg`, "image/svg+xml");
 }
 
 // ponytail: jsdom no implementa canvas (getContext/toBlob) ni la carga de
 // Image vía data URL, así que este flujo no tiene test unitario — se
 // verifica a mano en el navegador (pnpm --filter @flo/web dev, Task 6).
 // Si hace falta cobertura automatizada, agregar Playwright (spec §7).
-export function exportPng(svg: string): Promise<void> {
+export function exportPng(svg: string, name: string, scale = 2): Promise<void> {
   return new Promise((resolve, reject) => {
     const { width, height } = parseSvgSize(svg);
     if (width === 0 || height === 0) {
@@ -30,20 +30,20 @@ export function exportPng(svg: string): Promise<void> {
     const image = new Image();
     image.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width * scale;
+      canvas.height = height * scale;
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         reject(new Error("no se pudo crear el contexto 2d del canvas"));
         return;
       }
-      ctx.drawImage(image, 0, 0, width, height);
+      ctx.drawImage(image, 0, 0, width * scale, height * scale);
       canvas.toBlob((blob) => {
         if (!blob) {
           reject(new Error("no se pudo generar el PNG"));
           return;
         }
-        downloadBlob(blob, "diagrama.png");
+        downloadBlob(blob, `${name}.png`);
         resolve();
       }, "image/png");
     };

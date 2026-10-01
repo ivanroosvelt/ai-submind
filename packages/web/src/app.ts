@@ -108,13 +108,13 @@ export class App {
         onSave: () => void this.run("Guardar", () => this.save()),
         onExportSvg: () =>
           void this.run("Exportar SVG", async () => {
-            const svg = this.exportable();
-            if (svg) exportSvg(svg);
+            const out = this.exportable();
+            if (out) exportSvg(out.svg, out.name);
           }),
         onExportPng: () =>
           void this.run("Exportar PNG", async () => {
-            const svg = this.exportable();
-            if (svg) await exportPng(svg);
+            const out = this.exportable();
+            if (out) await exportPng(out.svg, out.name);
           }),
         onLoadExample: (id) => this.loadExample(id),
         onToggleExpand: () => void document.body.classList.toggle("flo-expanded"),
@@ -545,17 +545,17 @@ export class App {
     this.refresh();
   }
 
-  /** El SVG que exportan los botones: el bloque seleccionado si está en el preview; si no, el primero (#41). */
-  private exportable(): string | undefined {
-    if (this.mode === "map") return renderMap(this.ws.link()).svg;
+  /** Lo que exportan los botones (#41, #57): el SVG y el nombre del archivo, sin extensión. */
+  private exportable(): { svg: string; name: string } | undefined {
+    if (this.mode === "map") return { svg: renderMap(this.ws.link()).svg, name: "mapa" };
     if (this.mode === "graph") {
       // Lo que se ve, con su viewBox (#45), sin las franjas de click.
       const svg = this.el.preview.querySelector(".flo-kg svg")?.cloneNode(true) as Element | undefined;
       svg?.querySelectorAll(".flo-map-hit").forEach((hit) => hit.remove());
-      return svg?.outerHTML;
+      return svg ? { svg: svg.outerHTML, name: "grafo" } : undefined;
     }
     const diagrams = this.previewState.lastDiagrams;
-    const selected = diagrams.find((diagram) => blockId(this.ws.active, diagram.name) === this.selectedBlock);
-    return (selected ?? diagrams[0])?.svg;
+    const diagram = diagrams.find((d) => blockId(this.ws.active, d.name) === this.selectedBlock) ?? diagrams[0];
+    return diagram ? { svg: diagram.svg, name: diagram.name } : undefined;
   }
 }
