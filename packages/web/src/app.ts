@@ -23,7 +23,7 @@ import { DEFAULT_GRAPH, graphBarHtml, graphHtml, readBar, whereOf, type GraphQue
 import { addEdgeHitAreas, mapHtml } from "./map-view.js";
 import { bindPanZoom } from "./pan-zoom.js";
 import { byName, isPresetName, listPresets, savePreset, type Preset } from "./presets.js";
-import { nextPreviewState, previewHtml, renderActive, type PreviewState } from "./preview.js";
+import { nextPreviewState, previewHtml, renderActive, scopeMarkerIds, type PreviewState } from "./preview.js";
 import { createToolbar, type DiagramKind } from "./toolbar.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
 import { ensurePermission, openFolder, writeWorkspaceFile } from "./folder-io.js";
@@ -189,6 +189,7 @@ export class App {
       enhanceSequencePreview(this.el.preview);
       this.markSelection();
     }
+    scopeMarkerIds(this.el.preview);
     this.el.toolbar.querySelector("#flo-toggle-map")?.setAttribute("aria-pressed", String(this.mode === "map"));
     this.el.toolbar.querySelector("#flo-toggle-graph")?.setAttribute("aria-pressed", String(this.mode === "graph"));
     this.renderPanel();

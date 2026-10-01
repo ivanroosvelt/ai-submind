@@ -570,6 +570,14 @@ describe("App knowledge graph", () => {
     expect(vi.mocked(exportSvg).mock.calls[0][1]).toBe("grafo");
   });
 
+  it("never repeats an element id in the preview (#58)", () => {
+    const el = elements();
+    new App(el, { ...FILES, files: { ...FILES.files, "login.flo": 'use "./catalog.flo"\nflow a {\n  api -> db\n}\nflow b {\n  db -> api\n}\n' } });
+    const ids = [...el.preview.querySelectorAll("[id]")].map((node) => node.id);
+    expect(ids.length).toBeGreaterThan(1);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   it("goes back to the document view when another workspace is loaded", () => {
     const el = elements();
     const app = new App(el, KG_FILES);
