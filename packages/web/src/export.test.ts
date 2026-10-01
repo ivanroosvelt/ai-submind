@@ -17,8 +17,11 @@ describe("parseSvgSize", () => {
 });
 
 describe("svgDataUrl", () => {
-  it("encodes the svg as a base64 data URL", () => {
-    expect(svgDataUrl("<svg>x</svg>")).toBe(`data:image/svg+xml;base64,${btoa("<svg>x</svg>")}`);
+  it("encodes the svg as a utf-8 data URL, accents included", () => {
+    const svg = "<svg>ñandú</svg>";
+    const url = svgDataUrl(svg);
+    expect(url.startsWith("data:image/svg+xml;charset=utf-8,")).toBe(true);
+    expect(decodeURIComponent(url.slice("data:image/svg+xml;charset=utf-8,".length))).toBe(svg);
   });
 });
 

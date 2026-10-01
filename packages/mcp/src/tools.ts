@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { MEMORY_TYPES, query, tagCatalog, type Where } from "@flo/core";
@@ -24,6 +25,9 @@ const where: z.ZodType<Where> = z.lazy(() =>
   ])
 );
 
+// Una sola fuente de la versión: package.json (está junto a dist/ y a src/).
+const { version } = createRequire(import.meta.url)("../package.json") as { version: string };
+
 const json = (value: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }] });
 const failure = (value: unknown) => ({ ...json(value), isError: true });
 
@@ -40,7 +44,7 @@ function guarded<A extends unknown[], R>(handler: (...args: A) => Promise<R>) {
 
 /** Las cinco herramientas del spec de conocimiento §6 sobre una carpeta (decisión #35). */
 export function createServer(folder: FloFolder): McpServer {
-  const server = new McpServer({ name: "flo-mcp", version: "0.1.0" });
+  const server = new McpServer({ name: "flo-mcp", version });
 
   server.registerTool(
     "query",

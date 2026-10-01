@@ -26,7 +26,7 @@ export function isAbortError(error: unknown): boolean {
 }
 
 function openFloFileFallback(): Promise<OpenResult | null> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".flo,.md,text/plain";
@@ -36,7 +36,7 @@ function openFloFileFallback(): Promise<OpenResult | null> {
         resolve(null);
         return;
       }
-      readFileAsText(file).then((source) => resolve({ source, handle: null, name: file.name }));
+      readFileAsText(file).then((source) => resolve({ source, handle: null, name: file.name }), reject);
     });
     input.addEventListener("cancel", () => resolve(null));
     input.click();

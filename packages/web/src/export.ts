@@ -9,7 +9,7 @@ export function parseSvgSize(svg: string): { width: number; height: number } {
 }
 
 export function svgDataUrl(svg: string): string {
-  return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 export function exportSvg(svg: string): void {
