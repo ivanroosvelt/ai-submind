@@ -1618,6 +1618,6 @@ git commit -m "feat(web): diálogos propios sobre <dialog> y textos en tuteo (#6
 
 ## Cierre
 
-- [ ] Verificación final desde la raíz: `pnpm -r typecheck && pnpm -r test && pnpm -r build`.
-- [ ] `git status` limpio y `git diff --stat packages/core/src/render/__snapshots__/` vacío desde el inicio del plan.
-- [ ] Marcar el plan como completado (bloque **Estado** al principio, como en `2026-09-30-flo-arreglos-post-k4.md`).
+- [x] Verificación final desde la raíz: `pnpm -r typecheck && pnpm -r test && pnpm -r build`.
+- [x] `git status` limpio y `git diff --stat packages/core/src/render/__snapshots__/` vacío desde el inicio del plan.
+- [x] Marcar el plan como completado (bloque **Estado** al principio, como en `2026-09-30-flo-arreglos-post-k4.md`).
