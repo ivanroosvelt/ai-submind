@@ -5,7 +5,6 @@ export type { ParseResult } from "./parser/index.js";
 export type { Catalog } from "./workspace/resolver.js";
 export { Workspace } from "./workspace/workspace.js";
 export type { LinkResult, LinkedDocument } from "./workspace/workspace.js";
-export { SCHEMA_URI } from "./workspace/schema.js";
 export { blockId } from "./workspace/xref.js";
 export type { XRefIndex, BlockId, Location } from "./workspace/xref.js";
 export { query, tagCatalog } from "./workspace/query.js";

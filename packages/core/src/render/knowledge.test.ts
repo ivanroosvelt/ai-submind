@@ -10,7 +10,6 @@ function geometry(svg: string): string {
 }
 
 const FILES: Record<string, string> = {
-  "knowledge.schema.yaml": "type_tags: [decision]\nrelation_types: [affects, enforces, visualized_by]\n",
   "catalog.flo": 'entity api [API]\nentity db\nflow acceso "Acceso" {\n  api -> db\n}\n',
   "kb/pkce.md": [
     "---",

@@ -118,6 +118,8 @@ posición en el `.md`. Sus entidades y bloques entran al workspace con el
 
 ### 3.4 Esquema `knowledge.schema.yaml`
 
+_Reemplazado por #62: el esquema ya no existe; el vocabulario se deduce de las notas._
+
 ```yaml
 type_tags: [architecture, business_rule, decision, incident, pattern]
 relation_types: [enforces, visualized_by, affects, supersedes]
@@ -276,10 +278,10 @@ Requiere la parte multi-documento de la Fase F (abrir una carpeta con
 | `E062` | K1   | falta un campo obligatorio (`id`, `title`, `memory_type`)          |
 | `E063` | K1   | valor con tipo inválido para su campo                              |
 | `E064` | K1   | `memory_type` fuera de `working`, `short_term`, `long_term`        |
-| `E065` | K1   | `type_tag` no declarado en el esquema                              |
-| `E066` | K1   | tipo de relación no declarado en el esquema                        |
+| `E065` | K1   | `type_tag` no declarado en el esquema _Reemplazado por #62._ |
+| `E066` | K1   | tipo de relación no declarado en el esquema _Reemplazado por #62._ |
 | `E067` | K1   | campo de frontmatter desconocido                                   |
-| `E068` | K1   | falta `knowledge.schema.yaml` o su contenido es inválido           _Enmendado por #61: E068 solo cubre contenido inválido del esquema._ |
+| `E068` | K1   | falta `knowledge.schema.yaml` o su contenido es inválido           _Enmendado por #61: E068 solo cubre contenido inválido del esquema._ _Reemplazado por #62._ |
 
 `E030`–`E034` conservan su significado; `E032` también cubre una ruta de
 `use:` en un `.md` que no existe. El rango `E06x` queda para frontmatter y

@@ -10,15 +10,7 @@ describe("parse", () => {
     expect(diagnostics).toEqual([]);
   });
 
-  it("does not throw for knowledge.schema.yaml and returns its own diagnostics", () => {
-    expect(() => render("type_tags: x\n", "knowledge.schema.yaml")).not.toThrow();
-    const { diagrams, diagnostics } = render("type_tags: x\n", "knowledge.schema.yaml");
-    expect(diagrams).toEqual([]);
-    expect(diagnostics.length).toBeGreaterThan(0);
-    expect(diagnostics.every((d) => d.code === "E068")).toBe(true);
-  });
-
-  it("parses a valid .md as a loose document: one entity, no diagnostics without a schema", () => {
+  it("parses a valid .md as a loose document: one entity, no diagnostics", () => {
     const { document, diagnostics } = parse("---\nid: a\ntitle: A\nmemory_type: working\n---\n", "a.md");
     expect(document.entities.map((e) => e.id)).toEqual(["a"]);
     expect(diagnostics).toEqual([]);

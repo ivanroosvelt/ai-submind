@@ -139,7 +139,6 @@ function readFrontmatter(
   const knowledge: KnowledgeMeta = {
     memoryType: null,
     typeTags: [],
-    typeTagRanges: [],
     contextTags: [],
     customTags: {},
     relations: [],
@@ -179,7 +178,6 @@ function readFrontmatter(
         for (const item of listOf(value, key, pair.key)) {
           if (isScalar(item) && isIdentifier(item.value)) {
             knowledge.typeTags.push(item.value);
-            knowledge.typeTagRanges.push(yaml.rangeOf(item));
           } else {
             invalid(item, "cada 'type_tags' debe ser un identificador");
           }

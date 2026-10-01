@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Workspace } from "./workspace.js";
-import { SCHEMA_URI } from "./schema.js";
+import { isDocumentUri } from "./uri.js";
 import type { Diagnostic } from "../diagnostics.js";
 
 const catalog = "entity usuario (Usuario)\nentity api [API Gateway]\nentity db [Base de datos]\n";
@@ -87,14 +87,12 @@ describe("Workspace", () => {
   });
 });
 
-const SCHEMA = "type_tags: [decision]\nrelation_types: [affects]\n";
 const note = (id: string, extra: string[] = []) =>
   ["---", `id: ${id}`, `title: ${id}`, "memory_type: long_term", ...extra, "---", ""].join("\n");
 
 describe("Workspace with .md documents", () => {
   it("lets a flow use the entity of a .md, transitively through its 'use:'", () => {
     const result = workspace({
-      [SCHEMA_URI]: SCHEMA,
       "catalogo.flo": "entity api\n",
       "notas/pkce.md": note("pkce", ['use: ["../catalogo.flo"]']),
       "flujo.flo": 'use "./notas/pkce.md"\nflow f {\n  pkce -> api\n}\n',
@@ -103,12 +101,10 @@ describe("Workspace with .md documents", () => {
     expect([...result.documents.keys()]).toEqual(["catalogo.flo", "flujo.flo", "notas/pkce.md"]);
     expect([...result.documents.get("flujo.flo")!.catalog.keys()]).toEqual(["api", "pkce"]);
     expect(result.xref.flowsUsing("pkce")).toEqual(["flujo.flo#f"]);
-    expect(result.diagnostics.get(SCHEMA_URI)).toEqual([]);
   });
 
   it("does not cascade from a partially invalid frontmatter", () => {
     const result = workspace({
-      [SCHEMA_URI]: SCHEMA,
       "n.md": "---\nid: n\ntitle: 3\nmemory_type: nope\n---\n",
       "f.flo": 'use "./n.md"\nflow f {\n  n -> n\n}\n',
     }).link();
@@ -119,63 +115,23 @@ describe("Workspace with .md documents", () => {
     expect(result.diagnostics.get("f.flo")).toEqual([]);
   });
 
-  it("validates type_tags and relation types against the schema", () => {
+  it("gives no diagnostic for new type_tags or relation types (#62)", () => {
     const result = workspace({
-      [SCHEMA_URI]: SCHEMA,
       "catalogo.flo": "entity api\n",
-      "n.md": note("n", [
-        "type_tags: [decision, nope]", // 5
-        'use: ["./catalogo.flo"]', // 6
-        "relations:", // 7
-        "  - target: api", // 8
-        "    type: breaks", // 9
-      ]),
+      "n.md": note("n", ["type_tags: [whatever]", 'use: ["./catalogo.flo"]', "relations:", "  - target: api", "    type: breaks"]),
     }).link();
-    expect(codes(result.diagnostics.get("n.md"))).toEqual([
-      ["E065", 5, 23],
-      ["E066", 9, 11],
-    ]);
+    expect(result.diagnostics.get("n.md")).toEqual([]);
   });
 
-  it("emits no vocabulary diagnostics without a schema (#61)", () => {
-    const result = workspace({
-      "b.md": note("b", ["type_tags: [whatever]"]),
-      "a.md": note("a", ["type_tags: [whatever]"]),
-    }).link();
-    expect(result.diagnostics.get("a.md")).toEqual([]);
-    expect(result.diagnostics.get("b.md")).toEqual([]);
-    expect(result.diagnostics.has(SCHEMA_URI)).toBe(false);
-  });
-
-  it("does not let clearing a link() result's schema diagnostics corrupt the next link()", () => {
-    const ws = workspace({ [SCHEMA_URI]: "type_tags: x\nrelation_types: []\n", "a.md": note("a") });
-    ws.link().diagnostics.get(SCHEMA_URI)!.length = 0;
-    const second = ws.link();
-    expect(codes(second.diagnostics.get(SCHEMA_URI))).toEqual([["E068", 1, 12]]);
-  });
-
-  it("reports an invalid schema on the schema document only", () => {
-    const result = workspace({
-      [SCHEMA_URI]: "type_tags: x\nrelation_types: []\n",
-      "a.md": note("a", ["type_tags: [whatever]"]),
-    }).link();
-    expect(codes(result.diagnostics.get(SCHEMA_URI))).toEqual([["E068", 1, 12]]);
-    expect(result.diagnostics.get("a.md")).toEqual([]);
-    expect(result.documents.has(SCHEMA_URI)).toBe(false);
-  });
-
-  it("stops validating vocabulary after the schema is removed", () => {
-    const ws = workspace({ [SCHEMA_URI]: SCHEMA, "a.md": note("a", ["type_tags: [whatever]"]) });
-    expect(codes(ws.link().diagnostics.get("a.md")).map((c) => c[0])).toEqual(["E065"]);
-    ws.removeDocument(SCHEMA_URI);
-    const result = ws.link();
-    expect(result.diagnostics.get("a.md")).toEqual([]);
-    expect(result.diagnostics.has(SCHEMA_URI)).toBe(false);
+  it("does not treat a knowledge.schema.yaml as a document nor give it diagnostics", () => {
+    const result = workspace({ "a.md": note("a") }).link();
+    expect(isDocumentUri("knowledge.schema.yaml")).toBe(false);
+    expect(result.diagnostics.has("knowledge.schema.yaml")).toBe(false);
+    expect(result.documents.has("knowledge.schema.yaml")).toBe(false);
   });
 
   it("ignores a .md without frontmatter, also when an existing one loses it", () => {
     const ws = workspace({
-      [SCHEMA_URI]: SCHEMA,
       "README.md": "# hola\n",
       "n.md": note("n"),
       "f.flo": 'use "./n.md"\nflow f {\n  n -> n\n}\n',
@@ -190,7 +146,6 @@ describe("Workspace with .md documents", () => {
 });
 
 describe("Workspace relations", () => {
-  const RELATIONS_SCHEMA = "type_tags: [decision]\nrelation_types: [enforces, visualized_by, affects]\n";
   const pkce = [
     "---", // 1
     "id: pkce", // 2
@@ -213,7 +168,6 @@ describe("Workspace relations", () => {
     "",
   ].join("\n");
   const files = {
-    [SCHEMA_URI]: RELATIONS_SCHEMA,
     "catalogo.flo": "entity api\nentity auth\n",
     "flujos/auth.flo": 'use "../catalogo.flo"\nflow acceso {\n  api -> auth\n}\n',
     "reglas/passwords.md": note("br_passwords"),
@@ -266,7 +220,6 @@ describe("Workspace relations", () => {
 
   it("accepts relation cycles between .md documents", () => {
     const result = workspace({
-      [SCHEMA_URI]: RELATIONS_SCHEMA,
       "a.md": note("a", ["relations:", "  - target: ./b.md", "    type: affects"]),
       "b.md": note("b", ["relations:", "  - target: ./a.md", "    type: affects"]),
     }).link();
@@ -276,7 +229,7 @@ describe("Workspace relations", () => {
   });
 
   it("reports E032 for a missing 'use:' path in a .md", () => {
-    const result = workspace({ [SCHEMA_URI]: RELATIONS_SCHEMA, "x.md": note("x", ['use: ["./nope.flo"]']) }).link();
+    const result = workspace({ "x.md": note("x", ['use: ["./nope.flo"]']) }).link();
     expect(codes(result.diagnostics.get("x.md"))).toEqual([["E032", 5, 7]]);
   });
 });

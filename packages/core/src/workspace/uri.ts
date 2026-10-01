@@ -1,5 +1,4 @@
 import type { BlockId, DocumentUri } from "../ast.js";
-import { SCHEMA_URI } from "./schema.js";
 
 /**
  * Resuelve la ruta de un `use` relativa al documento que la declara. Las
@@ -37,7 +36,7 @@ export const IGNORED_DIRS: ReadonlySet<string> = new Set(["node_modules", ".git"
 
 /** Los documentos del workspace: `.flo`, `.md` y el esquema en la raíz (decisión #29). */
 export function isDocumentUri(uri: string): boolean {
-  return uri === SCHEMA_URI || uri.endsWith(".flo") || uri.endsWith(".md");
+  return uri.endsWith(".flo") || uri.endsWith(".md");
 }
 
 export function isIgnoredUri(uri: string): boolean {

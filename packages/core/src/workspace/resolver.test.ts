@@ -110,7 +110,7 @@ describe("linkDocuments — varios documentos", () => {
       "la ruta '../../x.flo' sale de la raíz del workspace o no nombra un documento",
     ]);
     expect(messages("../knowledge.schema.yaml")).toEqual([
-      "'../knowledge.schema.yaml' es el esquema de conocimiento, no un documento del workspace",
+      "el documento '../knowledge.schema.yaml' no existe en el workspace",
     ]);
     expect(messages("./notas.md")).toEqual([
       "el documento './notas.md' no existe en el workspace o no es un documento (un .md necesita frontmatter con '---')",

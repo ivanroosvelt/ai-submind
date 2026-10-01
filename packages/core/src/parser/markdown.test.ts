@@ -51,7 +51,6 @@ describe("parseMarkdownDocument: frontmatter", () => {
         knowledge: {
           memoryType: "long_term",
           typeTags: ["decision", "architecture"],
-          typeTagRanges: [r(5, 13, 5, 21), r(5, 23, 5, 35)],
           contextTags: ["project:core"],
           customTags: { status: "approved", level: 3 },
           relations: [
@@ -70,7 +69,6 @@ describe("parseMarkdownDocument: frontmatter", () => {
     const entity = crlf.document.entities[0];
     expect(entity.nameRange).toEqual(r(2, 5, 2, 18));
     expect(entity.range).toEqual(r(1, 1, 14, 4));
-    expect(entity.knowledge?.typeTagRanges).toEqual([r(5, 13, 5, 21), r(5, 23, 5, 35)]);
   });
 
   it("strips a leading UTF-8 BOM before splitting lines", () => {

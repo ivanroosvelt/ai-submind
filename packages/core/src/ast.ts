@@ -34,7 +34,6 @@ export interface Relation {
 export interface KnowledgeMeta {
   memoryType: MemoryType | null; // null solo si el frontmatter lo diagnosticó
   typeTags: string[];
-  typeTagRanges: Range[]; // paralelo a typeTags, para E065
   contextTags: string[]; // "clave:valor"
   customTags: Record<string, CustomTagValue>;
   relations: Relation[];

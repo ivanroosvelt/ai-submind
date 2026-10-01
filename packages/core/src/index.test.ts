@@ -9,7 +9,6 @@ import {
   blockId,
   layoutFlowchart,
   layoutSequence,
-  SCHEMA_URI,
   query,
   tagCatalog,
   entityAt,
@@ -117,7 +116,6 @@ describe("index: navigation surface (Fase E)", () => {
 
   it("links and renders a complete knowledge workspace through the public API", () => {
     const workspace = new Workspace();
-    workspace.setDocument(SCHEMA_URI, "type_tags: [decision]\nrelation_types: [affects, visualized_by]\n");
     workspace.setDocument("catalogo.flo", "entity api [API Gateway]\n");
     workspace.setDocument(
       "decisiones/pkce.md",
@@ -163,7 +161,6 @@ describe("index: navigation surface (Fase E)", () => {
 
   it("queries a knowledge workspace through the public API", () => {
     const workspace = new Workspace();
-    workspace.setDocument(SCHEMA_URI, "type_tags: [decision]\nrelation_types: [affects]\n");
     workspace.setDocument("catalogo.flo", "entity api\n");
     workspace.setDocument(
       "pkce.md",
@@ -187,7 +184,6 @@ describe("index: navigation surface (Fase E)", () => {
 
   it("exposes renderKnowledge", () => {
     const workspace = new Workspace();
-    workspace.setDocument("knowledge.schema.yaml", "type_tags: []\nrelation_types: []\n");
     workspace.setDocument("n.md", "---\nid: n\ntitle: N\nmemory_type: working\n---\n");
     const link = workspace.link();
     expect(renderKnowledge(link, query(link))).toContain(`fill="${MEMORY_FILL.working}"`);

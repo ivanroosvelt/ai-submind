@@ -1,7 +1,6 @@
 import { diagnosticAt, sortDiagnostics, type Diagnostic } from "../diagnostics.js";
 import type { DocumentUri, EntityDecl, EntityId, ParsedDocument } from "../ast.js";
 import { resolveUse } from "./uri.js";
-import { SCHEMA_URI, checkVocabulary, type Vocabulary } from "./schema.js";
 import { relationUses, resolveRelations } from "./knowledge.js";
 
 export type Catalog = Map<EntityId, EntityDecl>;
@@ -13,7 +12,7 @@ export interface LinkedDocuments {
   catalogs: Map<DocumentUri, Catalog>;
   /** Por documento, las uris que resuelven sus `use`, en orden de aparición y sin repetir; incluye los `use` implícitos de `relations`. */
   uses: Map<DocumentUri, DocumentUri[]>;
-  /** Por documento, diagnósticos de resolución (E030–E033, E035, E065, E066), ordenados por posición. */
+  /** Por documento, diagnósticos de resolución (E030–E033, E035), ordenados por posición. */
   diagnostics: Map<DocumentUri, Diagnostic[]>;
 }
 
@@ -28,11 +27,9 @@ export function byUri(a: { uri: DocumentUri }, b: { uri: DocumentUri }): number 
  * (E032), calcula el catálogo alcanzable de cada documento, rellena todos
  * los `Ref.target` contra ese catálogo (E030) y reporta bloques repetidos
  * dentro de un documento (E033); las rutas de `relations` cuentan como
- * `use` implícito y cada `relations.target` se resuelve (E035). Valida el
- * vocabulario de los `.md` contra el esquema, si lo hay (E065, E066); sin
- * esquema no se valida nada (decisión #61).
+ * `use` implícito y cada `relations.target` se resuelve (E035).
  */
-export function linkDocuments(input: ParsedDocument[], vocabulary: Vocabulary = null): LinkedDocuments {
+export function linkDocuments(input: ParsedDocument[]): LinkedDocuments {
   const documents = [...input].sort(byUri);
   const documentsByUri = new Map(documents.map((d) => [d.uri, d]));
   const diagnostics = new Map<DocumentUri, Diagnostic[]>(documents.map((d) => [d.uri, []]));
@@ -84,11 +81,6 @@ export function linkDocuments(input: ParsedDocument[], vocabulary: Vocabulary = 
     resolveRelations(document, catalog, documentsByUri, diagnostics.get(document.uri)!);
   }
 
-  // Sin esquema (null) no hay vocabulario que validar (decisión #61).
-  if (vocabulary !== null && vocabulary !== "invalid") {
-    for (const document of documents) checkVocabulary(document, vocabulary, diagnostics.get(document.uri)!);
-  }
-
   for (const list of diagnostics.values()) sortDiagnostics(list);
   return { entities, catalogs, uses, diagnostics };
 }
@@ -96,7 +88,6 @@ export function linkDocuments(input: ParsedDocument[], vocabulary: Vocabulary = 
 /** Por qué la ruta de un `use` no llega a un documento (E032). */
 function missingUseMessage(path: string, target: DocumentUri | null): string {
   if (target === null) return `la ruta '${path}' sale de la raíz del workspace o no nombra un documento`;
-  if (target === SCHEMA_URI) return `'${path}' es el esquema de conocimiento, no un documento del workspace`;
   if (target.endsWith(".md")) {
     return `el documento '${path}' no existe en el workspace o no es un documento (un .md necesita frontmatter con '---')`;
   }

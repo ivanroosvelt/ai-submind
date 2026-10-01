@@ -32,8 +32,8 @@ describe("shared uri helpers (#54)", () => {
   });
 
   it("knows which uris are workspace documents and which are ignored", () => {
-    expect(["a.flo", "kb/b.md", "knowledge.schema.yaml"].map(isDocumentUri)).toEqual([true, true, true]);
-    expect(["a.txt", "kb/knowledge.schema.yaml"].map(isDocumentUri)).toEqual([false, false]);
+    expect(["a.flo", "kb/b.md"].map(isDocumentUri)).toEqual([true, true]);
+    expect(["a.txt", "knowledge.schema.yaml", "kb/knowledge.schema.yaml"].map(isDocumentUri)).toEqual([false, false, false]);
     expect(["node_modules/x.md", "a/.git/b.flo", "gitx/a.flo"].map(isIgnoredUri)).toEqual([true, true, false]);
   });
 });

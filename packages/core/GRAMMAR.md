@@ -125,19 +125,8 @@ con la palabra `flo` se parsea como un `.flo` con el uri del `.md`, con sus
 líneas y columnas reales. Sus entidades van después de la del frontmatter
 (decisión #22). Los demás bloques de código se ignoran.
 
-El vocabulario es el que usan las fuentes; un `knowledge.schema.yaml`
-opcional, en la raíz del workspace (uri exacto), lo cierra:
-
-```yaml
-type_tags: [architecture, business_rule, decision, incident, pattern]
-relation_types: [enforces, visualized_by, affects, supersedes]
-```
-
-El esquema es opcional (decisión #61). Si existe, ambas claves son
-obligatorias y listas de identificadores, y cierra el vocabulario (`E065`,
-`E066`). Sin esquema, el vocabulario es el que usan las fuentes y no se
-valida; con un esquema inválido, los diagnósticos van en el esquema y
-tampoco se valida.
+El vocabulario (`type_tags`, tipos de relación) se deduce de las notas: un valor nuevo
+no da diagnóstico y se suma al catálogo (decisión #62).
 
 `relations.target` es una ruta si lo anterior a `#` contiene `/` o termina
 en `.md`/`.flo`: `x.md` resuelve a la entidad de ese `.md`, `x.flo#nombre`
@@ -180,14 +169,11 @@ subgrafos, `alt`/`loop` de secuencia, notas, estilos.
 | E051 | block | se esperaba `{` para abrir el bloque |
 | E052 | block | falta `}` que cierra el bloque |
 | E060 | markdown | frontmatter sin cerrar (falta el `---` final) |
-| E061 | markdown / esquema | error de sintaxis YAML |
+| E061 | markdown | error de sintaxis YAML |
 | E062 | markdown | falta un campo obligatorio (`id`, `title`, `memory_type`; `target`/`type` de una relación) |
 | E063 | markdown | valor con tipo inválido para su campo |
 | E064 | markdown | `memory_type` fuera de `working`, `short_term`, `long_term` |
-| E065 | esquema | `type_tag` no declarado en el esquema |
-| E066 | esquema | tipo de relación no declarado en el esquema |
 | E067 | markdown | campo de frontmatter (o de relación) desconocido |
-| E068 | esquema | el contenido de `knowledge.schema.yaml` es inválido |
 
 **Retirados:** E003, E004, E005, E006, E013, E015, E017, E020, E021, E022,
-E023, E025. No se reusan con otro significado.
+E023, E025, E065, E066, E068 (retirados por #62, sin esquema de conocimiento). No se reusan con otro significado.

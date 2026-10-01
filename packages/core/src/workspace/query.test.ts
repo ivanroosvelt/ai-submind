@@ -1,13 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { Workspace, type LinkResult } from "./workspace.js";
-import { SCHEMA_URI } from "./schema.js";
 import { query, tagCatalog, type QueryOptions, type QueryResult } from "./query.js";
 
 const md = (lines: string[]): string => [...lines, ""].join("\n");
 
 /** Workspace fijo de la Fase K2. Orden del catálogo: api, db, cache, incidente, passwords, pkce, auth. */
 const files: Record<string, string> = {
-  [SCHEMA_URI]: "type_tags: [business_rule, decision, incident]\nrelation_types: [affects, enforces, visualized_by]\n",
   "catalogo.flo": "entity api\nentity db\nentity cache\n",
   "flujos/auth.flo": md([
     'use "../catalogo.flo"',
@@ -122,7 +120,6 @@ describe("query", () => {
       "kb/passwords.md": ["E035"],
       "kb/pkce.md": [],
       "kb/zz_dup.md": ["E031"],
-      [SCHEMA_URI]: [],
     });
   });
 
@@ -284,7 +281,6 @@ describe("query", () => {
 
   it("returns embedded flo sources without carriage returns on CRLF files", () => {
     const crlfWorkspace = linkFiles({
-      [SCHEMA_URI]: "type_tags: []\nrelation_types: []\n",
       "kb/test.md": ["---", "id: a", "title: A", "memory_type: working", "---", "```flo", "entity x", "```", ""].join(
         "\r\n"
       ),
@@ -306,14 +302,13 @@ describe("tagCatalog", () => {
 
   it("handles custom tag keys named like Object.prototype members", () => {
     const tagged = linkFiles({
-      [SCHEMA_URI]: "type_tags: []\nrelation_types: []\n",
       "a.md": md(["---", "id: a", "title: A", "memory_type: working", "custom_tags:", "  constructor: x", "  toString: 1", "---"]),
     });
     expect(tagCatalog(tagged).customTags).toEqual({ constructor: ["x"], toString: [1] });
     expect(ids(query(tagged, { where: { custom: "constructor", equals: "x" } }))).toEqual(["a"]);
   });
 
-  it("lists type tags and relation types without a schema, no repeats (#61)", () => {
+  it("lists type tags and relation types, no repeats (#62)", () => {
     const sinEsquema = linkFiles({
       "a.md": md(["---", "id: a", "title: A", "memory_type: working", "type_tags: [x]", "relations:", "  - target: b", "    type: r1", "  - target: b", "    type: r2", "---"]),
       "b.md": md(["---", "id: b", "title: B", "memory_type: working", "type_tags: [x, y]", "relations:", "  - target: a", "    type: r1", "---"]),
