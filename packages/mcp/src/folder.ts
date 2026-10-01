@@ -42,13 +42,12 @@ const errorKey = (d: Diagnostic): string =>
  */
 function newErrors(before: LinkResult, after: LinkResult, uri: string): UriDiagnostic[] {
   const found: UriDiagnostic[] = [];
-  for (const [other, list] of after.diagnostics) {
-    const errors = list.filter((d) => d.severity === "error");
+  for (const [other, errors] of after.diagnostics) {
     if (other === uri) {
       found.push(...errors.map((d) => ({ uri: other, ...d })));
       continue;
     }
-    const previous = (before.diagnostics.get(other) ?? []).filter((d) => d.severity === "error").map(errorKey);
+    const previous = (before.diagnostics.get(other) ?? []).map(errorKey);
     for (const d of errors) {
       const index = previous.indexOf(errorKey(d));
       if (index >= 0) previous.splice(index, 1);
