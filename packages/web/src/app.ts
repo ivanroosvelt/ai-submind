@@ -71,7 +71,8 @@ export class App {
   readonly view: EditorView;
   selectedBlock: BlockId | null = null;
   private previewState: PreviewState = { lastDiagrams: [] };
-  private fileHandle: FileSystemFileHandle | null = null;
+  /** Sin carpeta, el handle de cada documento (#55): un uri nunca se guarda sobre el archivo de otro. */
+  private readonly fileHandles = new Map<DocumentUri, FileSystemFileHandle>();
   private panel: PanelState = null;
   private mode: "document" | "map" | "graph" = "document";
   /** La consulta de la vista de grafo (#45); se reemplaza, nunca se muta. */
@@ -149,7 +150,8 @@ export class App {
   /** Reemplaza el workspace entero (abrir carpeta o archivo, nuevo sin carpeta, ejemplo). */
   load(snapshot: WorkspaceSnapshot, fileHandle: FileSystemFileHandle | null = null): void {
     this.ws = new EditorWorkspace(snapshot);
-    this.fileHandle = fileHandle;
+    this.fileHandles.clear();
+    if (fileHandle) this.fileHandles.set(this.ws.active, fileHandle);
     this.states.clear();
     this.shown = null;
     this.selectedBlock = null;
@@ -383,9 +385,9 @@ export class App {
       }
     } else {
       const uri = ws.active;
-      const handle = await saveFloFile(ws.source(uri), this.fileHandle, uri);
+      const handle = await saveFloFile(ws.source(uri), this.fileHandles.get(uri) ?? null, uri);
       if (handle) {
-        if (this.ws === ws) this.fileHandle = handle;
+        if (this.ws === ws) this.fileHandles.set(uri, handle);
         ws.markSaved(uri);
       }
     }

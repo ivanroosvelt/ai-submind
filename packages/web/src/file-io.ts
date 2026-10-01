@@ -84,7 +84,7 @@ export async function saveFloFile(
       target = handle;
     } else {
       try {
-        target = await window.showSaveFilePicker!(FLO_PICKER_OPTIONS);
+        target = await window.showSaveFilePicker!({ ...FLO_PICKER_OPTIONS, suggestedName: name.slice(name.lastIndexOf("/") + 1) });
       } catch (error) {
         if (isAbortError(error)) return null;
         throw error;
