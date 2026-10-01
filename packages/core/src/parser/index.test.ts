@@ -18,10 +18,10 @@ describe("parse", () => {
     expect(diagnostics.every((d) => d.code === "E068")).toBe(true);
   });
 
-  it("parses a valid .md as a loose document: one entity, E068 because a workspace of one has no schema", () => {
+  it("parses a valid .md as a loose document: one entity, no diagnostics without a schema", () => {
     const { document, diagnostics } = parse("---\nid: a\ntitle: A\nmemory_type: working\n---\n", "a.md");
     expect(document.entities.map((e) => e.id)).toEqual(["a"]);
-    expect(diagnostics.map((d) => d.code)).toEqual(["E068"]);
+    expect(diagnostics).toEqual([]);
   });
 
   it("parses and resolves a document, returning the catalog", () => {

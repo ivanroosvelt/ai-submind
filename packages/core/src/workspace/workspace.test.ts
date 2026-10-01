@@ -137,12 +137,12 @@ describe("Workspace with .md documents", () => {
     ]);
   });
 
-  it("reports a single E068 on the first .md when there is no schema, and skips vocabulary", () => {
+  it("emits no vocabulary diagnostics without a schema (#61)", () => {
     const result = workspace({
       "b.md": note("b", ["type_tags: [whatever]"]),
       "a.md": note("a", ["type_tags: [whatever]"]),
     }).link();
-    expect(codes(result.diagnostics.get("a.md"))).toEqual([["E068", 1, 1]]);
+    expect(result.diagnostics.get("a.md")).toEqual([]);
     expect(result.diagnostics.get("b.md")).toEqual([]);
     expect(result.diagnostics.has(SCHEMA_URI)).toBe(false);
   });
@@ -164,12 +164,12 @@ describe("Workspace with .md documents", () => {
     expect(result.documents.has(SCHEMA_URI)).toBe(false);
   });
 
-  it("brings E068 back after the schema is removed", () => {
-    const ws = workspace({ [SCHEMA_URI]: SCHEMA, "a.md": note("a") });
-    expect(ws.link().diagnostics.get("a.md")).toEqual([]);
+  it("stops validating vocabulary after the schema is removed", () => {
+    const ws = workspace({ [SCHEMA_URI]: SCHEMA, "a.md": note("a", ["type_tags: [whatever]"]) });
+    expect(codes(ws.link().diagnostics.get("a.md")).map((c) => c[0])).toEqual(["E065"]);
     ws.removeDocument(SCHEMA_URI);
     const result = ws.link();
-    expect(codes(result.diagnostics.get("a.md"))).toEqual([["E068", 1, 1]]);
+    expect(result.diagnostics.get("a.md")).toEqual([]);
     expect(result.diagnostics.has(SCHEMA_URI)).toBe(false);
   });
 

@@ -19,7 +19,7 @@ const CONTEXT_TAG = /^[^:]+:.+$/;
 const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})\s*([^\s`]*)/;
 const FENCE_CLOSE = /^ {0,3}(`{3,}|~{3,})\s*$/;
 
-/** El `---` de apertura: ancla de E060, E062 y del E068 por esquema ausente. */
+/** El `---` de apertura: ancla de E060 y E062. */
 export function openingRange(): Range {
   return { start: { line: 1, column: 1 }, end: { line: 1, column: 4 } };
 }

@@ -14,7 +14,7 @@ export interface ParseResult {
  * nada (E032). Un `.md` sin frontmatter o `knowledge.schema.yaml` no son
  * documentos del workspace: se devuelve un documento vacío con catálogo
  * vacío (para el esquema, con sus propios diagnósticos). Un `.md` suelto
- * siempre lleva E068 porque un workspace de uno no tiene esquema.
+ * no lleva diagnósticos de vocabulario: sin esquema no se valida (#61).
  */
 export function parse(source: string, uri: DocumentUri = ""): ParseResult {
   const workspace = new Workspace();

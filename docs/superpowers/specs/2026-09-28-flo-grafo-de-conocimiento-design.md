@@ -127,7 +127,8 @@ relation_types: [enforces, visualized_by, affects, supersedes]
   `knowledge.schema.yaml`). Es un documento más: `setDocument` lo carga.
 - Si hay al menos un `.md` de conocimiento y no hay esquema, se reporta un
   único `E068` sobre el primer `.md`, y no se valida vocabulario (el resto
-  de la validación sigue).
+  de la validación sigue). *Enmendado por #61: el esquema es opcional; sin
+  él no hay diagnóstico y `E068` queda solo para un esquema inválido.*
 - Sin herencia ni tipos compuestos: no existen "ciclos en definiciones de
   tipos". Los ciclos en `relations` son válidos, como en `use`.
 

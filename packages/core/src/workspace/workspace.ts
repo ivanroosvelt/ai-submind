@@ -55,7 +55,7 @@ export class Workspace {
     const parsed = [...this.parsed.values()].sort((a, b) => byUri(a.document, b.document));
     const linked = linkDocuments(
       parsed.map((p) => p.document),
-      this.schema === null ? "missing" : (this.schema.schema ?? "invalid")
+      this.schema === null ? null : (this.schema.schema ?? "invalid")
     );
 
     const documents = new Map<DocumentUri, LinkedDocument>();

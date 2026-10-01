@@ -11,8 +11,8 @@ export interface KnowledgeSchema {
   relationTypes: Set<string>;
 }
 
-/** "missing" = no hay documento de esquema; "invalid" = lo hay y tiene diagnósticos. */
-export type Vocabulary = KnowledgeSchema | "missing" | "invalid";
+/** null = no hay documento de esquema (opcional, #61); "invalid" = lo hay y tiene diagnósticos. */
+export type Vocabulary = KnowledgeSchema | null | "invalid";
 
 const FIELDS = { type_tags: "typeTags", relation_types: "relationTypes" } as const;
 

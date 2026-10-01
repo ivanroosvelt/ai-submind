@@ -299,6 +299,7 @@ describe("tagCatalog", () => {
     expect(tagCatalog(link)).toEqual({
       typeTags: ["incident", "business_rule", "decision"],
       contextTags: ["project:ops", "project:core", "flow:authentication"],
+      relationTypes: ["affects", "enforces", "visualized_by"],
       customTags: { security_level: ["3", 3], urgent: [true], status: ["draft", "approved"] },
     });
   });
@@ -312,7 +313,17 @@ describe("tagCatalog", () => {
     expect(ids(query(tagged, { where: { custom: "constructor", equals: "x" } }))).toEqual(["a"]);
   });
 
+  it("lists type tags and relation types without a schema, no repeats (#61)", () => {
+    const sinEsquema = linkFiles({
+      "a.md": md(["---", "id: a", "title: A", "memory_type: working", "type_tags: [x]", "relations:", "  - target: b", "    type: r1", "  - target: b", "    type: r2", "---"]),
+      "b.md": md(["---", "id: b", "title: B", "memory_type: working", "type_tags: [x, y]", "relations:", "  - target: a", "    type: r1", "---"]),
+    });
+    const catalog = tagCatalog(sinEsquema);
+    expect(catalog.typeTags).toEqual(["x", "y"]);
+    expect(catalog.relationTypes).toEqual(["r1", "r2"]);
+  });
+
   it("is empty for a workspace without knowledge", () => {
-    expect(tagCatalog(linkFiles({ "a.flo": "entity a\n" }))).toEqual({ typeTags: [], contextTags: [], customTags: {} });
+    expect(tagCatalog(linkFiles({ "a.flo": "entity a\n" }))).toEqual({ typeTags: [], contextTags: [], relationTypes: [], customTags: {} });
   });
 });

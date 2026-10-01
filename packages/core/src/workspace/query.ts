@@ -52,6 +52,7 @@ export interface QueryResult {
 export interface TagCatalog {
   typeTags: string[];
   contextTags: string[];
+  relationTypes: string[]; // tipos de relación en uso, en orden de aparición
   customTags: Record<string, CustomTagValue[]>; // valores distintos por clave
 }
 
@@ -178,17 +179,19 @@ export function query(link: LinkResult, opts: QueryOptions = {}): QueryResult {
 export function tagCatalog(link: LinkResult): TagCatalog {
   const typeTags = new Set<string>();
   const contextTags = new Set<string>();
+  const relationTypes = new Set<string>();
   // Map y no objeto: una clave "constructor" no debe leer Object.prototype.
   const customTags = new Map<string, CustomTagValue[]>();
   for (const { knowledge } of link.entities.values()) {
     if (!knowledge) continue;
     for (const tag of knowledge.typeTags) typeTags.add(tag);
     for (const tag of knowledge.contextTags) contextTags.add(tag);
+    for (const relation of knowledge.relations) relationTypes.add(relation.type);
     for (const [key, value] of Object.entries(knowledge.customTags)) {
       const values = customTags.get(key) ?? [];
       if (!values.includes(value)) values.push(value);
       customTags.set(key, values);
     }
   }
-  return { typeTags: [...typeTags], contextTags: [...contextTags], customTags: Object.fromEntries(customTags) };
+  return { typeTags: [...typeTags], contextTags: [...contextTags], relationTypes: [...relationTypes], customTags: Object.fromEntries(customTags) };
 }

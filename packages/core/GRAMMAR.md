@@ -133,9 +133,11 @@ type_tags: [architecture, business_rule, decision, incident, pattern]
 relation_types: [enforces, visualized_by, affects, supersedes]
 ```
 
-Ambas claves son obligatorias y listas de identificadores. Sin esquema, el
-primer `.md` (por uri) lleva un único `E068` y no se valida vocabulario; con
-un esquema inválido, los diagnósticos van en el esquema y tampoco se valida.
+El esquema es opcional (decisión #61). Si existe, ambas claves son
+obligatorias y listas de identificadores, y cierra el vocabulario (`E065`,
+`E066`). Sin esquema, el vocabulario es el que usan las fuentes y no se
+valida; con un esquema inválido, los diagnósticos van en el esquema y
+tampoco se valida.
 
 `relations.target` es una ruta si lo anterior a `#` contiene `/` o termina
 en `.md`/`.flo`: `x.md` resuelve a la entidad de ese `.md`, `x.flo#nombre`
@@ -185,7 +187,7 @@ subgrafos, `alt`/`loop` de secuencia, notas, estilos.
 | E065 | esquema | `type_tag` no declarado en el esquema |
 | E066 | esquema | tipo de relación no declarado en el esquema |
 | E067 | markdown | campo de frontmatter (o de relación) desconocido |
-| E068 | esquema | falta `knowledge.schema.yaml` o su contenido es inválido |
+| E068 | esquema | el contenido de `knowledge.schema.yaml` es inválido |
 
 **Retirados:** E003, E004, E005, E006, E013, E015, E017, E020, E021, E022,
 E023, E025. No se reusan con otro significado.
