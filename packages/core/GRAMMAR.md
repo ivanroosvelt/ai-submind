@@ -107,13 +107,13 @@ Un `.md` es documento del workspace solo si su primera línea es `---`
 id: decision_auth        # obligatorio, identificador (misma regla que IDENT)
 title: "OAuth2 + PKCE"   # obligatorio, texto no vacío → label
 memory_type: long_term   # obligatorio: working | short_term | long_term
-type_tags: [decision]    # identificadores (si hay esquema, declarados en él)
+type_tags: [decision]    # identificadores; uno nuevo se suma al catálogo
 context_tags: ["project:core"]  # 'clave:valor'
 custom_tags: { status: approved, level: 3 }  # escalares
 use: ["../catalogo.flo"] # como 'use' en .flo
 relations:
   - target: api          # id, ruta a .md, o ruta a bloque 'x.flo#nombre'
-    type: affects        # si hay esquema, declarado en él
+    type: affects        # cualquier identificador
 ---
 ```
 

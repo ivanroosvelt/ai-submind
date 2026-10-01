@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { Workspace } from "./workspace.js";
-import { isDocumentUri } from "./uri.js";
 import type { Diagnostic } from "../diagnostics.js";
 
 const catalog = "entity usuario (Usuario)\nentity api [API Gateway]\nentity db [Base de datos]\n";
@@ -121,13 +120,6 @@ describe("Workspace with .md documents", () => {
       "n.md": note("n", ["type_tags: [whatever]", 'use: ["./catalogo.flo"]', "relations:", "  - target: api", "    type: breaks"]),
     }).link();
     expect(result.diagnostics.get("n.md")).toEqual([]);
-  });
-
-  it("does not treat a knowledge.schema.yaml as a document nor give it diagnostics", () => {
-    const result = workspace({ "a.md": note("a") }).link();
-    expect(isDocumentUri("knowledge.schema.yaml")).toBe(false);
-    expect(result.diagnostics.has("knowledge.schema.yaml")).toBe(false);
-    expect(result.documents.has("knowledge.schema.yaml")).toBe(false);
   });
 
   it("ignores a .md without frontmatter, also when an existing one loses it", () => {

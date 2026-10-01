@@ -34,7 +34,7 @@ export function parseBlockId(id: BlockId): { uri: DocumentUri; name: string } {
 /** Carpetas que ni la carga ni el watcher recorren (#33, #37). */
 export const IGNORED_DIRS: ReadonlySet<string> = new Set(["node_modules", ".git"]);
 
-/** Los documentos del workspace: `.flo`, `.md` y el esquema en la raíz (decisión #29). */
+/** Los documentos del workspace: `.flo` y `.md` (decisión #62: sin esquema). */
 export function isDocumentUri(uri: string): boolean {
   return uri.endsWith(".flo") || uri.endsWith(".md");
 }
