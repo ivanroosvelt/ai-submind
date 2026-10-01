@@ -12,7 +12,9 @@ async function main(): Promise<void> {
   };
   if (Object.values(el).some((element) => element === null)) return;
   const draft = await loadDraft().catch(() => null);
-  new App(el as AppElements, draft ?? newWorkspace());
+  const app = new App(el as AppElements, draft ?? newWorkspace());
+  window.addEventListener("keydown", (event) => app.onKeydown(event));
+  window.addEventListener("beforeunload", (event) => app.onBeforeUnload(event));
 }
 
 void main();

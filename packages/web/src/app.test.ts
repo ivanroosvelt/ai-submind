@@ -699,4 +699,32 @@ describe("App knowledge graph", () => {
       delete (window as { showSaveFilePicker?: unknown }).showSaveFilePicker;
     }
   });
+
+  it("saves on Ctrl/Cmd+S and keeps the browser's own dialog away (#56)", () => {
+    const app = new App(elements(), FILES);
+    const save = vi.spyOn(app, "save").mockResolvedValue();
+    for (const init of [{ ctrlKey: true }, { metaKey: true }, { ctrlKey: true, key: "S" }]) {
+      const event = new KeyboardEvent("keydown", { key: "s", cancelable: true, ...init });
+      app.onKeydown(event);
+      expect(event.defaultPrevented).toBe(true);
+    }
+    for (const init of [{ ctrlKey: true, altKey: true }, {}]) {
+      const event = new KeyboardEvent("keydown", { key: "s", cancelable: true, ...init });
+      app.onKeydown(event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect(save).toHaveBeenCalledTimes(3);
+  });
+
+  it("warns before leaving the page only with changes that would be lost (#56)", () => {
+    const app = new App(elements(), FILES);
+    const leave = () => new Event("beforeunload", { cancelable: true }) as BeforeUnloadEvent;
+    const clean = leave();
+    app.onBeforeUnload(clean);
+    expect(clean.defaultPrevented).toBe(false);
+    app.ws.setSource("catalog.flo", "entity x\n");
+    const dirty = leave();
+    app.onBeforeUnload(dirty);
+    expect(dirty.defaultPrevented).toBe(true);
+  });
 });
