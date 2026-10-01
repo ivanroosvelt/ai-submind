@@ -309,11 +309,11 @@ describe("tagCatalog", () => {
   });
 
   it("lists type tags and relation types, no repeats (#62)", () => {
-    const sinEsquema = linkFiles({
+    const notasConVocabulario = linkFiles({
       "a.md": md(["---", "id: a", "title: A", "memory_type: working", "type_tags: [x]", "relations:", "  - target: b", "    type: r1", "  - target: b", "    type: r2", "---"]),
       "b.md": md(["---", "id: b", "title: B", "memory_type: working", "type_tags: [x, y]", "relations:", "  - target: a", "    type: r1", "---"]),
     });
-    const catalog = tagCatalog(sinEsquema);
+    const catalog = tagCatalog(notasConVocabulario);
     expect(catalog.typeTags).toEqual(["x", "y"]);
     expect(catalog.relationTypes).toEqual(["r1", "r2"]);
   });

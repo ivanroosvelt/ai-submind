@@ -284,6 +284,5 @@ function readRelation(yaml: YamlSource, item: unknown, knowledge: KnowledgeMeta,
     target: targetNode.value as string,
     resolved: null,
     range: yaml.rangeOf(targetNode),
-    typeRange: yaml.rangeOf(typeNode),
   });
 }

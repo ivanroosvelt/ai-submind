@@ -163,7 +163,7 @@ Monorepo con pnpm workspaces:
   ```
 
   Herramientas: `query`, `get_node`, `list_tags` (vocabulario en uso, con
-  tipos de relación), `check` y `write_node`
+  tipos de relación; un valor nuevo se suma al catálogo), `check` y `write_node`
   (solo escribe `.md`/`.flo` dentro de la carpeta, y solo si el
   type-checker no encuentra errores nuevos).
 

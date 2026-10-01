@@ -27,7 +27,6 @@ export interface Relation {
   target: string; // tal como se escribió
   resolved: { kind: "entity"; id: EntityId } | { kind: "block"; id: BlockId } | null; // lo rellena el resolver
   range: Range; // el valor de `target`
-  typeRange: Range; // el valor de `type`
 }
 
 /** Lo que un `.md` agrega a su entidad (spec de conocimiento §4). */

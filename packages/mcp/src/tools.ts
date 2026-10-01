@@ -50,7 +50,7 @@ export function createServer(folder: FloFolder): McpServer {
     "query",
     {
       description:
-        "Consulta el grafo de conocimiento. `where` filtra las semillas (and/or/not, memory, typeTag, contextTag, custom, text); `from` limita las semillas a esos ids; `depth` expande por relaciones y flujos; `project` elige meta, full (con body) o full+diagrams.",
+        "Consulta el grafo de conocimiento. `where` filtra las semillas (and/or/not, memory, typeTag, contextTag, custom, text); `from` limita las semillas a esos ids; `depth` expande por relaciones y flujos; `project` elige meta, full (con body) o full+diagrams. Los valores válidos de typeTag/contextTag salen de list_tags.",
       inputSchema: z.strictObject({
         where: where.optional(),
         from: z.array(z.string()).optional(),
@@ -106,7 +106,7 @@ export function createServer(folder: FloFolder): McpServer {
     "write_node",
     {
       description:
-        "Crea o reemplaza un archivo .md o .flo (ruta relativa a la carpeta raíz). Solo escribe si el archivo no tiene errores y no aparecen errores nuevos en otros archivos; si no, devuelve los diagnósticos.",
+        "Crea o reemplaza un archivo .md o .flo (ruta relativa a la carpeta raíz). Solo escribe si el archivo no tiene errores y no aparecen errores nuevos en otros archivos; si no, devuelve los diagnósticos. Para type_tags y tipos de relación, consulta list_tags y reutiliza los existentes; uno nuevo es válido y se suma al catálogo.",
       inputSchema: z.strictObject({ path: z.string(), content: z.string() }),
     },
     guarded(async ({ path, content }) => {

@@ -54,7 +54,7 @@ describe("parseMarkdownDocument: frontmatter", () => {
           contextTags: ["project:core"],
           customTags: { status: "approved", level: 3 },
           relations: [
-            { type: "affects", target: "api", resolved: null, range: r(12, 13, 12, 16), typeRange: r(13, 11, 13, 18) },
+            { type: "affects", target: "api", resolved: null, range: r(12, 13, 12, 16) },
           ],
           body: "\n# Decisión\n",
         },
