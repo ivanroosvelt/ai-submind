@@ -35,6 +35,15 @@ describe("Lexer", () => {
     expect(lexer.next().value).toBe("b");
   });
 
+  it("explains the ASCII rule when E002 is a non-ASCII letter", () => {
+    const lexer = new Lexer("Café\n");
+    expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "Caf" });
+    lexer.next(); // salta la 'é' (E002) hasta el fin de línea
+    expect(lexer.diagnostics.map((d) => d.message)).toEqual([
+      "carácter inesperado 'é': los ids solo admiten letras ASCII, dígitos y '_'",
+    ]);
+  });
+
   it("reports E002 for an unexpected character and keeps lexing", () => {
     const lexer = new Lexer("1bad\n");
     expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "bad" });

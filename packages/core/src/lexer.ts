@@ -120,8 +120,10 @@ export class Lexer {
       }
 
       this.advance();
+      // Los ids son ASCII (GRAMMAR); con una letra como 'é' se dice por qué (#51).
+      const reason = /\p{L}/u.test(ch) ? ": los ids solo admiten letras ASCII, dígitos y '_'" : "";
       this.diagnostics.push(
-        diagnosticAt("E002", `carácter inesperado '${ch}'`, { start, end: { line: this.line, column: this.column } })
+        diagnosticAt("E002", `carácter inesperado '${ch}'${reason}`, { start, end: { line: this.line, column: this.column } })
       );
     }
 

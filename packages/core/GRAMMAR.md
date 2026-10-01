@@ -152,7 +152,7 @@ subgrafos, `alt`/`loop` de secuencia, notas, estilos.
 | Código | Origen | Significado |
 |---|---|---|
 | E001 | lexer | falta el delimitador de cierre antes de fin de línea |
-| E002 | lexer | carácter inesperado, o cadena sin cerrar |
+| E002 | lexer | carácter inesperado (si es una letra no ASCII, el mensaje explica que los ids son ASCII), o cadena sin cerrar |
 | E010 | parser | se esperaba un identificador |
 | E011 | entity | se esperaba el texto de la entidad (forma vacía) |
 | E012 | entity | falta el delimitador de cierre de la forma |

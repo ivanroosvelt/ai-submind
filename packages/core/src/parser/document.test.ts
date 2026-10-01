@@ -28,6 +28,17 @@ describe("parseDocument", () => {
     ]);
   });
 
+  it("ignores a leading BOM, keeping the editor's columns on line 1", () => {
+    const { document, diagnostics } = parseDocument("\uFEFFentity a\nflow f {\n  a -> a\n}\n", "x.flo");
+    expect(diagnostics).toEqual([]);
+    expect(document.entities[0].nameRange.start).toEqual({ line: 1, column: 8 });
+  });
+
+  it("reports a line-1 error at the column the editor shows when there is a BOM", () => {
+    const { diagnostics } = parseDocument("\uFEFFnope\n", "x.flo");
+    expect(diagnostics[0].range.start).toEqual({ line: 1, column: 1 });
+  });
+
   it("accepts an empty document and a catalog-only document with no diagnostics", () => {
     expect(parseDocument("", "a.flo")).toEqual({
       document: { uri: "a.flo", uses: [], entities: [], blocks: [] },
