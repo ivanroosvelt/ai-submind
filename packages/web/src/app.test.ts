@@ -730,6 +730,10 @@ describe("App knowledge graph", () => {
       expect(event.defaultPrevented).toBe(false);
     }
     expect(save).toHaveBeenCalledTimes(3);
+    const repeat = new KeyboardEvent("keydown", { key: "s", ctrlKey: true, repeat: true, cancelable: true });
+    app.onKeydown(repeat);
+    expect(repeat.defaultPrevented).toBe(true);
+    expect(save).toHaveBeenCalledTimes(3);
   });
 
   it("warns before leaving the page only with changes that would be lost (#56)", () => {

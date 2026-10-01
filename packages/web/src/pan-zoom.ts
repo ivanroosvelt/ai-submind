@@ -63,6 +63,8 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
   });
   svg.addEventListener("pointermove", (event) => {
     if (!last || !down) return;
+    // Soltado fuera del SVG antes de capturar: no llega pointerup; sin botón/contacto se corta el pan.
+    if (event.buttons === 0) return end();
     const dx = event.clientX - last.x;
     const dy = event.clientY - last.y;
     last = { x: event.clientX, y: event.clientY };

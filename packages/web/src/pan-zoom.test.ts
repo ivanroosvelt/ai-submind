@@ -31,7 +31,7 @@ function setup() {
 }
 
 const mouse = (target: Element, type: string, x: number, y = 0) =>
-  target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 }));
+  target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, buttons: 1 }));
 
 describe("bindPanZoom", () => {
   it("zooms in with the wheel (jsdom has no layout: 1 px = 1 unit)", () => {
@@ -129,5 +129,13 @@ describe("bindPanZoom", () => {
     down(svg, 7);
     mouse(svg, "pointerup", 0);
     expect(capture).not.toHaveBeenCalled();
+  });
+
+  it("stops panning when the button was released outside without a pointerup", () => {
+    const { svg, onChange } = setup();
+    mouse(svg, "pointerdown", 10);
+    svg.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: 30, buttons: 0 }));
+    mouse(svg, "pointermove", 50);
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

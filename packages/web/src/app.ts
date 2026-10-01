@@ -461,6 +461,8 @@ export class App {
   onKeydown(event: KeyboardEvent): void {
     if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== "s") return;
     event.preventDefault();
+    // Mantener la tecla repite el evento: no abrir un segundo selector de guardado.
+    if (event.repeat) return;
     void this.run("Guardar", () => this.save());
   }
 
