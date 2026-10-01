@@ -1,0 +1,2 @@
+type_tags: [decision, business_rule, incident, architecture]
+relation_types: [enforces, visualized_by, affects, supersedes, caused_by]

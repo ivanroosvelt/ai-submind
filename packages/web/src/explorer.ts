@@ -45,7 +45,7 @@ export function explorerHtml(ws: EditorWorkspace, filter: ExplorerFilter, select
         const id = blockId(uri, block.name);
         return `<li>${item("data-flo-block", id, escapeXml(block.title ?? block.name), id === selectedBlock ? " flo-selected" : "")}</li>`;
       });
-      const dirty = ws.isDirty(uri) ? ' <span class="flo-dirty" title="Sin guardar">●</span>' : "";
+      const dirty = ws.isUnsaved(uri) ? ' <span class="flo-dirty" title="Sin guardar">●</span>' : "";
       const file = item("data-flo-open", uri, `${escapeXml(uri)}${dirty}`, uri === ws.active ? " flo-active" : "");
       return `<li>${file}${blocks.length > 0 ? `<ul class="flo-tree">${blocks.join("")}</ul>` : ""}</li>`;
     })

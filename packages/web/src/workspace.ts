@@ -49,9 +49,13 @@ export class EditorWorkspace {
     return this.saved.get(uri) !== this.files.get(uri);
   }
 
-  /** Cambios que se perderían: archivos que difieren de disco; con carpeta, también los nunca guardados (#43). */
+  /** Cambios que se perderían: difiere de disco; con carpeta, también si nunca se guardó (#43). */
+  isUnsaved(uri: DocumentUri): boolean {
+    return this.isDirty(uri) && (this.saved.has(uri) || this.dir !== null);
+  }
+
   hasUnsavedChanges(): boolean {
-    return this.uris().some((uri) => this.isDirty(uri) && (this.saved.has(uri) || this.dir !== null));
+    return this.uris().some((uri) => this.isUnsaved(uri));
   }
 
   markSaved(uri: DocumentUri): void {

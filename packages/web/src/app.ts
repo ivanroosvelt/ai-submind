@@ -394,8 +394,7 @@ export class App {
   loadExample(id: string): void {
     const example = EXAMPLES.find((candidate) => candidate.id === id);
     if (!example || !this.confirmDiscard()) return;
-    const uri = `${id}.flo`;
-    this.load({ files: { [uri]: example.source }, saved: {}, active: uri, dir: null });
+    this.load({ files: example.files, saved: {}, active: example.active, dir: null });
   }
 
   private onPreviewClick(target: Element): void {

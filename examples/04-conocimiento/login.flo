@@ -1,0 +1,13 @@
+// El catálogo y el flujo que las notas de conocimiento referencian.
+entity usuario (Usuario)          type: actor
+entity login   [Pantalla de login] type: frontend
+entity api     [API Gateway]      type: service, tags: http
+entity auth    [Auth]             type: service
+entity db      [Base de datos]    type: store
+
+flow acceso "Inicio de sesión" {
+  usuario -> login
+  login -> api : POST /login
+  api -> auth : verificar
+  auth -> db : SELECT usuario
+}

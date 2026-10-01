@@ -35,6 +35,8 @@ describe("explorerHtml", () => {
     expect(div.querySelector('[data-flo-open="login.flo"]')!.classList.contains("flo-active")).toBe(true);
     expect(div.querySelector('[data-flo-block="login.flo#s"]')!.classList.contains("flo-selected")).toBe(true);
     expect(div.querySelector('[data-flo-open="catalog.flo"] .flo-dirty')).not.toBeNull();
+    // Sin carpeta, un archivo nunca guardado no se pierde al reemplazarlo (#43): sin marca.
+    expect(div.querySelector('[data-flo-open="login.flo"] .flo-dirty')).toBeNull();
   });
 
   it("filters the catalog by type and by tag", () => {
