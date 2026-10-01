@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -60,6 +60,12 @@ async function connect(): Promise<{ folder: FloFolder; client: Client; call: (na
 }
 
 describe("flo-mcp tools", () => {
+  it("reports the version from package.json", async () => {
+    const { client } = await connect();
+    const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string };
+    expect(client.getServerVersion()?.version).toBe(pkg.version);
+  });
+
   it("lists the five tools", async () => {
     const { client } = await connect();
     expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["query", "get_node", "list_tags", "check", "write_node"]);

@@ -69,6 +69,17 @@ describe("openFloFile", () => {
     expect(result).toBeNull();
     clickSpy.mockRestore();
   });
+
+  it("rejects when the fallback picker cannot read the file", async () => {
+    vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(function (this: HTMLInputElement) {
+      Object.defineProperty(this, "files", { value: [new File(["x"], "a.flo")], configurable: true });
+      this.dispatchEvent(new Event("change"));
+    });
+    vi.spyOn(FileReader.prototype, "readAsText").mockImplementation(function (this: FileReader) {
+      queueMicrotask(() => this.onerror?.(new ProgressEvent("error") as ProgressEvent<FileReader>));
+    });
+    await expect(openFloFile()).rejects.toBeInstanceOf(Error);
+  });
 });
 
 describe("saveFloFile", () => {
