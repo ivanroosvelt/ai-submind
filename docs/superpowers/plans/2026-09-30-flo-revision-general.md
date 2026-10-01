@@ -10,6 +10,12 @@
   - Task 10 captura el puntero al superar el umbral de arrastre, no en `pointerdown`; si no, el click se redirige al `<svg>` y rompe el drill-down (anotado en #59).
 - Revisión final: sin críticos ni importantes. Se corrigieron dos minors en `d5b3a50`:
   pan que quedaba armado al soltar fuera del SVG, y Ctrl+S repetido.
+- **Minors diferidos** (ninguno bloquea):
+  - `app.ts`: `void renameAt(...)` / `void rename(...)` descartan rechazos; envolver en `run()` si hace falta.
+  - Tests: el segundo test de BOM en `document.test.ts` no discrimina (assert `["E040"]`); falta un test de `confirmDiscard` en `false` para `openFile`/`openFolder`; el test de `flo-lint` perdió "clamp" en el título.
+  - `render/sequence.ts`: el label de un auto-mensaje en el último participante puede pasarse ~1px del borde derecho.
+  - Sin guard contra diálogos apilados (doble click en «Nuevo»).
+  - Formato: líneas en blanco dobles (`render/knowledge.ts`, `folder-io.ts`) e import largo en `mcp/folder.ts`.
 - **Queda** (pasos manuales en navegador, no corridos): PNG a 2× (task 8), arrastrar el grafo con mouse y touch (task 10) y los diálogos (task 11).
 
 **Goal:** Cerrar lo que encontró la revisión general del 2026-09-30:
