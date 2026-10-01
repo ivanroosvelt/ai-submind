@@ -14,6 +14,7 @@ describe("layoutSequence", () => {
     expect(layoutSequence(block, catalog)).toEqual({
       width: 320,
       height: 190,
+      columnWidth: 160,
       lifelineTop: 50,
       lifelineBottom: 170,
       participants: [

@@ -7,6 +7,9 @@ export const HEADER_HEIGHT = 50;
 const ROW_HEIGHT = 50;
 const TOP_MARGIN = 20;
 const BOTTOM_MARGIN = 20;
+// Las mismas medidas que el flowchart (measureFlowchartNode) y que svgLabel.
+const CHAR_WIDTH = 8;
+const LABEL_CHAR_WIDTH = 7;
 
 export interface SequenceParticipantLayout {
   id: string;
@@ -27,6 +30,7 @@ export interface SequenceMessageLayout {
 export interface SequenceLayout {
   width: number;
   height: number;
+  columnWidth: number;
   lifelineTop: number;
   lifelineBottom: number;
   participants: SequenceParticipantLayout[];
@@ -34,11 +38,18 @@ export interface SequenceLayout {
 }
 
 export function layoutSequence(block: DiagramBlock, catalog: Catalog): SequenceLayout {
-  const participants: SequenceParticipantLayout[] = blockNodes(block, catalog).map((node, index) => ({
+  const nodes = blockNodes(block, catalog);
+  // Una sola columna para todas (#52): la del label más largo, o 160 si todo cabe.
+  const columnWidth = Math.max(
+    COLUMN_WIDTH,
+    ...nodes.map((node) => node.label.length * CHAR_WIDTH + 40),
+    ...block.edges.map((edge) => (edge.label ?? "").length * LABEL_CHAR_WIDTH + 28)
+  );
+  const participants: SequenceParticipantLayout[] = nodes.map((node, index) => ({
     id: node.id,
     label: node.label,
     resolved: node.resolved,
-    x: COLUMN_WIDTH / 2 + index * COLUMN_WIDTH,
+    x: columnWidth / 2 + index * columnWidth,
     range: node.range,
   }));
 
@@ -54,8 +65,9 @@ export function layoutSequence(block: DiagramBlock, catalog: Catalog): SequenceL
   const lifelineBottom = HEADER_HEIGHT + TOP_MARGIN + (messages.length + 1) * ROW_HEIGHT;
 
   return {
-    width: participants.length * COLUMN_WIDTH,
+    width: participants.length * columnWidth,
     height: lifelineBottom + BOTTOM_MARGIN,
+    columnWidth,
     lifelineTop,
     lifelineBottom,
     participants,
