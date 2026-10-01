@@ -74,4 +74,23 @@ describe("createToolbar", () => {
     expect(actions.onLoadExample).toHaveBeenCalledWith("sequence");
     expect(select.value).toBe("");
   });
+
+  it("oculta paneles y siempre deja al menos uno visible", () => {
+    localStorage.clear();
+    const container = document.createElement("div");
+    createToolbar(container, mockActions());
+    const pane = (id: string) => container.querySelector<HTMLButtonElement>(`[data-flo-pane="${id}"]`)!;
+
+    pane("editor").click();
+    expect(document.body.classList.contains("flo-hide-editor")).toBe(true);
+    expect(pane("editor").getAttribute("aria-pressed")).toBe("false");
+
+    pane("side").click();
+    pane("preview").click();
+    expect(document.body.classList.contains("flo-hide-preview")).toBe(false);
+
+    pane("editor").click();
+    expect(document.body.classList.contains("flo-hide-editor")).toBe(false);
+    expect(JSON.parse(localStorage.getItem("flo:hidden-panes")!)).toEqual(["side"]);
+  });
 });

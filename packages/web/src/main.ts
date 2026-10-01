@@ -14,6 +14,7 @@ async function main(): Promise<void> {
   const draft = await loadDraft().catch(() => null);
   const app = new App(el as AppElements, draft ?? newWorkspace());
   window.addEventListener("keydown", (event) => app.onKeydown(event));
+  window.addEventListener("popstate", (event) => app.onPopState(event.state));
   window.addEventListener("beforeunload", (event) => app.onBeforeUnload(event));
 }
 

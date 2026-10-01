@@ -1,5 +1,6 @@
 import { blockId, escapeXml, renderBlock, type DocumentUri, type LinkResult, type RenderResult, type RenderedDiagram } from "@flo/core";
 import { parseSvgSize } from "./export.js";
+import { markdownHtml, noteHeaderHtml } from "./note-view.js";
 
 export interface PreviewState {
   lastDiagrams: RenderedDiagram[];
@@ -28,10 +29,31 @@ function sectionHtml(diagram: RenderedDiagram, uri: DocumentUri): string {
   return `<section class="flo-block" data-flo-block="${id}"><h2 class="flo-block-title">${escapeXml(diagram.title ?? diagram.name)}</h2>${body}</section>`;
 }
 
-export function previewHtml(state: PreviewState, result: RenderResult, uri: DocumentUri): string {
+/**
+ * Una nota `.md`: cabecera del frontmatter y el cuerpo como prosa, con cada
+ * cerca ` ```flo ` reemplazada por sus diagramas. Null si no es una nota.
+ */
+function noteHtml(link: LinkResult, uri: DocumentUri, diagrams: RenderedDiagram[]): string | null {
+  const document = link.documents.get(uri)?.document;
+  const entity = document?.entities[0];
+  if (!document || !entity?.knowledge) return null;
+  // Línea 1-based del documento → índice 0-based del cuerpo (el frontmatter termina en range.end).
+  const bodyLine = (line: number) => line - entity.range.end.line - 1;
+  const diagramsAt = (start: number, end: number) =>
+    document.blocks
+      .filter((block) => bodyLine(block.range.start.line) >= start && bodyLine(block.range.start.line) < end)
+      .flatMap((block) => diagrams.filter((diagram) => diagram.name === block.name))
+      .map((diagram) => sectionHtml(diagram, uri))
+      .join("");
+  return `<article class="flo-note">${noteHeaderHtml(link, entity)}<div class="flo-prose">${markdownHtml(entity.knowledge.body, diagramsAt)}</div></article>`;
+}
+
+export function previewHtml(state: PreviewState, result: RenderResult, uri: DocumentUri, link?: LinkResult): string {
   const diagrams = nextPreviewState(state, result).lastDiagrams;
   const count = result.diagnostics.length;
   const banner = count > 0 ? `<div class="flo-banner">${count} error${count === 1 ? "" : "es"}</div>` : "";
+  const note = link ? noteHtml(link, uri, diagrams) : null;
+  if (note) return banner + note;
   if (diagrams.length > 0) return banner + diagrams.map((diagram) => sectionHtml(diagram, uri)).join("");
   return banner || '<div class="flo-empty">Escribe un diagrama .flo para ver el preview</div>';
 }

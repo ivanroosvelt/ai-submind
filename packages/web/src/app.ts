@@ -62,6 +62,16 @@ function reportActionError(action: string, error: unknown): void {
 
 type PanelState = { kind: "entity"; id: EntityId } | { kind: "edge"; from: EntityId; to: EntityId } | null;
 
+/** Una parada del historial del navegador: qué se está mirando, sin el texto. */
+interface NavState {
+  uri: DocumentUri;
+  mode: "document" | "map" | "graph";
+  graph: GraphQuery;
+  panel: PanelState;
+  selectedBlock: BlockId | null;
+  highlight: EntityId | null;
+}
+
 function byData(root: ParentNode, selector: string, attribute: string, value: string): Element[] {
   return Array.from(root.querySelectorAll(selector)).filter((element) => element.getAttribute(attribute) === value);
 }
@@ -140,6 +150,56 @@ export class App {
     this.openDocument(this.ws.active);
   }
 
+  private navState(): NavState {
+    const { mode, graph, panel, selectedBlock, highlight } = this;
+    return { uri: this.ws.active, mode, graph, panel, selectedBlock, highlight };
+  }
+
+  /**
+   * Cada lugar nuevo es una entrada del historial del navegador: atrás y
+   * adelante (botones, mouse, gesto) vuelven por las referencias seguidas.
+   * Cambiar filtros o zoom del grafo reemplaza la entrada en vez de apilar.
+   */
+  private remember(): void {
+    const state = this.navState();
+    const previous = history.state as NavState | null;
+    const place = (nav: NavState) =>
+      JSON.stringify([nav.uri, nav.mode, nav.mode === "graph" ? nav.graph.from : null, nav.panel, nav.selectedBlock, nav.highlight]);
+    try {
+      if (previous?.uri === undefined || place(previous) === place(state)) {
+        // Safari limita las llamadas por segundo: sin cambios, no se toca.
+        if (JSON.stringify(previous) !== JSON.stringify(state)) history.replaceState(state, "");
+      } else {
+        history.pushState(state, "");
+      }
+    } catch {
+      // ponytail: si el navegador rechaza la entrada, se navega igual, sin historial.
+    }
+  }
+
+  /** `popstate`: vuelve a un lugar del historial; uno de otro workspace se ignora. */
+  onPopState(state: NavState | null): void {
+    if (!state?.uri || !this.ws.uris().includes(state.uri)) return;
+    ({ mode: this.mode, graph: this.graph, panel: this.panel, selectedBlock: this.selectedBlock, highlight: this.highlight } = state);
+    if (state.uri !== this.ws.active) this.openDocument(state.uri);
+    else this.refresh();
+  }
+
+  /** Sigue una referencia de una nota: a otra nota se abre su documento; a una entidad, su panel; a un bloque, el bloque. */
+  private follow(ref: Element): void {
+    const block = ref.getAttribute("data-flo-ref-block");
+    if (block !== null) return this.selectBlock(block);
+    const id = ref.getAttribute("data-flo-ref-entity")!;
+    const entity = this.ws.link().entities.get(id);
+    if (!entity?.knowledge) return this.selectEntity(id);
+    this.mode = "document";
+    this.selectedBlock = null;
+    this.highlight = null;
+    if (entity.uri === this.ws.active) this.refresh();
+    else this.openDocument(entity.uri);
+    this.el.preview.scrollTop = 0;
+  }
+
   private async run(action: string, task: () => Promise<void>): Promise<void> {
     try {
       await task();
@@ -186,7 +246,7 @@ export class App {
       const uri = this.ws.active;
       const result = renderActive(link, uri);
       this.previewState = nextPreviewState(this.previewState, result);
-      this.el.preview.innerHTML = previewHtml(this.previewState, result, uri);
+      this.el.preview.innerHTML = previewHtml(this.previewState, result, uri, link);
       enhanceSequencePreview(this.el.preview);
       this.markSelection();
     }
@@ -197,6 +257,7 @@ export class App {
     this.renderExplorer();
     // ponytail: sin IndexedDB (modo privado) el editor sigue, solo sin borrador.
     saveDraft(this.ws.snapshot()).catch(() => {});
+    this.remember();
   }
 
   /** Alterna el preview entre el documento activo y el mapa agregado del workspace (spec §8, #40). */
@@ -425,6 +486,8 @@ export class App {
       this.renderPanel();
       return;
     }
+    const ref = target.closest("[data-flo-ref-entity], [data-flo-ref-block]");
+    if (ref) return this.follow(ref);
     const section = target.closest("section[data-flo-block]");
     if (section && target.closest(".flo-block-title")) {
       this.selectBlock(section.getAttribute("data-flo-block")!);
@@ -459,6 +522,7 @@ export class App {
   selectEntity(id: EntityId): void {
     this.panel = { kind: "entity", id };
     this.renderPanel();
+    this.remember();
   }
 
   private renderPanel(): void {

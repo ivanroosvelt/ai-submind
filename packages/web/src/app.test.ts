@@ -752,3 +752,30 @@ describe("App knowledge graph", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 });
+
+describe("App navegación por referencias", () => {
+  it("una relación lleva a la nota destino, el backlink vuelve y el historial restaura", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.openDocument("kb/pkce.md");
+    const before = history.state;
+
+    el.preview.querySelector<HTMLElement>('[data-flo-ref-entity="rule"]')!.click();
+    expect(app.ws.active).toBe("kb/rule.md");
+    expect(history.state.uri).toBe("kb/rule.md");
+    // La vuelta: la regla lista a pkce en "Referenciada por".
+    expect(el.preview.querySelector('[data-flo-ref-entity="pkce"]')).not.toBeNull();
+
+    app.onPopState(before);
+    expect(app.ws.active).toBe("kb/pkce.md");
+  });
+
+  it("una relación a un bloque lo selecciona", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.openDocument("kb/pkce.md");
+    el.preview.querySelector<HTMLElement>('[data-flo-ref-block="catalog.flo#acceso"]')!.click();
+    expect(app.selectedBlock).toBe("catalog.flo#acceso");
+    expect(app.ws.active).toBe("catalog.flo");
+  });
+});
