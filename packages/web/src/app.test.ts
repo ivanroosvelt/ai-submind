@@ -236,6 +236,17 @@ describe("App", () => {
     expect(save).toHaveBeenCalledTimes(3);
   });
 
+  it("ignores auto-repeat and accepts non-Latin layouts on Ctrl+S", () => {
+    const app = new App(elements(), FILES);
+    const save = vi.spyOn(app, "save").mockResolvedValue();
+    const repeat = new KeyboardEvent("keydown", { key: "s", ctrlKey: true, repeat: true, cancelable: true });
+    app.onKeydown(repeat);
+    expect(repeat.defaultPrevented).toBe(true);
+    expect(save).not.toHaveBeenCalled();
+    app.onKeydown(new KeyboardEvent("keydown", { key: "ы", code: "KeyS", ctrlKey: true, cancelable: true }));
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
   it("warns before leaving the page only with changes that would be lost (#56)", () => {
     const app = new App(elements(), FILES);
     const leave = () => new Event("beforeunload", { cancelable: true }) as BeforeUnloadEvent;

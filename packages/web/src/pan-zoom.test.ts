@@ -96,11 +96,27 @@ describe("bindPanZoom", () => {
     expect(svg.getAttribute("viewBox")).toBe("0 0 100 50");
   });
 
-  it("captures the pointer so a drag keeps going outside the SVG", () => {
+  const withCapture = () => {
     const { svg } = setup();
     const capture = vi.fn();
     (svg as unknown as { setPointerCapture: (id: number) => void }).setPointerCapture = capture;
-    svg.dispatchEvent(Object.assign(new MouseEvent("pointerdown", { bubbles: true, button: 0 }), { pointerId: 7 }));
+    const fire = (type: string, x: number) =>
+      svg.dispatchEvent(Object.assign(new MouseEvent(type, { bubbles: true, button: 0, clientX: x }), { pointerId: 7 }));
+    return { capture, fire };
+  };
+
+  it("captures the pointer once the movement becomes a drag", () => {
+    const { capture, fire } = withCapture();
+    fire("pointerdown", 10);
+    expect(capture).not.toHaveBeenCalled();
+    fire("pointermove", 30);
     expect(capture).toHaveBeenCalledWith(7);
+  });
+
+  it("does not capture the pointer on a still click, so the click reaches the node", () => {
+    const { capture, fire } = withCapture();
+    fire("pointerdown", 10);
+    fire("pointerup", 10);
+    expect(capture).not.toHaveBeenCalled();
   });
 });

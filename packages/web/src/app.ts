@@ -398,8 +398,12 @@ export class App {
 
   /** Ctrl/Cmd+S guarda en toda la página (#56); sin Alt, que con AltGr escribe caracteres. */
   onKeydown(event: KeyboardEvent): void {
-    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== "s") return;
+    // `code` cubre layouts no latinos, donde `key` es otra letra.
+    const isS = event.key.toLowerCase() === "s" || event.code === "KeyS";
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || !isS) return;
     event.preventDefault();
+    // El auto-repeat de la tecla no debe guardar de nuevo.
+    if (event.repeat) return;
     void this.run("Guardar", () => this.save());
   }
 

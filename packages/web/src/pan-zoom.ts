@@ -58,8 +58,6 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
     down = { x: event.clientX, y: event.clientY };
     last = { x: event.clientX, y: event.clientY };
     isDrag = false;
-    // ponytail: jsdom no implementa setPointerCapture.
-    svg.setPointerCapture?.(event.pointerId);
   });
   svg.addEventListener("pointermove", (event) => {
     if (!last || !down) return;
@@ -70,6 +68,9 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
     if (!isDrag) {
       const netDistance = Math.hypot(event.clientX - down.x, event.clientY - down.y);
       isDrag = netDistance > DRAG_THRESHOLD;
+      // Capturar solo al arrastrar: con un click quieto, el click iría al <svg> y no al nodo.
+      // ponytail: jsdom no implementa setPointerCapture.
+      if (isDrag) svg.setPointerCapture?.(event.pointerId);
     }
     const s = scale();
     set(panViewBox(current(), dx * s, dy * s));
