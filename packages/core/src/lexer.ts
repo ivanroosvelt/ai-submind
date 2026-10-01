@@ -116,6 +116,8 @@ export class Lexer {
         while (this.i < this.source.length && /[A-Za-z0-9_]/.test(this.source[this.i])) {
           value += this.advance();
         }
+        // Capturar el rango al final del id ASCII, antes de la búsqueda de letra no ASCII (#51)
+        const end: Position = { line: this.line, column: this.column };
         // Si el siguiente carácter es una letra no ASCII, reportar E002 y consumirlo (#51)
         if (this.i < this.source.length && /\p{L}/u.test(this.source[this.i])) {
           const errStart: Position = { line: this.line, column: this.column };
@@ -125,7 +127,7 @@ export class Lexer {
             diagnosticAt("E002", `carácter inesperado '${errCh}': los ids solo admiten letras ASCII, dígitos y '_'`, { start: errStart, end: { line: this.line, column: this.column } })
           );
         }
-        return this.makeToken("IDENT", value, start);
+        return { kind: "IDENT", value, range: { start, end } };
       }
 
       this.advance();

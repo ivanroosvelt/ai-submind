@@ -50,7 +50,9 @@ describe("Lexer", () => {
 
   it("explains the ASCII rule when E002 is a non-ASCII letter", () => {
     const lexer = new Lexer("Café\n");
-    expect(lexer.next()).toMatchObject({ kind: "IDENT", value: "Caf" });
+    const ident = lexer.next();
+    expect(ident).toMatchObject({ kind: "IDENT", value: "Caf" });
+    expect(ident.range.end).toEqual({ line: 1, column: 4 });
     expect(lexer.diagnostics.map((d) => d.message)).toEqual([
       "carácter inesperado 'é': los ids solo admiten letras ASCII, dígitos y '_'",
     ]);
