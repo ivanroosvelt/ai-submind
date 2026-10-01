@@ -2,6 +2,19 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-10-01 (`d342559`..`44bb40a`).
+
+- Once tasks; solo la task 1 tuvo una ronda de fixes (rango del id antes de una letra no ASCII, `d2ad77b`).
+- Revisión final (whole-branch): lista con fixes, aplicados en `44bb40a`:
+  - el pan capturaba el puntero en `pointerdown` y le robaba el click a los nodos del grafo; ahora captura recién al pasar el umbral de arrastre;
+  - Ctrl/Cmd+S ignora el auto-repeat y acepta `code === "KeyS"` (teclados no latinos);
+  - el test de `exportSvg` vuelve a verificar el tipo del blob.
+- **Queda:**
+  - checks manuales en navegador de las tasks 8 (PNG 2× y nombre), 10 (pan y click en nodos, touch) y 11 (F2/Escape/Enter, diálogos);
+  - `Cafés` da `E002` y además un id `s` suelto (el lookahead consume una sola letra);
+  - `flo-highlight.ts` no quita un BOM pegado a mano;
+  - con `code === "KeyS"`, en Dvorak la tecla física S también guarda.
+
 **Goal:** Cerrar lo que encontró la revisión general del 2026-09-30:
 - tres bugs: el guardado que pisa archivos, el BOM en `.flo` y el auto-mensaje invisible;
 - mejoras de uso: atajo, aviso al salir, nombres de archivo, PNG nítido, labels largos, mensaje de ids, pan táctil, diálogos y tuteo;
