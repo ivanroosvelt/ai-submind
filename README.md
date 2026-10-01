@@ -109,7 +109,7 @@ Monorepo con pnpm workspaces:
   const link = ws.link();
   query(link, { where: { typeTag: "decision" }, depth: 1, project: "full" });
   // { nodes: [{ id: "pkce", distance: 0, body, ... }, { id: "api", distance: 1, ... }], edges: [...] }
-  tagCatalog(link); // { typeTags, contextTags, customTags, relationTypes }
+  tagCatalog(link); // { typeTags, contextTags, relationTypes, customTags }
   ```
 
 - **`@flo/web`** (`packages/web`) — vanilla TypeScript + Vite, consume

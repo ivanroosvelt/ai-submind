@@ -107,13 +107,13 @@ Un `.md` es documento del workspace solo si su primera línea es `---`
 id: decision_auth        # obligatorio, identificador (misma regla que IDENT)
 title: "OAuth2 + PKCE"   # obligatorio, texto no vacío → label
 memory_type: long_term   # obligatorio: working | short_term | long_term
-type_tags: [decision]    # identificadores declarados en el esquema
+type_tags: [decision]    # identificadores (si hay esquema, declarados en él)
 context_tags: ["project:core"]  # 'clave:valor'
 custom_tags: { status: approved, level: 3 }  # escalares
 use: ["../catalogo.flo"] # como 'use' en .flo
 relations:
   - target: api          # id, ruta a .md, o ruta a bloque 'x.flo#nombre'
-    type: affects        # declarado en el esquema
+    type: affects        # si hay esquema, declarado en él
 ---
 ```
 
@@ -125,8 +125,8 @@ con la palabra `flo` se parsea como un `.flo` con el uri del `.md`, con sus
 líneas y columnas reales. Sus entidades van después de la del frontmatter
 (decisión #22). Los demás bloques de código se ignoran.
 
-El vocabulario vive en `knowledge.schema.yaml`, en la raíz del workspace
-(uri exacto):
+El vocabulario es el que usan las fuentes; un `knowledge.schema.yaml`
+opcional, en la raíz del workspace (uri exacto), lo cierra:
 
 ```yaml
 type_tags: [architecture, business_rule, decision, incident, pattern]

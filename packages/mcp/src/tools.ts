@@ -82,7 +82,7 @@ export function createServer(folder: FloFolder): McpServer {
   server.registerTool(
     "list_tags",
     {
-      description: "El vocabulario en uso: type_tags, context_tags, los valores de cada custom_tag y los relation_types.",
+      description: "El vocabulario en uso: type_tags, context_tags, los valores de cada custom_tag y los relation_types. Si hay un knowledge.schema.yaml, write_node rechaza type_tags y relation_types fuera de él.",
       inputSchema: z.strictObject({}),
     },
     guarded(async () => json(tagCatalog(folder.link())))
