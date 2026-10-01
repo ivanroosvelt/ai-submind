@@ -40,7 +40,6 @@ export const FILES: WorkspaceSnapshot = {
 };
 
 const KG_SOURCES: Record<string, string> = {
-  "knowledge.schema.yaml": "type_tags: [decision, rule]\nrelation_types: [affects, enforces, visualized_by]\n",
   "catalog.flo": 'entity api [API]\nentity db\nflow acceso "Acceso" {\n  api -> db\n}\n',
   "login.flo": 'use "./catalog.flo"\nuse "./kb/pkce.md"\nflow login {\n  api -> pkce\n}\n',
   "kb/pkce.md": [

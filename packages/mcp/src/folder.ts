@@ -13,7 +13,7 @@ import {
   type FSWatcher,
 } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { IGNORED_DIRS, SCHEMA_URI, Workspace, isDocumentUri, isIgnoredUri, type Diagnostic, type LinkResult } from "@flo/core";
+import { IGNORED_DIRS, Workspace, isDocumentUri, isIgnoredUri, type Diagnostic, type LinkResult } from "@flo/core";
 
 export type UriDiagnostic = Diagnostic & { uri: string };
 

@@ -11,7 +11,6 @@ const node = (id: string, extra: string[] = []): string =>
   ["---", `id: ${id}`, `title: Nodo ${id}`, "memory_type: long_term", ...extra, "---", "Cuerpo.", ""].join("\n");
 
 const FILES: Record<string, string> = {
-  "knowledge.schema.yaml": "type_tags: [decision]\nrelation_types: [affects]\n",
   "catalogo.flo": "entity api\n",
   "kb/a.md": node("a", ["type_tags: [decision]", 'use: ["../catalogo.flo"]', "relations:", "  - target: api", "    type: affects"]),
   "kb/c.md": node("c", ['use: ["./a.md"]', "relations:", "  - target: a", "    type: affects"]),
@@ -154,11 +153,13 @@ describe("flo-mcp tools", () => {
     expect((await call("query", { from: ["m"] })).value.nodes).toHaveLength(1);
   });
 
-  it("write_node accepts a valid note in a folder without knowledge.schema.yaml", async () => {
-    const { "knowledge.schema.yaml": _schema, ...sinEsquema } = FILES;
-    const { call } = await connect(sinEsquema);
-    expect((await call("check")).value).toEqual({});
-    expect(await call("write_node", { path: "kb/m.md", content: node("m", ["type_tags: [cualquiera]"]) })).toEqual({ isError: false, value: { ok: true, uri: "kb/m.md" } });
+  it("write_node accepts a new type_tag and relation type, and list_tags lists them", async () => {
+    const { call } = await connect();
+    const content = node("m", ["type_tags: [nuevo_tag]", 'use: ["../catalogo.flo"]', "relations:", "  - target: api", "    type: inventada"]);
+    expect(await call("write_node", { path: "kb/m.md", content })).toEqual({ isError: false, value: { ok: true, uri: "kb/m.md" } });
+    const tags = (await call("list_tags")).value;
+    expect(tags.typeTags).toContain("nuevo_tag");
+    expect(tags.relationTypes).toContain("inventada");
   });
 
   it("a change on disk shows up in the next query", async () => {

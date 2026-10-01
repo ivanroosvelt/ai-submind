@@ -98,8 +98,8 @@ Monorepo con pnpm workspaces:
   Un `.md` que empieza con `---` es una entidad más del catálogo: su
   frontmatter YAML declara `id`, `title`, `memory_type`, tags y
   `relations`, y sus bloques ` ```flo ` embebidos entran al workspace. El
-  vocabulario es libre: si hay un `knowledge.schema.yaml` en la raíz, se
-  valida contra él; si no, no hay nada que validar.
+  vocabulario se deduce de las notas: crecer es libre, un tag o un tipo de
+  relación nuevo se suma al catálogo con solo usarlo.
 
   `query` filtra y expande el grafo; `tagCatalog` lista los tags en uso:
 
@@ -127,8 +127,7 @@ Monorepo con pnpm workspaces:
   página.
 
   **Workspace y navegación:** "Abrir carpeta" (File System Access API) carga
-  los `.flo`, `.md` y, si existe, el `knowledge.schema.yaml` de la raíz (sin
-  `node_modules` ni `.git`); sin esa API el navegador cae a un
+  los `.flo` y `.md` (sin `node_modules` ni `.git`); sin esa API el navegador cae a un
   `<input webkitdirectory>` de solo lectura, y "Guardar" descarga el
   archivo activo en vez de escribirlo. Con una carpeta abierta, "Nuevo"
   agrega `nuevo.flo` a ella; "Guardar" escribe todos los archivos
@@ -156,8 +155,7 @@ Monorepo con pnpm workspaces:
   vuelve a aplicar.
 
 - **`@flo/mcp`** (`packages/mcp`) — servidor MCP local (stdio) sobre una
-  carpeta de documentos `.flo` y `.md` con frontmatter (el
-  `knowledge.schema.yaml` es opcional). Relee lo que cambia en disco.
+  carpeta de documentos `.flo` y `.md` con frontmatter. Relee lo que cambia en disco.
 
   ```bash
   pnpm --filter @flo/mcp build

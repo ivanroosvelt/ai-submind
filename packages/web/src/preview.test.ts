@@ -47,13 +47,11 @@ describe("renderActive", () => {
     expect(result.diagrams[0].svg).toContain('data-flo-uri="b.flo"');
   });
 
-  it("renders the flo fences of a .md and nothing for the schema", () => {
+  it("renders the flo fences of a .md", () => {
     const link = linked({
       "n.md": "---\nid: n\ntitle: N\nmemory_type: working\n---\n```flo\nentity a\nflow f {\n  a -> a\n}\n```\n",
-      "knowledge.schema.yaml": "type_tags: []\nrelation_types: []\n",
     });
     expect(renderActive(link, "n.md").diagrams).toHaveLength(1);
-    expect(renderActive(link, "knowledge.schema.yaml").diagrams).toEqual([]);
   });
 });
 

@@ -20,7 +20,6 @@ const node = (id: string, extra: string[] = []): string =>
 
 /** Carpeta fija de la Fase K3. Catálogo: api, a, b, c; `roto.flo` pierde `api` (E031). */
 const FILES: Record<string, string> = {
-  "knowledge.schema.yaml": "type_tags: [decision]\nrelation_types: [affects]\n",
   "catalogo.flo": "entity api\n",
   "roto.flo": "entity api\n",
   "kb/a.md": node("a", ["type_tags: [decision]", 'use: ["../catalogo.flo"]', "relations:", "  - target: api", "    type: affects"]),
@@ -65,9 +64,15 @@ afterEach(() => {
 });
 
 describe("FloFolder load", () => {
-  it("loads .flo, .md with frontmatter and the schema, skipping ignored folders and other files", () => {
+  it("loads .flo and .md with frontmatter, skipping ignored folders and other files", () => {
     const folder = loaded();
     expect([...folder.link().entities.keys()]).toEqual(["api", "a", "b", "c"]);
+  });
+
+  it("a knowledge.schema.yaml in the folder is just another file: not loaded, no diagnostics", () => {
+    const folder = loaded({ ...FILES, "knowledge.schema.yaml": "type_tags: [decision]\nrelation_types: [affects]\n" });
+    expect(folder.diagnostics("knowledge.schema.yaml")).toBeNull();
+    expect(folder.diagnostics()).toEqual({ "roto.flo": [expect.objectContaining({ code: "E031" })] });
   });
 
   it("reports only non-empty diagnostics, keyed by uri", () => {
@@ -84,7 +89,7 @@ describe("FloFolder load", () => {
 
   it("does not follow symbolic links out of the root", () => {
     const outside = tempDir({ "x.md": node("fuera") });
-    const root = tempDir({ "knowledge.schema.yaml": "type_tags: []\nrelation_types: []\n" });
+    const root = tempDir({});
     symlinkSync(outside, join(root, "enlace"));
     const folder = new FloFolder(root);
     folder.load();

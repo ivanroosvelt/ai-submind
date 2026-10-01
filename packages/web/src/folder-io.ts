@@ -1,9 +1,9 @@
-import { IGNORED_DIRS, SCHEMA_URI, isDocumentUri, isIgnoredUri } from "@flo/core";
+import { IGNORED_DIRS, isDocumentUri, isIgnoredUri } from "@flo/core";
 import { isAbortError, readFileAsText } from "./file-io.js";
 import type { WorkspaceSnapshot } from "./workspace.js";
 
 
-/** Decisión #37 (la regla de carga de #33 en el navegador): .flo, .md y el esquema solo en la raíz. */
+/** Decisión #37 (la regla de carga de #33 en el navegador): .flo y .md. */
 export function isWorkspaceFile(uri: string): boolean {
   return !isIgnoredUri(uri) && isDocumentUri(uri);
 }
@@ -14,7 +14,7 @@ export function hasDirectoryAccess(): boolean {
 
 function snapshotOf(files: Record<string, string>, dir: FileSystemDirectoryHandle | null): WorkspaceSnapshot {
   const uris = Object.keys(files).sort();
-  return { files, saved: { ...files }, active: uris.find((uri) => uri !== SCHEMA_URI) ?? uris[0] ?? "", dir };
+  return { files, saved: { ...files }, active: uris[0] ?? "", dir };
 }
 
 async function readDirectory(

@@ -11,7 +11,6 @@ function linkOf(files: Record<string, string>) {
 }
 
 const link = linkOf({
-  "knowledge.schema.yaml": "type_tags: [decision]\nrelation_types: []\n",
   "n.md": '---\nid: n\ntitle: "Nota <1>"\nmemory_type: working\ntype_tags: [decision]\ncontext_tags: ["project:\\"x\\""]\n---\n',
 });
 

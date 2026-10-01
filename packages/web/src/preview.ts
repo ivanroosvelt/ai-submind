@@ -6,7 +6,7 @@ export interface PreviewState {
   lastDiagrams: RenderedDiagram[];
 }
 
-/** Los bloques del documento contra su catálogo alcanzable; el esquema y un `.md` sin frontmatter no tienen. */
+/** Los bloques del documento contra su catálogo alcanzable; un `.md` sin frontmatter no tiene. */
 export function renderActive(link: LinkResult, uri: DocumentUri): RenderResult {
   const diagnostics = link.diagnostics.get(uri) ?? [];
   const linked = link.documents.get(uri);

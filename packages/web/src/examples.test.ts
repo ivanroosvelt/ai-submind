@@ -17,9 +17,4 @@ describe("EXAMPLES", () => {
     for (const [uri, source] of Object.entries(example.files)) ws.setDocument(uri, source);
     expect(query(ws.link(), { where: { and: [{ text: "" }] }, depth: 1 }).nodes.length).toBeGreaterThan(0);
   });
-
-  it("el ejemplo de conocimiento no trae esquema: el vocabulario sale de las notas", () => {
-    const example = EXAMPLES.find((candidate) => candidate.id === "conocimiento")!;
-    expect(Object.keys(example.files)).not.toContain("knowledge.schema.yaml");
-  });
 });

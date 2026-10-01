@@ -39,11 +39,10 @@ afterEach(() => {
 });
 
 describe("isWorkspaceFile", () => {
-  it("accepts .flo, .md and the root schema only", () => {
+  it("accepts .flo and .md only", () => {
     expect(isWorkspaceFile("a.flo")).toBe(true);
     expect(isWorkspaceFile("kb/n.md")).toBe(true);
-    expect(isWorkspaceFile("knowledge.schema.yaml")).toBe(true);
-    expect(isWorkspaceFile("sub/knowledge.schema.yaml")).toBe(false);
+    expect(isWorkspaceFile("knowledge.schema.yaml")).toBe(false);
     expect(isWorkspaceFile("logo.png")).toBe(false);
     expect(isWorkspaceFile("node_modules/x/a.flo")).toBe(false);
     expect(isWorkspaceFile(".git/a.md")).toBe(false);
@@ -53,7 +52,7 @@ describe("isWorkspaceFile", () => {
 describe("openFolder", () => {
   it("reads a real-looking folder with the File System Access API", async () => {
     const dir = fakeDir("proyecto", {
-      "knowledge.schema.yaml": "type_tags: []\nrelation_types: []\n",
+      "knowledge.schema.yaml": "type_tags: []\nrelation_types: []\n", // un archivo más: no se carga
       "catalog.flo": "entity a\n",
       "logo.png": "binario",
       "README.md": "# sin frontmatter\n",
@@ -70,7 +69,6 @@ describe("openFolder", () => {
       "README.md",
       "catalog.flo",
       "flujos/login.flo",
-      "knowledge.schema.yaml",
     ]);
     expect(snapshot!.saved).toEqual(snapshot!.files);
     expect(snapshot!.active).toBe("README.md");
