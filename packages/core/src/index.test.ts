@@ -42,7 +42,6 @@ describe("index", () => {
         code: "E999",
         message: "prueba",
         range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } },
-        severity: "error",
       })
     ).toBe("E999 error [1:1]: prueba");
   });

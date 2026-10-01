@@ -4,7 +4,7 @@ import type { Diagnostic, Position } from "@flo/core";
 export interface LintDiagnostic {
   from: number;
   to: number;
-  severity: "error" | "warning";
+  severity: "error";
   message: string;
 }
 
@@ -17,6 +17,6 @@ export function toLintDiagnostics(diagnostics: Diagnostic[], doc: Text): LintDia
   return diagnostics.map((d) => {
     const from = offsetOf(doc, d.range.start);
     const to = Math.max(from, offsetOf(doc, d.range.end));
-    return { from, to, severity: d.severity, message: `${d.code}: ${d.message}` };
+    return { from, to, severity: "error", message: `${d.code}: ${d.message}` };
   });
 }

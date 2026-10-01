@@ -30,7 +30,6 @@ describe("linkDocuments — un documento", () => {
         code: "E030",
         message: "la entidad 'Cache' no está declarada; añade 'entity Cache'",
         range: { start: { line: 3, column: 8 }, end: { line: 3, column: 13 } },
-        severity: "error",
       },
     ]);
     expect(documents.get("a.flo")!.blocks[0].edges[0].to.target).toBeNull();

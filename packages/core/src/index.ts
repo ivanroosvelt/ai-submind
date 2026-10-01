@@ -49,5 +49,5 @@ export type {
   Relation,
 } from "./ast.js";
 export { formatDiagnostic } from "./diagnostics.js";
-export type { Diagnostic, DiagnosticSeverity } from "./diagnostics.js";
+export type { Diagnostic } from "./diagnostics.js";
 export { escapeXml } from "./render/svg.js";

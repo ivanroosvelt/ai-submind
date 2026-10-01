@@ -52,7 +52,6 @@ describe("Lexer", () => {
         code: "E002",
         message: "carácter inesperado '1'",
         range: { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } },
-        severity: "error",
       },
     ]);
   });

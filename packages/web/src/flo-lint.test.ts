@@ -18,13 +18,11 @@ describe("toLintDiagnostics", () => {
         code: "E004",
         message: "se esperaba 'diagram' al inicio del archivo",
         range: { start: { line: 1, column: 1 }, end: { line: 1, column: 6 } },
-        severity: "error",
       },
       {
         code: "E001",
         message: "se esperaba ']' antes de fin de línea",
         range: { start: { line: 1, column: 6 }, end: { line: 1, column: 17 } },
-        severity: "error",
       },
     ];
 
@@ -34,13 +32,13 @@ describe("toLintDiagnostics", () => {
     ]);
   });
 
-  it("clamps the range to the end of the line for a diagnostic past it", () => {
+  it("marks every diagnostic as an error", () => {
     const source = "diagram flowchart\n";
     const doc = Text.of(source.split("\n"));
     const range = { start: { line: 1, column: 999 }, end: { line: 1, column: 1000 } };
 
     expect(
-      toLintDiagnostics([{ code: "E999", message: "x", range, severity: "warning" }], doc)
-    ).toEqual([{ from: 17, to: 17, severity: "warning", message: "E999: x" }]);
+      toLintDiagnostics([{ code: "E999", message: "x", range }], doc)
+    ).toEqual([{ from: 17, to: 17, severity: "error", message: "E999: x" }]);
   });
 });

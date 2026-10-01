@@ -7,7 +7,6 @@ const ERROR: Diagnostic = {
   code: "E040",
   message: "x",
   range: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } },
-  severity: "error",
 };
 
 function diagram(name: string, svg: string, title: string | null = null): RenderedDiagram {
