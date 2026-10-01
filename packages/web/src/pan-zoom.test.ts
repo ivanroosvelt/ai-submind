@@ -51,40 +51,56 @@ describe("bindPanZoom", () => {
 
   it("pans while dragging with the main button", () => {
     const { svg, onChange } = setup();
-    mouse(svg, "mousedown", 10);
-    mouse(svg, "mousemove", 30, 10);
-    mouse(svg, "mouseup", 30, 10);
+    mouse(svg, "pointerdown", 10);
+    mouse(svg, "pointermove", 30, 10);
+    mouse(svg, "pointerup", 30, 10);
     expect(svg.getAttribute("viewBox")).toBe("-20 -10 100 50");
     expect(onChange).toHaveBeenLastCalledWith([-20, -10, 100, 50]);
   });
 
   it("swallows the click that ends a drag, but not a still click", () => {
     const { svg, parentClick, node } = setup();
-    mouse(node, "mousedown", 0);
-    mouse(svg, "mousemove", 10);
-    mouse(node, "mouseup", 10);
+    mouse(node, "pointerdown", 0);
+    mouse(svg, "pointermove", 10);
+    mouse(node, "pointerup", 10);
     mouse(node, "click", 10);
     expect(parentClick).not.toHaveBeenCalled();
-    mouse(node, "mousedown", 10);
-    mouse(node, "mouseup", 11);
+    mouse(node, "pointerdown", 10);
+    mouse(node, "pointerup", 11);
     mouse(node, "click", 11);
     expect(parentClick).toHaveBeenCalledTimes(1);
   });
 
   it("ignores moves without a pressed button", () => {
     const { svg, onChange } = setup();
-    mouse(svg, "mousemove", 30);
+    mouse(svg, "pointermove", 30);
     expect(onChange).not.toHaveBeenCalled();
   });
 
   it("jitter that returns to origin is not a drag", () => {
     const { svg, parentClick, node } = setup();
-    mouse(node, "mousedown", 0);
-    mouse(svg, "mousemove", 3);
-    mouse(svg, "mousemove", 0);
-    mouse(svg, "mousemove", 2);
-    mouse(node, "mouseup", 2);
+    mouse(node, "pointerdown", 0);
+    mouse(svg, "pointermove", 3);
+    mouse(svg, "pointermove", 0);
+    mouse(svg, "pointermove", 2);
+    mouse(node, "pointerup", 2);
     mouse(node, "click", 2);
     expect(parentClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops panning on pointercancel", () => {
+    const { svg } = setup();
+    mouse(svg, "pointerdown", 10);
+    mouse(svg, "pointercancel", 10);
+    mouse(svg, "pointermove", 30, 10);
+    expect(svg.getAttribute("viewBox")).toBe("0 0 100 50");
+  });
+
+  it("captures the pointer so a drag keeps going outside the SVG", () => {
+    const { svg } = setup();
+    const capture = vi.fn();
+    (svg as unknown as { setPointerCapture: (id: number) => void }).setPointerCapture = capture;
+    svg.dispatchEvent(Object.assign(new MouseEvent("pointerdown", { bubbles: true, button: 0 }), { pointerId: 7 }));
+    expect(capture).toHaveBeenCalledWith(7);
   });
 });

@@ -52,18 +52,21 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
   let down: { x: number; y: number } | null = null;
   let last: { x: number; y: number } | null = null;
   let isDrag = false;
-  svg.addEventListener("mousedown", (event) => {
+  // Pointer events (#59): mouse, touch y lápiz; la captura sigue el arrastre fuera del SVG.
+  svg.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) return;
     down = { x: event.clientX, y: event.clientY };
     last = { x: event.clientX, y: event.clientY };
     isDrag = false;
+    // ponytail: jsdom no implementa setPointerCapture.
+    svg.setPointerCapture?.(event.pointerId);
   });
-  svg.addEventListener("mousemove", (event) => {
+  svg.addEventListener("pointermove", (event) => {
     if (!last || !down) return;
     const dx = event.clientX - last.x;
     const dy = event.clientY - last.y;
     last = { x: event.clientX, y: event.clientY };
-    // Marcamos como arrastre si el desplazamiento neto desde mousedown supera el umbral.
+    // Marcamos como arrastre si el desplazamiento neto desde pointerdown supera el umbral.
     if (!isDrag) {
       const netDistance = Math.hypot(event.clientX - down.x, event.clientY - down.y);
       isDrag = netDistance > DRAG_THRESHOLD;
@@ -75,8 +78,8 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
     down = null;
     last = null;
   };
-  svg.addEventListener("mouseup", end);
-  svg.addEventListener("mouseleave", end);
+  svg.addEventListener("pointerup", end);
+  svg.addEventListener("pointercancel", end);
   // Captura en el SVG: el click que cierra un arrastre no llega al preview (drill-down).
   svg.addEventListener(
     "click",
