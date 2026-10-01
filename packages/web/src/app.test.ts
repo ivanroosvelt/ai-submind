@@ -394,9 +394,11 @@ describe("App navigation", () => {
     app.selectBlock("login.flo#vacio");
     click(el.toolbar.querySelector("#flo-export-svg")!);
     expect(vi.mocked(exportSvg).mock.calls[0][0]).not.toContain("API Gateway"); // no el primero
+    expect(vi.mocked(exportSvg).mock.calls[0][1]).toBe("vacio"); // el nombre del bloque elegido en ese test
     app.toggleMap();
     click(el.toolbar.querySelector("#flo-export-svg")!);
     expect(vi.mocked(exportSvg).mock.calls[1][0]).toContain('data-flo-block="#mapa"');
+    expect(vi.mocked(exportSvg).mock.calls[1][1]).toBe("mapa");
   });
 
   it("marks the map button as pressed while the map is visible", () => {
@@ -565,6 +567,7 @@ describe("App knowledge graph", () => {
     const svg = vi.mocked(exportSvg).mock.calls[0][0];
     expect(svg).toContain('data-flo-entity="pkce"');
     expect(svg).not.toContain("flo-map-hit");
+    expect(vi.mocked(exportSvg).mock.calls[0][1]).toBe("grafo");
   });
 
   it("goes back to the document view when another workspace is loaded", () => {
