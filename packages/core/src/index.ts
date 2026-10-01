@@ -51,3 +51,5 @@ export type {
 export { formatDiagnostic } from "./diagnostics.js";
 export type { Diagnostic } from "./diagnostics.js";
 export { escapeXml } from "./render/svg.js";
+export { MEMORY_TYPES } from "./ast.js";
+export { parseBlockId, IGNORED_DIRS, isDocumentUri, isIgnoredUri } from "./workspace/uri.js";

@@ -1,4 +1,4 @@
-import type { Where } from "@flo/core";
+import { MEMORY_TYPES, type Where } from "@flo/core";
 import { readFileAsText } from "./file-io.js";
 import { writeWorkspaceFile } from "./folder-io.js";
 import type { GraphQuery } from "./knowledge-view.js";
@@ -12,7 +12,7 @@ export interface Preset extends GraphQuery {
 export const PRESETS_DIR = ".flo/views";
 
 const NAME = /^[A-Za-z0-9_-]+$/;
-const MEMORY = new Set(["working", "short_term", "long_term"]);
+const MEMORY = new Set<string>(MEMORY_TYPES);
 const SCALAR = new Set(["string", "number", "boolean"]);
 
 export function isPresetName(name: string): boolean {

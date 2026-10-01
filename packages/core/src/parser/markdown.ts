@@ -2,6 +2,7 @@ import { isMap, isScalar, isSeq } from "yaml";
 import { diagnosticAt, sortDiagnostics, type Diagnostic } from "../diagnostics.js";
 import { isIdentifier, parseYamlSource, type YamlSource } from "./yaml.js";
 import { parseDocument } from "./document.js";
+import { MEMORY_TYPES } from "../ast.js";
 import type {
   CustomTagValue,
   DocumentUri,
@@ -13,7 +14,6 @@ import type {
   UseDecl,
 } from "../ast.js";
 
-const MEMORY_TYPES: readonly string[] = ["working", "short_term", "long_term"];
 const REQUIRED = ["id", "title", "memory_type"];
 const CONTEXT_TAG = /^[^:]+:.+$/;
 const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})\s*([^\s`]*)/;
@@ -163,7 +163,7 @@ function readFrontmatter(
         else invalid(value, "'title' debe ser un texto no vacío", pair.key);
         break;
       case "memory_type":
-        if (isScalar(value) && MEMORY_TYPES.includes(value.value as string)) {
+        if (isScalar(value) && MEMORY_TYPES.includes(value.value as MemoryType)) {
           knowledge.memoryType = value.value as MemoryType;
         } else {
           diagnostics.push(

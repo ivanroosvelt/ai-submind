@@ -123,4 +123,14 @@ describe("renameEntity", () => {
   it("returns no edits when the id does not change", () => {
     expect(renameEntity(link(files), "db", "db")).toEqual({ edits: new Map() });
   });
+
+  it("returns each document's edits in source order, also within one line", () => {
+    const result = renameEntity(link({ "a.flo": "entity api\nflow f {\n  api -> api\n}\n" }), "api", "gw");
+    if ("error" in result) throw new Error(result.error);
+    expect(result.edits.get("a.flo")!.map((edit) => edit.range.start)).toEqual([
+      { line: 1, column: 8 },
+      { line: 3, column: 3 },
+      { line: 3, column: 10 },
+    ]);
+  });
 });

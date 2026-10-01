@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { query, tagCatalog, type Where } from "@flo/core";
+import { MEMORY_TYPES, query, tagCatalog, type Where } from "@flo/core";
 import type { FloFolder } from "./folder.js";
 
-const memory = z.enum(["working", "short_term", "long_term"]);
+const memory = z.enum(MEMORY_TYPES);
 const projection = z.enum(["meta", "full", "full+diagrams"]);
 
 /**

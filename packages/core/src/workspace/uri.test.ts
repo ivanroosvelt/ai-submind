@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveUse } from "./uri.js";
+import { blockId, isDocumentUri, isIgnoredUri, parseBlockId, resolveUse } from "./uri.js";
 
 describe("resolveUse", () => {
   it.each([
@@ -22,5 +22,18 @@ describe("resolveUse", () => {
     ["a.flo", "./"],
   ])("returns null for %s + %s (outside the root or empty)", (from, path) => {
     expect(resolveUse(from, path)).toBeNull();
+  });
+});
+
+describe("shared uri helpers (#54)", () => {
+  it("parses a BlockId back into uri and name", () => {
+    expect(parseBlockId(blockId("kb/a.flo", "login"))).toEqual({ uri: "kb/a.flo", name: "login" });
+    expect(parseBlockId("#mapa")).toEqual({ uri: "", name: "mapa" });
+  });
+
+  it("knows which uris are workspace documents and which are ignored", () => {
+    expect(["a.flo", "kb/b.md", "knowledge.schema.yaml"].map(isDocumentUri)).toEqual([true, true, true]);
+    expect(["a.txt", "kb/knowledge.schema.yaml"].map(isDocumentUri)).toEqual([false, false]);
+    expect(["node_modules/x.md", "a/.git/b.flo", "gitx/a.flo"].map(isIgnoredUri)).toEqual([true, true, false]);
   });
 });

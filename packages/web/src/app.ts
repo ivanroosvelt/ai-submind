@@ -14,6 +14,7 @@ import {
   type LinkResult,
   type Location,
   type Position,
+  parseBlockId,
 } from "@flo/core";
 import { createEditor, showDocument, type EditorHost } from "./editor.js";
 import { edgePanelHtml, entityPanelHtml } from "./entity-panel.js";
@@ -466,7 +467,7 @@ export class App {
     if (this.panel?.kind === "edge") this.panel = null;
     this.selectedBlock = id;
     this.highlight = entity;
-    const uri = id.slice(0, id.lastIndexOf("#"));
+    const { uri } = parseBlockId(id);
     if (uri === this.ws.active) this.refresh();
     else this.openDocument(uri);
     byData(this.el.preview, "section[data-flo-block]", "data-flo-block", id)[0]?.scrollIntoView?.({ block: "nearest" });

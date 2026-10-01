@@ -3,7 +3,7 @@ import type { DiagramBlock, NodeShape, Range } from "../ast.js";
 import type { Catalog } from "../workspace/resolver.js";
 import { blockNodes, nodeId, type BlockNode } from "./nodes.js";
 
-const GRAPH_OPTIONS = { rankdir: "TB", nodesep: 40, ranksep: 60, marginx: 20, marginy: 20 };
+export const GRAPH_OPTIONS = { rankdir: "TB", nodesep: 40, ranksep: 60, marginx: 20, marginy: 20 };
 const CHAR_WIDTH = 8;
 
 export interface LayoutPoint {
@@ -41,7 +41,7 @@ export function measureFlowchartNode(shape: NodeShape, label: string): { width: 
   return { width: Math.max(textWidth + 40, 80), height: 50 };
 }
 
-function finiteOrZero(value: number | undefined): number {
+export function finiteOrZero(value: number | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
