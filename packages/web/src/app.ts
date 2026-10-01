@@ -25,6 +25,7 @@ import { bindPanZoom } from "./pan-zoom.js";
 import { byName, isPresetName, listPresets, savePreset, type Preset } from "./presets.js";
 import { nextPreviewState, previewHtml, renderActive, scopeMarkerIds, type PreviewState } from "./preview.js";
 import { createToolbar, type DiagramKind } from "./toolbar.js";
+import { ask, confirmDialog, notify } from "./dialogs.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
 import { ensurePermission, openFolder, writeWorkspaceFile } from "./folder-io.js";
 import { exportSvg, exportPng } from "./export.js";
@@ -56,7 +57,7 @@ export interface AppElements {
 
 function reportActionError(action: string, error: unknown): void {
   console.error(`flo: ${action} falló`, error);
-  window.alert(`No se pudo completar: ${action}. Revisá la consola para más detalle.`);
+  void notify(`No se pudo completar: ${action}. Revisa la consola para más detalle.`);
 }
 
 type PanelState = { kind: "entity"; id: EntityId } | { kind: "edge"; from: EntityId; to: EntityId } | null;
@@ -90,7 +91,7 @@ export class App {
     workspace: () => this.ws,
     onChange: () => this.refresh(),
     onGoToDefinition: (position) => this.goToDefinition(position),
-    onRename: (position) => this.renameAt(position),
+    onRename: (position) => void this.renameAt(position),
   };
 
   constructor(
@@ -102,7 +103,7 @@ export class App {
     createToolbar(
       el.toolbar,
       {
-        onNew: (kind) => this.newDocument(kind),
+        onNew: (kind) => void this.run("Nuevo", () => this.newDocument(kind)),
         onOpen: () => void this.run("Abrir", () => this.openFile()),
         onOpenFolder: () => void this.run("Abrir carpeta", () => this.openFolder()),
         onSave: () => void this.run("Guardar", () => this.save()),
@@ -116,7 +117,7 @@ export class App {
             const out = this.exportable();
             if (out) await exportPng(out.svg, out.name);
           }),
-        onLoadExample: (id) => this.loadExample(id),
+        onLoadExample: (id) => void this.run("Ejemplo", () => this.loadExample(id)),
         onToggleExpand: () => void document.body.classList.toggle("flo-expanded"),
         onToggleMap: () => this.toggleMap(),
         onToggleGraph: () => this.toggleGraph(),
@@ -234,15 +235,15 @@ export class App {
   private async savePreset(): Promise<void> {
     const ws = this.ws;
     if (!ws.dir) return;
-    const answer = window.prompt("Nombre de la vista:");
+    const answer = await ask("Nombre de la vista:");
     if (answer === null) return;
     const name = answer.trim();
     if (!isPresetName(name)) {
-      window.alert("El nombre de una vista solo puede tener letras, números, '-' y '_'.");
+      await notify("El nombre de una vista solo puede tener letras, números, '-' y '_'.");
       return;
     }
     const presets = this.presets ?? [];
-    if (presets.some((preset) => preset.name === name) && !window.confirm(`Ya existe la vista '${name}'. ¿Reemplazarla?`)) return;
+    if (presets.some((preset) => preset.name === name) && !(await confirmDialog(`Ya existe la vista '${name}'. ¿Reemplazarla?`))) return;
     if (!(await ensurePermission(ws.dir, "readwrite"))) throw new Error("sin permiso de escritura en la carpeta");
     const preset: Preset = { name, ...this.graph };
     await savePreset(ws.dir, preset);
@@ -339,14 +340,14 @@ export class App {
     if (location) this.reveal(location);
   }
 
-  private confirmDiscard(): boolean {
-    return !this.ws.hasUnsavedChanges() || window.confirm("Hay cambios sin guardar. ¿Descartarlos?");
+  private async confirmDiscard(): Promise<boolean> {
+    return !this.ws.hasUnsavedChanges() || (await confirmDialog("Hay cambios sin guardar. ¿Descartarlos?"));
   }
 
   /** Con carpeta abierta agrega un archivo al workspace; sin carpeta lo reemplaza. */
-  newDocument(kind: DiagramKind): void {
+  async newDocument(kind: DiagramKind): Promise<void> {
     if (!this.ws.dir) {
-      if (this.confirmDiscard()) this.load(newWorkspace(kind));
+      if (await this.confirmDiscard()) this.load(newWorkspace(kind));
       return;
     }
     let uri = "nuevo.flo";
@@ -357,7 +358,7 @@ export class App {
 
   async openFile(): Promise<void> {
     const opened = await openFloFile();
-    if (!opened || !this.confirmDiscard()) return;
+    if (!opened || !(await this.confirmDiscard())) return;
     const { name, source, handle } = opened;
     this.load({ files: { [name]: source }, saved: { [name]: source }, active: name, dir: null }, handle);
   }
@@ -366,10 +367,10 @@ export class App {
     const snapshot = await openFolder();
     if (!snapshot) return;
     if (Object.keys(snapshot.files).length === 0) {
-      window.alert("La carpeta no tiene archivos .flo ni .md.");
+      await notify("La carpeta no tiene archivos .flo ni .md.");
       return;
     }
-    if (this.confirmDiscard()) this.load(snapshot);
+    if (await this.confirmDiscard()) this.load(snapshot);
   }
 
   /** Decisión #38: con carpeta, todos los modificados y sin validar; sin carpeta, el activo. */
@@ -410,9 +411,9 @@ export class App {
     event.returnValue = "";
   }
 
-  loadExample(id: string): void {
+  async loadExample(id: string): Promise<void> {
     const example = EXAMPLES.find((candidate) => candidate.id === id);
-    if (!example || !this.confirmDiscard()) return;
+    if (!example || !(await this.confirmDiscard())) return;
     this.load({ files: example.files, saved: {}, active: example.active, dir: null });
   }
 
@@ -451,7 +452,7 @@ export class App {
       const location = this.ws.link().xref.definitionOf(panel.id);
       if (location) this.reveal(location);
     } else if (panel.kind === "entity" && button.hasAttribute("data-flo-rename")) {
-      this.rename(panel.id);
+      void this.rename(panel.id);
     }
   }
 
@@ -523,19 +524,19 @@ export class App {
     if (location) this.reveal(location);
   }
 
-  renameAt(position: Position): void {
+  renameAt(position: Position): Promise<void> {
     const id = this.entityAtCursor(position);
-    if (id !== null) this.rename(id);
+    return id === null ? Promise.resolve() : this.rename(id);
   }
 
   /** Decisión #39: el activo por el editor (queda en su historial), los demás en el workspace. */
-  rename(id: EntityId): void {
-    const answer = window.prompt(`Nuevo id para '${id}':`, id);
+  async rename(id: EntityId): Promise<void> {
+    const answer = await ask(`Nuevo id para '${id}':`, id);
     if (answer === null) return;
     const newId = answer.trim();
     const result = renameEntity(this.ws.link(), id, newId);
     if ("error" in result) {
-      window.alert(result.error);
+      await notify(result.error);
       return;
     }
     for (const [uri, edits] of result.edits) {

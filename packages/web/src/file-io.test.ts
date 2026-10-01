@@ -1,5 +1,12 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { hasFileSystemAccess, openFloFile, saveFloFile, downloadText } from "./file-io.js";
+
+vi.mock("./dialogs.js", () => ({ ask: vi.fn(), confirmDialog: vi.fn(), notify: vi.fn() }));
+import { ask } from "./dialogs.js";
+
+beforeEach(() => {
+  vi.mocked(ask).mockReset().mockResolvedValue(null);
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -116,18 +123,18 @@ describe("saveFloFile", () => {
   });
 
   it("prompts for a filename and downloads a .flo file when the browser has no File System Access API", async () => {
-    const promptSpy = vi.spyOn(window, "prompt").mockReturnValue("diagrama.flo");
+    vi.mocked(ask).mockResolvedValue("diagrama.flo");
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
     const result = await saveFloFile("diagram flowchart\n", null, "diagrama.flo");
 
-    expect(promptSpy).toHaveBeenCalledWith("Nombre del archivo para descargar:", "diagrama.flo");
+    expect(ask).toHaveBeenCalledWith("Nombre del archivo para descargar:", "diagrama.flo");
     expect(result).toBeNull();
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
 
   it("downloads using the name entered in the prompt, not the suggested one", async () => {
-    vi.spyOn(window, "prompt").mockReturnValue("arquitectura.flo");
+    vi.mocked(ask).mockResolvedValue("arquitectura.flo");
     let downloadAttr: string | null = null;
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
       this: HTMLAnchorElement
@@ -141,7 +148,7 @@ describe("saveFloFile", () => {
   });
 
   it("does not download when the user cancels the filename prompt", async () => {
-    vi.spyOn(window, "prompt").mockReturnValue(null);
+    vi.mocked(ask).mockResolvedValue(null);
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
     const result = await saveFloFile("diagram flowchart\n", null, "diagrama.flo");
