@@ -2,6 +2,16 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-10-01 (`c29168c`..`d5b3a50`).
+
+- Las 11 tasks pasaron su revisión; solo la 10 tuvo una ronda de fixes.
+- Desviaciones del plan:
+  - Task 5 omitió el `<meta viewport>` (ya venía en el refresh visual de `af9707c`).
+  - Task 10 captura el puntero al superar el umbral de arrastre, no en `pointerdown`; si no, el click se redirige al `<svg>` y rompe el drill-down (anotado en #59).
+- Revisión final: sin críticos ni importantes. Se corrigieron dos minors en `d5b3a50`:
+  pan que quedaba armado al soltar fuera del SVG, y Ctrl+S repetido.
+- **Queda** (pasos manuales en navegador, no corridos): PNG a 2× (task 8), arrastrar el grafo con mouse y touch (task 10) y los diálogos (task 11).
+
 **Goal:** Cerrar lo que encontró la revisión general del 2026-09-30:
 - tres bugs: el guardado que pisa archivos, el BOM en `.flo` y el auto-mensaje invisible;
 - mejoras de uso: atajo, aviso al salir, nombres de archivo, PNG nítido, labels largos, mensaje de ids, pan táctil, diálogos y tuteo;
