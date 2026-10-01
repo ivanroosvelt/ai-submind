@@ -1,5 +1,5 @@
 import type { SequenceLayout } from "../layout/sequence.js";
-import { COLUMN_WIDTH, HEADER_HEIGHT } from "../layout/sequence.js";
+import { HEADER_HEIGHT } from "../layout/sequence.js";
 import {
   ARROW_MARKER_ID,
   FILL_COLOR,
@@ -16,8 +16,8 @@ export function renderSequenceToSvg(layout: SequenceLayout, origin: BlockOrigin)
   const xById = new Map(layout.participants.map((participant) => [participant.id, participant.x]));
 
   const participantElements = layout.participants.map((participant) => {
-    const left = participant.x - COLUMN_WIDTH / 2 + 10;
-    const boxWidth = COLUMN_WIDTH - 20;
+    const left = participant.x - layout.columnWidth / 2 + 10;
+    const boxWidth = layout.columnWidth - 20;
     const dash = participant.resolved ? "" : ' stroke-dasharray="4 4"';
     const box = `<rect x="${left}" y="0" width="${boxWidth}" height="${HEADER_HEIGHT}" fill="${FILL_COLOR}" stroke="${STROKE_COLOR}" stroke-width="2"${dash} />`;
     const label = svgText(participant.x, HEADER_HEIGHT / 2, participant.label);
@@ -45,6 +45,12 @@ export function renderSequenceToSvg(layout: SequenceLayout, origin: BlockOrigin)
       uri: origin.uri,
       line: message.range.start.line,
     });
+    if (message.from === message.to) {
+      // Auto-mensaje (#52): un lazo a la derecha de la lifeline, que vuelve a ella.
+      const { y } = message;
+      const loop = `<polyline points="${x1},${y} ${x1 + 30},${y} ${x1 + 30},${y + 20} ${x1},${y + 20}" fill="none" stroke="${STROKE_COLOR}" stroke-width="2" marker-end="url(#${ARROW_MARKER_ID})"${data} />`;
+      return `${loop}${svgLabel(x1 + 15, y - 8, message.label)}`;
+    }
     const line = `<line x1="${x1}" y1="${message.y}" x2="${x2}" y2="${message.y}" stroke="${STROKE_COLOR}" stroke-width="2" marker-end="url(#${ARROW_MARKER_ID})"${data} />`;
     const midX = (x1 + x2) / 2;
     return `${line}${svgLabel(midX, message.y - 8, message.label)}`;

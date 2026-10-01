@@ -28,4 +28,33 @@ describe("renderSequenceToSvg", () => {
     expect(svg).toContain('stroke-width="2" stroke-dasharray="4 4" />');
     expect(svg).toContain(">ghost<");
   });
+
+  it("draws a message to the same participant as a visible loop (#52)", () => {
+    const svg = renderFirst("entity a\nsequence s {\n  a -> a : yo\n}\n");
+    expect(svg).toContain('<polyline points="80,120 110,120 110,140 80,140" fill="none" stroke="#1f2937" stroke-width="2" marker-end="url(#flo-arrow)" data-flo-from="a" data-flo-to="a"');
+    expect(svg).toContain('<text x="95" y="112"');
+    expect(svg).not.toMatch(/<line x1="80" y1="120" x2="80" y2="120"/);
+  });
+
+  it("keeps a final self-message loop inside the lifeline and the SVG", () => {
+    const svg = renderFirst("entity a\nentity b\nsequence s {\n  a -> b : x\n  b -> b : y\n}\n");
+    // Último mensaje en y=170; el lazo baja a 190; la lifeline termina en 220 y el SVG mide 240.
+    expect(svg).toContain('points="240,170 270,170 270,190 240,190"');
+    expect(svg).toContain('y2="220"');
+    expect(svg).toContain('height="240"');
+  });
+
+  it("widens every column to fit the longest participant label (#52)", () => {
+    const svg = renderFirst("entity a [Un participante con un nombre largo]\nentity b\nsequence s {\n  a -> b : x\n}\n");
+    // 35 caracteres × 8 + 40 = 320 por columna.
+    expect(svg).toContain('width="640" height="190"');
+    expect(svg).toContain('<rect x="10" y="0" width="300" height="50"');
+    expect(svg).toContain('<text x="160" y="25"');
+  });
+
+  it("widens the columns to fit the longest message label (#52)", () => {
+    const svg = renderFirst("entity a\nentity b\nsequence s {\n  a -> b : un mensaje bastante largo para una columna\n}\n");
+    // 42 caracteres × 7 + 28 = 322 por columna.
+    expect(svg).toContain('width="644"');
+  });
 });
