@@ -33,7 +33,7 @@ export function previewHtml(state: PreviewState, result: RenderResult, uri: Docu
   const count = result.diagnostics.length;
   const banner = count > 0 ? `<div class="flo-banner">${count} error${count === 1 ? "" : "es"}</div>` : "";
   if (diagrams.length > 0) return banner + diagrams.map((diagram) => sectionHtml(diagram, uri)).join("");
-  return banner || '<div class="flo-empty">Escribí un diagrama .flo para ver el preview</div>';
+  return banner || '<div class="flo-empty">Escribe un diagrama .flo para ver el preview</div>';
 }
 
 /**

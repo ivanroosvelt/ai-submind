@@ -12,6 +12,15 @@ vi.mock("./export.js", async (importOriginal) => ({
 }));
 import { exportSvg } from "./export.js";
 
+vi.mock("./dialogs.js", () => ({ ask: vi.fn(), confirmDialog: vi.fn(), notify: vi.fn() }));
+import { ask, confirmDialog, notify } from "./dialogs.js";
+
+beforeEach(() => {
+  vi.mocked(ask).mockReset().mockResolvedValue(null);
+  vi.mocked(confirmDialog).mockReset().mockResolvedValue(false);
+  vi.mocked(notify).mockReset().mockResolvedValue();
+});
+
 export function elements(): AppElements {
   const el = () => document.body.appendChild(document.createElement("div"));
   return { toolbar: el(), explorer: el(), editor: el(), preview: el(), panel: el() };
@@ -103,33 +112,33 @@ describe("App", () => {
     expect(app.view.state.doc.toString()).toBe(FILES.files["catalog.flo"]);
   });
 
-  it("adds a new file to an open folder instead of replacing the workspace", () => {
+  it("adds a new file to an open folder instead of replacing the workspace", async () => {
     const dir = {} as FileSystemDirectoryHandle;
     const app = new App(elements(), { ...FILES, dir });
-    app.newDocument("flowchart");
-    app.newDocument("sequence");
+    await app.newDocument("flowchart");
+    await app.newDocument("sequence");
     expect(app.ws.uris()).toEqual(["catalog.flo", "login.flo", "nuevo-2.flo", "nuevo.flo"]);
     expect(app.ws.active).toBe("nuevo-2.flo");
   });
 
-  it("replaces the workspace for a new document without a folder, asking before discarding changes", () => {
+  it("replaces the workspace for a new document without a folder, asking before discarding changes", async () => {
     const app = new App(elements(), FILES);
     app.ws.setSource("catalog.flo", "entity api\n");
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
-    app.newDocument("flowchart");
-    expect(confirm).toHaveBeenCalledWith("Hay cambios sin guardar. ¿Descartarlos?");
+    vi.mocked(confirmDialog).mockResolvedValue(false);
+    await app.newDocument("flowchart");
+    expect(confirmDialog).toHaveBeenCalledWith("Hay cambios sin guardar. ¿Descartarlos?");
     expect(app.ws.uris()).toEqual(["catalog.flo", "login.flo"]);
-    confirm.mockReturnValue(true);
-    app.newDocument("flowchart");
+    vi.mocked(confirmDialog).mockResolvedValue(true);
+    await app.newDocument("flowchart");
     expect(app.ws.uris()).toEqual(["nuevo.flo"]);
   });
 
-  it("asks before replacing an open folder whose new file was never saved", () => {
+  it("asks before replacing an open folder whose new file was never saved", async () => {
     const app = new App(elements(), { ...FILES, dir: {} as FileSystemDirectoryHandle });
-    app.newDocument("flowchart");
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
-    app.loadExample("flowchart");
-    expect(confirm).toHaveBeenCalledWith("Hay cambios sin guardar. ¿Descartarlos?");
+    await app.newDocument("flowchart");
+    vi.mocked(confirmDialog).mockResolvedValue(false);
+    await app.loadExample("flowchart");
+    expect(confirmDialog).toHaveBeenCalledWith("Hay cambios sin guardar. ¿Descartarlos?");
     expect(app.ws.uris()).toContain("nuevo.flo");
   });
 
@@ -145,13 +154,13 @@ describe("App", () => {
     expect(app.ws.source("catalog.flo")).toBe(FILES.files["catalog.flo"]);
   });
 
-  it("starts a replaced workspace without selection, panel or map mode", () => {
+  it("starts a replaced workspace without selection, panel or map mode", async () => {
     const el = elements();
     const app = new App(el, FILES);
     app.selectBlock("login.flo#login", "api");
     app.selectEntity("api");
     app.toggleMap();
-    app.loadExample("flowchart");
+    await app.loadExample("flowchart");
     expect(app.selectedBlock).toBeNull();
     expect(el.panel.innerHTML).toBe("");
     expect(el.preview.innerHTML).not.toContain("Mapa del sistema");
@@ -275,33 +284,39 @@ describe("App navigation", () => {
     expect(app.ws.active).toBe("login.flo");
   });
 
-  it("renames across documents: the active one through the editor, the rest in the workspace", () => {
+  it("renames across documents: the active one through the editor, the rest in the workspace", async () => {
     const el = elements();
     const app = new App(el, FILES);
     app.selectEntity("api");
-    vi.spyOn(window, "prompt").mockReturnValue("gateway");
+    vi.mocked(ask).mockResolvedValue("gateway");
     click(el.panel.querySelector("[data-flo-rename]")!);
-    expect(app.view.state.doc.toString()).toContain("  gateway -> db");
+    await vi.waitFor(() => expect(app.view.state.doc.toString()).toContain("  gateway -> db"));
     expect(app.ws.source("login.flo")).toContain("  gateway -> db");
     expect(app.ws.source("catalog.flo")).toBe("entity gateway [API Gateway]\nentity db [Base]\n");
     expect(app.ws.isDirty("catalog.flo")).toBe(true);
     expect(el.panel.innerHTML).toContain("<code>gateway</code>");
   });
 
-  it("shows the rename error and changes nothing", () => {
+  it("shows the rename error and changes nothing", async () => {
     const app = new App(elements(), FILES);
-    vi.spyOn(window, "prompt").mockReturnValue("db");
-    const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
-    app.rename("api");
-    expect(alert).toHaveBeenCalledWith("ya existe una entidad 'db'");
+    vi.mocked(ask).mockResolvedValue("db");
+    await app.rename("api");
+    expect(notify).toHaveBeenCalledWith("ya existe una entidad 'db'");
     expect(app.ws.hasUnsavedChanges()).toBe(false);
   });
 
-  it("renames the entity under the cursor", () => {
+  it("renames the entity under the cursor", async () => {
     const app = new App(elements(), FILES);
-    const prompt = vi.spyOn(window, "prompt").mockReturnValue(null);
-    app.renameAt({ line: 3, column: 4 });
-    expect(prompt).toHaveBeenCalledWith("Nuevo id para 'api':", "api");
+    await app.renameAt({ line: 3, column: 4 });
+    expect(ask).toHaveBeenCalledWith("Nuevo id para 'api':", "api");
+  });
+
+  it("does nothing when the rename dialog is dismissed (Escape = null)", async () => {
+    const app = new App(elements(), FILES);
+    vi.mocked(ask).mockResolvedValue(null);
+    await app.rename("api");
+    expect(app.ws.hasUnsavedChanges()).toBe(false);
+    expect(notify).not.toHaveBeenCalled();
   });
 
   it("keeps the explorer in sync with the workspace", () => {
@@ -562,7 +577,7 @@ describe("App knowledge graph", () => {
     app.toggleGraph();
     await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas"]));
     change(el.preview, "depth", "2");
-    vi.spyOn(window, "prompt").mockReturnValue(" mia ");
+    vi.mocked(ask).mockResolvedValue(" mia ");
     click(el.preview.querySelector("[data-flo-kg-save]")!);
     await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas", "mia"]));
     const views = (tree[".flo"] as MemoryTree).views as MemoryTree;
@@ -575,10 +590,9 @@ describe("App knowledge graph", () => {
     const app = new App(el, snapshot);
     app.toggleGraph();
     await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas"]));
-    vi.spyOn(window, "prompt").mockReturnValue("../fuera");
-    const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+    vi.mocked(ask).mockResolvedValue("../fuera");
     click(el.preview.querySelector("[data-flo-kg-save]")!);
-    await vi.waitFor(() => expect(alert).toHaveBeenCalled());
+    await vi.waitFor(() => expect(notify).toHaveBeenCalled());
     expect((tree[".flo"] as MemoryTree).views).toEqual({});
     expect(app.graph.depth).toBe(1);
   });
@@ -590,10 +604,9 @@ describe("App knowledge graph", () => {
     const app = new App(el, snapshot);
     app.toggleGraph();
     await vi.waitFor(() => expect(presetNames(el)).toEqual(["Vistas", "decisiones"]));
-    vi.spyOn(window, "prompt").mockReturnValue("decisiones");
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    vi.mocked(ask).mockResolvedValue("decisiones");
     click(el.preview.querySelector("[data-flo-kg-save]")!);
-    await vi.waitFor(() => expect(confirm).toHaveBeenCalled());
+    await vi.waitFor(() => expect(confirmDialog).toHaveBeenCalled());
     expect(((tree[".flo"] as MemoryTree).views as MemoryTree)["decisiones.json"]).toBe(original);
   });
 

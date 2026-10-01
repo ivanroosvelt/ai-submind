@@ -1,3 +1,5 @@
+import { ask } from "./dialogs.js";
+
 const FLO_PICKER_OPTIONS: FilePickerOptions = {
   types: [{ description: "Documento .flo o .md", accept: { "text/plain": [".flo", ".md"] } }],
 };
@@ -95,7 +97,7 @@ export async function saveFloFile(
     await writable.close();
     return target;
   }
-  const chosenName = window.prompt("Nombre del archivo para descargar:", name);
+  const chosenName = await ask("Nombre del archivo para descargar:", name);
   if (chosenName === null) return null;
   downloadText(source, chosenName.trim() || name, "text/plain");
   return null;
