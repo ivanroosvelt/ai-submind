@@ -107,6 +107,14 @@ describe("saveFloFile", () => {
     expect(result).toBe(handle);
   });
 
+  it("suggests the document's file name in the save picker (#55)", async () => {
+    window.showOpenFilePicker = vi.fn();
+    const writable = { write: vi.fn(), close: vi.fn() };
+    window.showSaveFilePicker = vi.fn().mockResolvedValue({ createWritable: vi.fn().mockResolvedValue(writable) });
+    await saveFloFile("x", null, "decisiones/pkce.md");
+    expect(window.showSaveFilePicker).toHaveBeenCalledWith(expect.objectContaining({ suggestedName: "pkce.md" }));
+  });
+
   it("prompts for a filename and downloads a .flo file when the browser has no File System Access API", async () => {
     const promptSpy = vi.spyOn(window, "prompt").mockReturnValue("diagrama.flo");
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});

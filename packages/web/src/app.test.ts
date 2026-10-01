@@ -187,6 +187,29 @@ describe("App", () => {
     expect(app.ws.isDirty("catalog.flo")).toBe(true);
   });
 
+  it("saves each document of a folderless workspace to its own file (#55)", async () => {
+    const written = new Map<string, string>();
+    const handle = (name: string) =>
+      ({
+        name,
+        createWritable: async () => ({ write: async (text: string) => void written.set(name, text), close: async () => {} }),
+      }) as unknown as FileSystemFileHandle;
+    window.showOpenFilePicker = vi.fn();
+    window.showSaveFilePicker = vi.fn().mockResolvedValueOnce(handle("a")).mockResolvedValueOnce(handle("b"));
+    try {
+      const app = new App(elements(), FILES); // sin carpeta, dos archivos, activo login.flo
+      await app.save();
+      app.openDocument("catalog.flo");
+      await app.save();
+      expect(window.showSaveFilePicker).toHaveBeenCalledTimes(2);
+      expect(written.get("a")).toBe(FILES.files["login.flo"]);
+      expect(written.get("b")).toBe(FILES.files["catalog.flo"]);
+    } finally {
+      delete (window as { showOpenFilePicker?: unknown }).showOpenFilePicker;
+      delete (window as { showSaveFilePicker?: unknown }).showSaveFilePicker;
+    }
+  });
+
   it("starts from a new flowchart", () => {
     expect(newWorkspace()).toEqual({ files: { "nuevo.flo": "flow nuevo {\n\n}\n" }, saved: {}, active: "nuevo.flo", dir: null });
   });

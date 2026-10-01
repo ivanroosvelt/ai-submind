@@ -8,6 +8,7 @@ declare global {
 
   interface FilePickerOptions {
     types?: FilePickerAcceptType[];
+    suggestedName?: string;
   }
 
   interface FileSystemHandlePermissionDescriptor {
