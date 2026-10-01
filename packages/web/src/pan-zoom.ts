@@ -52,14 +52,14 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
   let down: { x: number; y: number } | null = null;
   let last: { x: number; y: number } | null = null;
   let isDrag = false;
-  // Pointer events (#59): mouse, touch y lápiz; la captura sigue el arrastre fuera del SVG.
+  let pointerId = 0;
+  // Pointer events (#59): mouse, touch y lápiz; la captura (al superar el umbral) sigue el arrastre fuera del SVG.
   svg.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) return;
     down = { x: event.clientX, y: event.clientY };
     last = { x: event.clientX, y: event.clientY };
     isDrag = false;
-    // ponytail: jsdom no implementa setPointerCapture.
-    svg.setPointerCapture?.(event.pointerId);
+    pointerId = event.pointerId;
   });
   svg.addEventListener("pointermove", (event) => {
     if (!last || !down) return;
@@ -70,6 +70,9 @@ export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => 
     if (!isDrag) {
       const netDistance = Math.hypot(event.clientX - down.x, event.clientY - down.y);
       isDrag = netDistance > DRAG_THRESHOLD;
+      // Capturar recién al arrastrar: capturar en pointerdown redirige el click al <svg> y rompe el drill-down.
+      // ponytail: jsdom no implementa setPointerCapture.
+      if (isDrag) svg.setPointerCapture?.(pointerId);
     }
     const s = scale();
     set(panViewBox(current(), dx * s, dy * s));

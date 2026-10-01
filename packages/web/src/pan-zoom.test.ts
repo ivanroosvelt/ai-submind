@@ -91,16 +91,43 @@ describe("bindPanZoom", () => {
   it("stops panning on pointercancel", () => {
     const { svg } = setup();
     mouse(svg, "pointerdown", 10);
-    mouse(svg, "pointercancel", 10);
-    mouse(svg, "pointermove", 30, 10);
-    expect(svg.getAttribute("viewBox")).toBe("0 0 100 50");
+    mouse(svg, "pointermove", 20);
+    expect(svg.getAttribute("viewBox")).toBe("-10 0 100 50");
+    mouse(svg, "pointercancel", 20);
+    mouse(svg, "pointermove", 40);
+    expect(svg.getAttribute("viewBox")).toBe("-10 0 100 50");
   });
 
-  it("captures the pointer so a drag keeps going outside the SVG", () => {
+  it("ignores a non-primary button", () => {
+    const { svg, onChange } = setup();
+    svg.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 2, clientX: 10 }));
+    mouse(svg, "pointermove", 30);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  const down = (svg: Element, id: number) =>
+    svg.dispatchEvent(Object.assign(new MouseEvent("pointerdown", { bubbles: true, button: 0 }), { pointerId: id }));
+
+  it("captures the pointer only once the drag passes the threshold", () => {
     const { svg } = setup();
     const capture = vi.fn();
     (svg as unknown as { setPointerCapture: (id: number) => void }).setPointerCapture = capture;
-    svg.dispatchEvent(Object.assign(new MouseEvent("pointerdown", { bubbles: true, button: 0 }), { pointerId: 7 }));
+    down(svg, 7);
+    expect(capture).not.toHaveBeenCalled();
+    mouse(svg, "pointermove", 2);
+    expect(capture).not.toHaveBeenCalled();
+    mouse(svg, "pointermove", 10);
+    mouse(svg, "pointermove", 20);
+    expect(capture).toHaveBeenCalledTimes(1);
     expect(capture).toHaveBeenCalledWith(7);
+  });
+
+  it("never captures the pointer on a click without movement", () => {
+    const { svg } = setup();
+    const capture = vi.fn();
+    (svg as unknown as { setPointerCapture: (id: number) => void }).setPointerCapture = capture;
+    down(svg, 7);
+    mouse(svg, "pointerup", 0);
+    expect(capture).not.toHaveBeenCalled();
   });
 });
