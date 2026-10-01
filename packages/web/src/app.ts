@@ -394,6 +394,21 @@ export class App {
     this.refresh();
   }
 
+  /** Ctrl/Cmd+S guarda en toda la página (#56); sin Alt, que con AltGr escribe caracteres. */
+  onKeydown(event: KeyboardEvent): void {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== "s") return;
+    event.preventDefault();
+    void this.run("Guardar", () => this.save());
+  }
+
+  /** Cerrar o recargar la pestaña avisa si hay cambios que se perderían (#56, criterio de #43). */
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (!this.ws.hasUnsavedChanges()) return;
+    event.preventDefault();
+    // Safari todavía pide `returnValue` además de preventDefault.
+    event.returnValue = "";
+  }
+
   loadExample(id: string): void {
     const example = EXAMPLES.find((candidate) => candidate.id === id);
     if (!example || !this.confirmDiscard()) return;
