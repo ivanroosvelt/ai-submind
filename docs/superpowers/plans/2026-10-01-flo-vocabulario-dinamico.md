@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-10-01 (`a68d851`..`2866e51`, texto del esquema opcional en `a6f47e5`). **Reemplazado por #62:** el esquema opcional que dejó este plan se eliminó en `2026-10-01-flo-sin-esquema.md`.
+
 **Goal:** El vocabulario del grafo de conocimiento (`type_tags` y tipos de
 relación) sale de las fuentes. `knowledge.schema.yaml` deja de ser
 obligatorio. Si existe, sigue cerrando el vocabulario como hoy.
@@ -64,9 +66,9 @@ Las tasks 2 y 3 dependen de 1, porque consumen `@flo/core` por `dist/`.
 - `docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md`
   §3.4: nota breve "Enmendado por #61", sin reescribir la historia.
 
-- [ ] Tests primero (TDD), implementación, `pnpm --filter @flo/core test` y `typecheck`.
-- [ ] `pnpm --filter @flo/core build`.
-- [ ] Commit `feat(core): vocabulario dinámico, el esquema de conocimiento es opcional (#61)`.
+- [x] Tests primero (TDD), implementación, `pnpm --filter @flo/core test` y `typecheck`.
+- [x] `pnpm --filter @flo/core build`.
+- [x] Commit `feat(core): vocabulario dinámico, el esquema de conocimiento es opcional (#61)`.
 
 ### Task 2: MCP
 
@@ -83,8 +85,8 @@ tests. `README.md`, en la sección del servidor MCP.
 - Revisar en `README.md` (líneas ~101, ~129, ~159) los textos que describen
   el esquema como obligatorio.
 
-- [ ] Tests, `pnpm --filter @flo/mcp test` y `typecheck`.
-- [ ] Commit `feat(mcp): vocabulario en uso con tipos de relación y sin esquema obligatorio (#61)`.
+- [x] Tests, `pnpm --filter @flo/mcp test` y `typecheck`.
+- [x] Commit `feat(mcp): vocabulario en uso con tipos de relación y sin esquema obligatorio (#61)`.
 
 ### Task 3: web, ejemplos y docs
 
@@ -105,5 +107,5 @@ mencionen E068 o el esquema del ejemplo.
   esquema. Solo se cambia lo que esperaba E068 por ausencia.
 - Si algún texto de la UI menciona el esquema como obligatorio, ajustarlo.
 
-- [ ] `pnpm --filter @flo/web test` y `typecheck`.
-- [ ] Commit `feat(web): ejemplos sin esquema de conocimiento (#61)`.
+- [x] `pnpm --filter @flo/web test` y `typecheck`.
+- [x] Commit `feat(web): ejemplos sin esquema de conocimiento (#61)`.

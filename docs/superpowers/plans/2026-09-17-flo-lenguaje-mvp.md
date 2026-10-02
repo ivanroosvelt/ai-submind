@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-17 (`9fcd07e`..`1607ffa`, fixes de la revisión final en `1607ffa`).
+
 **Goal:** Dejar el monorepo `.flo` funcionando (Fase 0) y el lenguaje `.flo`
 parseando correctamente flowchart y secuencia — lexer, parser, AST y
 diagnostics con recuperación de errores — con tests en verde (Fase 1). Sin
@@ -53,14 +55,14 @@ GitHub Actions.
   y 3) declaran como miembros vía `pnpm-workspace.yaml`, y el
   `tsconfig.base.json` que ambos extienden con `"extends": "../../tsconfig.base.json"`.
 
-- [ ] **Step 1: Crear `pnpm-workspace.yaml`**
+- [x] **Step 1: Crear `pnpm-workspace.yaml`**
 
 ```yaml
 packages:
   - "packages/*"
 ```
 
-- [ ] **Step 2: Crear `package.json` raíz**
+- [x] **Step 2: Crear `package.json` raíz**
 
 ```json
 {
@@ -79,7 +81,7 @@ packages:
 }
 ```
 
-- [ ] **Step 3: Crear `tsconfig.base.json`**
+- [x] **Step 3: Crear `tsconfig.base.json`**
 
 ```json
 {
@@ -96,7 +98,7 @@ packages:
 }
 ```
 
-- [ ] **Step 4: Crear `.gitignore`**
+- [x] **Step 4: Crear `.gitignore`**
 
 ```
 node_modules/
@@ -104,7 +106,7 @@ dist/
 *.log
 ```
 
-- [ ] **Step 5: Crear `.github/workflows/ci.yml`**
+- [x] **Step 5: Crear `.github/workflows/ci.yml`**
 
 ```yaml
 name: CI
@@ -129,14 +131,14 @@ jobs:
       - run: pnpm test
 ```
 
-- [ ] **Step 6: Instalar y verificar**
+- [x] **Step 6: Instalar y verificar**
 
 Run: `pnpm install`
 Expected: termina sin error y crea `pnpm-lock.yaml` (todavía no hay
 paquetes bajo `packages/`, así que `pnpm -r ...` no tiene nada que
 ejecutar hasta el Task 2 — eso es esperado en este paso).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add pnpm-workspace.yaml package.json tsconfig.base.json .gitignore .github/workflows/ci.yml pnpm-lock.yaml
@@ -156,7 +158,7 @@ git commit -m "chore: setup del workspace pnpm y CI"
 - Produces: `VERSION: string` exportado desde `@flo/core`, consumido por
   `@flo/web` en el Task 3.
 
-- [ ] **Step 1: Crear `packages/core/package.json`**
+- [x] **Step 1: Crear `packages/core/package.json`**
 
 ```json
 {
@@ -177,7 +179,7 @@ git commit -m "chore: setup del workspace pnpm y CI"
 }
 ```
 
-- [ ] **Step 2: Crear `packages/core/tsconfig.json`**
+- [x] **Step 2: Crear `packages/core/tsconfig.json`**
 
 ```json
 {
@@ -190,7 +192,7 @@ git commit -m "chore: setup del workspace pnpm y CI"
 }
 ```
 
-- [ ] **Step 3: Escribir el test que falla**
+- [x] **Step 3: Escribir el test que falla**
 
 ```typescript
 // packages/core/src/index.test.ts
@@ -204,25 +206,25 @@ describe("index", () => {
 });
 ```
 
-- [ ] **Step 4: Instalar dependencias y correr el test — debe fallar**
+- [x] **Step 4: Instalar dependencias y correr el test — debe fallar**
 
 Run: `pnpm install && pnpm --filter @flo/core test`
 Expected: FAIL — `./index` no exporta `VERSION` (el archivo no existe
 todavía).
 
-- [ ] **Step 5: Implementación mínima**
+- [x] **Step 5: Implementación mínima**
 
 ```typescript
 // packages/core/src/index.ts
 export const VERSION = "0.0.0";
 ```
 
-- [ ] **Step 6: Correr el test — debe pasar**
+- [x] **Step 6: Correr el test — debe pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/core
@@ -246,7 +248,7 @@ git commit -m "chore: scaffold de @flo/core"
   consume nadie todavía en esta ronda, pero es el punto donde la Fase 3
   (editor web) engancha el layout real.
 
-- [ ] **Step 1: Crear `packages/web/package.json`**
+- [x] **Step 1: Crear `packages/web/package.json`**
 
 ```json
 {
@@ -272,7 +274,7 @@ git commit -m "chore: scaffold de @flo/core"
 }
 ```
 
-- [ ] **Step 2: Crear `packages/web/tsconfig.json`**
+- [x] **Step 2: Crear `packages/web/tsconfig.json`**
 
 ```json
 {
@@ -285,7 +287,7 @@ git commit -m "chore: scaffold de @flo/core"
 }
 ```
 
-- [ ] **Step 3: Crear `packages/web/vitest.config.ts`**
+- [x] **Step 3: Crear `packages/web/vitest.config.ts`**
 
 ```typescript
 import { defineConfig } from "vitest/config";
@@ -297,7 +299,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Crear `packages/web/index.html`**
+- [x] **Step 4: Crear `packages/web/index.html`**
 
 ```html
 <!doctype html>
@@ -313,7 +315,7 @@ export default defineConfig({
 </html>
 ```
 
-- [ ] **Step 5: Escribir el test que falla**
+- [x] **Step 5: Escribir el test que falla**
 
 ```typescript
 // packages/web/src/app.test.ts
@@ -329,12 +331,12 @@ describe("renderApp", () => {
 });
 ```
 
-- [ ] **Step 6: Instalar y correr el test — debe fallar**
+- [x] **Step 6: Instalar y correr el test — debe fallar**
 
 Run: `pnpm install && pnpm --filter @flo/web test`
 Expected: FAIL — `./app` no existe todavía.
 
-- [ ] **Step 7: Implementación mínima**
+- [x] **Step 7: Implementación mínima**
 
 ```typescript
 // packages/web/src/app.ts
@@ -354,18 +356,18 @@ if (root) {
 }
 ```
 
-- [ ] **Step 8: Correr el test — debe pasar**
+- [x] **Step 8: Correr el test — debe pasar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: PASS
 
-- [ ] **Step 9: Verificar el build de todo el monorepo**
+- [x] **Step 9: Verificar el build de todo el monorepo**
 
 Run: `pnpm build && pnpm typecheck && pnpm test`
 Expected: los tres comandos terminan en verde para `@flo/core` y `@flo/web`
 — esto es el entregable completo de la Fase 0 (spec §9).
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add packages/web
@@ -385,7 +387,7 @@ git commit -m "chore: scaffold de @flo/web, consume @flo/core"
   este documento. Ningún token, código de error o regla se agrega en
   código sin actualizar este archivo primero.
 
-- [ ] **Step 1: Escribir `packages/core/GRAMMAR.md`**
+- [x] **Step 1: Escribir `packages/core/GRAMMAR.md`**
 
 ```markdown
 # Gramática `.flo` (MVP: flowchart + sequence)
@@ -466,7 +468,7 @@ spec no la especifica con ejemplos concretos.
 | E027 | parser (sequence) | se esperaba el texto del mensaje |
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add packages/core/GRAMMAR.md
@@ -484,7 +486,7 @@ git commit -m "docs: gramatica formal de .flo (flowchart + sequence)"
   `formatDiagnostic(diagnostic: Diagnostic): string` — usados por el
   lexer (Task 7) y ambos parsers (Tasks 8-10).
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 ```typescript
 // packages/core/src/diagnostics.test.ts
@@ -520,12 +522,12 @@ describe("formatDiagnostic", () => {
 });
 ```
 
-- [ ] **Step 2: Correr el test — debe fallar**
+- [x] **Step 2: Correr el test — debe fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./diagnostics` no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/diagnostics.ts
@@ -545,12 +547,12 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
 }
 ```
 
-- [ ] **Step 4: Correr el test — debe pasar**
+- [x] **Step 4: Correr el test — debe pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/diagnostics.ts packages/core/src/diagnostics.test.ts
@@ -571,7 +573,7 @@ git commit -m "feat(core): modulo de diagnostics"
   `SequenceParticipant`, `SequenceMessage`, `SequenceDiagram`, `Diagram`,
   `isFlowchartDiagram`, `isSequenceDiagram` (Tasks 8-10 los usan).
 
-- [ ] **Step 1: Crear `packages/core/src/tokens.ts`**
+- [x] **Step 1: Crear `packages/core/src/tokens.ts`**
 
 ```typescript
 export type TokenKind =
@@ -596,7 +598,7 @@ export interface Token {
 }
 ```
 
-- [ ] **Step 2: Escribir el test de AST que falla**
+- [x] **Step 2: Escribir el test de AST que falla**
 
 ```typescript
 // packages/core/src/ast.test.ts
@@ -619,12 +621,12 @@ describe("diagram type guards", () => {
 });
 ```
 
-- [ ] **Step 3: Correr el test — debe fallar**
+- [x] **Step 3: Correr el test — debe fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./ast` no existe.
 
-- [ ] **Step 4: Crear `packages/core/src/ast.ts`**
+- [x] **Step 4: Crear `packages/core/src/ast.ts`**
 
 ```typescript
 export interface Position {
@@ -684,12 +686,12 @@ export function isSequenceDiagram(diagram: Diagram): diagram is SequenceDiagram 
 }
 ```
 
-- [ ] **Step 5: Correr el test — debe pasar**
+- [x] **Step 5: Correr el test — debe pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core/src/tokens.ts packages/core/src/ast.ts packages/core/src/ast.test.ts
@@ -708,7 +710,7 @@ git commit -m "feat(core): tipos de tokens y AST"
   `TokenizeResult = { tokens: Token[]; diagnostics: Diagnostic[] }` — la
   usan los parsers (Tasks 8-10).
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 // packages/core/src/lexer.test.ts
@@ -809,12 +811,12 @@ describe("tokenize", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./lexer` no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/lexer.ts
@@ -979,12 +981,12 @@ export function tokenize(source: string): TokenizeResult {
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS (los 7 `it` de `lexer.test.ts`)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/lexer.ts packages/core/src/lexer.test.ts
@@ -1005,7 +1007,7 @@ git commit -m "feat(core): lexer de .flo con recuperacion de errores"
   diagnostics donde debe empujar los suyos (mutación, mismo array que ya
   trae los diagnostics del lexer). Lo consume Task 10.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 // packages/core/src/parser/flowchart.test.ts
@@ -1064,12 +1066,12 @@ describe("parseFlowchartBody", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./flowchart` no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/parser/flowchart.ts
@@ -1242,12 +1244,12 @@ export function parseFlowchartBody(
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/parser/flowchart.ts packages/core/src/parser/flowchart.test.ts
@@ -1267,7 +1269,7 @@ git commit -m "feat(core): parser de flowchart con recuperacion de errores"
   — misma forma de interfaz que `parseFlowchartBody` (Task 8). Lo consume
   Task 10.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 // packages/core/src/parser/sequence.test.ts
@@ -1327,12 +1329,12 @@ describe("parseSequenceBody", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./sequence` no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/parser/sequence.ts
@@ -1517,12 +1519,12 @@ export function parseSequenceBody(
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/parser/sequence.ts packages/core/src/parser/sequence.test.ts
@@ -1544,7 +1546,7 @@ git commit -m "feat(core): parser de sequence con recuperacion de errores"
   — es la API pública de `@flo/core` para esta ronda (spec §3: `parse()` +
   `render()`; `render()` llega en la Fase 2).
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 // packages/core/src/parser/index.test.ts
@@ -1642,12 +1644,12 @@ describe("parse", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./index` (dentro de `parser/`) no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/parser/index.ts
@@ -1734,12 +1736,12 @@ export function parse(source: string): ParseResult {
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS
 
-- [ ] **Step 5: Exponer `parse` desde el paquete**
+- [x] **Step 5: Exponer `parse` desde el paquete**
 
 ```typescript
 // packages/core/src/index.ts
@@ -1750,14 +1752,14 @@ export type { Diagram, FlowchartDiagram, SequenceDiagram } from "./ast";
 export type { Diagnostic } from "./diagnostics";
 ```
 
-- [ ] **Step 6: Correr toda la suite del monorepo**
+- [x] **Step 6: Correr toda la suite del monorepo**
 
 Run: `pnpm build && pnpm typecheck && pnpm test`
 Expected: verde en `@flo/core` y `@flo/web` — este es el entregable
 completo de la Fase 1 (spec §9): `.flo` parsea flowchart y secuencia con
 recuperación de errores, con tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/core/src/parser/index.ts packages/core/src/parser/index.test.ts packages/core/src/index.ts

@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-10-01 (`8687b49`..`bfe3520`; fixes `03ed356` y `bfe3520`).
+
 **Goal:** Eliminar `knowledge.schema.yaml` del lenguaje. El catálogo de
 vocabulario se deduce siempre de las notas, y un valor nuevo se suma solo.
 
@@ -58,8 +60,8 @@ La task 2 consume `@flo/core` por `dist/`.
 - `docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md`:
   nota "_Reemplazado por #62_" en §3.4 y en las filas E065/E066/E068.
 
-- [ ] Tests, `pnpm --filter @flo/core test` y `typecheck`, `pnpm --filter @flo/core build`.
-- [ ] Commit `feat(core): sin esquema de conocimiento, el vocabulario se deduce de las notas (#62)`.
+- [x] Tests, `pnpm --filter @flo/core test` y `typecheck`, `pnpm --filter @flo/core build`.
+- [x] Commit `feat(core): sin esquema de conocimiento, el vocabulario se deduce de las notas (#62)`.
 
 ### Task 2: MCP, web, ejemplos y docs
 
@@ -86,5 +88,5 @@ La task 2 consume `@flo/core` por `dist/`.
   usuario y ejemplos: no debe quedar nada del esquema de conocimiento
   (salvo `inputSchema` de zod y los specs históricos).
 
-- [ ] `pnpm --filter @flo/mcp test`, `pnpm --filter @flo/web test`, `typecheck` de ambos.
-- [ ] Commit `feat: MCP y web sin esquema de conocimiento (#62)`.
+- [x] `pnpm --filter @flo/mcp test`, `pnpm --filter @flo/web test`, `typecheck` de ambos.
+- [x] Commit `feat: MCP y web sin esquema de conocimiento (#62)`.

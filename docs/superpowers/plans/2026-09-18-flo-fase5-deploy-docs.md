@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-18 (`039ef61`..`1f5e264`, fixes de la revisión final `e376c62` y `dbed4d9`). El deploy a Pages no está activo hasta habilitar Pages en el repo; el publish a npm no se ejecutó.
+
 **Goal:** Preparar `@flo/core` para publicarse en npm (sin ejecutar el publish real), desplegar `@flo/web` a GitHub Pages, y escribir documentación de sintaxis `.flo` orientada a usuario final.
 
 **Architecture:** Tres piezas independientes que no se tocan entre sí: (1) metadata + LICENSE en `packages/core/package.json` verificados con `npm pack --dry-run`, sin login ni publish real — eso queda para la Fase 6; (2) un workflow nuevo de GitHub Actions (`deploy.yml`, separado de `ci.yml`) que hace build de `@flo/web` y publica `dist/` a GitHub Pages, más el `base` correcto en la config de Vite para el subpath `/submind/`; (3) `docs/SYNTAX.md`, una guía de sintaxis para usuarios finales (distinta de `GRAMMAR.md`, que es la referencia formal interna). README se actualiza al final para reflejar las tres piezas y mover "publicar a npm" al roadmap como Fase 6.
@@ -30,7 +32,7 @@
 - Consumes: nada de tasks anteriores.
 - Produces: nada que otras tasks consuman — es independiente.
 
-- [ ] **Step 1: Crear `LICENSE` (MIT) en la raíz del repo**
+- [x] **Step 1: Crear `LICENSE` (MIT) en la raíz del repo**
 
 ```
 MIT License
@@ -56,7 +58,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-- [ ] **Step 2: Actualizar `packages/core/package.json` con metadata de publicación**
+- [x] **Step 2: Actualizar `packages/core/package.json` con metadata de publicación**
 
 Reemplazar el contenido completo por:
 
@@ -100,7 +102,7 @@ Reemplazar el contenido completo por:
 }
 ```
 
-- [ ] **Step 3: Verificar que el tarball solo incluye `dist/` + metadata**
+- [x] **Step 3: Verificar que el tarball solo incluye `dist/` + metadata**
 
 Run:
 ```bash
@@ -115,7 +117,7 @@ cp LICENSE packages/core/LICENSE
 ```
 y repetir el dry-run para confirmar que ahora aparece.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add LICENSE packages/core/package.json packages/core/LICENSE 2>/dev/null
@@ -133,7 +135,7 @@ git commit -m "chore(core): prepara @flo/core para publicación npm (metadata, L
 - Consumes: nada.
 - Produces: `dist/index.html` con assets referenciados bajo `/submind/` en vez de `/` — Task 3 (el workflow de deploy) depende de que el build ya sirva bien bajo ese subpath.
 
-- [ ] **Step 1: Crear `packages/web/vite.config.ts`**
+- [x] **Step 1: Crear `packages/web/vite.config.ts`**
 
 ```ts
 import { defineConfig } from "vite";
@@ -143,7 +145,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 2: Verificar que el build referencia el subpath correcto**
+- [x] **Step 2: Verificar que el build referencia el subpath correcto**
 
 Run:
 ```bash
@@ -152,7 +154,7 @@ grep -o '"/submind/assets/[^"]*"' packages/web/dist/index.html
 ```
 Expected: al menos una coincidencia (el/los `<script>`/`<link>` del bundle apuntan a `/submind/assets/...`).
 
-- [ ] **Step 3: Verificar que el editor sigue funcionando localmente**
+- [x] **Step 3: Verificar que el editor sigue funcionando localmente**
 
 Run:
 ```bash
@@ -160,7 +162,7 @@ pnpm --filter @flo/web serve
 ```
 Abrir la URL que imprime `vite preview` (va a ser algo como `http://localhost:4173/submind/`, porque el `base` también aplica en preview) y confirmar visualmente que el editor carga (toolbar + panes), sin errores 404 en la consola del navegador para JS/CSS. Cerrar el server después (Ctrl+C).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/web/vite.config.ts
@@ -178,7 +180,7 @@ git commit -m "feat(web): fija base de Vite a /submind/ para GitHub Pages"
 - Consumes: `packages/web/dist` generado por `pnpm build` (depende de Task 2 para que el `base` ya esté fijado antes del primer deploy real).
 - Produces: nada que otra task consuma.
 
-- [ ] **Step 1: Crear `.github/workflows/deploy.yml`**
+- [x] **Step 1: Crear `.github/workflows/deploy.yml`**
 
 ```yaml
 name: Deploy
@@ -227,7 +229,7 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-- [ ] **Step 2: Validar el YAML**
+- [x] **Step 2: Validar el YAML**
 
 Run:
 ```bash
@@ -235,14 +237,14 @@ python3 -c "import yaml, sys; yaml.safe_load(open('.github/workflows/deploy.yml'
 ```
 Expected: sin errores de parseo. Si ninguna de las dos herramientas está disponible, al menos correr `cat .github/workflows/deploy.yml` y revisar la indentación a ojo contra el bloque de arriba.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .github/workflows/deploy.yml
 git commit -m "ci(web): agrega workflow de deploy a GitHub Pages"
 ```
 
-- [ ] **Step 4: Nota para el usuario (paso manual, no automatizable desde acá)**
+- [x] **Step 4: Nota para el usuario (paso manual, no automatizable desde acá)**
 
 Este workflow no queda activo hasta que se habilite Pages en el repo: Settings → Pages → Build and deployment → Source: "GitHub Actions". Eso requiere acceso a la UI de GitHub con las credenciales del usuario — dejarlo anotado en el README (Task 5) en vez de intentarlo desde la sesión.
 
@@ -257,7 +259,7 @@ Este workflow no queda activo hasta que se habilite Pages en el repo: Settings �
 - Consumes: nada (es contenido nuevo, referencia el comportamiento ya implementado en `@flo/core`, documentado en `packages/core/GRAMMAR.md`).
 - Produces: el link que README (Task 5) agrega.
 
-- [ ] **Step 1: Escribir `docs/SYNTAX.md`**
+- [x] **Step 1: Escribir `docs/SYNTAX.md`**
 
 ```markdown
 # Sintaxis de `.flo`
@@ -355,7 +357,7 @@ si la línea `diagram <tipo>` es inválida; con errores más abajo en el
 archivo, `diagram` sigue trayendo lo que se pudo parsear.
 ```
 
-- [ ] **Step 2: Verificar que los ejemplos parsean sin errores**
+- [x] **Step 2: Verificar que los ejemplos parsean sin errores**
 
 Run:
 ```bash
@@ -397,7 +399,7 @@ rm /tmp/flo-syntax-check.mjs
 ```
 Expected: `flowchart: OK` y `sequence: OK`, exit code 0. Si algún ejemplo falla, corregir el ejemplo en `docs/SYNTAX.md` (no el parser) hasta que pase.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/SYNTAX.md
@@ -415,7 +417,7 @@ git commit -m "docs: agrega guía de sintaxis .flo para usuario final"
 - Consumes: nada nuevo — enlaza `docs/SYNTAX.md` (Task 4) y menciona el deploy (Task 3) y la prep de npm (Task 1).
 - Produces: nada.
 
-- [ ] **Step 1: Reemplazar el bloque de estado (líneas 8-14)**
+- [x] **Step 1: Reemplazar el bloque de estado (líneas 8-14)**
 
 Old:
 ```markdown
@@ -439,7 +441,7 @@ New:
 > `npm publish` real — eso es la Fase 6 (ver [Roadmap](#roadmap)).
 ```
 
-- [ ] **Step 2: Reemplazar la sección Documentación (líneas 121-126)**
+- [x] **Step 2: Reemplazar la sección Documentación (líneas 121-126)**
 
 Old:
 ```markdown
@@ -464,7 +466,7 @@ New:
 - [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md) — gramática formal (EBNF), reglas léxicas especiales y tabla de códigos de diagnóstico (E001–E027).
 ```
 
-- [ ] **Step 3: Reemplazar la sección Roadmap (líneas 128-132)**
+- [x] **Step 3: Reemplazar la sección Roadmap (líneas 128-132)**
 
 Old:
 ```markdown
@@ -484,7 +486,7 @@ New:
 Detalle completo de cada fase en el spec enlazado arriba.
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add README.md

@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-17 (`4ef709f`..`7cf0f54`, fix de la revisión final `e0ceaea`).
+
 **Goal:** Dejar `@flo/core` con `parse()` + `render()` end-to-end: layout
 determinista (`dagre` para flowchart, columnas propias para sequence) y
 render a SVG para ambos tipos de diagrama, con tests — incluyendo
@@ -69,7 +71,7 @@ desde `packages/core/src/index.ts` como la API pública de `@flo/core`
   `layoutFlowchart(diagram: FlowchartDiagram): FlowchartLayout` —
   consumidos por Task 4 (`render/flowchart.ts`).
 
-- [ ] **Step 1: Agregar `dagre` a `packages/core/package.json`**
+- [x] **Step 1: Agregar `dagre` a `packages/core/package.json`**
 
 Editar `packages/core/package.json` para que quede así:
 
@@ -96,13 +98,13 @@ Editar `packages/core/package.json` para que quede así:
 }
 ```
 
-- [ ] **Step 2: Instalar**
+- [x] **Step 2: Instalar**
 
 Run: `pnpm install`
 Expected: termina sin error, `pnpm-lock.yaml` queda actualizado con
 `dagre` y `@types/dagre`.
 
-- [ ] **Step 3: Escribir los tests que fallan**
+- [x] **Step 3: Escribir los tests que fallan**
 
 ```typescript
 // packages/core/src/layout/flowchart.test.ts
@@ -191,12 +193,12 @@ describe("layoutFlowchart", () => {
 });
 ```
 
-- [ ] **Step 4: Correr los tests — deben fallar**
+- [x] **Step 4: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./flowchart.js` (dentro de `layout/`) no existe.
 
-- [ ] **Step 5: Implementación**
+- [x] **Step 5: Implementación**
 
 ```typescript
 // packages/core/src/layout/flowchart.ts
@@ -268,19 +270,19 @@ export function layoutFlowchart(diagram: FlowchartDiagram): FlowchartLayout {
 }
 ```
 
-- [ ] **Step 6: Correr los tests — deben pasar**
+- [x] **Step 6: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS (5 `it`)
 
-- [ ] **Step 7: Typecheck**
+- [x] **Step 7: Typecheck**
 
 Run: `pnpm --filter @flo/core typecheck`
 Expected: sin errores — confirma que los tipos de `@types/dagre`
 (`graph.node()`, `graph.edge()`, `graph.graph()`) encajan con el uso de
 arriba bajo `strict` + `NodeNext`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/core/package.json pnpm-lock.yaml packages/core/src/layout/flowchart.ts packages/core/src/layout/flowchart.test.ts
@@ -300,7 +302,7 @@ git commit -m "feat(core): layout de flowchart con dagre"
   usadas por Task 5), `layoutSequence(diagram: SequenceDiagram): SequenceLayout`
   — consumidos por Task 5 (`render/sequence.ts`).
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 // packages/core/src/layout/sequence.test.ts
@@ -371,12 +373,12 @@ describe("layoutSequence", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./sequence.js` (dentro de `layout/`) no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/layout/sequence.ts
@@ -438,12 +440,12 @@ export function layoutSequence(diagram: SequenceDiagram): SequenceLayout {
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS (3 `it`)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/layout/sequence.ts packages/core/src/layout/sequence.test.ts
@@ -463,7 +465,7 @@ git commit -m "feat(core): layout de columnas para sequence"
   `svgText(x: number, y: number, text: string): string` — consumidos por
   Task 4 (`render/flowchart.ts`) y Task 5 (`render/sequence.ts`).
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 // packages/core/src/render/svg.test.ts
@@ -505,12 +507,12 @@ describe("svgText", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./svg.js` (dentro de `render/`) no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/render/svg.ts
@@ -534,12 +536,12 @@ export function svgText(x: number, y: number, text: string): string {
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS (4 `it`)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/render/svg.ts packages/core/src/render/svg.test.ts
@@ -560,7 +562,7 @@ git commit -m "feat(core): utilidades de SVG (escape, marcador de flecha, texto)
 - Produces: `renderFlowchartToSvg(diagram: FlowchartDiagram, layout: FlowchartLayout): string`
   — consumido por Task 6 (`render/index.ts`).
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 ```typescript
 // packages/core/src/render/flowchart.test.ts
@@ -609,12 +611,12 @@ describe("renderFlowchartToSvg", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./flowchart.js` (dentro de `render/`) no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/render/flowchart.ts
@@ -672,12 +674,12 @@ export function renderFlowchartToSvg(diagram: FlowchartDiagram, layout: Flowchar
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS (2 `it`)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/render/flowchart.ts packages/core/src/render/flowchart.test.ts
@@ -697,7 +699,7 @@ git commit -m "feat(core): render de flowchart a SVG"
 - Produces: `renderSequenceToSvg(diagram: SequenceDiagram, layout: SequenceLayout): string`
   — consumido por Task 6 (`render/index.ts`).
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 ```typescript
 // packages/core/src/render/sequence.test.ts
@@ -746,12 +748,12 @@ describe("renderSequenceToSvg", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./sequence.js` (dentro de `render/`) no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/render/sequence.ts
@@ -787,12 +789,12 @@ export function renderSequenceToSvg(diagram: SequenceDiagram, layout: SequenceLa
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS (2 `it`)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/render/sequence.ts packages/core/src/render/sequence.test.ts
@@ -817,7 +819,7 @@ git commit -m "feat(core): render de sequence a SVG"
   la segunda mitad de la API pública de `@flo/core` para esta ronda
   (spec §3: `parse()` + `render()`). Consumido por Task 7.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 // packages/core/src/render/index.test.ts
@@ -886,12 +888,12 @@ describe("render", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL — `./index.js` (dentro de `render/`) no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/core/src/render/index.ts
@@ -927,12 +929,12 @@ export function render(source: string): RenderResult {
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS (4 `it`)
 
-- [ ] **Step 5: Exponer `render` desde el paquete**
+- [x] **Step 5: Exponer `render` desde el paquete**
 
 ```typescript
 // packages/core/src/index.ts
@@ -960,13 +962,13 @@ export { formatDiagnostic } from "./diagnostics.js";
 export type { Diagnostic, DiagnosticSeverity } from "./diagnostics.js";
 ```
 
-- [ ] **Step 6: Correr toda la suite del monorepo**
+- [x] **Step 6: Correr toda la suite del monorepo**
 
 Run: `pnpm build && pnpm typecheck && pnpm test`
 Expected: verde en `@flo/core` y `@flo/web` — `@flo/core` ahora expone
 `parse()` + `render()` end-to-end (spec §3, §9 Fase 2).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/core/src/render/index.ts packages/core/src/render/index.test.ts packages/core/src/index.ts
@@ -985,7 +987,7 @@ git commit -m "feat(core): render(source) end-to-end para flowchart y sequence"
   diagramas (spec §7): cualquier cambio no intencional en layout o render
   hace fallar este archivo.
 
-- [ ] **Step 1: Escribir los tests de snapshot**
+- [x] **Step 1: Escribir los tests de snapshot**
 
 ```typescript
 // packages/core/src/render/reference-diagrams.test.ts
@@ -1055,20 +1057,20 @@ describe("reference diagrams (visual snapshot)", () => {
 });
 ```
 
-- [ ] **Step 2: Generar los snapshots**
+- [x] **Step 2: Generar los snapshots**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS — Vitest crea
 `packages/core/src/render/__snapshots__/reference-diagrams.test.ts.snap`
 en la primera corrida (no existe snapshot previo con el que comparar).
 
-- [ ] **Step 3: Confirmar que el snapshot generado es estable**
+- [x] **Step 3: Confirmar que el snapshot generado es estable**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS de nuevo, sin diffs — la segunda corrida compara contra
 el `.snap` recién creado.
 
-- [ ] **Step 4: Commit (incluye el `.snap` generado)**
+- [x] **Step 4: Commit (incluye el `.snap` generado)**
 
 ```bash
 git add packages/core/src/render/reference-diagrams.test.ts packages/core/src/render/__snapshots__/reference-diagrams.test.ts.snap
@@ -1084,7 +1086,7 @@ git commit -m "test(core): snapshots visuales sobre diagramas de referencia"
 - Consumes: `render` exportado por `@flo/core` (Task 6).
 - Produces: ninguna — solo documentación.
 
-- [ ] **Step 1: Actualizar el estado y la API documentada**
+- [x] **Step 1: Actualizar el estado y la API documentada**
 
 En `README.md`, reemplazar el bloque de estado actual:
 
@@ -1134,13 +1136,13 @@ dejando:
 - **Fase 5** — publicación de `@flo/core` a npm, documentación de usuario final, deploy del editor.
 ```
 
-- [ ] **Step 2: Verificar la suite completa una última vez**
+- [x] **Step 2: Verificar la suite completa una última vez**
 
 Run: `pnpm build && pnpm typecheck && pnpm test`
 Expected: verde — mismo resultado del Step 6 de Task 6, ahora con el
 README actualizado en el mismo commit lógico de cierre de fase.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add README.md

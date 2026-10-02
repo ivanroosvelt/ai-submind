@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-18 (`4c14395`..`9b23d58`, fix de la revisión final `ca42e98`).
+
 **Goal:** Dejar `@flo/web` con abrir/guardar de archivos `.flo` (File System
 Access API + fallback de `<input type=file>`/descarga), autosave a
 IndexedDB como red de seguridad, exportación a SVG/PNG, y un menú "Nuevo"
@@ -75,7 +77,7 @@ nueva, y solo de test (`devDependency`).
 - Produces: `DB_NAME` (constante), `saveDraft(source: string): Promise<void>`,
   `loadDraft(): Promise<string | null>` — consumidos por Task 6 (`main.ts`).
 
-- [ ] **Step 1: Agregar `fake-indexeddb` como devDependency**
+- [x] **Step 1: Agregar `fake-indexeddb` como devDependency**
 
 Editar `packages/web/package.json`, agregando a `devDependencies`:
 
@@ -91,13 +93,13 @@ Editar `packages/web/package.json`, agregando a `devDependencies`:
 }
 ```
 
-- [ ] **Step 2: Instalar**
+- [x] **Step 2: Instalar**
 
 Run: `pnpm install`
 Expected: termina sin error, `pnpm-lock.yaml` queda actualizado con
 `fake-indexeddb`.
 
-- [ ] **Step 3: Escribir los tests que fallan**
+- [x] **Step 3: Escribir los tests que fallan**
 
 ```typescript
 // packages/web/src/storage.test.ts
@@ -134,12 +136,12 @@ describe("draft autosave (IndexedDB)", () => {
 });
 ```
 
-- [ ] **Step 4: Correr los tests — deben fallar**
+- [x] **Step 4: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: FAIL — `./storage.js` no existe.
 
-- [ ] **Step 5: Implementación**
+- [x] **Step 5: Implementación**
 
 ```typescript
 // packages/web/src/storage.ts
@@ -182,17 +184,17 @@ export async function loadDraft(): Promise<string | null> {
 }
 ```
 
-- [ ] **Step 6: Correr los tests — deben pasar**
+- [x] **Step 6: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: PASS (3 `it`)
 
-- [ ] **Step 7: Typecheck**
+- [x] **Step 7: Typecheck**
 
 Run: `pnpm --filter @flo/web typecheck`
 Expected: sin errores.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/web/package.json pnpm-lock.yaml packages/web/src/storage.ts packages/web/src/storage.test.ts
@@ -218,7 +220,7 @@ git commit -m "feat(web): autosave de borrador a IndexedDB"
   `openFloFile`/`saveFloFile`/`hasFileSystemAccess` consumidos por Task 6
   (`main.ts`).
 
-- [ ] **Step 1: Ambient types del File System Access API**
+- [x] **Step 1: Ambient types del File System Access API**
 
 `lib.dom.d.ts` (TypeScript 5.6, ya instalado) declara `FileSystemFileHandle`,
 `FileSystemHandle` y `FileSystemWritableFileStream` completos — no hace
@@ -246,7 +248,7 @@ declare global {
 }
 ```
 
-- [ ] **Step 2: Polyfill de `URL.createObjectURL`/`revokeObjectURL` en jsdom**
+- [x] **Step 2: Polyfill de `URL.createObjectURL`/`revokeObjectURL` en jsdom**
 
 En `packages/web/src/test-setup.ts`, agregar al final (mismo patrón que el
 guard de `Range` ya existente en el archivo):
@@ -260,7 +262,7 @@ if (!URL.revokeObjectURL) {
 }
 ```
 
-- [ ] **Step 3: Escribir los tests que fallan**
+- [x] **Step 3: Escribir los tests que fallan**
 
 ```typescript
 // packages/web/src/file-io.test.ts
@@ -360,12 +362,12 @@ describe("downloadText", () => {
 });
 ```
 
-- [ ] **Step 4: Correr los tests — deben fallar**
+- [x] **Step 4: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: FAIL — `./file-io.js` no existe.
 
-- [ ] **Step 5: Implementación**
+- [x] **Step 5: Implementación**
 
 ```typescript
 // packages/web/src/file-io.ts
@@ -446,19 +448,19 @@ export async function saveFloFile(
 }
 ```
 
-- [ ] **Step 6: Correr los tests — deben pasar**
+- [x] **Step 6: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: PASS (8 `it`)
 
-- [ ] **Step 7: Typecheck**
+- [x] **Step 7: Typecheck**
 
 Run: `pnpm --filter @flo/web typecheck`
 Expected: sin errores — confirma que `file-system-access.d.ts` amplía
 `Window` sin chocar con las interfaces `FileSystemFileHandle`/
 `FileSystemWritableFileStream` ya provistas por `lib.dom.d.ts`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/web/src/file-system-access.d.ts packages/web/src/file-io.ts packages/web/src/file-io.test.ts packages/web/src/test-setup.ts
@@ -478,7 +480,7 @@ git commit -m "feat(web): abrir/guardar .flo (File System Access API + fallback 
   `exportPng(svg: string): Promise<void>` — consumidos por Task 6
   (`main.ts`).
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 // packages/web/src/export.test.ts
@@ -521,12 +523,12 @@ describe("exportSvg", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: FAIL — `./export.js` no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/web/src/export.ts
@@ -581,12 +583,12 @@ export function exportPng(svg: string): Promise<void> {
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: PASS (4 `it`)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/export.ts packages/web/src/export.test.ts
@@ -607,7 +609,7 @@ git commit -m "feat(web): exportar diagrama a SVG y PNG"
   `(result: RenderResult, source: string) => void` — consumidos por Task 6
   (`main.ts`).
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 Agregar al final de `packages/web/src/editor.test.ts` (dentro del mismo
 archivo, después del `describe("createEditor", ...)` existente — no borrar
@@ -653,14 +655,14 @@ describe("getEditorSource / setEditorSource", () => {
 ya existente al tope del archivo — agrega `getEditorSource, setEditorSource`
 a la misma línea en vez de duplicar el import.)
 
-- [ ] **Step 2: Correr los tests — deben fallar**
+- [x] **Step 2: Correr los tests — deben fallar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: FAIL — `getEditorSource`/`setEditorSource` no existen, y la
 firma de `onPreview` (2 args) no rompe en runtime pero el test de
 "passes the current source..." falla porque `source` llega `undefined`.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 En `packages/web/src/editor.ts`, cambiar la firma de `createEditor` y el
 callback de `updateListener`, y agregar los dos helpers nuevos:
@@ -721,14 +723,14 @@ export function setEditorSource(view: EditorView, source: string): void {
 }
 ```
 
-- [ ] **Step 4: Correr los tests — deben pasar**
+- [x] **Step 4: Correr los tests — deben pasar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: PASS — todos los tests de `editor.test.ts` (los preexistentes
 siguen en verde: reciben `source` como segundo argumento pero los
 callbacks `(result) => {...}` ya escritos lo ignoran sin error).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/editor.ts packages/web/src/editor.test.ts
@@ -751,7 +753,7 @@ git commit -m "feat(web): getEditorSource/setEditorSource y source en onPreview"
   `document.querySelector("#toolbar")`, agregado a `index.html` en este
   mismo task.
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 ```typescript
 // packages/web/src/toolbar.test.ts
@@ -795,12 +797,12 @@ describe("createToolbar", () => {
 });
 ```
 
-- [ ] **Step 2: Correr el test — debe fallar**
+- [x] **Step 2: Correr el test — debe fallar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: FAIL — `./toolbar.js` no existe.
 
-- [ ] **Step 3: Implementación**
+- [x] **Step 3: Implementación**
 
 ```typescript
 // packages/web/src/toolbar.ts
@@ -841,12 +843,12 @@ export function createToolbar(container: HTMLElement, actions: ToolbarActions): 
 }
 ```
 
-- [ ] **Step 4: Correr el test — debe pasar**
+- [x] **Step 4: Correr el test — debe pasar**
 
 Run: `pnpm --filter @flo/web test`
 Expected: PASS (1 `it`)
 
-- [ ] **Step 5: Agregar el contenedor `#toolbar` y su estilo a `index.html`**
+- [x] **Step 5: Agregar el contenedor `#toolbar` y su estilo a `index.html`**
 
 Reemplazar todo `packages/web/index.html` por:
 
@@ -942,7 +944,7 @@ Reemplazar todo `packages/web/index.html` por:
 </html>
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/web/src/toolbar.ts packages/web/src/toolbar.test.ts packages/web/index.html
@@ -963,7 +965,7 @@ git commit -m "feat(web): toolbar (nuevo/abrir/guardar/exportar)"
   (`./storage.js`, Task 1).
 - Produces: nada (punto de entrada de la app, sin exports).
 
-- [ ] **Step 1: Reescribir `main.ts`**
+- [x] **Step 1: Reescribir `main.ts`**
 
 ```typescript
 // packages/web/src/main.ts
@@ -1023,12 +1025,12 @@ async function main(): Promise<void> {
 void main();
 ```
 
-- [ ] **Step 2: Correr toda la suite del monorepo**
+- [x] **Step 2: Correr toda la suite del monorepo**
 
 Run: `pnpm build && pnpm typecheck && pnpm test`
 Expected: verde en `@flo/core` y `@flo/web`.
 
-- [ ] **Step 3: Verificación manual en el navegador**
+- [x] **Step 3: Verificación manual en el navegador**
 
 Run: `pnpm --filter @flo/web dev`
 
@@ -1052,7 +1054,7 @@ Si algún paso falla, arreglar antes de continuar — no marcar el task como
 completo sin esta verificación (spec §6: la persistencia es el
 entregable central de esta fase).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/web/src/main.ts
@@ -1068,7 +1070,7 @@ git commit -m "feat(web): conecta toolbar, autosave y apertura/guardado en main.
 - Consumes: nada.
 - Produces: ninguna — solo documentación.
 
-- [ ] **Step 1: Actualizar el estado**
+- [x] **Step 1: Actualizar el estado**
 
 En `README.md`, reemplazar el bloque de estado actual:
 
@@ -1113,13 +1115,13 @@ dejando:
 - **Fase 5** — publicación de `@flo/core` a npm, documentación de usuario final, deploy del editor.
 ```
 
-- [ ] **Step 2: Verificar la suite completa una última vez**
+- [x] **Step 2: Verificar la suite completa una última vez**
 
 Run: `pnpm build && pnpm typecheck && pnpm test`
 Expected: verde — mismo resultado del Step 2 de Task 6, ahora con el
 README actualizado en el mismo commit lógico de cierre de fase.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add README.md

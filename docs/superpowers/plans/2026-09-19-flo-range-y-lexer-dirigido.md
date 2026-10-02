@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-20 (`2b0afbe`..`159c1c6`).
+
 **Goal:** Dejar `@flo/core` con (A) rangos de inicio-fin en tokens,
 diagnósticos y nodos del AST, y (B) un lexer perezoso cuyos modos los
 decide el parser. Ambas cosas son prerrequisito de las entidades
@@ -71,7 +73,7 @@ ni de runtime ni de desarrollo.
 - Produces: `Range` en `ast.ts`; `Token.range` reemplaza `Token.line` /
   `Token.column` — consumido por todos los parsers y por las Tasks 2, 3 y 5.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 En `packages/core/src/lexer.test.ts`, agregar casos que verifiquen el span
 completo, no solo el inicio:
@@ -106,7 +108,7 @@ token de un solo carácter es `end.column === start.column + 1`. El `end`
 de un `TEXT` cubre el texto **sin recortar** — el `value` va trimeado pero
 el rango refleja lo que hay en el archivo.
 
-- [ ] **Step 2: Definir `Range` en `ast.ts`**
+- [x] **Step 2: Definir `Range` en `ast.ts`**
 
 ```typescript
 export interface Position {
@@ -123,7 +125,7 @@ export interface Range {
 
 `Position` se mantiene exportado: sigue siendo el tipo de los extremos.
 
-- [ ] **Step 3: Cambiar `Token` en `tokens.ts`**
+- [x] **Step 3: Cambiar `Token` en `tokens.ts`**
 
 ```typescript
 import type { Range } from "./ast.js";
@@ -137,7 +139,7 @@ export interface Token {
 }
 ```
 
-- [ ] **Step 4: Producir los rangos en `lexer.ts`**
+- [x] **Step 4: Producir los rangos en `lexer.ts`**
 
 En `push()`, capturar la posición actual como `end` en lugar de recibir
 solo el inicio:
@@ -156,7 +158,7 @@ Reemplazar los `startLine`/`startColumn` sueltos por un único
 `const start: Position = { line, column }` al tope del bucle. El token
 `EOF` final queda con `range` vacío (`start === end` en la posición final).
 
-- [ ] **Step 5: Adaptar los parsers (mecánico)**
+- [x] **Step 5: Adaptar los parsers (mecánico)**
 
 En `parser/index.ts`, `parser/flowchart.ts` y `parser/sequence.ts`,
 reemplazar cada `token.line` por `token.range.start.line` y cada
@@ -164,12 +166,12 @@ reemplazar cada `token.line` por `token.range.start.line` y cada
 esta task** — los diagnósticos siguen teniendo `line`/`column` planos hasta
 la Task 2.
 
-- [ ] **Step 6: Verificar**
+- [x] **Step 6: Verificar**
 
 Run: `pnpm --filter @flo/core test && pnpm --filter @flo/core typecheck`
 Expected: todo en verde, snapshots de SVG **sin cambios**.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 `refactor(core): dar a cada token un Range de inicio-fin`
 
@@ -188,7 +190,7 @@ Expected: todo en verde, snapshots de SVG **sin cambios**.
 - Produces: `Diagnostic` con `range: Range` en lugar de `line` / `column`;
   `diagnosticAt(code, message, range, severity?)` como factory.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 // packages/core/src/diagnostics.test.ts
@@ -231,7 +233,7 @@ rangos de sus dos extremos — se resuelve en la Task 3, así que **esta
 aserción se escribe en la Task 3, no aquí**. En la Task 2 basta con
 verificar que `E017` conserva su posición de inicio actual.
 
-- [ ] **Step 2: Cambiar `Diagnostic` y agregar la factory**
+- [x] **Step 2: Cambiar `Diagnostic` y agregar la factory**
 
 ```typescript
 import type { Range } from './ast.js';
@@ -259,7 +261,7 @@ export function formatDiagnostic(d: Diagnostic): string {
 }
 ```
 
-- [ ] **Step 3: Migrar todos los sitios de construcción**
+- [x] **Step 3: Migrar todos los sitios de construcción**
 
 Hoy cada diagnóstico se arma como objeto literal inline (hay ~20 sitios
 entre lexer y parsers). Reemplazar todos por `diagnosticAt(...)` pasando
@@ -273,18 +275,18 @@ Dos casos especiales a no romper:
 - `E017` conserva por ahora `edge.position`, convertido a un rango
   degenerado (`start === end`). La Task 3 lo arregla.
 
-- [ ] **Step 4: Actualizar `sortDiagnosticsByPosition` en `parser/index.ts`**
+- [x] **Step 4: Actualizar `sortDiagnosticsByPosition` en `parser/index.ts`**
 
 Ordena por `d.range.start.line` y luego `d.range.start.column`.
 
-- [ ] **Step 5: Verificar**
+- [x] **Step 5: Verificar**
 
 Run: `pnpm --filter @flo/core test && pnpm --filter @flo/core typecheck`
 Expected: verde. Todos los tests de diagnósticos existentes necesitan
 adaptar su forma esperada (`line`/`column` → `range`); los **códigos,
 mensajes y posiciones de inicio no cambian**.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 `refactor(core): reemplazar line/column por Range en Diagnostic`
 
@@ -306,7 +308,7 @@ mensajes y posiciones de inicio no cambian**.
   `fromRange` / `toRange`. Consumido por las Fases C–E (navegación,
   `data-flo-*`, rename).
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 it('records the full declaration range and the name range separately', () => {
@@ -333,7 +335,7 @@ it('records the range of each edge endpoint', () => {
 Más la aserción de `E017` sobre el identificador culpable que quedó
 diferida en la Task 2.
 
-- [ ] **Step 2: Cambiar el AST**
+- [x] **Step 2: Cambiar el AST**
 
 ```typescript
 export interface FlowchartNode {
@@ -376,7 +378,7 @@ Por qué dos rangos: `nameRange` es el destino del "ir a definición" y lo
 que se sustituye al renombrar; `range` es para plegado, hit-test del cursor
 y el panel de detalle.
 
-- [ ] **Step 3: Poblarlos en los parsers**
+- [x] **Step 3: Poblarlos en los parsers**
 
 En `parser/flowchart.ts`, el `nameRange` es `id.range` y el `range` va de
 `id.range.start` al `end` del token de cierre (`]`, `)`, `}`) o del último
@@ -385,21 +387,21 @@ token consumido de la arista. Mismo criterio en `parser/sequence.ts`.
 Para el participante autodeclarado por `ensureParticipant()`, `range` y
 `nameRange` son ambos el rango del token del mensaje que lo creó.
 
-- [ ] **Step 4: Corregir `E017`**
+- [x] **Step 4: Corregir `E017`**
 
 La pasada final deja de reportar sobre `edge.position` y pasa a reportar
 sobre `edge.fromRange` o `edge.toRange` según cuál de los dos extremos no
 resolvió. El mismo ajuste aplica a `E027` en `parser/sequence.ts` si
 reporta sobre la posición del mensaje.
 
-- [ ] **Step 5: Verificar**
+- [x] **Step 5: Verificar**
 
 Run: `pnpm -r test && pnpm -r typecheck`
 Expected: verde. Los snapshots de SVG **no cambian** — el layout no lee
 `position`, y si algún test de layout construye diagramas a mano hay que
 actualizar los fixtures a la forma nueva.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 `feat(core): rangos de declaracion y de nombre en los nodos del AST`
 
@@ -423,7 +425,7 @@ actualizar los fixtures a la forma nueva.
   parsers. Así la suite queda verde en cada paso y la Task 5 es un
   reemplazo, no una reescritura simultánea.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 describe('Lexer', () => {
@@ -470,7 +472,7 @@ describe('Lexer', () => {
 });
 ```
 
-- [ ] **Step 2: Implementar la clase**
+- [x] **Step 2: Implementar la clase**
 
 ```typescript
 export class Lexer {
@@ -511,13 +513,13 @@ después de consumir el token de apertura, sin peek intermedio. Que sea un
 `throw` y no un diagnóstico es deliberado: es un bug del parser, no un
 error del usuario.
 
-- [ ] **Step 3: Verificar**
+- [x] **Step 3: Verificar**
 
 Run: `pnpm --filter @flo/core test`
 Expected: verde. Los tests viejos de `tokenize()` siguen pasando sin
 cambios porque `tokenize()` no se tocó.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 `feat(core): lexer perezoso con modos pedidos por el consumidor`
 
@@ -537,7 +539,7 @@ cambios porque `tokenize()` no se tocó.
 - `parseFlowchartBody` / `parseSequenceBody` cambian de firma:
   `(tokens: Token[], diagnostics: Diagnostic[])` → `(lexer: Lexer, diagnostics: Diagnostic[])`.
 
-- [ ] **Step 1: Adaptar los tests de parser existentes**
+- [x] **Step 1: Adaptar los tests de parser existentes**
 
 Los tests de parser van contra `parse(source)`, así que **no deberían
 cambiar**. Los que sí cambian son los de `tokenize()` en
@@ -552,7 +554,7 @@ cambian de comportamiento y hay que reescribirlos explícitamente:
 - Un `:` al final de línea sin texto detrás produce ahora un `TEXT` vacío
   pedido explícitamente por el parser, no uno implícito.
 
-- [ ] **Step 2: Introducir un cursor de un token en los parsers**
+- [x] **Step 2: Introducir un cursor de un token en los parsers**
 
 Los tres parsers usan hoy `tokens[pos]` con `current()` / `advance()`. El
 reemplazo mantiene exactamente esa forma sobre el `Lexer`:
@@ -580,7 +582,7 @@ function readText(closer: ']' | ')' | '}' | '\n'): Token {
 
 `skipNewlines()` y `skipToNextLine()` no cambian de lógica.
 
-- [ ] **Step 3: Pedir el texto donde corresponde**
+- [x] **Step 3: Pedir el texto donde corresponde**
 
 Tres sitios, uno por cada punto donde hoy el lexer adivinaba:
 
@@ -593,7 +595,7 @@ Tres sitios, uno por cada punto donde hoy el lexer adivinaba:
    clave **contextual**, reconocida por el parser comparando
    `token.value === "as"` en esa posición y en ninguna otra.
 
-- [ ] **Step 4: Actualizar `parser/index.ts`**
+- [x] **Step 4: Actualizar `parser/index.ts`**
 
 `parse()` construye `const lexer = new Lexer(source)`, valida el header
 consumiendo del lexer, y delega pasándole el mismo `lexer`. Desaparece el
@@ -605,7 +607,7 @@ Los diagnósticos del lexer ya no se copian al inicio: se acumulan en
 antes de `sortDiagnosticsByPosition()`. El orden final es idéntico porque
 ese sort los reordena por posición de todos modos.
 
-- [ ] **Step 5: Borrar el código muerto**
+- [x] **Step 5: Borrar el código muerto**
 
 Eliminar de `lexer.ts`: `tokenize()`, `TokenizeResult`, `BracketMode`,
 `ColonMode`, `PendingTextMode`, `BRACKET_CLOSERS`. Verificar con
@@ -613,7 +615,7 @@ Eliminar de `lexer.ts`: `tokenize()`, `TokenizeResult`, `BracketMode`,
 `tokenize` nunca estuvo en la API pública (`packages/core/src/index.ts` no
 lo exporta), así que no hay ruptura externa.
 
-- [ ] **Step 6: Verificar**
+- [x] **Step 6: Verificar**
 
 Run: `pnpm -r test && pnpm -r typecheck && pnpm -r build`
 Expected: verde. **Los snapshots de SVG de
@@ -621,7 +623,7 @@ Expected: verde. **Los snapshots de SVG de
 verificación más fuerte de que la refactorización no cambió el lenguaje. Si
 alguno cambia, investigar antes de regenerar.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 `refactor(core): dirigir el modo del lexer desde el parser`
 
@@ -644,7 +646,7 @@ un `"` en un `.flo` de hoy sigue siendo un error, solo que ahora es `E002`
 sobre el string completo en vez de sobre el primer carácter. Se hace acá y
 no en la Fase C porque es puramente léxico.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 ```typescript
 it('lexes a double-quoted string', () => {
@@ -667,7 +669,7 @@ it('reports E002 for a string not closed before end of line', () => {
 });
 ```
 
-- [ ] **Step 2: Implementar**
+- [x] **Step 2: Implementar**
 
 Agregar `"STRING"` a `TokenKind` y una rama en el escáner de modo código:
 al ver `"`, consumir hasta el `"` de cierre o el fin de línea. El `value`
@@ -676,7 +678,7 @@ esta ronda: un `"` dentro de un string no se soporta, y no hace falta para
 rutas ni títulos. Si más adelante se necesita, se agrega `\"` como cambio
 aislado.
 
-- [ ] **Step 3: Verificar y commit**
+- [x] **Step 3: Verificar y commit**
 
 Run: `pnpm --filter @flo/core test`
 `feat(core): token de string entre comillas dobles`
@@ -689,7 +691,7 @@ Run: `pnpm --filter @flo/core test`
 
 - Modify: `packages/core/GRAMMAR.md`
 
-- [ ] **Step 1: Actualizar `GRAMMAR.md`**
+- [x] **Step 1: Actualizar `GRAMMAR.md`**
 
 La sección de reglas léxicas especiales describe hoy comportamientos que
 dejaron de existir. Reescribir:
@@ -706,7 +708,7 @@ dejaron de existir. Reescribir:
 La EBNF de flowchart y sequence **no cambia**: ese es el punto de todo el
 plan.
 
-- [ ] **Step 2: Verificación final**
+- [x] **Step 2: Verificación final**
 
 Run: `pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: todo verde, snapshots de SVG sin cambios respecto al inicio del
@@ -719,7 +721,7 @@ const lexer = new Lexer('flow login {\n  a -> b\n}\n');
 // debe emitir IDENT IDENT LBRACE NEWLINE IDENT ARROW IDENT NEWLINE RBRACE NEWLINE EOF
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 `docs(core): actualizar GRAMMAR.md tras el cambio de lexado`
 

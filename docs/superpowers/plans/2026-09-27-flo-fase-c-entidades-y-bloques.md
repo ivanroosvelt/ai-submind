@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Estado:** completado el 2026-09-27 (`ee024e8`..`f3cb79c`); los pendientes diferidos quedaron en el spec §11.
+
 **Goal:** Reemplazar el lenguaje `diagram <kind>` por un documento con
 declaraciones `entity` (el catálogo) y bloques `flow`/`sequence` con nombre
 que solo contienen aristas, con resolución estricta de referencias dentro
@@ -138,7 +140,7 @@ E023, E025. No se reusan con otro significado.
   - `parseBlock(cursor: TokenCursor, diagnostics: Diagnostic[]): DiagramBlock | null`
     — precondición: `cursor.current()` es el `IDENT` `flow` o `sequence`.
 
-- [ ] **Step 1: Agregar los tipos a `ast.ts`**
+- [x] **Step 1: Agregar los tipos a `ast.ts`**
 
 Al final de `packages/core/src/ast.ts`, sin tocar lo existente:
 
@@ -189,7 +191,7 @@ export interface ParsedDocument {
 }
 ```
 
-- [ ] **Step 2: Crear `parser/cursor.ts`**
+- [x] **Step 2: Crear `parser/cursor.ts`**
 
 Es la lógica que hoy está duplicada como closures en
 `parser/flowchart.ts` y `parser/sequence.ts` (`current`, `advance`,
@@ -298,7 +300,7 @@ propio del método va en la Task 2), justo antes de `skipRestOfLine()`:
   }
 ```
 
-- [ ] **Step 3: Escribir los tests que fallan**
+- [x] **Step 3: Escribir los tests que fallan**
 
 `packages/core/src/parser/block.test.ts`:
 
@@ -399,12 +401,12 @@ describe("parseBlock", () => {
 });
 ```
 
-- [ ] **Step 4: Correr los tests y ver que fallan**
+- [x] **Step 4: Correr los tests y ver que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/parser/block.test.ts`
 Expected: FAIL — `Cannot find module './block.js'`.
 
-- [ ] **Step 5: Implementar `parser/block.ts`**
+- [x] **Step 5: Implementar `parser/block.ts`**
 
 ```ts
 import type { Token } from "../tokens.js";
@@ -540,13 +542,13 @@ export function parseBlock(cursor: TokenCursor, diagnostics: Diagnostic[]): Diag
 }
 ```
 
-- [ ] **Step 6: Verificar**
+- [x] **Step 6: Verificar**
 
 Run: `pnpm --filter @flo/core typecheck && pnpm --filter @flo/core test`
 Expected: todo verde (los tests viejos siguen pasando; el lenguaje viejo
 no se tocó).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/core/src/ast.ts packages/core/src/lexer.ts packages/core/src/parser/cursor.ts packages/core/src/parser/block.ts packages/core/src/parser/block.test.ts
@@ -583,7 +585,7 @@ Prop       ::= "type" ":" Ident | "tags" ":" Ident+
 Body       ::= "{" Newline (PropList? Newline)* "}"
 ```
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 En `packages/core/src/lexer.test.ts`, dentro del `describe("Lexer")`:
 
@@ -731,14 +733,14 @@ describe("parseEntity", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests y ver que fallan**
+- [x] **Step 2: Correr los tests y ver que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/lexer.test.ts src/parser/entity.test.ts`
 Expected: FAIL — `COMMA` sale como `E002 carácter inesperado ','` y
 `./entity.js` no existe. (El test de `restOfLineIsBlank` ya pasa: el
 método se agregó en la Task 1.)
 
-- [ ] **Step 3: Agregar `COMMA`**
+- [x] **Step 3: Agregar `COMMA`**
 
 En `tokens.ts`, agregar `| "COMMA"` a `TokenKind` (después de `"COLON"`).
 En `lexer.ts`, dentro de `scanCodeToken()`, justo después del bloque de
@@ -751,7 +753,7 @@ En `lexer.ts`, dentro de `scanCodeToken()`, justo después del bloque de
       }
 ```
 
-- [ ] **Step 4: Implementar `parser/entity.ts`**
+- [x] **Step 4: Implementar `parser/entity.ts`**
 
 ```ts
 import type { Token, TokenKind } from "../tokens.js";
@@ -929,13 +931,13 @@ export function parseEntity(cursor: TokenCursor, uri: DocumentUri, diagnostics: 
 Nota sobre el test de E045: en `entity a {\n  type: x\n` el `{` está en
 la columna 10, por eso el ancla esperada es `{ line: 1, column: 10 }`.
 
-- [ ] **Step 5: Verificar**
+- [x] **Step 5: Verificar**
 
 Run: `pnpm --filter @flo/core typecheck && pnpm --filter @flo/core test`
 Expected: todo verde. Ningún test viejo depende de que `,` sea `E002`
 (verificado: el único test de E002 usa `1`).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core/src/tokens.ts packages/core/src/lexer.ts packages/core/src/lexer.test.ts packages/core/src/parser/entity.ts packages/core/src/parser/entity.test.ts
@@ -959,7 +961,7 @@ git commit -m "feat(core): declaraciones entity con forma, propiedades y cuerpo"
 
 Gramática: `Document ::= (BlankLine | EntityDecl | Block)* EOF`.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 `packages/core/src/parser/document.test.ts`:
 
@@ -1039,12 +1041,12 @@ Nota sobre el test de "orphaned body": `flow {` da `E050`; como el header
 falló, `inErrorRun` queda en `true` y las líneas `a -> b`, `b -> c` y `}`
 no suman `E040`. `entity a` es válida y cierra la racha.
 
-- [ ] **Step 2: Correr los tests y ver que fallan**
+- [x] **Step 2: Correr los tests y ver que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/parser/document.test.ts`
 Expected: FAIL — `Cannot find module './document.js'`.
 
-- [ ] **Step 3: Implementar `parser/document.ts`**
+- [x] **Step 3: Implementar `parser/document.ts`**
 
 ```ts
 import { Lexer } from "../lexer.js";
@@ -1107,12 +1109,12 @@ export function parseDocument(
 }
 ```
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `pnpm --filter @flo/core typecheck && pnpm --filter @flo/core test`
 Expected: todo verde.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/parser/document.ts packages/core/src/parser/document.test.ts
@@ -1137,7 +1139,7 @@ git commit -m "feat(core): parseDocument con entity y bloques al nivel superior"
   - `resolveDocument(document: ParsedDocument): { catalog: Catalog; diagnostics: Diagnostic[] }`
     — **muta** cada `Ref.target` de los bloques del documento.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 `packages/core/src/workspace/resolver.test.ts`:
 
@@ -1187,12 +1189,12 @@ describe("resolveDocument", () => {
 });
 ```
 
-- [ ] **Step 2: Correr los tests y ver que fallan**
+- [x] **Step 2: Correr los tests y ver que fallan**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/resolver.test.ts`
 Expected: FAIL — `Cannot find module './resolver.js'`.
 
-- [ ] **Step 3: Implementar `workspace/resolver.ts`**
+- [x] **Step 3: Implementar `workspace/resolver.ts`**
 
 ```ts
 import { diagnosticAt, type Diagnostic } from "../diagnostics.js";
@@ -1240,12 +1242,12 @@ export function resolveDocument(document: ParsedDocument): { catalog: Catalog; d
 }
 ```
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `pnpm --filter @flo/core typecheck && pnpm --filter @flo/core test`
 Expected: todo verde.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/workspace/resolver.ts packages/core/src/workspace/resolver.test.ts
@@ -1286,7 +1288,7 @@ se borra el viejo. Es grande pero no divisible — layout, render,
     `layoutFlowchart(block, catalog)`, `layoutSequence(block, catalog)`,
     `renderFlowchartToSvg(layout)`, `renderSequenceToSvg(layout)`.
 
-- [ ] **Step 1: Reescribir los tests de referencia (sin tocar el valor de los snapshots)**
+- [x] **Step 1: Reescribir los tests de referencia (sin tocar el valor de los snapshots)**
 
 `packages/core/src/render/reference-diagrams.test.ts` completo:
 
@@ -1363,7 +1365,7 @@ En `render/__snapshots__/reference-diagrams.test.ts.snap`, **editar a mano**:
 
 **Nunca** correr vitest con `-u` en esta task.
 
-- [ ] **Step 2: Reescribir el resto de los tests**
+- [x] **Step 2: Reescribir el resto de los tests**
 
 Todos usan `parse()` para construir bloque + catálogo en vez de armar el
 AST a mano:
@@ -1712,13 +1714,13 @@ describe("index", () => {
 });
 ```
 
-- [ ] **Step 3: Correr los tests y ver que fallan**
+- [x] **Step 3: Correr los tests y ver que fallan**
 
 Run: `pnpm --filter @flo/core test`
 Expected: FAIL masivo (tipos y firmas nuevas todavía no existen). Es el
 punto de partida esperado.
 
-- [ ] **Step 4: Crear `layout/nodes.ts`**
+- [x] **Step 4: Crear `layout/nodes.ts`**
 
 ```ts
 import type { DiagramBlock, NodeShape } from "../ast.js";
@@ -1761,7 +1763,7 @@ export function blockNodes(block: DiagramBlock, catalog: Catalog): BlockNode[] {
 }
 ```
 
-- [ ] **Step 5: Adaptar `layout/flowchart.ts`**
+- [x] **Step 5: Adaptar `layout/flowchart.ts`**
 
 Cambiar los tipos y `layoutFlowchart`; `measureFlowchartNode`,
 `GRAPH_OPTIONS`, `CHAR_WIDTH`, `LayoutPoint` y `finiteOrZero` quedan igual.
@@ -1830,7 +1832,7 @@ El placeholder de 1×1 del lenguaje viejo desaparece: un nodo no resuelto
 ahora se mide como un rectángulo con su nombre, así que siempre tiene
 ancho > 0 (el problema del `NaN` en `intersectRect` no puede volver).
 
-- [ ] **Step 6: Adaptar `layout/sequence.ts`**
+- [x] **Step 6: Adaptar `layout/sequence.ts`**
 
 ```ts
 import type { DiagramBlock } from "../ast.js";
@@ -1867,7 +1869,7 @@ export function layoutSequence(block: DiagramBlock, catalog: Catalog): SequenceL
 }
 ```
 
-- [ ] **Step 7: Adaptar los renderers**
+- [x] **Step 7: Adaptar los renderers**
 
 `render/flowchart.ts` — el render ya no recibe el AST, solo el layout:
 
@@ -1943,7 +1945,7 @@ export function renderSequenceToSvg(layout: SequenceLayout): string {
 
 Borrar el import de `SequenceDiagram` de `render/sequence.ts`.
 
-- [ ] **Step 8: `parse()` y `render()` públicos**
+- [x] **Step 8: `parse()` y `render()` públicos**
 
 `parser/index.ts` completo:
 
@@ -2042,7 +2044,7 @@ export type { Diagnostic, DiagnosticSeverity } from "./diagnostics.js";
 export { escapeXml } from "./render/svg.js";
 ```
 
-- [ ] **Step 9: Borrar el lenguaje viejo**
+- [x] **Step 9: Borrar el lenguaje viejo**
 
 ```bash
 git rm packages/core/src/parser/flowchart.ts packages/core/src/parser/flowchart.test.ts \
@@ -2062,7 +2064,7 @@ Expected: sin resultados. (`lexer.test.ts` y `diagnostics.test.ts` mencionan
 `participant`/`E017` como strings de prueba del lexer y del formateo: son
 válidos tal cual y no se tocan.)
 
-- [ ] **Step 10: Verificar**
+- [x] **Step 10: Verificar**
 
 Run: `pnpm --filter @flo/core typecheck && pnpm --filter @flo/core test`
 Expected: todo verde, **3 snapshots pasados, 0 escritos, 0 obsoletos**
@@ -2070,7 +2072,7 @@ Expected: todo verde, **3 snapshots pasados, 0 escritos, 0 obsoletos**
 "1 snapshot written" o "1 obsolete", el Step 1 quedó mal: revisar las
 claves del `.snap`, no regenerar.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add -A packages/core/src
@@ -2099,13 +2101,13 @@ nodos y 'participant'. render() devuelve un SVG por bloque."
 - Consumes: `render`, `RenderResult`, `RenderedDiagram`, `escapeXml` de `@flo/core` (Task 5).
 - Produces: `PreviewState = { lastDiagrams: RenderedDiagram[] }`.
 
-- [ ] **Step 1: Reconstruir core**
+- [x] **Step 1: Reconstruir core**
 
 Run: `pnpm --filter @flo/core build`
 Expected: OK. Desde ahora `pnpm --filter @flo/web typecheck` falla hasta
 terminar esta task — es el punto de partida.
 
-- [ ] **Step 2: Escribir los tests que fallan**
+- [x] **Step 2: Escribir los tests que fallan**
 
 `packages/web/src/preview.test.ts` completo:
 
@@ -2209,13 +2211,13 @@ En `packages/web/src/flo-highlight.test.ts`, borrar el caso
   });
 ```
 
-- [ ] **Step 3: Correr los tests y ver que fallan**
+- [x] **Step 3: Correr los tests y ver que fallan**
 
 Run: `pnpm --filter @flo/web test`
 Expected: FAIL en `preview.test.ts`, `editor.test.ts` y el test nuevo de
 `flo-highlight`.
 
-- [ ] **Step 4: Implementar**
+- [x] **Step 4: Implementar**
 
 `packages/web/src/preview.ts` completo:
 
@@ -2334,7 +2336,7 @@ aquí, sin condición alguna, los disparadores de modo texto: abrir
       }
 ```
 
-- [ ] **Step 5: Reescribir los ejemplos**
+- [x] **Step 5: Reescribir los ejemplos**
 
 `examples/01-flowchart.flo`:
 
@@ -2440,7 +2442,7 @@ describe("EXAMPLES", () => {
 });
 ```
 
-- [ ] **Step 6: Verificar**
+- [x] **Step 6: Verificar**
 
 Run: `pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: todo verde.
@@ -2456,7 +2458,7 @@ ejemplo de secuencia ⇒ dos bloques con título, cada uno con su header
 sticky al hacer scroll; borrar `entity mail` ⇒ banner de 2 errores y
 `mail` punteado en el bloque `webhook`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/web examples
@@ -2476,7 +2478,7 @@ git commit -m "feat(web): preview de varios bloques con título y ejemplos en la
 
 **Interfaces:** ninguna (solo docs).
 
-- [ ] **Step 1: Reescribir `packages/core/GRAMMAR.md`**
+- [x] **Step 1: Reescribir `packages/core/GRAMMAR.md`**
 
 Estructura y contenido obligatorio:
 
@@ -2537,7 +2539,7 @@ Comment      ::= "//" cualquier carácter hasta fin de línea
    terminar" de este plan** (columnas Código / Origen / Significado, sin la
    columna Estado) y debajo la línea de códigos retirados.
 
-- [ ] **Step 2: Reescribir `docs/SYNTAX.md`**
+- [x] **Step 2: Reescribir `docs/SYNTAX.md`**
 
 Guía para quien escribe diagramas (no la gramática), mismo tono que la
 actual. Secciones: (1) un documento tiene entidades y bloques — ejemplo
@@ -2556,7 +2558,7 @@ const { diagrams, diagnostics } = render(source);
 // un elemento por bloque: { name, title, kind: "flow" | "sequence", svg }
 ```
 
-- [ ] **Step 3: Actualizar `README.md` y `examples/README.md`**
+- [x] **Step 3: Actualizar `README.md` y `examples/README.md`**
 
 - `README.md`: reemplazar los dos ejemplos de sintaxis (líneas ~20–40) por
   un único documento con entidades + un `flow` + un `sequence`, y la
@@ -2574,12 +2576,12 @@ Comprobar que no queda sintaxis vieja en la documentación viva:
 Run: `grep -rn "diagram flowchart\|diagram sequence\|participant " README.md docs/SYNTAX.md examples packages/core/GRAMMAR.md`
 Expected: solo menciones dentro de la sección de migración de `docs/SYNTAX.md`.
 
-- [ ] **Step 4: Verificación final**
+- [x] **Step 4: Verificación final**
 
 Run: `pnpm -r typecheck && pnpm -r test && pnpm -r build`
 Expected: todo verde; snapshots de referencia: 3 pasados, 0 escritos, 0 obsoletos.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/GRAMMAR.md docs/SYNTAX.md README.md examples/README.md

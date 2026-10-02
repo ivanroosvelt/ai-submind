@@ -89,7 +89,7 @@ Fuera de alcance (decidido): el tamaño del bundle (640 KB), que no se toca hast
 - Consumes: nada nuevo.
 - Produces: el mensaje de `E002` para una letra no ASCII es exactamente `` `carácter inesperado '${ch}': los ids solo admiten letras ASCII, dígitos y '_'` ``.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/core/src/lexer.test.ts`, dentro del `describe` del lexer, junto al test `"reports E002 for an unexpected character and keeps lexing"`:
 
@@ -118,12 +118,12 @@ En `packages/core/src/parser/document.test.ts`, en el `describe` de `parseDocume
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/core exec vitest run src/lexer.test.ts src/parser/document.test.ts`
 Expected: FAIL. El lexer da `"carácter inesperado 'é'"` y el parser da `E002 carácter inesperado '﻿'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/core/src/parser/document.ts`, en `parseDocument`:
 
@@ -150,17 +150,17 @@ Expected: FAIL. El lexer da `"carácter inesperado 'é'"` y el parser da `E002 c
 | E002 | lexer | carácter inesperado (si es una letra no ASCII, el mensaje explica que los ids son ASCII), o cadena sin cerrar |
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS. Los snapshots no cambian.
 
-- [ ] **Step 5: Build core**
+- [x] **Step 5: Build core**
 
 Run: `pnpm --filter @flo/core build`
 Expected: sin errores.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core/src/parser/document.ts packages/core/src/lexer.ts packages/core/GRAMMAR.md packages/core/src/lexer.test.ts packages/core/src/parser/document.test.ts
@@ -180,7 +180,7 @@ git commit -m "fix(core): BOM en .flo y mensaje de ids no ASCII (#51)"
 - Consumes: `blockNodes`, `nodeId` de `layout/nodes.ts`.
 - Produces: `SequenceLayout.columnWidth: number`. El render deja de importar `COLUMN_WIDTH` y usa `layout.columnWidth`. `COLUMN_WIDTH` sigue exportado como mínimo (160).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 En `packages/core/src/render/sequence.test.ts`, dentro de `describe("renderSequenceToSvg")`:
 
@@ -215,12 +215,12 @@ En `packages/core/src/render/sequence.test.ts`, dentro de `describe("renderSeque
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/core exec vitest run src/render/sequence.test.ts`
 Expected: FAIL. Hoy no hay `<polyline>` en `sequence` y el ancho es fijo (320).
 
-- [ ] **Step 3: Implement the layout**
+- [x] **Step 3: Implement the layout**
 
 `packages/core/src/layout/sequence.ts`:
 - agregar `columnWidth: number;` a `SequenceLayout`, después de `height`;
@@ -270,7 +270,7 @@ export function layoutSequence(block: DiagramBlock, catalog: Catalog): SequenceL
 }
 ```
 
-- [ ] **Step 4: Implement the render**
+- [x] **Step 4: Implement the render**
 
 `packages/core/src/render/sequence.ts`:
 - cambiar el import a `import { HEADER_HEIGHT } from "../layout/sequence.js";`;
@@ -292,21 +292,21 @@ export function layoutSequence(block: DiagramBlock, catalog: Catalog): SequenceL
     }
 ```
 
-- [ ] **Step 5: Fix layout tests that compare the whole object**
+- [x] **Step 5: Fix layout tests that compare the whole object**
 
 En `packages/core/src/layout/sequence.test.ts`, el `toEqual` de la línea ~14 compara el layout entero: agregarle `columnWidth: 160,`. No cambiar ningún otro valor esperado. Si otro número cambia, el layout está mal.
 
-- [ ] **Step 6: Run all core tests**
+- [x] **Step 6: Run all core tests**
 
 Run: `pnpm --filter @flo/core test`
 Expected: PASS. Los tres snapshots de `reference-diagrams.test.ts.snap` pasan sin `-u`: sus labels caben en 160.
 
-- [ ] **Step 7: Build core and run web tests**
+- [x] **Step 7: Build core and run web tests**
 
 Run: `pnpm --filter @flo/core build && pnpm --filter @flo/web test`
 Expected: PASS. `sequence-view.ts` lee la altura del `rect`, no el ancho.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/core/src/layout/sequence.ts packages/core/src/render/sequence.ts packages/core/src/render/sequence.test.ts packages/core/src/layout/sequence.test.ts
@@ -332,7 +332,7 @@ git commit -m "fix(core): auto-mensaje visible y columnas a la medida en sequenc
   - `DiagnosticSeverity` ya no existe;
   - `LintDiagnostic.severity` es el literal `"error"`.
 
-- [ ] **Step 1: Update the tests to the new shape (they become the failing tests)**
+- [x] **Step 1: Update the tests to the new shape (they become the failing tests)**
 
 - `packages/core/src/diagnostics.test.ts`:
   - borrar el test `"formats a warning diagnostic"` entero;
@@ -353,12 +353,12 @@ git commit -m "fix(core): auto-mensaje visible y columnas a la medida en sequenc
 
   y su título cambia a `"marks every diagnostic as an error"`.
 
-- [ ] **Step 2: Run typecheck to verify it fails**
+- [x] **Step 2: Run typecheck to verify it fails**
 
 Run: `pnpm --filter @flo/core typecheck`
 Expected: FAIL. `diagnostics.test.ts` y los demás construyen `Diagnostic` sin `severity`, que todavía es obligatorio.
 
-- [ ] **Step 3: Implement in core**
+- [x] **Step 3: Implement in core**
 
 `packages/core/src/diagnostics.ts` completo:
 
@@ -393,7 +393,7 @@ export function formatDiagnostic(diagnostic: Diagnostic): string {
 Run: `grep -rn "severity\|DiagnosticSeverity" packages/core/src packages/core/GRAMMAR.md docs/SYNTAX.md README.md`
 Expected: sin resultados. Si queda alguno, borrarlo.
 
-- [ ] **Step 4: Build core and fix the consumers**
+- [x] **Step 4: Build core and fix the consumers**
 
 Run: `pnpm --filter @flo/core build`
 
@@ -434,12 +434,12 @@ function newErrors(before: LinkResult, after: LinkResult, uri: string): UriDiagn
 Run: `grep -rn "severity" packages/web/src packages/mcp/src`
 Expected: solo `flo-lint.ts` y `flo-lint.test.ts` (el literal `"error"` que pide CodeMirror).
 
-- [ ] **Step 5: Run everything**
+- [x] **Step 5: Run everything**
 
 Run: `pnpm -r typecheck && pnpm -r test`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core packages/web/src/flo-lint.ts packages/web/src/flo-lint.test.ts packages/web/src/preview.test.ts packages/mcp/src/folder.ts
@@ -471,7 +471,7 @@ git commit -m "refactor(core): Diagnostic sin severidad, todo es error (#53)"
 
   Internos de core: `push` (de `xref.ts`), `GRAPH_OPTIONS` y `finiteOrZero` (de `layout/flowchart.ts`).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/core/src/workspace/uri.test.ts` (si ya existe, agregar el `describe`):
 
@@ -511,12 +511,12 @@ En `packages/core/src/workspace/navigation.test.ts`, un test del orden de las ed
 
 (Importar `Workspace` y `renameEntity` como lo hagan los demás tests del archivo.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/core exec vitest run src/workspace/uri.test.ts src/workspace/navigation.test.ts`
 Expected: FAIL. `parseBlockId`, `isDocumentUri` e `isIgnoredUri` no existen. El test de orden puede pasar ya; es un test de regresión del comparador.
 
-- [ ] **Step 3: Implement the core helpers**
+- [x] **Step 3: Implement the core helpers**
 
 `packages/core/src/ast.ts`, reemplazar la línea de `MemoryType`:
 
@@ -590,12 +590,12 @@ export { MEMORY_TYPES } from "./ast.js";
 export { parseBlockId, IGNORED_DIRS, isDocumentUri, isIgnoredUri } from "./workspace/uri.js";
 ```
 
-- [ ] **Step 4: Run core tests and build**
+- [x] **Step 4: Run core tests and build**
 
 Run: `pnpm --filter @flo/core test && pnpm --filter @flo/core build`
 Expected: PASS. Los snapshots no cambian.
 
-- [ ] **Step 5: Replace the copies in mcp and web**
+- [x] **Step 5: Replace the copies in mcp and web**
 
 `packages/mcp/src/folder.ts`:
 - borrar `IGNORED`, `isDocumentUri` e `isIgnored`;
@@ -635,12 +635,12 @@ export function blockLabel(link: LinkResult, id: BlockId): string {
 
 `packages/web/src/app.ts:469`: `const { uri } = parseBlockId(id);` (importar `parseBlockId` de `@flo/core`).
 
-- [ ] **Step 6: Run everything**
+- [x] **Step 6: Run everything**
 
 Run: `pnpm -r typecheck && pnpm -r test`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/core packages/mcp/src packages/web/src
@@ -662,7 +662,7 @@ git commit -m "refactor: helpers compartidos en core en vez de copias (#54)"
 - Consumes: nada nuevo.
 - Produces: `svgDataUrl(svg)` devuelve `data:image/svg+xml;charset=utf-8,<encodeURIComponent(svg)>`. `openFloFile()` rechaza si el fallback no puede leer el archivo.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/mcp/src/tools.test.ts` (agregar `readFileSync` al import de `node:fs`):
 
@@ -700,7 +700,7 @@ git commit -m "refactor: helpers compartidos en core en vez de copias (#54)"
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/web exec vitest run src/export.test.ts src/file-io.test.ts`
 Expected:
@@ -708,7 +708,7 @@ Expected:
 - `svgDataUrl` falla (base64);
 - el test del fallback se cuelga hasta el timeout (la promesa nunca se resuelve).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/mcp/src/tools.ts`:
 
@@ -757,12 +757,12 @@ function openFloFileFallback(): Promise<OpenResult | null> {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/mcp test && pnpm --filter @flo/mcp build && pnpm --filter @flo/web test`
 Expected: PASS. El build de mcp confirma que `../package.json` resuelve desde `dist/`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/mcp/src/tools.ts packages/mcp/src/tools.test.ts packages/web/index.html packages/web/src/export.ts packages/web/src/export.test.ts packages/web/src/file-io.ts packages/web/src/file-io.test.ts
@@ -783,7 +783,7 @@ git commit -m "fix: versión MCP de package.json, viewport, data URL utf-8 y fal
 - Consumes: `saveFloFile(source, handle, name)` de `file-io.ts`; `name` es el uri del documento.
 - Produces: `App` guarda un `Map<DocumentUri, FileSystemFileHandle>` privado. `FilePickerOptions.suggestedName?: string`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/web/src/app.test.ts`, en el `describe` de guardado o al final del principal:
 
@@ -824,14 +824,14 @@ git commit -m "fix: versión MCP de package.json, viewport, data URL utf-8 y fal
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/app.test.ts src/file-io.test.ts`
 Expected: FAIL:
 - el picker se llama una sola vez y `written.get("a")` termina con el contenido de `catalog.flo`;
 - falta `suggestedName`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/file-system-access.d.ts`:
 
@@ -877,12 +877,12 @@ Si un test existente hace `toHaveBeenCalledWith(<opciones exactas>)` sobre `show
       }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/app.ts packages/web/src/app.test.ts packages/web/src/file-io.ts packages/web/src/file-io.test.ts packages/web/src/file-system-access.d.ts
@@ -902,7 +902,7 @@ git commit -m "fix(web): cada documento sin carpeta se guarda en su propio archi
 - Consumes: `App.save(): Promise<void>`, `EditorWorkspace.hasUnsavedChanges()`.
 - Produces: `App.onKeydown(event: KeyboardEvent): void` y `App.onBeforeUnload(event: BeforeUnloadEvent): void`. `main.ts` los conecta a `window`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/web/src/app.test.ts`:
 
@@ -936,12 +936,12 @@ git commit -m "fix(web): cada documento sin carpeta se guarda en su propio archi
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/app.test.ts`
 Expected: FAIL con `app.onKeydown is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/app.ts`, después de `save()`:
 
@@ -970,12 +970,12 @@ Expected: FAIL con `app.onKeydown is not a function`.
   window.addEventListener("beforeunload", (event) => app.onBeforeUnload(event));
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/app.ts packages/web/src/app.test.ts packages/web/src/main.ts
@@ -998,7 +998,7 @@ git commit -m "feat(web): Ctrl/Cmd+S guarda y cerrar la pestaña avisa si hay ca
   - `exportPng(svg: string, name: string, scale = 2): Promise<void>`;
   - `App.exportable(): { svg: string; name: string } | undefined` (privado).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/web/src/export.test.ts`, ajustar el test existente de `exportSvg` para que llame `exportSvg("<svg/>", "login")` y espere la descarga `login.svg`, en el mismo estilo de ese test. Si no hay test de `exportSvg`, agregar:
 
@@ -1026,12 +1026,12 @@ describe("exportSvg", () => {
   El primer valor tiene que ser el nombre del bloque que ese test selecciona; leer el test para confirmarlo.
 - en `"exports the graph as shown"`: `expect(vi.mocked(exportSvg).mock.calls[0][1]).toBe("grafo");`.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/export.test.ts src/app.test.ts`
 Expected: FAIL. Hoy se descarga como `diagrama.svg` y `exportSvg` recibe un solo argumento.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/export.ts`:
 
@@ -1083,12 +1083,12 @@ El comentario `ponytail:` existente sigue valiendo (jsdom no tiene canvas).
           }),
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Manual check (jsdom no tiene canvas)**
+- [x] **Step 5: Manual check (jsdom no tiene canvas)**
 
 Run: `pnpm --filter @flo/web dev`. En el navegador:
 1. Ejemplos → Flowchart.
@@ -1097,7 +1097,7 @@ Run: `pnpm --filter @flo/web dev`. En el navegador:
 
 Anotar el resultado en el reporte de la task.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/web/src/export.ts packages/web/src/export.test.ts packages/web/src/app.ts packages/web/src/app.test.ts
@@ -1117,7 +1117,7 @@ git commit -m "feat(web): exportar PNG a 2x y con el nombre del bloque (#57)"
 - Consumes: el SVG del core, con `<marker id="flo-arrow">` y `marker-end="url(#flo-arrow)"`.
 - Produces: `scopeMarkerIds(container: ParentNode): void`. Renombra el marcador del SVG `n` del contenedor a `flo-arrow-<n>`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/web/src/preview.test.ts` (importar `render` de `@flo/core` y `scopeMarkerIds` de `./preview.js`):
 
@@ -1148,12 +1148,12 @@ describe("scopeMarkerIds", () => {
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/preview.test.ts src/app.test.ts`
 Expected: FAIL. `scopeMarkerIds` no existe, y en el preview aparece `flo-arrow` dos veces.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/preview.ts`:
 
@@ -1181,12 +1181,12 @@ export function scopeMarkerIds(container: ParentNode): void {
 
 (importar `scopeMarkerIds` de `./preview.js`). Cubre los tres modos, porque `renderGraph` también escribe en `el.preview`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test`
 Expected: PASS. `"exports the graph as shown"` sigue pasando: el SVG exportado desde el DOM lleva `flo-arrow-0`, coherente dentro del archivo.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/src/preview.ts packages/web/src/preview.test.ts packages/web/src/app.ts packages/web/src/app.test.ts
@@ -1206,7 +1206,7 @@ git commit -m "fix(web): un id de marcador por SVG en el preview (#58)"
 - Consumes: nada nuevo.
 - Produces: `bindPanZoom` con la misma firma; escucha `pointerdown`/`pointermove`/`pointerup`/`pointercancel`.
 
-- [ ] **Step 1: Update the tests (they become the failing tests)**
+- [x] **Step 1: Update the tests (they become the failing tests)**
 
 En `packages/web/src/pan-zoom.test.ts`, el helper `mouse` dispara eventos por nombre. Cambiar en todos los tests:
 - `"mousedown"` → `"pointerdown"`;
@@ -1233,12 +1233,12 @@ jsdom no tiene `PointerEvent`; un `MouseEvent` con `type: "pointerdown"` llega i
   });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/pan-zoom.test.ts`
 Expected: FAIL. El pan no reacciona a eventos `pointer*`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/src/pan-zoom.ts`, reemplazar desde `svg.addEventListener("mousedown", …)` hasta `svg.addEventListener("mouseleave", end);`:
 
@@ -1275,18 +1275,18 @@ Expected: FAIL. El pan no reacciona a eventos `pointer*`.
 
 `packages/web/index.html`, en `.flo-kg svg { … }`, agregar `touch-action: none;`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pnpm --filter @flo/web test && pnpm --filter @flo/web typecheck`
 Expected: PASS. El test del click que cierra un arrastre (captura en `click`) sigue pasando.
 
-- [ ] **Step 5: Manual check**
+- [x] **Step 5: Manual check**
 
 Run: `pnpm --filter @flo/web dev`. Ejemplos → Grafo de conocimiento → Grafo:
 - arrastrar y soltar fuera del SVG: el pan sigue mientras se arrastra y se corta al soltar;
 - con las devtools en modo táctil, arrastrar con el dedo también desplaza.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/web/src/pan-zoom.ts packages/web/src/pan-zoom.test.ts packages/web/index.html
@@ -1316,7 +1316,7 @@ git commit -m "feat(web): pan del grafo con pointer events y captura (#59)"
 
   En `App` pasan a devolver `Promise<void>`: `newDocument`, `openFile`, `openFolder`, `loadExample`, `rename` y `renameAt`. `confirmDiscard` devuelve `Promise<boolean>` (privado).
 
-- [ ] **Step 1: Write the failing tests for the dialogs**
+- [x] **Step 1: Write the failing tests for the dialogs**
 
 `packages/web/src/dialogs.test.ts`:
 
@@ -1372,12 +1372,12 @@ describe("dialogs (#60)", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm --filter @flo/web exec vitest run src/dialogs.test.ts`
 Expected: FAIL con `Cannot find module './dialogs.js'`.
 
-- [ ] **Step 3: Implement `dialogs.ts`**
+- [x] **Step 3: Implement `dialogs.ts`**
 
 ```ts
 /**
@@ -1483,7 +1483,7 @@ export async function notify(message: string): Promise<void> {
 Run: `pnpm --filter @flo/web exec vitest run src/dialogs.test.ts`
 Expected: PASS.
 
-- [ ] **Step 4: Switch `app.ts` and `file-io.ts` to the dialogs**
+- [x] **Step 4: Switch `app.ts` and `file-io.ts` to the dialogs**
 
 `packages/web/src/app.ts` (importar `ask`, `confirmDialog` y `notify` de `./dialogs.js`):
 
@@ -1522,7 +1522,7 @@ function reportActionError(action: string, error: unknown): void {
 Run: `grep -rn "window\.\(prompt\|alert\|confirm\)" packages/web/src --include=*.ts | grep -v test`
 Expected: sin resultados.
 
-- [ ] **Step 5: Migrate the tests from window spies to the dialogs mock**
+- [x] **Step 5: Migrate the tests from window spies to the dialogs mock**
 
 En `packages/web/src/app.test.ts` y `packages/web/src/file-io.test.ts`, agregar arriba (junto al `vi.mock` existente en `app.test.ts`):
 
@@ -1590,7 +1590,7 @@ Todos los llamados directos a `app.newDocument`, `app.loadExample`, `app.rename`
 
 En `file-io.test.ts`, los tres tests del nombre de descarga usan `vi.mocked(ask).mockResolvedValue("diagrama.flo" | "arquitectura.flo" | null)` y `expect(ask).toHaveBeenCalledWith("Nombre del archivo para descargar:", "diagrama.flo")`.
 
-- [ ] **Step 6: Tuteo en los textos al usuario**
+- [x] **Step 6: Tuteo en los textos al usuario**
 
 - `packages/web/src/preview.ts:36`: `'<div class="flo-empty">Escribe un diagrama .flo para ver el preview</div>'`.
 - `examples/README.md`:
@@ -1601,19 +1601,19 @@ En `file-io.test.ts`, los tres tests del nombre de descarga usan `vi.mocked(ask)
 Run: `grep -rnE "(Escribí|Revisá|abrila|tocá|podés|tenés|usá|probá|elegí|agregá|mirá|hacé|poné|querés|pegá|guardá|fijate)" packages/core/src packages/web/src packages/mcp/src packages/web/index.html README.md examples/README.md docs/SYNTAX.md`
 Expected: sin resultados. Si aparece alguno en un test que compara el texto, actualizar el test.
 
-- [ ] **Step 7: Run everything**
+- [x] **Step 7: Run everything**
 
 Run: `pnpm -r typecheck && pnpm -r test`
 Expected: PASS.
 
-- [ ] **Step 8: Manual check**
+- [x] **Step 8: Manual check**
 
 Run: `pnpm --filter @flo/web dev`, y en el navegador:
 1. Renombrar con F2: aparece el diálogo con el id seleccionado. Escape no cambia nada; Enter renombra.
 2. Con una carpeta abierta y cambios, "Nuevo flowchart" crea el archivo; abrir un ejemplo pregunta antes de descartar.
 3. Guardar vista: aparece el diálogo de nombre.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/web/src/dialogs.ts packages/web/src/dialogs.test.ts packages/web/src/app.ts packages/web/src/app.test.ts packages/web/src/file-io.ts packages/web/src/file-io.test.ts packages/web/src/preview.ts packages/web/index.html examples/README.md
