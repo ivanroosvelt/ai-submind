@@ -15,9 +15,9 @@ sintaxis Mermaid: es un formato nuevo desde cero.
 > navegación en el editor: explorador, panel de entidad, ir a definición,
 > renombrar y mapa agregado). Del
 > [grafo de conocimiento](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md)
-> están completas K1, K2 y K3: un `.md` con frontmatter tipado es una entidad del
+> están completas K1, K2, K3 y K4: un `.md` con frontmatter tipado es una entidad del
 > catálogo, `query`/`tagCatalog` lo consultan y `@flo/mcp` lo expone a agentes
-> por MCP. Pendientes: K4 y la Fase 6 (ver [Roadmap](#roadmap)).
+> por MCP. Pendiente: la Fase 6 (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
 
@@ -165,7 +165,15 @@ Monorepo con pnpm workspaces:
   Herramientas: `query`, `get_node`, `list_tags` (vocabulario en uso, con
   tipos de relación; un valor nuevo se suma al catálogo), `check` y `write_node`
   (solo escribe `.md`/`.flo` dentro de la carpeta, y solo si el
-  type-checker no encuentra errores nuevos).
+  type-checker no encuentra errores nuevos). Al conectar, el servidor le pasa
+  al agente instrucciones de uso: cuándo consultar y anotar, el formato de una
+  nota y cómo reutilizar las existentes.
+
+  Para usarlo desde Claude Code:
+
+  ```bash
+  claude mcp add flo -- node <repo>/packages/mcp/dist/main.js <carpeta>
+  ```
 
 ## Uso
 
@@ -176,7 +184,7 @@ por `packageManager` en el `package.json` raíz).
 pnpm install
 pnpm build      # compila @flo/core, y después @flo/web y @flo/mcp
 pnpm typecheck
-pnpm test       # 302 tests (vitest): 215 en @flo/core + 50 en @flo/web + 37 en @flo/mcp
+pnpm test       # 484 tests (vitest): 250 en @flo/core + 191 en @flo/web + 43 en @flo/mcp
 ```
 
 Cada paquete también corre estos scripts individualmente con

@@ -65,6 +65,15 @@ describe("flo-mcp tools", () => {
     expect(client.getServerVersion()?.version).toBe(pkg.version);
   });
 
+  it("sends instructions whose example note is valid", async () => {
+    const { client, call } = await connect({ ...FILES, "decisiones/pkce.md": node("decision_pkce") });
+    const instructions = client.getInstructions() ?? "";
+    for (const tool of ["query", "get_node", "list_tags", "check", "write_node"]) expect(instructions).toContain(tool);
+    const example = /```markdown\n([\s\S]*?)```/.exec(instructions)?.[1];
+    expect(example).toBeDefined();
+    expect(await call("write_node", { path: "notas/ejemplo.md", content: example })).toEqual({ isError: false, value: { ok: true, uri: "notas/ejemplo.md" } });
+  });
+
   it("lists the five tools", async () => {
     const { client } = await connect();
     expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["query", "get_node", "list_tags", "check", "write_node"]);
