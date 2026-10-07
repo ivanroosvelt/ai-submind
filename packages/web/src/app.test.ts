@@ -37,6 +37,7 @@ export const FILES: WorkspaceSnapshot = {
   },
   active: "login.flo",
   dir: null,
+  local: false,
 };
 
 const KG_SOURCES: Record<string, string> = {
@@ -64,7 +65,7 @@ const KG_SOURCES: Record<string, string> = {
   "kb/rule.md": "---\nid: rule\ntitle: Regla\nmemory_type: working\ntype_tags: [rule]\n---\nContraseñas largas.\n",
 };
 
-export const KG_FILES: WorkspaceSnapshot = { files: KG_SOURCES, saved: { ...KG_SOURCES }, active: "login.flo", dir: null };
+export const KG_FILES: WorkspaceSnapshot = { files: KG_SOURCES, saved: { ...KG_SOURCES }, active: "login.flo", dir: null, local: false };
 
 const graphNodes = (el: AppElements) =>
   [...el.preview.querySelectorAll(".flo-kg g[data-flo-entity]")].map((g) => g.getAttribute("data-flo-entity"));
@@ -196,7 +197,7 @@ describe("App", () => {
   });
 
   it("starts from a new flowchart", () => {
-    expect(newWorkspace()).toEqual({ files: { "nuevo.flo": "flow nuevo {\n\n}\n" }, saved: {}, active: "nuevo.flo", dir: null });
+    expect(newWorkspace()).toEqual({ files: { "nuevo.flo": "flow nuevo {\n\n}\n" }, saved: {}, active: "nuevo.flo", dir: null, local: false });
   });
 });
 
@@ -780,5 +781,100 @@ describe("App navegación por referencias", () => {
     el.preview.querySelector<HTMLElement>('[data-flo-ref-block="catalog.flo#acceso"]')!.click();
     expect(app.selectedBlock).toBe("catalog.flo#acceso");
     expect(app.ws.active).toBe("catalog.flo");
+  });
+});
+
+vi.mock("./local-folder.js", () => ({
+  readLocalFiles: vi.fn(),
+  writeLocalFile: vi.fn(),
+  readLocalViews: vi.fn(async () => ({})),
+}));
+import { readLocalFiles, writeLocalFile } from "./local-folder.js";
+
+describe("modo carpeta local (#66)", () => {
+  const LOCAL: WorkspaceSnapshot = {
+    files: { "a.flo": "entity a\n", "b.flo": "entity b\n" },
+    saved: { "a.flo": "entity a\n", "b.flo": "entity b\n" },
+    active: "a.flo",
+    dir: null,
+    local: true,
+  };
+
+  beforeEach(() => {
+    vi.mocked(readLocalFiles).mockReset();
+    vi.mocked(writeLocalFile).mockReset().mockResolvedValue();
+  });
+
+  it("Guardar hace PUT de cada archivo modificado", async () => {
+    const app = new App(elements(), structuredClone(LOCAL));
+    app.ws.setSource("b.flo", "entity b2\n");
+    await app.save();
+    expect(writeLocalFile).toHaveBeenCalledWith("b.flo", "entity b2\n");
+    expect(writeLocalFile).toHaveBeenCalledTimes(1);
+    expect(app.ws.isDirty("b.flo")).toBe(false);
+  });
+
+  it("Nuevo agrega un archivo en vez de reemplazar el workspace", async () => {
+    const app = new App(elements(), structuredClone(LOCAL));
+    await app.newDocument("flowchart");
+    expect(app.ws.uris()).toEqual(["a.flo", "b.flo", "nuevo.flo"]);
+  });
+
+  it("syncLocal aplica un cambio externo al archivo activo y lo muestra en el editor", async () => {
+    const app = new App(elements(), structuredClone(LOCAL));
+    vi.mocked(readLocalFiles).mockResolvedValueOnce({ "a.flo": "entity a\nentity z\n", "b.flo": "entity b\n" });
+    await app.syncLocal();
+    expect(app.view.state.doc.toString()).toBe("entity a\nentity z\n");
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it("syncLocal con el activo borrado del disco abre otro", async () => {
+    const app = new App(elements(), structuredClone(LOCAL));
+    vi.mocked(readLocalFiles).mockResolvedValueOnce({ "b.flo": "entity b\n" });
+    await app.syncLocal();
+    expect(app.ws.uris()).toEqual(["b.flo"]);
+    expect(app.ws.active).toBe("b.flo");
+    expect(app.view.state.doc.toString()).toBe("entity b\n");
+  });
+
+  it("syncLocal con todo borrado del disco deja el workspace vacío sin romper", async () => {
+    const app = new App(elements(), structuredClone(LOCAL));
+    vi.mocked(readLocalFiles).mockResolvedValueOnce({});
+    await app.syncLocal();
+    expect(app.ws.uris()).toEqual([]);
+    expect(app.ws.active).toBe("");
+    expect(app.view.state.doc.toString()).toBe("");
+  });
+
+  it("syncLocal con el archivo modificado conserva el texto del editor y avisa una sola vez hasta guardar", async () => {
+    const app = new App(elements(), structuredClone(LOCAL));
+    // Se escribe en el editor, como el usuario.
+    app.view.dispatch({ changes: { from: 0, to: app.view.state.doc.length, insert: "entity mio\n" } });
+    vi.mocked(readLocalFiles).mockResolvedValueOnce({ "a.flo": "entity agente\n", "b.flo": "entity b\n" });
+    await app.syncLocal();
+    expect(app.ws.source("a.flo")).toBe("entity mio\n");
+    expect(app.view.state.doc.toString()).toBe("entity mio\n");
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledWith(expect.stringContaining("a.flo"));
+    // El agente vuelve a escribir: el mismo conflicto no se avisa de nuevo.
+    vi.mocked(readLocalFiles).mockResolvedValueOnce({ "a.flo": "entity agente2\n", "b.flo": "entity b\n" });
+    await app.syncLocal();
+    expect(app.view.state.doc.toString()).toBe("entity mio\n");
+    expect(notify).toHaveBeenCalledTimes(1);
+    // Guardar reemplaza lo del disco; un conflicto posterior es otro aviso.
+    await app.save();
+    expect(writeLocalFile).toHaveBeenCalledWith("a.flo", "entity mio\n");
+    app.view.dispatch({ changes: { from: 0, to: app.view.state.doc.length, insert: "entity mio2\n" } });
+    vi.mocked(readLocalFiles).mockResolvedValueOnce({ "a.flo": "entity agente3\n", "b.flo": "entity b\n" });
+    await app.syncLocal();
+    expect(app.view.state.doc.toString()).toBe("entity mio2\n");
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
+
+  it("en modo local no se guarda borrador en IndexedDB", async () => {
+    const storage = await import("./storage.js");
+    const spy = vi.spyOn(storage, "saveDraft");
+    new App(elements(), structuredClone(LOCAL));
+    expect(spy).not.toHaveBeenCalled();
   });
 });

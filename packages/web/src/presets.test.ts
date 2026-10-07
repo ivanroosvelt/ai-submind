@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { isPresetName, isWhere, listPresets, parsePreset, savePreset, type Preset } from "./presets.js";
+import { isPresetName, isWhere, listLocalPresets, listPresets, parsePreset, savePreset, type Preset } from "./presets.js";
 import { memoryDir, type MemoryTree } from "./test-dir.js";
 
 afterEach(() => vi.restoreAllMocks());
+
+vi.mock("./local-folder.js", () => ({
+  readLocalViews: vi.fn(async () => ({ b: JSON.stringify({ where: { memory: "long_term" }, depth: 1 }), a: "no json", "x y": "{}" })),
+}));
 
 const PRESET: Preset = {
   name: "decisiones",
@@ -137,5 +141,14 @@ describe("listPresets / savePreset", () => {
     const dir = { kind: "directory", name: "", getDirectoryHandle: async () => flo } as unknown as FileSystemDirectoryHandle;
     expect((await listPresets(dir)).map((preset) => preset.name)).toEqual(["ok"]);
     expect(warn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("listLocalPresets", () => {
+  it("valida y ordena como listPresets", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const presets = await listLocalPresets();
+    expect(presets.map((p) => p.name)).toEqual(["b"]);
+    expect(warn).toHaveBeenCalledTimes(2);
   });
 });

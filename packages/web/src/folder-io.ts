@@ -14,7 +14,7 @@ export function hasDirectoryAccess(): boolean {
 
 function snapshotOf(files: Record<string, string>, dir: FileSystemDirectoryHandle | null): WorkspaceSnapshot {
   const uris = Object.keys(files).sort();
-  return { files, saved: { ...files }, active: uris[0] ?? "", dir };
+  return { files, saved: { ...files }, active: uris[0] ?? "", dir, local: false };
 }
 
 async function readDirectory(

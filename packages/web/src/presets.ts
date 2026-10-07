@@ -2,6 +2,7 @@ import { MEMORY_TYPES, type Where } from "@tejo/core";
 import { readFileAsText } from "./file-io.js";
 import { writeWorkspaceFile } from "./folder-io.js";
 import type { GraphQuery } from "./knowledge-view.js";
+import { readLocalViews } from "./local-folder.js";
 import type { ViewBox } from "./pan-zoom.js";
 
 /** Una vista guardada de la vista de grafo (spec de conocimiento §7, decisión #46). */
@@ -101,8 +102,23 @@ export async function listPresets(dir: FileSystemDirectoryHandle): Promise<Prese
   return presets.sort(byName);
 }
 
+export const presetUri = (name: string) => `${PRESETS_DIR}/${name}.json`;
+
+export function presetJson({ name, where, from, depth, viewBox }: Preset): string {
+  return `${JSON.stringify({ name, where, from, depth, viewBox }, null, 2)}\n`;
+}
+
 export async function savePreset(dir: FileSystemDirectoryHandle, preset: Preset): Promise<void> {
-  const { name, where, from, depth, viewBox } = preset;
-  const json = JSON.stringify({ name, where, from, depth, viewBox }, null, 2);
-  await writeWorkspaceFile(dir, `${PRESETS_DIR}/${name}.json`, `${json}\n`);
+  await writeWorkspaceFile(dir, presetUri(preset.name), presetJson(preset));
+}
+
+/** Las vistas de `tejo view` (#66), con las mismas reglas que `listPresets`. */
+export async function listLocalPresets(): Promise<Preset[]> {
+  const presets: Preset[] = [];
+  for (const [name, text] of Object.entries(await readLocalViews())) {
+    const preset = isPresetName(name) ? parsePreset(name, text) : null;
+    if (preset) presets.push(preset);
+    else console.warn(`tejo: se ignora la vista ${PRESETS_DIR}/${name}.json (nombre o contenido inválido)`);
+  }
+  return presets.sort(byName);
 }

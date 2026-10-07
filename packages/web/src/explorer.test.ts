@@ -11,6 +11,7 @@ const ws = () =>
     saved: { "catalog.flo": "entity api\n" },
     active: "login.flo",
     dir: null,
+    local: false,
   });
 
 const container = (html: string) => {

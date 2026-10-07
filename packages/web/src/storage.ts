@@ -39,7 +39,7 @@ export async function loadDraft(): Promise<WorkspaceSnapshot | null> {
   });
   db.close();
   if (typeof stored === "string") {
-    return { files: { [LEGACY_DRAFT_URI]: stored }, saved: {}, active: LEGACY_DRAFT_URI, dir: null };
+    return { files: { [LEGACY_DRAFT_URI]: stored }, saved: {}, active: LEGACY_DRAFT_URI, dir: null, local: false };
   }
   const snapshot = stored as WorkspaceSnapshot | undefined;
   return snapshot && Object.keys(snapshot.files ?? {}).length > 0 ? snapshot : null;

@@ -22,13 +22,14 @@ import { bindExplorer, explorerHtml, type ExplorerFilter } from "./explorer.js";
 import { DEFAULT_GRAPH, graphBarHtml, graphHtml, readBar, whereOf, type GraphQuery } from "./knowledge-view.js";
 import { addEdgeHitAreas, mapHtml } from "./map-view.js";
 import { bindPanZoom } from "./pan-zoom.js";
-import { byName, isPresetName, listPresets, savePreset, type Preset } from "./presets.js";
+import { byName, isPresetName, listLocalPresets, listPresets, presetJson, presetUri, savePreset, type Preset } from "./presets.js";
 import { nextPreviewState, previewHtml, renderActive, scopeMarkerIds, type PreviewState } from "./preview.js";
 import { ask, confirmDialog, notify } from "./dialogs.js";
 import { createToolbar, type DiagramKind } from "./toolbar.js";
 import { openFloFile, saveFloFile } from "./file-io.js";
 import { ensurePermission, openFolder, writeWorkspaceFile } from "./folder-io.js";
 import { exportSvg, exportPng } from "./export.js";
+import { readLocalFiles, writeLocalFile } from "./local-folder.js";
 import { saveDraft } from "./storage.js";
 import { EXAMPLES } from "./examples.js";
 import { enhanceSequencePreview } from "./sequence-view.js";
@@ -44,7 +45,7 @@ const NEW_SOURCE: Record<DiagramKind, string> = {
 const SEARCH_DEBOUNCE_MS = 200;
 
 export function newWorkspace(kind: DiagramKind = "flowchart"): WorkspaceSnapshot {
-  return { files: { "nuevo.flo": NEW_SOURCE[kind] }, saved: {}, active: "nuevo.flo", dir: null };
+  return { files: { "nuevo.flo": NEW_SOURCE[kind] }, saved: {}, active: "nuevo.flo", dir: null, local: false };
 }
 
 export interface AppElements {
@@ -95,6 +96,8 @@ export class App {
   /** El estado de cada documento que dejó el editor, hasta que se reemplace el workspace (#43). */
   private readonly states = new Map<DocumentUri, EditorState>();
   private shown: DocumentUri | null = null;
+  /** Modo local (#66): los archivos ya avisados como cambiados en el disco mientras se editaban. */
+  private readonly conflicts = new Set<DocumentUri>();
   /** El debounce de la búsqueda de la barra del grafo (#48). */
   private searchTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly host: EditorHost = {
@@ -214,6 +217,7 @@ export class App {
     this.fileHandles.clear();
     if (fileHandle) this.fileHandles.set(this.ws.active, fileHandle);
     this.states.clear();
+    this.conflicts.clear();
     this.shown = null;
     this.selectedBlock = null;
     this.highlight = null;
@@ -256,7 +260,7 @@ export class App {
     this.renderPanel();
     this.renderExplorer();
     // ponytail: sin IndexedDB (modo privado) el editor sigue, solo sin borrador.
-    saveDraft(this.ws.snapshot()).catch(() => {});
+    if (!this.ws.local) saveDraft(this.ws.snapshot()).catch(() => {});
     this.remember();
   }
 
@@ -286,8 +290,12 @@ export class App {
   /** Las vistas de `.flo/views` (#46); sin permiso de lectura, ninguna. */
   private async loadPresets(): Promise<void> {
     const ws = this.ws;
-    if (!ws.dir) return;
-    const presets = (await ensurePermission(ws.dir, "read")) ? await listPresets(ws.dir) : [];
+    if (!ws.hasFolder()) return;
+    const presets = ws.local
+      ? await listLocalPresets()
+      : (await ensurePermission(ws.dir!, "read"))
+        ? await listPresets(ws.dir!)
+        : [];
     if (this.ws !== ws) return;
     this.presets = presets;
     if (this.mode === "graph") this.refresh();
@@ -295,7 +303,7 @@ export class App {
 
   private async savePreset(): Promise<void> {
     const ws = this.ws;
-    if (!ws.dir) return;
+    if (!ws.hasFolder()) return;
     const answer = await ask("Nombre de la vista:");
     if (answer === null) return;
     const name = answer.trim();
@@ -305,9 +313,13 @@ export class App {
     }
     const presets = this.presets ?? [];
     if (presets.some((preset) => preset.name === name) && !(await confirmDialog(`Ya existe la vista '${name}'. ¿Reemplazarla?`))) return;
-    if (!(await ensurePermission(ws.dir, "readwrite"))) throw new Error("sin permiso de escritura en la carpeta");
     const preset: Preset = { name, ...this.graph };
-    await savePreset(ws.dir, preset);
+    if (ws.local) {
+      await writeLocalFile(presetUri(name), presetJson(preset));
+    } else {
+      if (!(await ensurePermission(ws.dir!, "readwrite"))) throw new Error("sin permiso de escritura en la carpeta");
+      await savePreset(ws.dir!, preset);
+    }
     if (this.ws !== ws) return;
     this.presets = [...presets.filter((other) => other.name !== name), preset].sort(byName);
     this.refresh();
@@ -407,7 +419,7 @@ export class App {
 
   /** Con carpeta abierta agrega un archivo al workspace; sin carpeta lo reemplaza. */
   async newDocument(kind: DiagramKind): Promise<void> {
-    if (!this.ws.dir) {
+    if (!this.ws.hasFolder()) {
       if (await this.confirmDiscard()) this.load(newWorkspace(kind));
       return;
     }
@@ -421,7 +433,7 @@ export class App {
     const opened = await openFloFile();
     if (!opened || !(await this.confirmDiscard())) return;
     const { name, source, handle } = opened;
-    this.load({ files: { [name]: source }, saved: { [name]: source }, active: name, dir: null }, handle);
+    this.load({ files: { [name]: source }, saved: { [name]: source }, active: name, dir: null, local: false }, handle);
   }
 
   async openFolder(): Promise<void> {
@@ -439,7 +451,14 @@ export class App {
     // El workspace puede reemplazarse durante los await: se guarda el que había al empezar.
     const ws = this.ws;
     const { dir } = ws;
-    if (dir) {
+    if (ws.local) {
+      for (const uri of ws.uris()) {
+        if (!ws.isDirty(uri)) continue;
+        await writeLocalFile(uri, ws.source(uri));
+        ws.markSaved(uri);
+        this.conflicts.delete(uri);
+      }
+    } else if (dir) {
       if (!(await ensurePermission(dir, "readwrite"))) throw new Error("sin permiso de escritura en la carpeta");
       for (const uri of ws.uris()) {
         if (!ws.isDirty(uri)) continue;
@@ -455,6 +474,27 @@ export class App {
       }
     }
     this.refresh();
+  }
+
+  /** Cambio en el disco con `tejo view` (#66): lo limpio sigue al disco; lo modificado se conserva con un aviso. */
+  async syncLocal(): Promise<void> {
+    const ws = this.ws;
+    if (!ws.local) return;
+    const files = await readLocalFiles();
+    if (this.ws !== ws) return;
+    // Lo vuelto a lo del disco sin guardar también deja de estar en conflicto: el próximo se vuelve a avisar.
+    for (const uri of this.conflicts) if (!ws.isDirty(uri)) this.conflicts.delete(uri);
+    const { changed, conflicts } = ws.applyDisk(files);
+    for (const uri of changed) this.states.delete(uri);
+    if (changed.length > 0) {
+      if (this.shown !== null && changed.includes(this.shown)) this.shown = null;
+      this.openDocument(ws.active);
+    }
+    for (const uri of conflicts) {
+      if (this.conflicts.has(uri)) continue;
+      this.conflicts.add(uri);
+      await notify(`'${uri}' cambió en el disco mientras lo editabas. Se conserva tu versión; si guardas, reemplaza la del disco.`);
+    }
   }
 
   /** Ctrl/Cmd+S guarda en toda la página (#56); sin Alt, que con AltGr escribe caracteres. */
@@ -477,7 +517,7 @@ export class App {
   async loadExample(id: string): Promise<void> {
     const example = EXAMPLES.find((candidate) => candidate.id === id);
     if (!example || !(await this.confirmDiscard())) return;
-    this.load({ files: example.files, saved: {}, active: example.active, dir: null });
+    this.load({ files: example.files, saved: {}, active: example.active, dir: null, local: false });
   }
 
   private onPreviewClick(target: Element): void {

@@ -94,7 +94,7 @@ describe("openFolder", () => {
 
     const snapshot = await openFolder();
 
-    expect(snapshot).toEqual({ files: { "a.flo": "entity a\n" }, saved: { "a.flo": "entity a\n" }, active: "a.flo", dir: null });
+    expect(snapshot).toEqual({ files: { "a.flo": "entity a\n" }, saved: { "a.flo": "entity a\n" }, active: "a.flo", dir: null, local: false });
   });
 });
 

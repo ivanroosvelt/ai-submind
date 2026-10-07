@@ -40,6 +40,7 @@ describe("drafts", () => {
       saved: { "a.flo": "entity a\n" },
       active: "kb/n.md",
       dir: null,
+      local: false,
     };
     await saveDraft(snapshot);
     expect(await loadDraft()).toEqual(snapshot);
@@ -52,6 +53,7 @@ describe("drafts", () => {
       saved: {},
       active: LEGACY_DRAFT_URI,
       dir: null,
+      local: false,
     });
   });
 

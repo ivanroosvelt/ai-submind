@@ -15,6 +15,7 @@ describe("editor", () => {
       saved: {},
       active: "a.flo",
       dir: null,
+      local: false,
     });
     host = { workspace: () => ws, onChange: vi.fn(), onGoToDefinition: vi.fn(), onRename: vi.fn() };
   });
