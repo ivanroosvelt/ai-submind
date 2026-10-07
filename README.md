@@ -1,6 +1,6 @@
 # tejo
 
-tejo es una base de conocimiento local para proyectos y agentes, escrita en `.flo` — un lenguaje de diagramas propio — un reemplazo de Mermaid con
+tejo es una base de conocimiento local para proyectos y agentes, escrita en `.flo`, un lenguaje de diagramas propio: un reemplazo de Mermaid con
 gramática determinista, parser con recuperación de errores y diagnósticos
 estructurados en vez de mensajes de texto suelto. Sin compatibilidad con
 sintaxis Mermaid: es un formato nuevo desde cero.
@@ -157,11 +157,6 @@ Monorepo con pnpm workspaces:
 - **`@tejo/mcp`** (`packages/mcp`) — servidor MCP local (stdio) sobre una
   carpeta de documentos `.flo` y `.md` con frontmatter. Relee lo que cambia en disco.
 
-  ```bash
-  pnpm --filter @tejo/mcp build
-  node packages/mcp/dist/main.js <carpeta>
-  ```
-
   Herramientas: `query`, `get_node`, `list_tags` (vocabulario en uso, con
   tipos de relación; un valor nuevo se suma al catálogo), `check` y `write_node`
   (solo escribe `.md`/`.flo` dentro de la carpeta, y solo si el
@@ -169,11 +164,24 @@ Monorepo con pnpm workspaces:
   al agente instrucciones de uso: cuándo consultar y anotar, el formato de una
   nota y cómo reutilizar las existentes.
 
-  Para usarlo desde Claude Code:
+  Para usarlo desde Claude Code, `npx tejo init` deja el `.mcp.json` listo
+  (o a mano: `claude mcp add tejo -- npx tejo mcp knowledge`).
+
+- **`tejo`** (`packages/tejo`) — el CLI publicable: empaqueta core, mcp y el
+  visor web en un solo paquete (`dist/cli.js` + `dist/viewer/`).
 
   ```bash
-  claude mcp add flo -- node <repo>/packages/mcp/dist/main.js <carpeta>
+  npm i -D tejo        # o usa npx tejo … sin instalar
+  npx tejo init        # crea knowledge/, .mcp.json, .claude/skills/tejo y el bloque de AGENTS.md
+  npx tejo view        # abre el visor en http://127.0.0.1:8356
+  npx tejo check       # lista errores; sale con 1 si hay alguno (útil en CI)
   ```
+
+  Todos los comandos aceptan la carpeta como argumento (por defecto `knowledge`).
+  `init` puede correrse otra vez y solo actualiza lo suyo; `mcp` lo arranca el
+  agente desde `.mcp.json`; `view [--port N] [--no-open]` lee y guarda
+  directamente en la carpeta. `pnpm --filter tejo test:pack` instala el
+  tarball en un proyecto temporal y prueba `init`, `check` y `view`.
 
 ## Uso
 
@@ -182,9 +190,9 @@ por `packageManager` en el `package.json` raíz).
 
 ```bash
 pnpm install
-pnpm build      # compila @tejo/core, y después @tejo/web y @tejo/mcp
+pnpm build      # compila @tejo/core, y después @tejo/web, @tejo/mcp y tejo
 pnpm typecheck
-pnpm test       # 484 tests (vitest): 250 en @tejo/core + 191 en @tejo/web + 43 en @tejo/mcp
+pnpm test       # 552 tests (vitest): 250 en @tejo/core + 214 en @tejo/web + 54 en @tejo/mcp + 34 en tejo
 ```
 
 Cada paquete también corre estos scripts individualmente con
@@ -201,7 +209,7 @@ pnpm serve   # vite preview — sirve ese dist localmente
 ```
 
 CI (`.github/workflows/ci.yml`) corre `install --frozen-lockfile → build →
-typecheck → test` en cada push y PR.
+typecheck → test → test:pack` en cada push y PR.
 
 ## Documentación
 
