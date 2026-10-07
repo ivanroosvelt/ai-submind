@@ -1,7 +1,8 @@
 {
-  "name": "@flo/core",
+  "name": "@tejo/core",
+  "private": true,
   "version": "0.1.0",
-  "description": "Lexer, parser, AST y renderer a SVG para .flo, un lenguaje de diagramas con gramática determinista (flowchart y sequence).",
+  "description": "Lexer, parser, workspace y render a SVG del lenguaje .flo (paquete interno de tejo).",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,7 +12,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ivanroosvelt/submind.git",
+    "url": "https://github.com/ivanroosvelt/tejo.git",
     "directory": "packages/core"
   },
   "keywords": [

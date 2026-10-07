@@ -1,5 +1,6 @@
 {
-  "name": "@flo/mcp",
+  "name": "@tejo/mcp",
+  "private": true,
   "version": "0.1.0",
   "description": "Servidor MCP local que expone una carpeta de documentos .flo y .md a agentes LLM.",
   "type": "module",
@@ -19,7 +20,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@flo/core": "workspace:*",
+    "@tejo/core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.31.0",
     "zod": "^4.0.0"
   },

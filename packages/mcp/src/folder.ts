@@ -13,7 +13,7 @@ import {
   type FSWatcher,
 } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { IGNORED_DIRS, Workspace, isDocumentUri, isIgnoredUri, type Diagnostic, type LinkResult } from "@flo/core";
+import { IGNORED_DIRS, Workspace, isDocumentUri, isIgnoredUri, type Diagnostic, type LinkResult } from "@tejo/core";
 
 export type UriDiagnostic = Diagnostic & { uri: string };
 
@@ -94,7 +94,7 @@ export class FloFolder {
       try {
         entries = readdirSync(dir, { withFileTypes: true });
       } catch (error) {
-        console.error(`flo-mcp: se salta un directorio ilegible: ${(error as Error).message}`);
+        console.error(`tejo: se salta un directorio ilegible: ${(error as Error).message}`);
         return;
       }
       dirs.push(dir);
@@ -242,13 +242,13 @@ export class FloFolder {
         );
         // Un directorio observado que se borra puede emitir un error: se cierra su watcher.
         watcher.on("error", (error) => {
-          console.error(`flo-mcp: ${error.message}`);
+          console.error(`tejo: ${error.message}`);
           watcher.close();
           if (watchers.get(dir) === watcher) watchers.delete(dir);
         });
         watchers.set(dir, watcher);
       } catch (error) {
-        console.error(`flo-mcp: no se pudo observar '${dir}': ${(error as Error).message}`);
+        console.error(`tejo: no se pudo observar '${dir}': ${(error as Error).message}`);
       }
     }
   }
@@ -274,7 +274,7 @@ export class FloFolder {
       }
       this.load();
     } catch (error) {
-      console.error(`flo-mcp: ${(error as Error).message}`);
+      console.error(`tejo: ${(error as Error).message}`);
     }
   }
 

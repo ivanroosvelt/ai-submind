@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { Workspace, render } from "@flo/core";
-import type { Diagnostic, RenderResult, RenderedDiagram } from "@flo/core";
+import { Workspace, render } from "@tejo/core";
+import type { Diagnostic, RenderResult, RenderedDiagram } from "@tejo/core";
 import { nextPreviewState, previewHtml, renderActive, scopeMarkerIds, type PreviewState } from "./preview.js";
 
 const ERROR: Diagnostic = {

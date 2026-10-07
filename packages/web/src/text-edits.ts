@@ -1,4 +1,4 @@
-import type { Position, TextEdit } from "@flo/core";
+import type { Position, TextEdit } from "@tejo/core";
 
 /** Offset de una posición del core (línea y columna desde 1, en unidades UTF-16 como el lexer). */
 export function offsetAt(source: string, position: Position): number {

@@ -1,4 +1,4 @@
-import type { DocumentUri } from "@flo/core";
+import type { DocumentUri } from "@tejo/core";
 import flowchart from "../../../examples/01-flowchart.flo?raw";
 import sequence from "../../../examples/02-sequence.flo?raw";
 import catalogo from "../../../examples/03-catalogo.flo?raw";

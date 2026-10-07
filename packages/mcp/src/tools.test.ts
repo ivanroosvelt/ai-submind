@@ -18,7 +18,7 @@ const FILES: Record<string, string> = {
 
 /** Los tests de mayúsculas solo tienen sentido en un FS case-insensitive (macOS/Windows). */
 const CASE_INSENSITIVE_FS = ((): boolean => {
-  const dir = mkdtempSync(join(tmpdir(), "flo-mcp-case-"));
+  const dir = mkdtempSync(join(tmpdir(), "tejo-case-"));
   writeFileSync(join(dir, "case.txt"), "");
   const insensitive = existsSync(join(dir, "CASE.txt"));
   rmSync(dir, { recursive: true, force: true });
@@ -31,7 +31,7 @@ afterEach(() => {
 });
 
 async function connect(files: Record<string, string> = FILES): Promise<{ folder: FloFolder; client: Client; call: (name: string, args?: Record<string, unknown>) => Promise<{ isError: boolean; value: any }> }> {
-  const root = mkdtempSync(join(tmpdir(), "flo-mcp-"));
+  const root = mkdtempSync(join(tmpdir(), "tejo-"));
   cleanup.push(() => rmSync(root, { recursive: true, force: true }));
   for (const [path, content] of Object.entries(files)) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -58,7 +58,7 @@ async function connect(files: Record<string, string> = FILES): Promise<{ folder:
   return { folder, client, call };
 }
 
-describe("flo-mcp tools", () => {
+describe("tejo mcp tools", () => {
   it("reports the version from package.json", async () => {
     const { client } = await connect();
     const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string };

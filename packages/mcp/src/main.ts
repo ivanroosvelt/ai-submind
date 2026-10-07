@@ -7,7 +7,7 @@ import { createServer } from "./tools.js";
 // stdout es el protocolo MCP: los avisos van a stderr.
 const [root] = process.argv.slice(2);
 if (!root || !statSync(root, { throwIfNoEntry: false })?.isDirectory()) {
-  console.error("uso: flo-mcp <carpeta>");
+  console.error("uso: tejo mcp [carpeta]");
   process.exit(1);
 }
 const folder = new FloFolder(root);

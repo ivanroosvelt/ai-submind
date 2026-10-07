@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Workspace, renderMap } from "@flo/core";
+import { Workspace, renderMap } from "@tejo/core";
 import { addEdgeHitAreas, mapHtml } from "./map-view.js";
 
 function mapOf(files: Record<string, string>) {

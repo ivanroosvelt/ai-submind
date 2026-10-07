@@ -1,4 +1,4 @@
-import { Workspace, type DocumentUri, type LinkResult } from "@flo/core";
+import { Workspace, type DocumentUri, type LinkResult } from "@tejo/core";
 
 /** Lo que abre una carpeta o un archivo y lo que se guarda como borrador (decisiones #37, #38). */
 export interface WorkspaceSnapshot {

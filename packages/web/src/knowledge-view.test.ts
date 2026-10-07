@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { MEMORY_FILL, Workspace, tagCatalog } from "@flo/core";
+import { MEMORY_FILL, Workspace, tagCatalog } from "@tejo/core";
 import { DEFAULT_GRAPH, filterOf, graphBarHtml, graphHtml, readBar, whereOf, type GraphFilter } from "./knowledge-view.js";
 
 const EMPTY: GraphFilter = { memory: null, typeTag: null, contextTag: null, text: "" };

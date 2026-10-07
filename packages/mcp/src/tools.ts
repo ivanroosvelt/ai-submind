@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createRequire } from "node:module";
 import { z } from "zod";
-import { MEMORY_TYPES, query, tagCatalog, type Where } from "@flo/core";
+import { MEMORY_TYPES, query, tagCatalog, type Where } from "@tejo/core";
 import type { FloFolder } from "./folder.js";
 
 // Una sola fuente de la versión: package.json (está junto a dist/ y a src/).
@@ -77,7 +77,7 @@ function guarded<A extends unknown[], R>(handler: (...args: A) => Promise<R>) {
 
 /** Las cinco herramientas del spec de conocimiento §6 sobre una carpeta (decisión #35). */
 export function createServer(folder: FloFolder): McpServer {
-  const server = new McpServer({ name: "flo-mcp", version }, { instructions: INSTRUCTIONS });
+  const server = new McpServer({ name: "tejo", version }, { instructions: INSTRUCTIONS });
 
   server.registerTool(
     "query",

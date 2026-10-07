@@ -1,4 +1,4 @@
-import { MEMORY_TYPES, type Where } from "@flo/core";
+import { MEMORY_TYPES, type Where } from "@tejo/core";
 import { readFileAsText } from "./file-io.js";
 import { writeWorkspaceFile } from "./folder-io.js";
 import type { GraphQuery } from "./knowledge-view.js";
@@ -96,7 +96,7 @@ export async function listPresets(dir: FileSystemDirectoryHandle): Promise<Prese
       preset = null;
     }
     if (preset) presets.push(preset);
-    else console.warn(`flo: se ignora la vista ${PRESETS_DIR}/${handle.name} (nombre o contenido inválido)`);
+    else console.warn(`tejo: se ignora la vista ${PRESETS_DIR}/${handle.name} (nombre o contenido inválido)`);
   }
   return presets.sort(byName);
 }

@@ -163,7 +163,7 @@ flow f {
 ## Uso desde código
 
 ```ts
-import { render } from "@flo/core";
+import { render } from "@tejo/core";
 
 const { diagrams, diagnostics } = render(source);
 // un elemento por bloque: { name, title, kind: "flow" | "sequence", svg }

@@ -35,7 +35,7 @@ const FILES: Record<string, string> = {
 const temps: string[] = [];
 
 function tempDir(files: Record<string, string>): string {
-  const root = mkdtempSync(join(tmpdir(), "flo-mcp-"));
+  const root = mkdtempSync(join(tmpdir(), "tejo-"));
   temps.push(root);
   for (const [path, content] of Object.entries(files)) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -52,7 +52,7 @@ function loaded(files: Record<string, string> = FILES): FloFolder {
 
 /** Detectado una sola vez: los tests de mayúsculas solo tienen sentido en un FS case-insensitive (macOS/Windows). */
 const CASE_INSENSITIVE_FS = ((): boolean => {
-  const dir = mkdtempSync(join(tmpdir(), "flo-mcp-case-"));
+  const dir = mkdtempSync(join(tmpdir(), "tejo-case-"));
   writeFileSync(join(dir, "case.txt"), "");
   const insensitive = existsSync(join(dir, "CASE.txt"));
   rmSync(dir, { recursive: true, force: true });

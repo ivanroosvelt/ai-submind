@@ -1,4 +1,4 @@
-import { blockId, escapeXml, type BlockId, type DocumentUri, type EntityId } from "@flo/core";
+import { blockId, escapeXml, type BlockId, type DocumentUri, type EntityId } from "@tejo/core";
 import type { EditorWorkspace } from "./workspace.js";
 
 export interface ExplorerFilter {

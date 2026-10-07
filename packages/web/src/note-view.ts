@@ -1,4 +1,4 @@
-import { MEMORY_FILL, escapeXml, type EntityDecl, type EntityId, type LinkResult, type Relation } from "@flo/core";
+import { MEMORY_FILL, escapeXml, type EntityDecl, type EntityId, type LinkResult, type Relation } from "@tejo/core";
 
 // ponytail: Markdown mínimo a mano (títulos, párrafos, listas, citas, código,
 // énfasis, links); sin dependencia nueva. Tablas o HTML crudo salen como texto.

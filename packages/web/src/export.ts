@@ -18,7 +18,7 @@ export function exportSvg(svg: string, name: string): void {
 
 // ponytail: jsdom no implementa canvas (getContext/toBlob) ni la carga de
 // Image vía data URL, así que este flujo no tiene test unitario — se
-// verifica a mano en el navegador (pnpm --filter @flo/web dev, Task 6).
+// verifica a mano en el navegador (pnpm --filter @tejo/web dev, Task 6).
 // Si hace falta cobertura automatizada, agregar Playwright (spec §7).
 export function exportPng(svg: string, name: string, scale = 2): Promise<void> {
   return new Promise((resolve, reject) => {

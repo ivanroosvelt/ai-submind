@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Workspace } from "@flo/core";
+import { Workspace } from "@tejo/core";
 import { blockLabel, edgePanelHtml, entityPanelHtml } from "./entity-panel.js";
 
 function linked(files: Record<string, string>) {

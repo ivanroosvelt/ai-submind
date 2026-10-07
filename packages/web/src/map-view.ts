@@ -1,4 +1,4 @@
-import type { RenderedMap } from "@flo/core";
+import type { RenderedMap } from "@tejo/core";
 
 export function mapHtml(map: RenderedMap): string {
   const body =

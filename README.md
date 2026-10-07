@@ -1,6 +1,6 @@
-# .flo
+# tejo
 
-`.flo` es un lenguaje de diagramas propio — un reemplazo de Mermaid con
+tejo es una base de conocimiento local para proyectos y agentes, escrita en `.flo` — un lenguaje de diagramas propio — un reemplazo de Mermaid con
 gramática determinista, parser con recuperación de errores y diagnósticos
 estructurados en vez de mensajes de texto suelto. Sin compatibilidad con
 sintaxis Mermaid: es un formato nuevo desde cero.
@@ -16,7 +16,7 @@ sintaxis Mermaid: es un formato nuevo desde cero.
 > renombrar y mapa agregado). Del
 > [grafo de conocimiento](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md)
 > están completas K1, K2, K3 y K4: un `.md` con frontmatter tipado es una entidad del
-> catálogo, `query`/`tagCatalog` lo consultan y `@flo/mcp` lo expone a agentes
+> catálogo, `query`/`tagCatalog` lo consultan y `@tejo/mcp` lo expone a agentes
 > por MCP. Pendiente: la Fase 6 (ver [Roadmap](#roadmap)).
 
 ## Ejemplos
@@ -51,12 +51,12 @@ todos los bloques que las usan; los bloques solo contienen aristas. Ver
 
 Monorepo con pnpm workspaces:
 
-- **`@flo/core`** (`packages/core`) — lexer, parser, resolver, layout y
-  render a SVG. No importa nada de `@flo/web` ni de ningún framework de
+- **`@tejo/core`** (`packages/core`) — lexer, parser, resolver, layout y
+  render a SVG. No importa nada de `@tejo/web` ni de ningún framework de
   UI: pensado para publicarse a npm de forma independiente. API pública:
 
   ```ts
-  import { parse } from "@flo/core";
+  import { parse } from "@tejo/core";
 
   const { document, catalog, diagnostics } = parse(source);
   ```
@@ -68,11 +68,11 @@ Monorepo con pnpm workspaces:
   tabla completa de códigos de diagnóstico en
   [`packages/core/GRAMMAR.md`](packages/core/GRAMMAR.md).
 
-  `@flo/core` también expone `render(source)`, que hace `parse()` +
+  `@tejo/core` también expone `render(source)`, que hace `parse()` +
   layout + render a SVG en un solo paso:
 
   ```ts
-  import { render } from "@flo/core";
+  import { render } from "@tejo/core";
 
   const { diagrams, diagnostics } = render(source);
   // un elemento por bloque: { name, title, kind: "flow" | "sequence", svg }
@@ -85,7 +85,7 @@ Monorepo con pnpm workspaces:
   `Workspace` los resuelve juntos y arma el índice de referencias:
 
   ```ts
-  import { Workspace, renderBlock } from "@flo/core";
+  import { Workspace, renderBlock } from "@tejo/core";
 
   const ws = new Workspace();
   ws.setDocument("catalogo.flo", catalogo);
@@ -104,7 +104,7 @@ Monorepo con pnpm workspaces:
   `query` filtra y expande el grafo; `tagCatalog` lista los tags en uso:
 
   ```ts
-  import { query, tagCatalog } from "@flo/core";
+  import { query, tagCatalog } from "@tejo/core";
 
   const link = ws.link();
   query(link, { where: { typeTag: "decision" }, depth: 1, project: "full" });
@@ -112,8 +112,8 @@ Monorepo con pnpm workspaces:
   tagCatalog(link); // { typeTags, contextTags, relationTypes, customTags }
   ```
 
-- **`@flo/web`** (`packages/web`) — vanilla TypeScript + Vite, consume
-  `@flo/core`. Editor split-pane: CodeMirror 6 a la izquierda (resaltado
+- **`@tejo/web`** (`packages/web`) — vanilla TypeScript + Vite, consume
+  `@tejo/core`. Editor split-pane: CodeMirror 6 a la izquierda (resaltado
   de sintaxis `.flo` por tipo de token, diagnósticos del core pintados
   inline con subrayado + tooltip vía `@codemirror/lint`) y preview SVG en
   vivo a la derecha, actualizado con debounce de 200ms. Si el diagrama
@@ -154,11 +154,11 @@ Monorepo con pnpm workspaces:
   `.flo/views/<nombre>.json` (versionable), y el selector "Vistas" los
   vuelve a aplicar.
 
-- **`@flo/mcp`** (`packages/mcp`) — servidor MCP local (stdio) sobre una
+- **`@tejo/mcp`** (`packages/mcp`) — servidor MCP local (stdio) sobre una
   carpeta de documentos `.flo` y `.md` con frontmatter. Relee lo que cambia en disco.
 
   ```bash
-  pnpm --filter @flo/mcp build
+  pnpm --filter @tejo/mcp build
   node packages/mcp/dist/main.js <carpeta>
   ```
 
@@ -182,14 +182,14 @@ por `packageManager` en el `package.json` raíz).
 
 ```bash
 pnpm install
-pnpm build      # compila @flo/core, y después @flo/web y @flo/mcp
+pnpm build      # compila @tejo/core, y después @tejo/web y @tejo/mcp
 pnpm typecheck
-pnpm test       # 484 tests (vitest): 250 en @flo/core + 191 en @flo/web + 43 en @flo/mcp
+pnpm test       # 484 tests (vitest): 250 en @tejo/core + 191 en @tejo/web + 43 en @tejo/mcp
 ```
 
 Cada paquete también corre estos scripts individualmente con
-`pnpm --filter @flo/core <script>` / `pnpm --filter @flo/web <script>`.
-`@flo/web` además tiene `pnpm --filter @flo/web dev` para levantar el
+`pnpm --filter @tejo/core <script>` / `pnpm --filter @tejo/web <script>`.
+`@tejo/web` además tiene `pnpm --filter @tejo/web dev` para levantar el
 editor con Vite en modo desarrollo (hot reload).
 
 Para servir el build estático (`packages/web/dist`) como lo haría un
@@ -221,6 +221,6 @@ typecheck → test` en cada push y PR.
 Orden de la v2: D → E → K1 → K2 → K3 → F → **K4**.
 
 - **K4** — vista de grafo de conocimiento en la web.
-- **Fase 6** — `npm publish` real de `@flo/core` (el paquete ya está preparado; falta correr `npm login && npm publish --access public` desde `packages/core` con una cuenta npm autenticada, y habilitar GitHub Pages en Settings → Pages → Source: "GitHub Actions" para que el workflow de deploy quede activo).
+- **Fase 6** — `npm publish` real de `@tejo/core` (el paquete ya está preparado; falta correr `npm login && npm publish --access public` desde `packages/core` con una cuenta npm autenticada, y habilitar GitHub Pages en Settings → Pages → Source: "GitHub Actions" para que el workflow de deploy quede activo).
 
 Detalle completo de cada fase en los specs enlazados arriba.

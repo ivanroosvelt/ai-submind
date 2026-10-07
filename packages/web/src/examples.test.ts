@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Workspace, query } from "@flo/core";
+import { Workspace, query } from "@tejo/core";
 import { EXAMPLES } from "./examples.js";
 
 describe("EXAMPLES", () => {

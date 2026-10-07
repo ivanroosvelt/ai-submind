@@ -1,5 +1,5 @@
 import type { Text } from "@codemirror/state";
-import type { Diagnostic, Position } from "@flo/core";
+import type { Diagnostic, Position } from "@tejo/core";
 
 export interface LintDiagnostic {
   from: number;

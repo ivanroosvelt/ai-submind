@@ -1,7 +1,9 @@
-# submind — `.flo`
+# tejo — lenguaje `.flo`
 
-Monorepo pnpm: `packages/core` (`@flo/core`: lexer, parser, resolver,
-layout, render a SVG) y `packages/web` (`@flo/web`: editor + preview).
+Monorepo pnpm: `packages/core` (`@tejo/core`: lexer, parser, resolver,
+layout, render a SVG), `packages/mcp` (`@tejo/mcp`), `packages/web`
+(`@tejo/web`: editor + preview) y `packages/tejo` (`tejo`: la CLI publicable,
+que empaqueta core, mcp y el visor).
 
 ## Flujo de trabajo
 
@@ -24,8 +26,8 @@ layout, render a SVG) y `packages/web` (`@flo/web`: editor + preview).
   vigente vive en `packages/core/GRAMMAR.md`.
 - **Imports relativos en `packages/core/src/` llevan sufijo `.js`**
   (`"module": "NodeNext"`).
-- **`@flo/web` consume `@flo/core` por `dist/`**: tras cambiar la API de
-  core, `pnpm --filter @flo/core build` antes de correr los tests de web.
+- **`@tejo/web` consume `@tejo/core` por `dist/` y `tejo` consume `@tejo/mcp`
+  por `dist/`**: tras cambiar la API, `pnpm -r build` antes de los tests.
 - Sin dependencias nuevas salvo que el spec lo diga.
 - Mensajes de diagnóstico y comentarios en español.
 - Commits chicos, uno por task: `feat(core): ...`, `refactor(core): ...`,
@@ -33,4 +35,4 @@ layout, render a SVG) y `packages/web` (`@flo/web`: editor + preview).
 
 ## Verificación
 
-`pnpm -r typecheck && pnpm -r test && pnpm -r build`
+`pnpm -r build && pnpm -r typecheck && pnpm -r test`

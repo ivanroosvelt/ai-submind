@@ -15,7 +15,7 @@ import {
   type Location,
   type Position,
   parseBlockId,
-} from "@flo/core";
+} from "@tejo/core";
 import { createEditor, showDocument, type EditorHost } from "./editor.js";
 import { edgePanelHtml, entityPanelHtml } from "./entity-panel.js";
 import { bindExplorer, explorerHtml, type ExplorerFilter } from "./explorer.js";
@@ -56,7 +56,7 @@ export interface AppElements {
 }
 
 function reportActionError(action: string, error: unknown): void {
-  console.error(`flo: ${action} falló`, error);
+  console.error(`tejo: ${action} falló`, error);
   void notify(`No se pudo completar: ${action}. Revisa la consola para más detalle.`);
 }
 

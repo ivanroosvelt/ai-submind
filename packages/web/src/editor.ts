@@ -2,7 +2,7 @@ import { basicSetup } from "codemirror";
 import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { linter, lintGutter } from "@codemirror/lint";
-import type { DocumentUri, Position } from "@flo/core";
+import type { DocumentUri, Position } from "@tejo/core";
 import { floHighlightField } from "./flo-highlight-field.js";
 import { toLintDiagnostics } from "./flo-lint.js";
 import { positionAt } from "./text-edits.js";

@@ -1,4 +1,4 @@
-import { IGNORED_DIRS, isDocumentUri, isIgnoredUri } from "@flo/core";
+import { IGNORED_DIRS, isDocumentUri, isIgnoredUri } from "@tejo/core";
 import { isAbortError, readFileAsText } from "./file-io.js";
 import type { WorkspaceSnapshot } from "./workspace.js";
 

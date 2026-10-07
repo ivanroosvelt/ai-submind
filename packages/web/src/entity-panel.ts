@@ -1,4 +1,4 @@
-import { escapeXml, parseBlockId, type BlockId, type EntityId, type LinkResult, type QueryEdge } from "@flo/core";
+import { escapeXml, parseBlockId, type BlockId, type EntityId, type LinkResult, type QueryEdge } from "@tejo/core";
 
 /** "<título o nombre> · <uri>" de un bloque del workspace. */
 export function blockLabel(link: LinkResult, id: BlockId): string {

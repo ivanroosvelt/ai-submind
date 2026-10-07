@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Text } from "@codemirror/state";
-import type { Diagnostic } from "@flo/core";
+import type { Diagnostic } from "@tejo/core";
 import { toLintDiagnostics } from "./flo-lint.js";
 
 describe("toLintDiagnostics", () => {

@@ -1,4 +1,4 @@
-import { blockId, escapeXml, renderBlock, type DocumentUri, type LinkResult, type RenderResult, type RenderedDiagram } from "@flo/core";
+import { blockId, escapeXml, renderBlock, type DocumentUri, type LinkResult, type RenderResult, type RenderedDiagram } from "@tejo/core";
 import { parseSvgSize } from "./export.js";
 import { markdownHtml, noteHeaderHtml } from "./note-view.js";
 

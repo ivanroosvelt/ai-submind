@@ -1,4 +1,4 @@
-import { MEMORY_FILL, MEMORY_TYPES, escapeXml, type EntityId, type LinkResult, type MemoryType, type TagCatalog, type Where } from "@flo/core";
+import { MEMORY_FILL, MEMORY_TYPES, escapeXml, type EntityId, type LinkResult, type MemoryType, type TagCatalog, type Where } from "@tejo/core";
 import type { ViewBox } from "./pan-zoom.js";
 
 /** Lo que muestra la vista de grafo (decisión #45); un preset es esto con nombre (#46). */

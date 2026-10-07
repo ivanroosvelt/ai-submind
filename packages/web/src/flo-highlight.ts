@@ -1,5 +1,5 @@
 import type { Text } from "@codemirror/state";
-import { Lexer, type Token, type Position } from "@flo/core";
+import { Lexer, type Token, type Position } from "@tejo/core";
 
 export interface HighlightRange {
   from: number;

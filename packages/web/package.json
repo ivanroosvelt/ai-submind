@@ -1,5 +1,5 @@
 {
-  "name": "@flo/web",
+  "name": "@tejo/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "@codemirror/lint": "^6.9.7",
     "@codemirror/state": "^6.7.5",
     "@codemirror/view": "^6.43.12",
-    "@flo/core": "workspace:*",
+    "@tejo/core": "workspace:*",
     "codemirror": "^6.0.2"
   },
   "devDependencies": {
