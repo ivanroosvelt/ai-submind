@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import { runMcp } from "@tejo/mcp";
 import { check } from "./check.js";
 import { DEFAULT_FOLDER, resolveFolder } from "./folder-arg.js";
+import { init } from "./init.js";
 
 export const USAGE = `uso:
   tejo init [carpeta]                     prepara la carpeta, .mcp.json, la skill y AGENTS.md
@@ -22,6 +23,14 @@ export async function main(argv: string[], cwd: string): Promise<number> {
   }
   try {
     switch (command) {
+      case "init": {
+        const { positionals } = parseArgs({ args: rest, allowPositionals: true });
+        const report = init(cwd, positionals[0] ?? DEFAULT_FOLDER);
+        for (const path of report.created) console.log(`creado      ${path}`);
+        for (const path of report.updated) console.log(`actualizado ${path}`);
+        for (const path of report.unchanged) console.log(`sin cambios ${path}`);
+        return 0;
+      }
       case "check": {
         const { positionals } = parseArgs({ args: rest, allowPositionals: true });
         const { lines, errors } = check(resolveFolder(positionals[0], cwd));

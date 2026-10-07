@@ -34,4 +34,12 @@ describe("tejo cli", () => {
     expect(await main(["check", "nada"], tempFolder({}))).toBe(1);
     expect(err.join("\n")).toContain("la carpeta 'nada' no existe o no es un directorio");
   });
+
+  it("init prepara el proyecto y check pasa sobre la carpeta creada", async () => {
+    const { out } = capture();
+    const cwd = tempFolder({});
+    expect(await main(["init"], cwd)).toBe(0);
+    expect(out.join("\n")).toContain("creado      .mcp.json");
+    expect(await main(["check"], cwd)).toBe(0);
+  });
 });
