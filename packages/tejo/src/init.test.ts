@@ -51,6 +51,28 @@ describe("tejo init", () => {
     expect(read(cwd, ".mcp.json")).toBe("{ no");
   });
 
+  it.each([["[]"], ["null"], ['"x"'], ['{"mcpServers":[]}'], ['{"mcpServers":null}']])(
+    ".mcp.json %s (no objeto) aborta sin escribir nada",
+    (text) => {
+      const cwd = tempFolder({ ".mcp.json": text });
+      expect(() => init(cwd, "knowledge")).toThrow(/no es un objeto/);
+      expect(existsSync(join(cwd, "knowledge"))).toBe(false);
+      expect(existsSync(join(cwd, "AGENTS.md"))).toBe(false);
+      expect(read(cwd, ".mcp.json")).toBe(text);
+    },
+  );
+
+  it("un marcador de inicio huérfano no hace perder texto ajeno", () => {
+    const user = "# Mío\n\n<!-- tejo:start -->\nTexto propio importante.\n";
+    const cwd = tempFolder({ "AGENTS.md": user });
+    init(cwd, "knowledge");
+    init(cwd, "knowledge");
+    const agents = read(cwd, "AGENTS.md");
+    expect(agents.startsWith(user)).toBe(true);
+    expect(agents.split("<!-- tejo:end -->").length).toBe(2);
+    expect(agents.split("<!-- tejo:start -->").length).toBe(3);
+  });
+
   it("respeta el texto ajeno de AGENTS.md y solo reemplaza su bloque", () => {
     const cwd = tempFolder({ "AGENTS.md": "# Mi proyecto\n\nReglas propias.\n" });
     init(cwd, "knowledge");

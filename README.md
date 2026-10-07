@@ -229,6 +229,6 @@ typecheck → test → test:pack` en cada push y PR.
 Orden de la v2: D → E → K1 → K2 → K3 → F → **K4**.
 
 - **K4** — vista de grafo de conocimiento en la web.
-- **Fase 6** — `npm publish` real de `@tejo/core` (el paquete ya está preparado; falta correr `npm login && npm publish --access public` desde `packages/core` con una cuenta npm autenticada, y habilitar GitHub Pages en Settings → Pages → Source: "GitHub Actions" para que el workflow de deploy quede activo).
+- **Fase 6** — publicación en npm: el paquete publicable es `tejo` (`packages/tejo`); `@tejo/core` es privado. Publicar (`npm login && npm publish`) queda a cargo del usuario. Falta además habilitar GitHub Pages en Settings → Pages → Source: "GitHub Actions" para que el workflow de deploy quede activo.
 
 Detalle completo de cada fase en los specs enlazados arriba.

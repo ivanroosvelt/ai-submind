@@ -18,9 +18,10 @@ function hasDocuments(dir: string): boolean {
 /** `AGENTS.md` con el bloque de tejo puesto o reemplazado; el resto del texto no se toca. */
 function withBlock(current: string | null, block: string): string {
   if (current === null) return block;
-  const start = current.indexOf(BLOCK_START);
   const end = current.indexOf(BLOCK_END);
-  if (start >= 0 && end > start) {
+  // El inicio es el último marcador antes del fin: un inicio huérfano no arrastra texto ajeno.
+  const start = end >= 0 ? current.lastIndexOf(BLOCK_START, end) : -1;
+  if (start >= 0) {
     const after = current.slice(end + BLOCK_END.length).replace(/^\n/, "");
     return current.slice(0, start) + block + after;
   }
@@ -45,6 +46,11 @@ export function init(cwd: string, folderArg: string): InitReport {
     } catch (error) {
       throw new Error(`.mcp.json no es JSON válido: ${(error as Error).message}`);
     }
+  }
+  const isObject = (v: unknown) => typeof v === "object" && v !== null && !Array.isArray(v);
+  if (!isObject(config)) throw new Error(".mcp.json no es un objeto JSON");
+  if (config.mcpServers !== undefined && !isObject(config.mcpServers)) {
+    throw new Error("mcpServers en .mcp.json no es un objeto");
   }
   const servers = (config.mcpServers ?? {}) as Record<string, unknown>;
   config.mcpServers = { ...servers, tejo: { command: "npx", args: ["tejo", "mcp", folder] } };
