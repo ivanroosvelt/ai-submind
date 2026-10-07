@@ -454,23 +454,26 @@ export class App {
     if (ws.local) {
       for (const uri of ws.uris()) {
         if (!ws.isDirty(uri)) continue;
-        await writeLocalFile(uri, ws.source(uri));
-        ws.markSaved(uri);
+        const source = ws.source(uri);
+        await writeLocalFile(uri, source);
+        ws.markSaved(uri, source);
         this.conflicts.delete(uri);
       }
     } else if (dir) {
       if (!(await ensurePermission(dir, "readwrite"))) throw new Error("sin permiso de escritura en la carpeta");
       for (const uri of ws.uris()) {
         if (!ws.isDirty(uri)) continue;
-        await writeWorkspaceFile(dir, uri, ws.source(uri));
-        ws.markSaved(uri);
+        const source = ws.source(uri);
+        await writeWorkspaceFile(dir, uri, source);
+        ws.markSaved(uri, source);
       }
     } else {
       const uri = ws.active;
-      const handle = await saveFloFile(ws.source(uri), this.fileHandles.get(uri) ?? null, uri);
+      const source = ws.source(uri);
+      const handle = await saveFloFile(source, this.fileHandles.get(uri) ?? null, uri);
       if (handle) {
         if (this.ws === ws) this.fileHandles.set(uri, handle);
-        ws.markSaved(uri);
+        ws.markSaved(uri, source);
       }
     }
     this.refresh();

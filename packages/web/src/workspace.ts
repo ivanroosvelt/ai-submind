@@ -68,8 +68,9 @@ export class EditorWorkspace {
     return this.uris().some((uri) => this.isUnsaved(uri));
   }
 
-  markSaved(uri: DocumentUri): void {
-    this.saved.set(uri, this.source(uri));
+  /** `source`: lo que se escribió; lo tecleado mientras se guardaba sigue sin guardar. */
+  markSaved(uri: DocumentUri, source = this.source(uri)): void {
+    this.saved.set(uri, source);
   }
 
   /**

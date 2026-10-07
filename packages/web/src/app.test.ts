@@ -871,6 +871,26 @@ describe("modo carpeta local (#66)", () => {
     expect(notify).toHaveBeenCalledTimes(2);
   });
 
+  it("lo escrito durante un Guardar en curso sigue sin guardar y no lo pisa el disco", async () => {
+    const app = new App(elements(), structuredClone(LOCAL));
+    const type = (text: string) => app.view.dispatch({ changes: { from: 0, to: app.view.state.doc.length, insert: text } });
+    type("entity enviado\n");
+    let finish!: () => void;
+    vi.mocked(writeLocalFile).mockImplementationOnce(() => new Promise<void>((resolve) => (finish = resolve)));
+    const saving = app.save();
+    // El PUT sigue en vuelo: el usuario escribe.
+    type("entity nuevo\n");
+    finish();
+    await saving;
+    expect(writeLocalFile).toHaveBeenCalledWith("a.flo", "entity enviado\n");
+    expect(app.ws.isDirty("a.flo")).toBe(true);
+    // El eco del guardado: el disco tiene lo enviado.
+    vi.mocked(readLocalFiles).mockResolvedValueOnce({ "a.flo": "entity enviado\n", "b.flo": "entity b\n" });
+    await app.syncLocal();
+    expect(app.view.state.doc.toString()).toBe("entity nuevo\n");
+    expect(app.ws.isDirty("a.flo")).toBe(true);
+  });
+
   it("en modo local no se guarda borrador en IndexedDB", async () => {
     const storage = await import("./storage.js");
     const spy = vi.spyOn(storage, "saveDraft");
