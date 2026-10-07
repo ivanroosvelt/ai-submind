@@ -1,0 +1,42 @@
+{
+  "name": "tejo",
+  "version": "0.1.0",
+  "description": "Base de conocimiento local para tu proyecto y tus agentes: notas .md y diagramas .flo, servidor MCP, skill y visor.",
+  "type": "module",
+  "bin": {
+    "tejo": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanroosvelt/tejo.git",
+    "directory": "packages/tejo"
+  },
+  "keywords": ["knowledge-base", "mcp", "agents", "diagram", "markdown"],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "dagre": "^0.8.5",
+    "yaml": "^2.9.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@tejo/core": "workspace:*",
+    "@tejo/mcp": "workspace:*",
+    "@tejo/web": "workspace:*",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}
