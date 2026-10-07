@@ -45,6 +45,9 @@ function newErrors(before: LinkResult, after: LinkResult, uri: string): UriDiagn
   return found;
 }
 
+/** Vistas guardadas del visor (#46): `.flo/views/<nombre>.json`. */
+const VIEW_URI = /^\.flo\/views\/[A-Za-z0-9_-]+\.json$/;
+
 /**
  * Una carpeta del disco como workspace (decisión #33). El disco manda: el
  * estado es el mapa `uri → fuente` leído de él. `link()` es perezoso y se
@@ -58,6 +61,7 @@ export class FloFolder {
   protected linked: LinkResult | null = null;
   /** Un `fs.watch` no recursivo por directorio mientras se observa (decisión #36); null si no. */
   private watchers: Map<string, FSWatcher> | null = null;
+  private onDiskChange: (() => void) | null = null;
 
   constructor(root: string) {
     // `.native` devuelve las mayúsculas del disco en macOS (APFS no distingue
@@ -147,14 +151,58 @@ export class FloFolder {
     return file === null ? null : this.uriOf(file);
   }
 
-  /** `write_node` (spec §6, decisión #34): valida en un workspace de prueba y escribe de forma atómica. */
-  write(path: string, content: string): WriteResult {
+  /** La uri canónica y el archivo de `path`, o el error si sale de la raíz, no es .md/.flo (o una vista) o está ignorada. */
+  private target(path: string, allowViews: boolean): { uri: string; file: string } | WriteResult {
     const uri = this.canonicalUri(path);
     if (uri === null) return fail(`la ruta '${path}' sale de la carpeta raíz (directamente o por un enlace simbólico)`);
-    const file = join(this.root, uri);
-
-    if (!uri.endsWith(".md") && !uri.endsWith(".flo")) return fail(`solo se escriben archivos .md o .flo: '${path}'`);
+    const view = allowViews && VIEW_URI.test(uri);
+    if (!view && !isDocumentUri(uri)) return fail(`solo se escriben archivos .md o .flo: '${path}'`);
     if (isIgnoredUri(uri)) return fail(`la ruta '${path}' está en una carpeta ignorada (node_modules, .git)`);
+    return { uri, file: join(this.root, uri) };
+  }
+
+  /** Escribe en un temporal y renombra; null si salió bien. */
+  private writeAtomic(path: string, file: string, content: string): WriteResult | null {
+    const temp = join(dirname(file), `.${basename(file)}.${randomBytes(6).toString("hex")}.tmp`);
+    try {
+      mkdirSync(dirname(file), { recursive: true });
+      writeFileSync(temp, content);
+      renameSync(temp, file);
+      return null;
+    } catch (error) {
+      try {
+        rmSync(temp, { force: true });
+      } catch {
+        // El temporal puede colgar de una ruta que ya no es un directorio (ENOTDIR); no hay nada que limpiar.
+      }
+      return fail(`no se pudo escribir '${path}': ${(error as NodeJS.ErrnoException).code ?? "error de E/S"}`);
+    }
+  }
+
+  /** Copia del mapa `uri → fuente` (lo que sirve `GET /api/files` de `tejo view`). */
+  files(): Record<string, string> {
+    return Object.fromEntries(this.sources);
+  }
+
+  /** "Guardar" del visor (#66): mismas reglas de ruta que `write`, más las vistas; sin validar diagnósticos (#38). */
+  save(path: string, content: string): WriteResult {
+    const target = this.target(path, true);
+    if (!("file" in target)) return target;
+    const failed = this.writeAtomic(path, target.file, content);
+    if (failed) return failed;
+    if (isDocumentUri(target.uri)) {
+      this.sources.set(target.uri, content);
+      this.workspace.setDocument(target.uri, content);
+      this.linked = null;
+    }
+    return { ok: true, uri: target.uri };
+  }
+
+  /** `write_node` (spec §6, decisión #34): valida en un workspace de prueba y escribe de forma atómica. */
+  write(path: string, content: string): WriteResult {
+    const target = this.target(path, false);
+    if (!("file" in target)) return target;
+    const { uri } = target;
 
     const trial = new Workspace();
     for (const [other, source] of this.sources) if (other !== uri) trial.setDocument(other, source);
@@ -166,19 +214,8 @@ export class FloFolder {
     const errors = newErrors(this.link(), after, uri);
     if (errors.length > 0) return fail(`'${path}' no se escribió: tiene errores o rompe otros archivos`, errors);
 
-    const temp = join(dirname(file), `.${basename(file)}.${randomBytes(6).toString("hex")}.tmp`);
-    try {
-      mkdirSync(dirname(file), { recursive: true });
-      writeFileSync(temp, content);
-      renameSync(temp, file);
-    } catch (error) {
-      try {
-        rmSync(temp, { force: true });
-      } catch {
-        // El temporal puede colgar de una ruta que ya no es un directorio (ENOTDIR); no hay nada que limpiar.
-      }
-      return fail(`no se pudo escribir '${path}': ${(error as NodeJS.ErrnoException).code ?? "error de E/S"}`);
-    }
+    const failed = this.writeAtomic(path, target.file, content);
+    if (failed) return failed;
     this.sources.set(uri, content);
     this.workspace.setDocument(uri, content);
     this.linked = null;
@@ -212,13 +249,15 @@ export class FloFolder {
    * `fs.watch` no recursivo por directorio, resincronizado en cada `load()`.
    * Quien llama cierra con `close()`.
    */
-  watch(): { close(): void } {
+  watch(onChange?: () => void): { close(): void } {
+    this.onDiskChange = onChange ?? null;
     this.watchers ??= new Map();
     this.syncWatchers(this.walk().dirs);
     return {
       close: () => {
         for (const watcher of this.watchers?.values() ?? []) watcher.close();
         this.watchers = null;
+        this.onDiskChange = null;
       },
     };
   }
@@ -275,6 +314,8 @@ export class FloFolder {
       this.load();
     } catch (error) {
       console.error(`tejo: ${(error as Error).message}`);
+    } finally {
+      this.onDiskChange?.();
     }
   }
 

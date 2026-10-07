@@ -333,3 +333,62 @@ describe("FloFolder watch", () => {
     expect(ids(folder)).not.toContain("w");
   }, TIMEOUT);
 });
+
+describe("save (tejo view, #66)", () => {
+  it("escribe sin validar un documento con errores", () => {
+    const folder = loaded();
+    const result = folder.save("kb/roto.md", "---\nid: [\n---\n");
+    expect(result).toEqual({ ok: true, uri: "kb/roto.md" });
+    expect(readFileSync(join(folder.root, "kb/roto.md"), "utf8")).toBe("---\nid: [\n---\n");
+    expect(folder.files()["kb/roto.md"]).toBe("---\nid: [\n---\n");
+  });
+
+  it("escribe una vista guardada de .flo/views", () => {
+    const folder = loaded();
+    expect(folder.save(".flo/views/mia.json", "{}\n")).toEqual({ ok: true, uri: ".flo/views/mia.json" });
+    expect(readFileSync(join(folder.root, ".flo/views/mia.json"), "utf8")).toBe("{}\n");
+    expect(folder.files()[".flo/views/mia.json"]).toBeUndefined();
+  });
+
+  it.each(["../fuera.md", "kb/x.txt", ".flo/views/../a.json", ".flo/views/a b.json", "otra/views/a.json", "node_modules/x.md"])(
+    "rechaza '%s'",
+    (path) => {
+      const folder = loaded();
+      expect(folder.save(path, "x").ok).toBe(false);
+    }
+  );
+
+  it("rechaza escribir a través de un enlace simbólico que sale de la raíz", () => {
+    const folder = loaded();
+    const outside = tempDir({});
+    symlinkSync(outside, join(folder.root, "link"));
+    expect(folder.save("link/a.md", "---\n---\n").ok).toBe(false);
+    expect(existsSync(join(outside, "a.md"))).toBe(false);
+  });
+});
+
+describe("files y watch(onChange)", () => {
+  it("files() es una copia del mapa de fuentes", () => {
+    const folder = loaded();
+    const files = folder.files();
+    expect(files["catalogo.flo"]).toBe("entity api\n");
+    files["catalogo.flo"] = "cambiado";
+    expect(folder.files()["catalogo.flo"]).toBe("entity api\n");
+  });
+
+  it("avisa a onChange cuando cambia un archivo en disco", async () => {
+    const folder = loaded();
+    const onChange = vi.fn();
+    const watcher = folder.watch(onChange);
+    try {
+      // fs.watch no avisa cuándo está listo: lo escrito enseguida puede perderse mientras arranca.
+      await new Promise((done) => setTimeout(done, 200));
+      writeFileSync(join(folder.root, "catalogo.flo"), "entity api\nentity db\n");
+      // Puede llegar antes algún evento rezagado de la creación de la carpeta de prueba: se espera al cambio.
+      await vi.waitFor(() => expect(folder.files()["catalogo.flo"]).toBe("entity api\nentity db\n"), { timeout: 5000 });
+      expect(onChange).toHaveBeenCalled();
+    } finally {
+      watcher.close();
+    }
+  });
+});

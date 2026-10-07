@@ -2,11 +2,10 @@
   "name": "@tejo/mcp",
   "private": true,
   "version": "0.1.0",
-  "description": "Servidor MCP local que expone una carpeta de documentos .flo y .md a agentes LLM.",
+  "description": "Servidor MCP de tejo sobre una carpeta de documentos .flo y .md (paquete interno).",
   "type": "module",
-  "bin": {
-    "flo-mcp": "dist/main.js"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
