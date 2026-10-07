@@ -35,6 +35,17 @@ describe("tejo cli", () => {
     expect(err.join("\n")).toContain("la carpeta 'nada' no existe o no es un directorio");
   });
 
+  it("view sobre una carpeta inexistente: mensaje y exit 1", async () => {
+    const { err } = capture();
+    expect(await main(["view", "nada", "--no-open"], tempFolder({}))).toBe(1);
+    expect(err.join("\n")).toContain("la carpeta 'nada' no existe o no es un directorio");
+  });
+
+  it("view con --port inválido: exit 1", async () => {
+    capture();
+    expect(await main(["view", ".", "--port", "abc", "--no-open"], tempFolder({}))).toBe(1);
+  });
+
   it("init prepara el proyecto y check pasa sobre la carpeta creada", async () => {
     const { out } = capture();
     const cwd = tempFolder({});

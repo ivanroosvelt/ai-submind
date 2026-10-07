@@ -5,6 +5,7 @@ import { runMcp } from "@tejo/mcp";
 import { check } from "./check.js";
 import { DEFAULT_FOLDER, resolveFolder } from "./folder-arg.js";
 import { init } from "./init.js";
+import { DEFAULT_PORT, startView } from "./server.js";
 
 export const USAGE = `uso:
   tejo init [carpeta]                     prepara la carpeta, .mcp.json, la skill y AGENTS.md
@@ -40,6 +41,22 @@ export async function main(argv: string[], cwd: string): Promise<number> {
       case "mcp": {
         const { positionals } = parseArgs({ args: rest, allowPositionals: true });
         await runMcp(resolveFolder(positionals[0], cwd));
+        return 0;
+      }
+      case "view": {
+        const { positionals, values } = parseArgs({
+          args: rest,
+          allowPositionals: true,
+          options: { port: { type: "string" }, "no-open": { type: "boolean" } },
+        });
+        const port = Number(values.port ?? DEFAULT_PORT);
+        if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error(`puerto inválido: '${values.port}'`);
+        const { url } = await startView(resolveFolder(positionals[0], cwd), {
+          port,
+          open: !values["no-open"],
+          viewerDir: fileURLToPath(new URL("./viewer/", import.meta.url)),
+        });
+        console.log(`tejo: visor en ${url} (Ctrl+C para salir)`);
         return 0;
       }
       default:
