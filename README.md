@@ -164,14 +164,14 @@ Monorepo con pnpm workspaces:
   al agente instrucciones de uso: cuándo consultar y anotar, el formato de una
   nota y cómo reutilizar las existentes.
 
-  Para usarlo desde Claude Code, `npx tejo init` deja el `.mcp.json` listo
-  (o a mano: `claude mcp add tejo -- npx tejo mcp knowledge`).
+  Para usarlo desde Claude Code, `npx @ivanroosveltlt/tejo init` deja el `.mcp.json` listo
+  (o a mano: `claude mcp add tejo -- npx -y @ivanroosveltlt/tejo mcp knowledge`).
 
-- **`tejo`** (`packages/tejo`) — el CLI publicable: empaqueta core, mcp y el
+- **`@ivanroosveltlt/tejo`** (`packages/tejo`) — el CLI publicable: empaqueta core, mcp y el
   visor web en un solo paquete (`dist/cli.js` + `dist/viewer/`).
 
   ```bash
-  npm i -D tejo        # o usa npx tejo … sin instalar
+  npm i -D @ivanroosveltlt/tejo        # o usa npx @ivanroosveltlt/tejo … sin instalar
   npx tejo init        # crea knowledge/, .mcp.json, .claude/skills/tejo y el bloque de AGENTS.md
   npx tejo view        # abre el visor en http://127.0.0.1:8356
   npx tejo check       # lista errores; sale con 1 si hay alguno (útil en CI)
@@ -180,7 +180,7 @@ Monorepo con pnpm workspaces:
   Todos los comandos aceptan la carpeta como argumento (por defecto `knowledge`).
   `init` puede correrse otra vez y solo actualiza lo suyo; `mcp` lo arranca el
   agente desde `.mcp.json`; `view [--port N] [--no-open]` lee y guarda
-  directamente en la carpeta. `pnpm --filter tejo test:pack` instala el
+  directamente en la carpeta. `pnpm --filter @ivanroosveltlt/tejo test:pack` instala el
   tarball en un proyecto temporal y prueba `init`, `check` y `view`.
 
 ## Uso

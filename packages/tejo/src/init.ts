@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { isDocumentUri } from "@tejo/core";
-import { BLOCK_END, BLOCK_START, WELCOME_NOTE, agentsBlock, skill } from "./templates.js";
+import { BLOCK_END, BLOCK_START, PKG, WELCOME_NOTE, agentsBlock, skill } from "./templates.js";
 
 export type InitReport = { created: string[]; updated: string[]; unchanged: string[] };
 
@@ -53,7 +53,7 @@ export function init(cwd: string, folderArg: string): InitReport {
     throw new Error("mcpServers en .mcp.json no es un objeto");
   }
   const servers = (config.mcpServers ?? {}) as Record<string, unknown>;
-  config.mcpServers = { ...servers, tejo: { command: "npx", args: ["tejo", "mcp", folder] } };
+  config.mcpServers = { ...servers, tejo: { command: "npx", args: ["-y", PKG, "mcp", folder] } };
 
   const writes: Write[] = [
     { path: ".mcp.json", content: `${JSON.stringify(config, null, 2)}\n` },

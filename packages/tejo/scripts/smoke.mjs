@@ -16,10 +16,10 @@ try {
   console.log(run("npx", ["--no-install", "tejo", "init"]));
   console.log(run("npx", ["--no-install", "tejo", "check"]));
   const config = JSON.parse(readFileSync(join(work, ".mcp.json"), "utf8"));
-  if (config.mcpServers.tejo.args.join(" ") !== "tejo mcp knowledge") throw new Error("'.mcp.json' inesperado");
+  if (config.mcpServers.tejo.args.join(" ") !== "-y @ivanroosveltlt/tejo mcp knowledge") throw new Error("'.mcp.json' inesperado");
 
   // Se lanza el bin instalado con node (sin npx) para que kill() mate al proceso real y no deje huérfanos.
-  view = spawn("node", [join(work, "node_modules/tejo/dist/cli.js"), "view", "--no-open", "--port", "0"], { cwd: work });
+  view = spawn("node", [join(work, "node_modules/@ivanroosveltlt/tejo/dist/cli.js"), "view", "--no-open", "--port", "0"], { cwd: work });
   const url = await new Promise((resolve, reject) => {
     view.stdout.on("data", (chunk) => {
       const match = /http:\/\/127\.0\.0\.1:\d+\//.exec(String(chunk));

@@ -5,7 +5,7 @@ frontmatter y diagramas `.flo`, versionadas con el repo, un servidor MCP, una
 skill para el agente y un visor web.
 
 ```bash
-npm i -D tejo        # o usa npx tejo … sin instalar
+npm i -D @ivanroosveltlt/tejo        # o usa npx @ivanroosveltlt/tejo … sin instalar
 npx tejo init        # crea knowledge/, .mcp.json, .claude/skills/tejo y el bloque de AGENTS.md
 npx tejo view        # abre el visor en http://127.0.0.1:8356
 npx tejo check       # lista errores; sale con 1 si hay alguno (útil en CI)

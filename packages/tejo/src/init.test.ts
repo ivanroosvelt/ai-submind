@@ -15,7 +15,7 @@ describe("tejo init", () => {
       [".claude/skills/tejo/SKILL.md", ".mcp.json", "AGENTS.md", "knowledge/bienvenida.md"].sort()
     );
     expect(JSON.parse(read(cwd, ".mcp.json"))).toEqual({
-      mcpServers: { tejo: { command: "npx", args: ["tejo", "mcp", "knowledge"] } },
+      mcpServers: { tejo: { command: "npx", args: ["-y", "@ivanroosveltlt/tejo", "mcp", "knowledge"] } },
     });
     expect(read(cwd, ".claude/skills/tejo/SKILL.md")).toMatch(/^---\nname: tejo\ndescription: /);
     expect(read(cwd, ".claude/skills/tejo/SKILL.md")).toContain("write_node");
@@ -40,7 +40,7 @@ describe("tejo init", () => {
     const config = JSON.parse(read(cwd, ".mcp.json"));
     expect(config.extra).toBe(1);
     expect(config.mcpServers.otro).toEqual({ command: "x" });
-    expect(config.mcpServers.tejo.args).toEqual(["tejo", "mcp", "knowledge"]);
+    expect(config.mcpServers.tejo.args).toEqual(["-y", "@ivanroosveltlt/tejo", "mcp", "knowledge"]);
   });
 
   it("un .mcp.json inválido aborta sin escribir nada", () => {
@@ -89,7 +89,7 @@ describe("tejo init", () => {
     init(cwd, "knowledge");
     const report = init(cwd, "docs/kb");
     expect(report.updated.sort()).toEqual([".claude/skills/tejo/SKILL.md", ".mcp.json", "AGENTS.md"].sort());
-    expect(JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo.args).toEqual(["tejo", "mcp", "docs/kb"]);
+    expect(JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo.args).toEqual(["-y", "@ivanroosveltlt/tejo", "mcp", "docs/kb"]);
     expect(read(cwd, ".claude/skills/tejo/SKILL.md")).toContain("docs/kb/");
   });
 
@@ -110,7 +110,7 @@ describe("tejo init", () => {
   it("acepta una ruta de carpeta con ./ o barra final y la normaliza", () => {
     const cwd = tempFolder({});
     init(cwd, "./docs/kb/");
-    expect(JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo.args).toEqual(["tejo", "mcp", "docs/kb"]);
+    expect(JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo.args).toEqual(["-y", "@ivanroosveltlt/tejo", "mcp", "docs/kb"]);
   });
 
   it("rechaza una carpeta fuera del proyecto", () => {
