@@ -23,5 +23,6 @@ jobs:
       - name: El tag coincide con la versión del paquete
         run: test "v$(node -p "require('./packages/tejo/package.json').version")" = "$GITHUB_REF_NAME"
       # pnpm pack reemplaza workspace:* en el manifiesto; npm publish hace el OIDC.
-      - run: pnpm --filter @ivanroosveltlt/tejo pack --pack-destination "$RUNNER_TEMP"
+      - run: pnpm pack --pack-destination "$RUNNER_TEMP"
+        working-directory: packages/tejo
       - run: npm publish "$RUNNER_TEMP"/*.tgz --access public
