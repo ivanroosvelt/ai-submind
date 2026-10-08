@@ -1,0 +1,27 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+  id-token: write # Trusted Publishing (OIDC): npm publica sin token
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # trae npm >= 11.5, necesario para OIDC
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: El tag coincide con la versión del paquete
+        run: test "v$(node -p "require('./packages/tejo/package.json').version")" = "$GITHUB_REF_NAME"
+      # pnpm pack reemplaza workspace:* en el manifiesto; npm publish hace el OIDC.
+      - run: pnpm --filter @ivanroosveltlt/tejo pack --pack-destination "$RUNNER_TEMP"
+      - run: npm publish "$RUNNER_TEMP"/*.tgz --access public
