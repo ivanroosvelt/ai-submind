@@ -1,6 +1,6 @@
 {
   "name": "@ivanroosveltlt/tejo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Base de conocimiento local para tu proyecto y tus agentes: notas .md y diagramas .flo, servidor MCP, skill y visor.",
   "type": "module",
   "bin": {
@@ -18,7 +18,13 @@
     "url": "https://github.com/ivanroosvelt/tejo.git",
     "directory": "packages/tejo"
   },
-  "keywords": ["knowledge-base", "mcp", "agents", "diagram", "markdown"],
+  "keywords": [
+    "knowledge-base",
+    "mcp",
+    "agents",
+    "diagram",
+    "markdown"
+  ],
   "engines": {
     "node": ">=20"
   },
