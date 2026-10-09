@@ -115,6 +115,9 @@ El prompt trae un ejemplo mínimo de bloque `flo` dentro de una nota:
 
 ````markdown
 ```flo
+entity api
+entity db
+
 flow create_order "Create an order" {
   api -> db : save order
   db -> api : order id
