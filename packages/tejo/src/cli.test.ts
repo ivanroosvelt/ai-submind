@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { INSTRUCTIONS, MAP_PROMPT } from "@tejo/mcp";
 import { main } from "./cli.js";
 import { tempFolder } from "./test-folder.js";
 
@@ -21,6 +22,30 @@ describe("tejo cli", () => {
     const { err } = capture();
     expect(await main(["nada"], process.cwd())).toBe(1);
     expect(err.join("\n")).toContain("comando desconocido: nada");
+  });
+
+  it("guide notes imprime las instrucciones vigentes", async () => {
+    const { out } = capture();
+    expect(await main(["guide", "notes"], tempFolder({}))).toBe(0);
+    expect(out).toEqual([INSTRUCTIONS]);
+  });
+
+  it("guide map imprime el prompt con carpeta y scope", async () => {
+    const { out } = capture();
+    expect(await main(["guide", "map", "docs/kb", "--scope", "packages/core"], tempFolder({}))).toBe(0);
+    expect(out).toEqual([MAP_PROMPT("docs/kb", "packages/core")]);
+  });
+
+  it("guide map usa knowledge por defecto", async () => {
+    const { out } = capture();
+    expect(await main(["guide", "map"], tempFolder({}))).toBe(0);
+    expect(out).toEqual([MAP_PROMPT("knowledge")]);
+  });
+
+  it.each([[[]], [["nada"]]])("guide %j: mensaje y exit 1", async (args) => {
+    const { err } = capture();
+    expect(await main(["guide", ...args], tempFolder({}))).toBe(1);
+    expect(err.join("\n")).toContain("tema desconocido");
   });
 
   it("check sale con 1 si hay errores y 0 si no", async () => {

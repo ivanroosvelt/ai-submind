@@ -16,7 +16,8 @@ try {
   console.log(run("npx", ["--no-install", "tejo", "init"]));
   console.log(run("npx", ["--no-install", "tejo", "check"]));
   const config = JSON.parse(readFileSync(join(work, ".mcp.json"), "utf8"));
-  if (config.mcpServers.tejo.args.join(" ") !== "-y @ivanroosveltlt/tejo mcp knowledge") throw new Error("'.mcp.json' inesperado");
+  if (config.mcpServers.tejo.args.join(" ") !== "-y @ivanroosveltlt/tejo@latest mcp knowledge") throw new Error("'.mcp.json' inesperado");
+  if (!run("npx", ["--no-install", "tejo", "guide", "map"]).includes("map-plan.md")) throw new Error("'tejo guide map' inesperado");
 
   // Se lanza el bin instalado con node (sin npx) para que kill() mate al proceso real y no deje huérfanos.
   view = spawn("node", [join(work, "node_modules/@ivanroosveltlt/tejo/dist/cli.js"), "view", "--no-open", "--port", "0"], { cwd: work });

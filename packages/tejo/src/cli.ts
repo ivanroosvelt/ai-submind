@@ -1,7 +1,7 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { runMcp } from "@tejo/mcp";
+import { INSTRUCTIONS, MAP_PROMPT, runMcp } from "@tejo/mcp";
 import { check } from "./check.js";
 import { DEFAULT_FOLDER, resolveFolder } from "./folder-arg.js";
 import { init } from "./init.js";
@@ -12,6 +12,7 @@ export const USAGE = `uso:
   tejo mcp [carpeta]                      servidor MCP por stdio (lo arranca el agente)
   tejo view [carpeta] [--port N] [--no-open]  visor en http://127.0.0.1:8356
   tejo check [carpeta]                    lista los errores; sale con 1 si hay alguno
+  tejo guide notes|map [carpeta] [--scope ruta]  imprime las instrucciones vigentes para el agente
 
 carpeta: por defecto '${DEFAULT_FOLDER}'.`;
 
@@ -57,6 +58,14 @@ export async function main(argv: string[], cwd: string): Promise<number> {
           viewerDir: fileURLToPath(new URL("./viewer/", import.meta.url)),
         });
         console.log(`tejo: visor en ${url} (Ctrl+C para salir)`);
+        return 0;
+      }
+      case "guide": {
+        const { positionals, values } = parseArgs({ args: rest, allowPositionals: true, options: { scope: { type: "string" } } });
+        const [topic, folder = DEFAULT_FOLDER] = positionals;
+        if (topic === "notes") console.log(INSTRUCTIONS);
+        else if (topic === "map") console.log(MAP_PROMPT(folder, values.scope));
+        else throw new Error(`tema desconocido: '${topic ?? ""}' (usa notes o map)`);
         return 0;
       }
       default:

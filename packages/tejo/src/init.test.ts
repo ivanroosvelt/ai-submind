@@ -7,18 +7,26 @@ import { tempFolder } from "./test-folder.js";
 
 const read = (cwd: string, path: string) => readFileSync(join(cwd, path), "utf8");
 
+const LATEST = "@ivanroosveltlt/tejo@latest";
+const SKILLS = [".claude/skills/tejo/SKILL.md", ".claude/skills/tejo-map/SKILL.md"];
+
 describe("tejo init", () => {
   it("en un proyecto vacío crea carpeta, nota, .mcp.json, skill y AGENTS.md", () => {
     const cwd = tempFolder({});
     const report = init(cwd, "knowledge");
-    expect(report.created.sort()).toEqual(
-      [".claude/skills/tejo/SKILL.md", ".mcp.json", "AGENTS.md", "knowledge/bienvenida.md"].sort()
-    );
+    expect(report.created.sort()).toEqual([...SKILLS, ".mcp.json", "AGENTS.md", "knowledge/bienvenida.md"].sort());
     expect(JSON.parse(read(cwd, ".mcp.json"))).toEqual({
-      mcpServers: { tejo: { command: "npx", args: ["-y", "@ivanroosveltlt/tejo", "mcp", "knowledge"] } },
+      mcpServers: { tejo: { command: "npx", args: ["-y", LATEST, "mcp", "knowledge"] } },
     });
-    expect(read(cwd, ".claude/skills/tejo/SKILL.md")).toMatch(/^---\nname: tejo\ndescription: /);
-    expect(read(cwd, ".claude/skills/tejo/SKILL.md")).toContain("write_node");
+    const notes = read(cwd, ".claude/skills/tejo/SKILL.md");
+    expect(notes).toMatch(/^---\nname: tejo\ndescription: /);
+    expect(notes).toContain("npx -y @ivanroosveltlt/tejo@latest guide notes knowledge");
+    expect(notes).toContain("npx @ivanroosveltlt/tejo check knowledge");
+    const map = read(cwd, ".claude/skills/tejo-map/SKILL.md");
+    expect(map).toMatch(/^---\nname: tejo-map\ndescription: /);
+    expect(map).toContain("npx -y @ivanroosveltlt/tejo@latest guide map knowledge");
+    expect(map).toContain("--scope");
+    expect(read(cwd, "AGENTS.md")).toContain("tejo-map");
     expect(read(cwd, "AGENTS.md")).toContain("<!-- tejo:start -->");
     expect(existsSync(join(cwd, "CLAUDE.md"))).toBe(false);
     expect(check(join(cwd, "knowledge")).errors).toBe(0);
@@ -27,11 +35,12 @@ describe("tejo init", () => {
   it("es idempotente", () => {
     const cwd = tempFolder({});
     init(cwd, "knowledge");
-    const before = [".mcp.json", "AGENTS.md", ".claude/skills/tejo/SKILL.md"].map((p) => read(cwd, p));
+    const files = [".mcp.json", "AGENTS.md", ...SKILLS];
+    const before = files.map((p) => read(cwd, p));
     const report = init(cwd, "knowledge");
     expect(report.created).toEqual([]);
     expect(report.updated).toEqual([]);
-    expect([".mcp.json", "AGENTS.md", ".claude/skills/tejo/SKILL.md"].map((p) => read(cwd, p))).toEqual(before);
+    expect(files.map((p) => read(cwd, p))).toEqual(before);
   });
 
   it("fusiona un .mcp.json existente y conserva lo ajeno", () => {
@@ -40,7 +49,7 @@ describe("tejo init", () => {
     const config = JSON.parse(read(cwd, ".mcp.json"));
     expect(config.extra).toBe(1);
     expect(config.mcpServers.otro).toEqual({ command: "x" });
-    expect(config.mcpServers.tejo.args).toEqual(["-y", "@ivanroosveltlt/tejo", "mcp", "knowledge"]);
+    expect(config.mcpServers.tejo.args).toEqual(["-y", LATEST, "mcp", "knowledge"]);
   });
 
   it("un .mcp.json inválido aborta sin escribir nada", () => {
@@ -88,9 +97,19 @@ describe("tejo init", () => {
     const cwd = tempFolder({});
     init(cwd, "knowledge");
     const report = init(cwd, "docs/kb");
-    expect(report.updated.sort()).toEqual([".claude/skills/tejo/SKILL.md", ".mcp.json", "AGENTS.md"].sort());
-    expect(JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo.args).toEqual(["-y", "@ivanroosveltlt/tejo", "mcp", "docs/kb"]);
-    expect(read(cwd, ".claude/skills/tejo/SKILL.md")).toContain("docs/kb/");
+    expect(report.updated.sort()).toEqual([...SKILLS, ".mcp.json", "AGENTS.md"].sort());
+    expect(JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo.args).toEqual(["-y", LATEST, "mcp", "docs/kb"]);
+    expect(read(cwd, ".claude/skills/tejo/SKILL.md")).toContain("guide notes docs/kb");
+  });
+
+  it("migra un proyecto de 0.1.x (args sin @latest) sin tocar sus notas", () => {
+    const old = { mcpServers: { tejo: { command: "npx", args: ["-y", "@ivanroosveltlt/tejo", "mcp", "knowledge"] } } };
+    const cwd = tempFolder({ ".mcp.json": `${JSON.stringify(old, null, 2)}\n`, "knowledge/propia.md": "# propia\n" });
+    const report = init(cwd, "knowledge");
+    expect(report.updated).toContain(".mcp.json");
+    expect(report.created).toContain(".claude/skills/tejo-map/SKILL.md");
+    expect(JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo.args).toEqual(["-y", LATEST, "mcp", "knowledge"]);
+    expect(read(cwd, "knowledge/propia.md")).toBe("# propia\n");
   });
 
   it("agrega @AGENTS.md a un CLAUDE.md existente una sola vez", () => {
@@ -110,7 +129,7 @@ describe("tejo init", () => {
   it("acepta una ruta de carpeta con ./ o barra final y la normaliza", () => {
     const cwd = tempFolder({});
     init(cwd, "./docs/kb/");
-    expect(JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo.args).toEqual(["-y", "@ivanroosveltlt/tejo", "mcp", "docs/kb"]);
+    expect(JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo.args).toEqual(["-y", LATEST, "mcp", "docs/kb"]);
   });
 
   it("rechaza una carpeta fuera del proyecto", () => {
