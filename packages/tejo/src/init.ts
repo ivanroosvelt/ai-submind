@@ -28,8 +28,13 @@ function withBlock(current: string | null, block: string): string {
   return `${current.replace(/\n*$/, "\n")}\n${block}`;
 }
 
-/** `tejo init` (spec §4.1, decisión #65): idempotente; calcula todo antes de escribir. */
-export function init(cwd: string, folderArg: string): InitReport {
+/** Los archivos que son de tejo: `staleFiles` solo mira estos (no `CLAUDE.md` ni la nota de bienvenida). */
+const OWNED = [".mcp.json", ".claude/skills/tejo/SKILL.md", ".claude/skills/tejo-map/SKILL.md", "AGENTS.md"];
+
+type Plan = { folder: string; entry: { command: string; args: string[] }; writes: Write[] };
+
+/** Lo que `init` escribiría, sin tocar el disco; lanza con los mismos errores que `init`. */
+function plan(cwd: string, folderArg: string): Plan {
   const absolute = resolve(cwd, folderArg);
   const rel = relative(cwd, absolute);
   if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
@@ -53,7 +58,8 @@ export function init(cwd: string, folderArg: string): InitReport {
     throw new Error("mcpServers en .mcp.json no es un objeto");
   }
   const servers = (config.mcpServers ?? {}) as Record<string, unknown>;
-  config.mcpServers = { ...servers, tejo: { command: "npx", args: ["-y", PKG_LATEST, "mcp", folder] } };
+  const entry = { command: "npx", args: ["-y", PKG_LATEST, "mcp", folder] };
+  config.mcpServers = { ...servers, tejo: entry };
 
   const writes: Write[] = [
     { path: ".mcp.json", content: `${JSON.stringify(config, null, 2)}\n` },
@@ -65,7 +71,12 @@ export function init(cwd: string, folderArg: string): InitReport {
   if (claude !== null && !claude.includes("@AGENTS.md")) {
     writes.push({ path: "CLAUDE.md", content: `${claude.replace(/\n*$/, "\n")}\n@AGENTS.md\n` });
   }
+  return { folder, entry, writes };
+}
 
+/** `tejo init` (spec §4.1, decisiones #65 y #68): idempotente; calcula todo antes de escribir. */
+export function init(cwd: string, folderArg: string): InitReport {
+  const { folder, writes } = plan(cwd, folderArg);
   const report: InitReport = { created: [], updated: [], unchanged: [] };
   const folderPath = join(cwd, folder);
   if (hasDocuments(folderPath)) report.unchanged.push(`${folder}/`);
@@ -83,4 +94,26 @@ export function init(cwd: string, folderArg: string): InitReport {
     (current === null ? report.created : report.updated).push(path);
   }
   return report;
+}
+
+/**
+ * Archivos de tejo que faltan o difieren de lo que escribiría `init` (#68).
+ * De `.mcp.json` solo compara la entrada `tejo`, no el formato. Nunca lanza:
+ * ante cualquier error devuelve [] y el servidor arranca sin aviso.
+ */
+export function staleFiles(cwd: string, folderArg: string): string[] {
+  try {
+    const { entry, writes } = plan(cwd, folderArg);
+    return writes
+      .filter(({ path, content }) => {
+        if (!OWNED.includes(path)) return false;
+        const current = readIfExists(join(cwd, path));
+        if (path !== ".mcp.json") return current !== content;
+        const tejo = current === null ? undefined : JSON.parse(current).mcpServers?.tejo;
+        return JSON.stringify(tejo) !== JSON.stringify(entry);
+      })
+      .map(({ path }) => path);
+  } catch {
+    return [];
+  }
 }

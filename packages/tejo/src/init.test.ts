@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { init } from "./init.js";
+import { init, staleFiles } from "./init.js";
+import { staleNotice } from "./templates.js";
 import { check } from "./check.js";
 import { tempFolder } from "./test-folder.js";
 
@@ -135,5 +136,59 @@ describe("tejo init", () => {
   it("rechaza una carpeta fuera del proyecto", () => {
     const cwd = tempFolder({});
     expect(() => init(cwd, "../fuera")).toThrow("la carpeta tiene que estar dentro del proyecto: '../fuera'");
+  });
+});
+
+describe("staleFiles", () => {
+  it("vacío justo después de init", () => {
+    const cwd = tempFolder({});
+    init(cwd, "knowledge");
+    expect(staleFiles(cwd, "knowledge")).toEqual([]);
+  });
+
+  it("lista una skill borrada y un bloque de AGENTS.md viejo", () => {
+    const cwd = tempFolder({});
+    init(cwd, "knowledge");
+    rmSync(join(cwd, ".claude/skills/tejo-map/SKILL.md"));
+    writeFileSync(join(cwd, "AGENTS.md"), "<!-- tejo:start -->\nviejo\n<!-- tejo:end -->\n");
+    expect(staleFiles(cwd, "knowledge")).toEqual([".claude/skills/tejo-map/SKILL.md", "AGENTS.md"]);
+  });
+
+  it("lista un .mcp.json de 0.1.x", () => {
+    const old = { mcpServers: { tejo: { command: "npx", args: ["-y", "@ivanroosveltlt/tejo", "mcp", "knowledge"] } } };
+    const cwd = tempFolder({});
+    init(cwd, "knowledge");
+    writeFileSync(join(cwd, ".mcp.json"), JSON.stringify(old));
+    expect(staleFiles(cwd, "knowledge")).toEqual([".mcp.json"]);
+  });
+
+  it("ignora el formato de .mcp.json si la entrada tejo es la correcta", () => {
+    const cwd = tempFolder({});
+    init(cwd, "knowledge");
+    const config = JSON.parse(read(cwd, ".mcp.json"));
+    writeFileSync(join(cwd, ".mcp.json"), JSON.stringify({ otro: 1, ...config }));
+    expect(staleFiles(cwd, "knowledge")).toEqual([]);
+  });
+
+  it("no lanza: .mcp.json inválido o carpeta fuera del proyecto dan []", () => {
+    const cwd = tempFolder({ ".mcp.json": "{ no" });
+    expect(staleFiles(cwd, "knowledge")).toEqual([]);
+    expect(staleFiles(cwd, "../fuera")).toEqual([]);
+  });
+
+  it("no cuenta CLAUDE.md ni la nota de bienvenida", () => {
+    const cwd = tempFolder({});
+    init(cwd, "knowledge");
+    writeFileSync(join(cwd, "CLAUDE.md"), "# sin @AGENTS\n");
+    rmSync(join(cwd, "knowledge/bienvenida.md"));
+    expect(staleFiles(cwd, "knowledge")).toEqual([]);
+  });
+});
+
+describe("staleNotice", () => {
+  it("nombra los archivos y el comando para actualizar", () => {
+    const text = staleNotice("docs/kb", [".mcp.json", "AGENTS.md"]);
+    expect(text).toContain("`.mcp.json`, `AGENTS.md`");
+    expect(text).toContain("npx @ivanroosveltlt/tejo@latest init docs/kb");
   });
 });

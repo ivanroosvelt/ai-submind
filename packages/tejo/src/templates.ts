@@ -78,3 +78,9 @@ markdown libre. Los bloques \`\`\`flo dentro de una nota son diagramas.
 - \`npx ${PKG} check\` lista los errores.
 - Los agentes la usan por el servidor MCP \`tejo\` (ver \`.mcp.json\`).
 `;
+
+/** Aviso que `tejo mcp` suma a sus instrucciones si los archivos de `init` difieren (#68). En inglés: lo lee el agente. */
+export function staleNotice(folder: string, files: string[]): string {
+  return `## tejo files out of date
+These files written by \`tejo init\` are missing or out of date: ${files.map((file) => `\`${file}\``).join(", ")}. Tell the user to run \`npx ${PKG_LATEST} init ${folder}\` to refresh them; their notes are not touched.`;
+}

@@ -4,8 +4,9 @@ import { parseArgs } from "node:util";
 import { INSTRUCTIONS, MAP_PROMPT, runMcp } from "@tejo/mcp";
 import { check } from "./check.js";
 import { DEFAULT_FOLDER, resolveFolder } from "./folder-arg.js";
-import { init } from "./init.js";
+import { init, staleFiles } from "./init.js";
 import { DEFAULT_PORT, startView } from "./server.js";
+import { staleNotice } from "./templates.js";
 
 export const USAGE = `uso:
   tejo init [carpeta]                     prepara la carpeta, .mcp.json, la skill y AGENTS.md
@@ -41,7 +42,9 @@ export async function main(argv: string[], cwd: string): Promise<number> {
       }
       case "mcp": {
         const { positionals } = parseArgs({ args: rest, allowPositionals: true });
-        await runMcp(resolveFolder(positionals[0], cwd));
+        const folderArg = positionals[0] ?? DEFAULT_FOLDER;
+        const stale = staleFiles(cwd, folderArg);
+        await runMcp(resolveFolder(positionals[0], cwd), stale.length > 0 ? staleNotice(folderArg, stale) : undefined);
         return 0;
       }
       case "view": {
