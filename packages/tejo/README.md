@@ -1,8 +1,10 @@
 # tejo
 
-Base de conocimiento local para tu proyecto y tus agentes: notas `.md` con
-frontmatter y diagramas `.flo`, versionadas con el repo, un servidor MCP, una
-skill para el agente y un visor web.
+**El conocimiento de tu proyecto, tejido en el repo.**
+
+Decisiones, reglas, incidentes y flujos como notas `.md` con frontmatter y
+diagramas `.flo`, versionados junto al código y conectados en un grafo que
+consultan las personas (en el visor) y los agentes (por MCP).
 
 ```bash
 npm i -D @ivanroosveltlt/tejo        # o usa npx @ivanroosveltlt/tejo … sin instalar

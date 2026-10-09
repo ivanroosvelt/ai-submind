@@ -1,28 +1,67 @@
 # tejo
 
-tejo es una base de conocimiento local para proyectos y agentes, escrita en `.flo`, un lenguaje de diagramas propio: un reemplazo de Mermaid con
-gramática determinista, parser con recuperación de errores y diagnósticos
-estructurados en vez de mensajes de texto suelto. Sin compatibilidad con
-sintaxis Mermaid: es un formato nuevo desde cero.
+**El conocimiento de tu proyecto, tejido en el repo.**
 
-> **Estado actual:** Fases 0-5 completas (monorepo + CI, lenguaje, layout
-> + render SVG, editor web, persistencia y exportación, deploy y docs).
-> Sobre esa base, la rama `v2` implementa las
-> [entidades centralizadas](docs/superpowers/specs/2026-09-19-flo-entidades-centralizadas.md):
-> fases A–F completas (rangos, lexer dirigido por el parser, catálogo de
-> entidades y bloques nombrados, workspace multi-documento con `use`,
-> índice de referencias cruzadas, atributos `data-flo-*` en el SVG y
-> navegación en el editor: explorador, panel de entidad, ir a definición,
-> renombrar y mapa agregado). Del
-> [grafo de conocimiento](docs/superpowers/specs/2026-09-28-flo-grafo-de-conocimiento-design.md)
-> están completas K1, K2, K3 y K4: un `.md` con frontmatter tipado es una entidad del
-> catálogo, `query`/`tagCatalog` lo consultan y `@tejo/mcp` lo expone a agentes
-> por MCP. Pendiente: la Fase 6 (ver [Roadmap](#roadmap)).
+[![npm](https://img.shields.io/npm/v/@ivanroosveltlt/tejo)](https://www.npmjs.com/package/@ivanroosveltlt/tejo)
 
-## Ejemplos
+Las decisiones, reglas, incidentes y flujos de un proyecto suelen quedar
+dispersos entre wikis, hilos y la memoria de quien estuvo ahí. tejo los
+guarda junto al código, como texto plano que se versiona con el repo, y
+los teje en un grafo que pueden consultar tanto las personas como los
+agentes:
 
-Un documento declara un catálogo de entidades y uno o más bloques
-(`flow`/`sequence`) que las conectan:
+- **Notas `.md`** con frontmatter tipado (`decision`, `incident`, `business_rule`…;
+  el vocabulario es libre) y relaciones explícitas entre ellas.
+- **Diagramas `.flo`**, un lenguaje propio y pensado para eso: las
+  entidades (usuario, API, base de datos) se declaran una vez y se
+  reutilizan en todos los flujos, de modo que una nota puede apuntar a
+  `api` o a `login.flo#acceso` y el enlace no se rompe.
+- **Un servidor MCP** para que el agente consulte el grafo antes de decidir
+  y anote lo nuevo; solo escribe notas que pasan el chequeo.
+- **Un visor** que dibuja el grafo y los diagramas y muestra al instante lo
+  que el agente escribe.
+
+## Empezar
+
+```bash
+npx @ivanroosveltlt/tejo init    # knowledge/, .mcp.json, skill del agente y bloque en AGENTS.md
+npx @ivanroosveltlt/tejo view    # visor en http://127.0.0.1:8356
+npx @ivanroosveltlt/tejo check   # sale con 1 si hay errores (útil en CI)
+```
+
+Una nota es markdown con frontmatter, y puede llevar diagramas adentro:
+
+````md
+---
+id: decision_pkce
+title: "Decisión: OAuth2 + PKCE"
+memory_type: long_term
+type_tags: [decision, architecture]
+relations:
+  - target: ../reglas/passwords.md
+    type: enforces
+  - target: ../login.flo#acceso
+    type: visualized_by
+---
+
+El login usa authorization code con PKCE: el cliente no guarda secretos.
+
+```flo
+flow pkce "Validación PKCE" {
+  api -> auth : validar code_verifier
+  auth -> api : refresh token
+}
+```
+````
+
+Hay un proyecto de ejemplo completo en [`examples/04-conocimiento`](examples/04-conocimiento).
+
+## El lenguaje `.flo`
+
+Gramática determinista, un parser que no se detiene en el primer error y
+diagnósticos con código y posición, para que tanto el editor como el agente
+sepan exactamente qué arreglar. Un documento declara un catálogo de
+entidades y uno o más bloques (`flow`/`sequence`) que las conectan:
 
 ```
 entity user (Usuario)
@@ -183,16 +222,16 @@ Monorepo con pnpm workspaces:
   directamente en la carpeta. `pnpm --filter @ivanroosveltlt/tejo test:pack` instala el
   tarball en un proyecto temporal y prueba `init`, `check` y `view`.
 
-## Uso
+## Desarrollo
 
 Requiere Node 20+ y pnpm (via `corepack enable`, la versión queda fijada
 por `packageManager` en el `package.json` raíz).
 
 ```bash
 pnpm install
-pnpm build      # compila @tejo/core, y después @tejo/web, @tejo/mcp y tejo
+pnpm build      # compila @tejo/core, y después @tejo/web, @tejo/mcp y @ivanroosveltlt/tejo
 pnpm typecheck
-pnpm test       # 552 tests (vitest): 250 en @tejo/core + 214 en @tejo/web + 54 en @tejo/mcp + 34 en tejo
+pnpm test       # 558 tests (vitest): 250 en @tejo/core + 214 en @tejo/web + 54 en @tejo/mcp + 40 en @ivanroosveltlt/tejo
 ```
 
 Cada paquete también corre estos scripts individualmente con
@@ -208,8 +247,29 @@ pnpm build   # genera packages/web/dist
 pnpm serve   # vite preview — sirve ese dist localmente
 ```
 
-CI (`.github/workflows/ci.yml`) corre `install --frozen-lockfile → build →
-typecheck → test → test:pack` en cada push y PR.
+## CI y releases
+
+- **CI** (`.github/workflows/ci.yml`): `install --frozen-lockfile → build →
+  typecheck → test → test:pack` en cada push y PR.
+- **Release** (`.github/workflows/release.yml`): un tag `v*` publica
+  `@ivanroosveltlt/tejo` en npm. Corre build, typecheck y tests, comprueba
+  que el tag coincida con la `version` de `packages/tejo/package.json` y
+  publica con [Trusted Publishing](https://docs.npmjs.com/trusted-publishers)
+  (OIDC): no hay token de npm en el repo. La conexión está configurada en
+  npmjs.com → paquete → Settings → Trusted Publisher, atada a
+  `ivanroosvelt/tejo` y `release.yml`; si el workflow cambia de nombre hay
+  que recrearla.
+
+Para sacar una versión:
+
+```bash
+cd packages/tejo && npm version patch --no-git-tag-version && cd ../..   # o minor / major
+git commit -am "chore(tejo): vX.Y.Z"
+git tag vX.Y.Z && git push --follow-tags
+```
+
+Solo se publica `@ivanroosveltlt/tejo`; `@tejo/core`, `@tejo/mcp` y
+`@tejo/web` son privados y viajan empaquetados dentro del CLI.
 
 ## Documentación
 
@@ -226,9 +286,11 @@ typecheck → test → test:pack` en cada push y PR.
 
 ## Roadmap
 
-Orden de la v2: D → E → K1 → K2 → K3 → F → **K4**.
+Hecho: lenguaje, layout y render a SVG, editor web, entidades
+centralizadas y workspace (fases A–F), grafo de conocimiento y MCP
+(K1–K4), y el CLI publicado en npm con releases por tag.
 
-- **K4** — vista de grafo de conocimiento en la web.
-- **Fase 6** — publicación en npm: el paquete publicable es `tejo` (`packages/tejo`); `@tejo/core` es privado. Publicar (`npm login && npm publish`) queda a cargo del usuario. Falta además habilitar GitHub Pages en Settings → Pages → Source: "GitHub Actions" para que el workflow de deploy quede activo.
+- **Pendiente** — habilitar GitHub Pages en Settings → Pages → Source:
+  "GitHub Actions" para que el workflow de deploy del editor quede activo.
 
 Detalle completo de cada fase en los specs enlazados arriba.
