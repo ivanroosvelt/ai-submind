@@ -9,7 +9,7 @@ import { DEFAULT_PORT, startView } from "./server.js";
 import { VERSION, staleNotice } from "./templates.js";
 
 export const USAGE = `uso:
-  tejo init [carpeta]                     prepara la carpeta, .mcp.json, la skill y AGENTS.md
+  tejo init [carpeta]                     prepara la carpeta, .mcp.json, las skills y AGENTS.md
   tejo mcp [carpeta]                      servidor MCP por stdio (lo arranca el agente)
   tejo view [carpeta] [--port N] [--no-open]  visor en http://127.0.0.1:8356
   tejo check [carpeta]                    lista los errores; sale con 1 si hay alguno

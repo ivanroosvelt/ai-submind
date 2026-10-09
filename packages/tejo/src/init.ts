@@ -22,7 +22,7 @@ function withBlock(current: string | null, block: string): string {
   // El inicio es el último marcador antes del fin: un inicio huérfano no arrastra texto ajeno.
   const start = end >= 0 ? current.lastIndexOf(BLOCK_START, end) : -1;
   if (start >= 0) {
-    const after = current.slice(end + BLOCK_END.length).replace(/^\n/, "");
+    const after = current.slice(end + BLOCK_END.length).replace(/^\r?\n/, "");
     return current.slice(0, start) + block + after;
   }
   return `${current.replace(/\n*$/, "\n")}\n${block}`;
@@ -108,9 +108,11 @@ export function staleFiles(cwd: string, folderArg: string): string[] {
       .filter(({ path, content }) => {
         if (!OWNED.includes(path)) return false;
         const current = readIfExists(join(cwd, path));
-        if (path !== ".mcp.json") return current !== content;
+        // Se normaliza CRLF: un checkout en Windows no es un archivo desactualizado.
+        if (path !== ".mcp.json") return current?.replace(/\r\n/g, "\n") !== content.replace(/\r\n/g, "\n");
+        // Solo importan command y args: `claude mcp add` agrega type/env y el orden no cuenta.
         const tejo = current === null ? undefined : JSON.parse(current).mcpServers?.tejo;
-        return JSON.stringify(tejo) !== JSON.stringify(entry);
+        return JSON.stringify([tejo?.command, tejo?.args]) !== JSON.stringify([entry.command, entry.args]);
       })
       .map(({ path }) => path);
   } catch {

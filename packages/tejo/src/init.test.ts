@@ -170,6 +170,22 @@ describe("staleFiles", () => {
     expect(staleFiles(cwd, "knowledge")).toEqual([]);
   });
 
+  it("ignora claves extra y otro orden en la entrada tejo de .mcp.json", () => {
+    const cwd = tempFolder({});
+    init(cwd, "knowledge");
+    const { command, args } = JSON.parse(read(cwd, ".mcp.json")).mcpServers.tejo;
+    const entry = { env: {}, args, command, type: "stdio" };
+    writeFileSync(join(cwd, ".mcp.json"), JSON.stringify({ mcpServers: { tejo: entry } }));
+    expect(staleFiles(cwd, "knowledge")).toEqual([]);
+  });
+
+  it("ignora finales de línea CRLF", () => {
+    const cwd = tempFolder({});
+    init(cwd, "knowledge");
+    writeFileSync(join(cwd, "AGENTS.md"), read(cwd, "AGENTS.md").replace(/\n/g, "\r\n"));
+    expect(staleFiles(cwd, "knowledge")).toEqual([]);
+  });
+
   it("no lanza: .mcp.json inválido o carpeta fuera del proyecto dan []", () => {
     const cwd = tempFolder({ ".mcp.json": "{ no" });
     expect(staleFiles(cwd, "knowledge")).toEqual([]);

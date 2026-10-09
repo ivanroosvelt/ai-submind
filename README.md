@@ -204,7 +204,7 @@ Monorepo con pnpm workspaces:
   nota y cómo reutilizar las existentes. El prompt `map` (`/mcp__tejo__map` en Claude Code, o la skill `tejo-map`) guía el volcado de un proyecto existente a la base, con un plan reanudable en `map-plan.md`.
 
   Para usarlo desde Claude Code, `npx @ivanroosveltlt/tejo init` deja el `.mcp.json` listo
-  (o a mano: `claude mcp add tejo -- npx -y @ivanroosveltlt/tejo@latest mcp knowledge`).
+  (o a mano: `claude mcp add tejo -- npx -y @ivanroosveltlt/tejo@latest mcp knowledge`). Sin `init` no hay skills ni bloque en AGENTS.md, así que el agente te va a sugerir correrlo.
 
 - **`@ivanroosveltlt/tejo`** (`packages/tejo`) — el CLI publicable: empaqueta core, mcp y el
   visor web en un solo paquete (`dist/cli.js` + `dist/viewer/`).

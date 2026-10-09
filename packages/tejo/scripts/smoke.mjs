@@ -19,6 +19,9 @@ try {
   if (config.mcpServers.tejo.args.join(" ") !== "-y @ivanroosveltlt/tejo@latest mcp knowledge") throw new Error("'.mcp.json' inesperado");
   if (!run("npx", ["--no-install", "tejo", "guide", "map"]).includes("map-plan.md")) throw new Error("'tejo guide map' inesperado");
 
+  const version = JSON.parse(readFileSync(join(pkg, "package.json"), "utf8")).version;
+  if (run("npx", ["--no-install", "tejo", "--version"]).trim() !== version) throw new Error("'tejo --version' inesperado");
+
   // Se lanza el bin instalado con node (sin npx) para que kill() mate al proceso real y no deje huérfanos.
   view = spawn("node", [join(work, "node_modules/@ivanroosveltlt/tejo/dist/cli.js"), "view", "--no-open", "--port", "0"], { cwd: work });
   const url = await new Promise((resolve, reject) => {
