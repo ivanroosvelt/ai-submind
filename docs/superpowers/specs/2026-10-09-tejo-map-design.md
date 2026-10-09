@@ -32,9 +32,10 @@ las features nuevas (como `map`) de ahora en adelante.
   `check`.
 - Una sesión cortada se retoma donde quedó: el progreso se guarda después de
   cada paso.
-- `npx @ivanroosveltlt/tejo@latest init` en un proyecto inicializado con una
-  versión anterior deja el servidor MCP y las skills en la versión nueva sin
-  tocar las notas.
+- Un proyecto inicializado recibe las features nuevas sin hacer nada: el
+  servidor y el texto de las skills salen siempre de la última versión. Si
+  una versión nueva cambia los archivos que escribe `init`, el agente avisa
+  que hay que correrlo.
 
 ## 2. El prompt `map`
 
@@ -153,55 +154,76 @@ otro cambio.
   (`map-plan.md`, no `<folder>/map-plan.md`), y que sin MCP se editan los
   archivos de `<folder>/` y se valida con `npx @ivanroosveltlt/tejo check`.
 - **Skill**: `tejo init` escribe también `.claude/skills/tejo-map/SKILL.md`
-  (`name: tejo-map`; en Claude Code, `/tejo-map`) con `MAP_PROMPT(folder)`.
-  El `scope` se le pasa al agente en el mismo mensaje
-  (`/tejo-map packages/core`); la skill lo dice en una línea.
+  (`name: tejo-map`; en Claude Code, `/tejo-map`), una skill mínima que lee
+  el texto con `tejo guide map` (§4). El `scope` se le pasa al agente en el
+  mismo mensaje (`/tejo-map packages/core`) y la skill lo traduce a
+  `--scope`.
 - El bloque de `AGENTS.md` suma una línea: para volcar el proyecto a la base,
   el prompt MCP `map` o la skill `tejo-map`.
 
-## 4. Versionado y actualización
+## 4. Actualización automática
 
-Hoy `init` registra `npx -y @ivanroosveltlt/tejo mcp <carpeta>` sin versión:
-npx reutiliza lo que tiene en caché y un proyecto puede quedarse con el
-servidor viejo; las skills nuevas solo llegan si se vuelve a correr `init`.
+El texto vive solo en el paquete; en el repo no queda nada con versión.
 
-- `init` **fija la versión**: `mcpServers.tejo = npx -y
-  @ivanroosveltlt/tejo@<versión> mcp <carpeta>`. La versión sale del
-  `package.json` del paquete (mismo mecanismo que `tools.ts`). El servidor y
-  las skills de un proyecto quedan siempre en la misma versión.
-- **Actualizar** = `npx @ivanroosveltlt/tejo@latest init [carpeta]`. Como
-  `init` es idempotente, regenera las skills (y crea las nuevas), el bloque
-  de `AGENTS.md` y la versión de `.mcp.json`; las notas no se tocan. Una
-  entrada vieja sin versión se reemplaza.
-- `init` termina imprimiendo cómo actualizar.
+- **`.mcp.json` sigue a la última versión**: `mcpServers.tejo = npx -y
+  @ivanroosveltlt/tejo@latest mcp <carpeta>`. Cada sesión del agente arranca
+  el servidor más nuevo, con sus instrucciones y prompts. Verificado con npm
+  10.9.8: con la caché caliente arranca en ~4 s (≈ igual que una versión
+  fija) y sin red usa la versión de la caché.
+- **`tejo guide <topic> [carpeta] [--scope ruta]`** imprime el texto vigente:
+  `notes` → `INSTRUCTIONS`, `map` → `MAP_PROMPT(carpeta, scope)`. Un topic
+  desconocido es error (exit 1).
+- **Skills mínimas**: `.claude/skills/tejo/SKILL.md` y
+  `.claude/skills/tejo-map/SKILL.md` ya no copian el texto; le piden al agente
+  correr `npx -y @ivanroosveltlt/tejo@latest guide notes|map <carpeta>` (con
+  `--scope <ruta>` si el pedido nombra una) y seguir lo que imprime. Conservan
+  la sección "sin el servidor MCP" (`check`, `view`). Su contenido solo cambia
+  si cambia la forma de las skills, no el texto.
+- **Aviso de archivos desactualizados**: `tejo mcp` compara, antes de
+  arrancar, los archivos que `init` escribiría (las skills, la entrada
+  `tejo` de `.mcp.json` y el bloque de `AGENTS.md`; no `CLAUDE.md` ni la nota
+  de bienvenida) con los del disco. Si alguno difiere o falta, suma a las
+  instrucciones del servidor, en inglés: los archivos desactualizados y que
+  se le pida a la persona correr `npx @ivanroosveltlt/tejo@latest init
+  <carpeta>`. La comparación es local (no consulta el registro). Si la
+  carpeta no está dentro del cwd o la comparación falla, no hay aviso.
+  El servidor nunca escribe esos archivos por su cuenta.
+- **Migración única desde 0.1.x**: su `.mcp.json` dice `npx -y
+  @ivanroosveltlt/tejo mcp …` sin `@latest`, y npx sigue usando la 0.1.x de
+  la caché, que no sabe avisar. Hay que correr `npx
+  @ivanroosveltlt/tejo@latest init` una vez; el README lo dice.
 - `tejo --version` (y `-v`) imprime la versión.
-- El README documenta "Actualizar".
 
-Fuera de alcance: que el servidor avise de una versión nueva. Se agrega si
-actualizar a mano resulta un problema.
+Descartado: fijar la versión en `.mcp.json` (obliga a actualizar a mano) y
+que el servidor reescriba las skills al arrancar (modifica el repo sin que
+nadie lo pida).
 
 ## 5. Decisión #68
 
-> **Prompt `map` y versión fijada.** Enmienda a #63: el servidor MCP registra
-> un prompt, `map` (argumento opcional `scope`), que guía el volcado de un
-> proyecto a la base (plan reanudable en `map-plan.md`, recorrido por
-> áreas con el progreso actualizado tras cada una, nota índice, `check`).
-> Su texto tiene una sola fuente, `MAP_PROMPT` de `@tejo/mcp`, que también
-> usa la skill `.claude/skills/tejo-map/SKILL.md` que escribe `init`.
-> Enmienda a #65/#67: `init` fija la versión del paquete en `.mcp.json`
-> (`@ivanroosveltlt/tejo@<versión>`); actualizar es correr
-> `npx @ivanroosveltlt/tejo@latest init`. `tejo --version` imprime la
-> versión.
+> **Prompt `map` y actualización automática.** Enmienda a #63: el servidor
+> MCP registra un prompt, `map` (argumento opcional `scope`), que guía el
+> volcado de un proyecto a la base (plan reanudable en `map-plan.md`,
+> recorrido por áreas con el progreso actualizado tras cada una, nota
+> `overview.md`, `check`). Su texto, en inglés como todo lo que genera, tiene
+> una sola fuente: `MAP_PROMPT` de `@tejo/mcp`. Enmienda a #65/#67:
+> `.mcp.json` registra `npx -y @ivanroosveltlt/tejo@latest mcp <carpeta>`;
+> las skills `tejo` y `tejo-map` son mínimas y leen el texto vigente con
+> `tejo guide notes|map`; `tejo mcp` avisa en sus instrucciones si los
+> archivos de `init` están desactualizados, sin escribirlos. `tejo --version`
+> imprime la versión.
 
 ## 6. Tests
 
 - `@tejo/mcp`:
   - el servidor lista el prompt `map`; `getPrompt` con y sin `scope`
     devuelve un texto que nombra la carpeta y, si viene, el `scope`;
-  - la nota con el ejemplo de flow pasa por `write_node` sin errores.
-- `tejo` (`init`):
-  - escribe `.claude/skills/tejo-map/SKILL.md`;
-  - `.mcp.json` lleva `@ivanroosveltlt/tejo@<versión del package.json>`;
-  - un `.mcp.json` con la entrada vieja sin versión queda actualizado;
-  - correr `init` dos veces deja todo en "sin cambios".
-- `tejo` (CLI): `--version` imprime la versión y sale con 0.
+  - la nota de ejemplo con flow pasa por `write_node` sin errores;
+  - `createServer` con un aviso extra lo suma a las instrucciones.
+- `tejo`:
+  - `init` escribe las dos skills mínimas y `.mcp.json` con `@latest`; un
+    `.mcp.json` de 0.1.x queda actualizado; dos corridas dan "sin cambios";
+  - `guide notes` imprime `INSTRUCTIONS`; `guide map knowledge --scope x`
+    imprime `MAP_PROMPT("knowledge", "x")`; un topic desconocido sale con 1;
+  - el aviso: vacío tras `init`, lista los archivos tras borrar una skill o
+    con un `.mcp.json` viejo, vacío si la carpeta está fuera del cwd;
+  - `--version` imprime la versión y sale con 0.
