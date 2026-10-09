@@ -1,9 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createRequire } from "node:module";
+import { relative, sep } from "node:path";
 import { z } from "zod";
 import { MEMORY_TYPES, query, tagCatalog, type Where } from "@tejo/core";
 import type { FloFolder } from "./folder.js";
-import { INSTRUCTIONS } from "./instructions.js";
+import { INSTRUCTIONS, MAP_PROMPT } from "./instructions.js";
 
 // Una sola fuente de la versión: package.json (está junto a dist/ y a src/).
 const { version } = createRequire(import.meta.url)("../package.json") as { version: string };
@@ -43,9 +44,10 @@ function guarded<A extends unknown[], R>(handler: (...args: A) => Promise<R>) {
   };
 }
 
-/** Las cinco herramientas del spec de conocimiento §6 sobre una carpeta (decisión #35). */
-export function createServer(folder: FloFolder): McpServer {
-  const server = new McpServer({ name: "tejo", version }, { instructions: INSTRUCTIONS });
+/** Las cinco herramientas del spec de conocimiento §6 y el prompt `map` (#35, #68); `notice` se suma a las instrucciones. */
+export function createServer(folder: FloFolder, notice?: string): McpServer {
+  const instructions = notice ? `${INSTRUCTIONS}\n\n${notice}` : INSTRUCTIONS;
+  const server = new McpServer({ name: "tejo", version }, { instructions });
 
   server.registerTool(
     "query",
@@ -114,6 +116,20 @@ export function createServer(folder: FloFolder): McpServer {
       const result = folder.write(path, content);
       return result.ok ? json(result) : failure(result);
     })
+  );
+
+  server.registerPrompt(
+    "map",
+    {
+      title: "Map the project",
+      description: "Walk the project and write its notes, relations and flows into the knowledge base, with a resumable plan in map-plan.md.",
+      argsSchema: { scope: z.string().describe("Path to limit the walk to; the whole project if omitted.").optional() },
+    },
+    ({ scope }) => {
+      // `folder.root` ya es realpath; el cwd puede no serlo ni existir: se compara tal cual.
+      const rel = relative(process.cwd(), folder.root).split(sep).join("/") || ".";
+      return { messages: [{ role: "user", content: { type: "text", text: MAP_PROMPT(rel, scope) } }] };
+    }
   );
 
   return server;

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { FloFolder } from "./folder.js";
@@ -27,6 +27,7 @@ const CASE_INSENSITIVE_FS = ((): boolean => {
 
 const cleanup: (() => void)[] = [];
 afterEach(() => {
+  vi.restoreAllMocks();
   for (const undo of cleanup.splice(0)) undo();
 });
 
@@ -183,4 +184,54 @@ describe("tejo mcp tools", () => {
       { timeout: 5000, interval: 50 }
     );
   }, 15000);
+
+  it("lists the map prompt with an optional scope", async () => {
+    const { client } = await connect();
+    const { prompts } = await client.listPrompts();
+    expect(prompts.map((prompt) => prompt.name)).toEqual(["map"]);
+    expect(prompts[0].arguments).toEqual([expect.objectContaining({ name: "scope", required: false })]);
+  });
+
+  it("map names the folder relative to the cwd, and the scope when given", async () => {
+    const { folder, client } = await connect();
+    vi.spyOn(process, "cwd").mockReturnValue(dirname(folder.root));
+    const text = async (args: Record<string, string> = {}) =>
+      ((await client.getPrompt({ name: "map", arguments: args })).messages[0].content as { text: string }).text;
+    const whole = await text();
+    expect(whole).toContain(`\`${basename(folder.root)}/\``);
+    expect(whole).toContain("the whole project");
+    expect(whole).toContain("map-plan.md");
+    expect(await text({ scope: "packages/core" })).toContain("`packages/core`");
+    expect(await text({ scope: "  " })).toContain("the whole project");
+  });
+
+  it("map works when the folder is outside the cwd", async () => {
+    const { folder, client } = await connect();
+    vi.spyOn(process, "cwd").mockReturnValue(realpathSync(tmpdir()) + "/otro");
+    const result = await client.getPrompt({ name: "map", arguments: {} });
+    expect((result.messages[0].content as { text: string }).text).toContain(`../${basename(folder.root)}/`);
+  });
+
+  it("appends an extra notice to the instructions", async () => {
+    const root = mkdtempSync(join(tmpdir(), "tejo-"));
+    cleanup.push(() => rmSync(root, { recursive: true, force: true }));
+    const folder = new FloFolder(root);
+    folder.load();
+    const [serverSide, clientSide] = InMemoryTransport.createLinkedPair();
+    await createServer(folder, "NOTICE").connect(serverSide);
+    const client = new Client({ name: "test", version: "0.0.0" });
+    await client.connect(clientSide);
+    cleanup.push(() => void client.close());
+    expect(client.getInstructions()).toMatch(/write_node[\s\S]*\n\nNOTICE$/);
+  });
+
+  it("map's example note with a flow is valid", async () => {
+    const { client } = await connect();
+    const text = ((await client.getPrompt({ name: "map", arguments: {} })).messages[0].content as { text: string }).text;
+    // El último bloque ~~~markdown es la nota de ejemplo (el primero es el plan, sin flow).
+    const example = [...text.matchAll(/~~~markdown\n([\s\S]*?)~~~/g)].at(-1)?.[1];
+    expect(example).toContain("```flo");
+    const { call } = await connect({});
+    expect(await call("write_node", { path: "orders.md", content: example })).toEqual({ isError: false, value: { ok: true, uri: "orders.md" } });
+  });
 });
