@@ -1,5 +1,10 @@
+import { createRequire } from "node:module";
+
 // Nombre publicado en npm: "tejo" sin scope lo rechaza el registro (#67).
 export const PKG = "@ivanroosveltlt/tejo";
+
+// Una sola fuente de la versión: package.json, un nivel arriba de src/ y de dist/.
+export const { version: VERSION } = createRequire(import.meta.url)("../package.json") as { version: string };
 
 export const BLOCK_START = "<!-- tejo:start -->";
 export const BLOCK_END = "<!-- tejo:end -->";

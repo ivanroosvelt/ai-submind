@@ -6,7 +6,7 @@ import { check } from "./check.js";
 import { DEFAULT_FOLDER, resolveFolder } from "./folder-arg.js";
 import { init, staleFiles } from "./init.js";
 import { DEFAULT_PORT, startView } from "./server.js";
-import { staleNotice } from "./templates.js";
+import { VERSION, staleNotice } from "./templates.js";
 
 export const USAGE = `uso:
   tejo init [carpeta]                     prepara la carpeta, .mcp.json, la skill y AGENTS.md
@@ -14,6 +14,7 @@ export const USAGE = `uso:
   tejo view [carpeta] [--port N] [--no-open]  visor en http://127.0.0.1:8356
   tejo check [carpeta]                    lista los errores; sale con 1 si hay alguno
   tejo guide notes|map [carpeta] [--scope ruta]  imprime las instrucciones vigentes para el agente
+  tejo --version                          imprime la versión
 
 carpeta: por defecto '${DEFAULT_FOLDER}'.`;
 
@@ -22,6 +23,10 @@ export async function main(argv: string[], cwd: string): Promise<number> {
   const [command, ...rest] = argv;
   if (command === undefined || command === "--help" || command === "-h" || command === "help") {
     console.log(USAGE);
+    return 0;
+  }
+  if (command === "--version" || command === "-v") {
+    console.log(VERSION);
     return 0;
   }
   try {

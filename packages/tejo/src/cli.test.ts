@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { INSTRUCTIONS, MAP_PROMPT } from "@tejo/mcp";
 import { main } from "./cli.js";
@@ -16,6 +17,13 @@ describe("tejo cli", () => {
     const { out } = capture();
     expect(await main(["--help"], process.cwd())).toBe(0);
     expect(out.join("\n")).toContain("tejo init [carpeta]");
+  });
+
+  it.each([["--version"], ["-v"]])("%s imprime la versión y sale con 0", async (flag) => {
+    const { out } = capture();
+    const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string };
+    expect(await main([flag], tempFolder({}))).toBe(0);
+    expect(out).toEqual([version]);
   });
 
   it("un comando desconocido imprime el uso y sale con 1", async () => {

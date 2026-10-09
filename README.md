@@ -201,26 +201,26 @@ Monorepo con pnpm workspaces:
   (solo escribe `.md`/`.flo` dentro de la carpeta, y solo si el
   type-checker no encuentra errores nuevos). Al conectar, el servidor le pasa
   al agente instrucciones de uso: cuándo consultar y anotar, el formato de una
-  nota y cómo reutilizar las existentes.
+  nota y cómo reutilizar las existentes. El prompt `map` (`/mcp__tejo__map` en Claude Code, o la skill `tejo-map`) guía el volcado de un proyecto existente a la base, con un plan reanudable en `map-plan.md`.
 
   Para usarlo desde Claude Code, `npx @ivanroosveltlt/tejo init` deja el `.mcp.json` listo
-  (o a mano: `claude mcp add tejo -- npx -y @ivanroosveltlt/tejo mcp knowledge`).
+  (o a mano: `claude mcp add tejo -- npx -y @ivanroosveltlt/tejo@latest mcp knowledge`).
 
 - **`@ivanroosveltlt/tejo`** (`packages/tejo`) — el CLI publicable: empaqueta core, mcp y el
   visor web en un solo paquete (`dist/cli.js` + `dist/viewer/`).
 
   ```bash
   npm i -D @ivanroosveltlt/tejo     # o usa npx @ivanroosveltlt/tejo … sin instalar
-  npx @ivanroosveltlt/tejo init  # crea knowledge/, .mcp.json, .claude/skills/tejo y el bloque de AGENTS.md
+  npx @ivanroosveltlt/tejo init  # crea knowledge/, .mcp.json, las skills tejo y tejo-map y el bloque de AGENTS.md
   npx @ivanroosveltlt/tejo view  # abre el visor en http://127.0.0.1:8356
   npx @ivanroosveltlt/tejo check # lista errores; sale con 1 si hay alguno (útil en CI)
   ```
 
   Todos los comandos aceptan la carpeta como argumento (por defecto `knowledge`).
-  `init` puede correrse otra vez y solo actualiza lo suyo; `mcp` lo arranca el
+  `init` puede correrse otra vez y solo actualiza lo suyo; `.mcp.json` arranca `@latest` y las skills leen su texto con `tejo guide`, así que un proyecto inicializado recibe las versiones nuevas solo; si cambian los archivos de `init`, el agente avisa; `mcp` lo arranca el
   agente desde `.mcp.json`; `view [--port N] [--no-open]` lee y guarda
   directamente en la carpeta. `pnpm --filter @ivanroosveltlt/tejo test:pack` instala el
-  tarball en un proyecto temporal y prueba `init`, `check` y `view`.
+  tarball en un proyecto temporal y prueba `init`, `check`, `guide` y `view`.
 
 ## Desarrollo
 
