@@ -20,6 +20,26 @@ export function panViewBox([x, y, width, height]: ViewBox, dx: number, dy: numbe
   return [x - dx, y - dy, width, height];
 }
 
+/**
+ * El viewBox que muestra `content` entero en una caja de `width`×`height` px,
+ * con el mismo aspecto que la caja (el pan y el zoom asumen escala uniforme).
+ * Con `minScale`, si el contenido entero quedaría más chico que eso, se
+ * muestra a esa escala desde arriba al centro: legible antes que completo.
+ */
+export function fitViewBox([x, y, width, height]: ViewBox, box: { width: number; height: number }, minScale = 0): ViewBox {
+  if (box.width <= 0 || box.height <= 0 || width <= 0 || height <= 0) return [x, y, width, height];
+  const scale = Math.max(Math.min(box.width / width, box.height / height), minScale);
+  const w = box.width / scale;
+  const h = box.height / scale;
+  const top = h >= height ? y - (h - height) / 2 : y;
+  return [x - (w - width) / 2, top, w, h];
+}
+
+/** El viewBox de igual escala que `current`, centrado en `(cx, cy)`. */
+export function centerViewBox([, , width, height]: ViewBox, cx: number, cy: number): ViewBox {
+  return [cx - width / 2, cy - height / 2, width, height];
+}
+
 /** Rueda = zoom alrededor del puntero; arrastre con el botón principal = desplazar (spec de conocimiento §7). */
 export function bindPanZoom(svg: SVGSVGElement, onChange: (viewBox: ViewBox) => void): void {
   const current = () => parseViewBox(svg.getAttribute("viewBox")) ?? [0, 0, 0, 0];

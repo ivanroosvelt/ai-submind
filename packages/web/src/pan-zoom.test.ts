@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { bindPanZoom, panViewBox, parseViewBox, zoomViewBox } from "./pan-zoom.js";
+import { bindPanZoom, centerViewBox, fitViewBox, panViewBox, parseViewBox, zoomViewBox } from "./pan-zoom.js";
 
 describe("viewBox math", () => {
   it("parses a viewBox attribute", () => {
@@ -137,5 +137,25 @@ describe("bindPanZoom", () => {
     svg.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: 30, buttons: 0 }));
     mouse(svg, "pointermove", 50);
     expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("fitViewBox", () => {
+  it("fits the whole content with the box aspect", () => {
+    expect(fitViewBox([0, 0, 200, 100], { width: 400, height: 400 })).toEqual([0, -50, 200, 200]);
+  });
+
+  it("keeps minScale and shows the top center when the content is too big", () => {
+    expect(fitViewBox([0, 0, 4000, 1000], { width: 400, height: 200 }, 0.5)).toEqual([1600, 0, 800, 400]);
+  });
+
+  it("leaves the content as is without box size (jsdom)", () => {
+    expect(fitViewBox([0, 0, 10, 10], { width: 0, height: 0 })).toEqual([0, 0, 10, 10]);
+  });
+});
+
+describe("centerViewBox", () => {
+  it("centers on the point keeping the zoom", () => {
+    expect(centerViewBox([0, 0, 100, 50], 300, 300)).toEqual([250, 275, 100, 50]);
   });
 });

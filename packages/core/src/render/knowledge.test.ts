@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Workspace } from "../workspace/workspace.js";
 import { query } from "../workspace/query.js";
 import { FILL_COLOR } from "./svg.js";
-import { MEMORY_FILL, renderKnowledge } from "./knowledge.js";
+import { MEMORY_FILL, renderKnowledge, wrapLabel } from "./knowledge.js";
 
 // Los data-flo-* no son geometría (decisión #26): se quitan antes del snapshot.
 function geometry(svg: string): string {
@@ -96,5 +96,18 @@ describe("renderKnowledge", () => {
     const empty = renderKnowledge(link, { nodes: [], edges: [] });
     expect(empty).toContain('width="0"');
     expect(empty).not.toContain("<g");
+  });
+});
+
+describe("wrapLabel", () => {
+  it("keeps short titles in one line", () => {
+    expect(wrapLabel("Regla corta")).toEqual(["Regla corta"]);
+  });
+
+  it("breaks long titles by words, each line within 28 chars", () => {
+    const lines = wrapLabel("Decisión: flujo del dinero (Anditour cobra el abono); pasarela pendiente");
+    expect(lines.length).toBeGreaterThan(1);
+    expect(lines.every((line) => line.length <= 28)).toBe(true);
+    expect(lines.join(" ")).toBe("Decisión: flujo del dinero (Anditour cobra el abono); pasarela pendiente");
   });
 });

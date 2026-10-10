@@ -12,6 +12,7 @@ import {
   STROKE_COLOR,
   arrowMarkerDefs,
   dataAttributes,
+  escapeXml,
   svgLabel,
   svgText,
 } from "./svg.js";
@@ -23,6 +24,38 @@ export const MEMORY_FILL: Record<MemoryType, string> = {
   long_term: "#dcfce7",
 };
 
+// Los títulos de notas suelen ser frases: en una sola línea un nodo mide
+// cientos de px y el grafo se vuelve una franja ilegible.
+const WRAP_CHARS = 28;
+const LINE_HEIGHT = 18;
+
+/** Parte un título largo en líneas de hasta `WRAP_CHARS`, por palabras. */
+export function wrapLabel(label: string): string[] {
+  if (label.length <= WRAP_CHARS) return [label];
+  const lines: string[] = [];
+  let line = "";
+  for (const word of label.split(/\s+/)) {
+    if (line && line.length + 1 + word.length > WRAP_CHARS) {
+      lines.push(line);
+      line = word;
+    } else line = line ? `${line} ${word}` : word;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function measureNode(shape: NodeShape, lines: string[]): { width: number; height: number } {
+  const widest = lines.reduce((a, b) => (b.length > a.length ? b : a), "");
+  const size = measureFlowchartNode(shape, widest);
+  return { width: size.width, height: size.height + (lines.length - 1) * LINE_HEIGHT };
+}
+
+function nodeText(x: number, y: number, lines: string[]): string {
+  if (lines.length === 1) return svgText(x, y, lines[0]);
+  const top = y - ((lines.length - 1) * LINE_HEIGHT) / 2;
+  const spans = lines.map((line, i) => `<tspan x="${x}" y="${top + i * LINE_HEIGHT}">${escapeXml(line)}</tspan>`);
+  return `<text text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="14">${spans.join("")}</text>`;
+}
 
 interface GraphNode {
   id: string; // EntityId o BlockId: un BlockId lleva '#', así que no chocan
@@ -109,7 +142,8 @@ export function renderKnowledge(link: LinkResult, result: QueryResult): string {
   const graph = new dagre.graphlib.Graph({ multigraph: true });
   graph.setGraph({ ...GRAPH_OPTIONS });
   graph.setDefaultEdgeLabel(() => ({}));
-  for (const node of nodes) graph.setNode(node.id, measureFlowchartNode(node.shape, node.label));
+  const lines = new Map(nodes.map((node) => [node.id, wrapLabel(node.label)]));
+  for (const node of nodes) graph.setNode(node.id, measureNode(node.shape, lines.get(node.id)!));
   edges.forEach((edge, index) => graph.setEdge(edge.from, edge.to, {}, String(index)));
   dagre.layout(graph);
 
@@ -117,7 +151,7 @@ export function renderKnowledge(link: LinkResult, result: QueryResult): string {
     const { x, y, width, height } = graph.node(node.id);
     const shape = shapeElement({ x, y, width, height, shape: node.shape }, false, node.fill);
     const className = node.className ? ` class="${node.className}"` : "";
-    return `<g${className}${dataAttributes(node.data)}>${shape}${svgText(x, y, node.label)}</g>`;
+    return `<g${className}${dataAttributes(node.data)}>${shape}${nodeText(x, y, lines.get(node.id)!)}</g>`;
   });
   const edgeElements = edges.map((edge, index) => {
     const points = graph.edge({ v: edge.from, w: edge.to, name: String(index) }).points;

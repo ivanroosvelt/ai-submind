@@ -898,3 +898,93 @@ describe("modo carpeta local (#66)", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 });
+
+describe("App lienzo: recorrer el catálogo", () => {
+  const pick = (el: AppElements, id: string) => click(el.explorer.querySelector(`button[data-flo-entity="${id}"]`)!);
+  const selected = (el: AppElements) =>
+    [...el.preview.querySelectorAll("g.flo-selected[data-flo-entity]")].map((g) => g.getAttribute("data-flo-entity"));
+
+  afterEach(() => document.body.classList.remove("flo-expanded"));
+
+  it("highlights a visible note in the graph without changing the query", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    pick(el, "rule");
+    expect(selected(el)).toEqual(["rule"]);
+    expect(app.graph.from).toBeNull();
+    expect(el.panel.innerHTML).toContain("<code>rule</code>");
+    expect(el.explorer.querySelector('button[data-flo-entity="rule"]')!.classList.contains("flo-selected")).toBe(true);
+    expect(el.preview.classList.contains("flo-canvas-mode")).toBe(true);
+  });
+
+  it("re-centers the graph on an entity the filter hides", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    change(el.preview, "memory", "working");
+    change(el.preview, "depth", "0");
+    pick(el, "pkce");
+    expect(app.graph).toEqual({ where: { and: [{ text: "" }] }, from: ["pkce"], depth: 1, viewBox: null });
+    expect(graphNodes(el)).toContain("pkce");
+    expect(selected(el)).toEqual(["pkce"]);
+  });
+
+  it("re-centers on a .flo entity outside the graph with a filter that admits it", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleGraph();
+    change(el.preview, "depth", "0");
+    pick(el, "db");
+    expect(app.graph.from).toEqual(["db"]);
+    expect(graphNodes(el)).toContain("db");
+    expect(selected(el)).toEqual(["db"]);
+  });
+
+  it("highlights an entity of the map, and goes to the graph for one outside it", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleMap();
+    pick(el, "db");
+    expect(el.preview.querySelector(".flo-map")).not.toBeNull();
+    expect(selected(el)).toEqual(["db"]);
+    pick(el, "rule");
+    expect(el.preview.querySelector(".flo-kg")).not.toBeNull();
+    expect(selected(el)).toEqual(["rule"]);
+    expect(el.toolbar.querySelector("#flo-toggle-graph")!.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("in the document opens the note, or the first flow of a .flo entity", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    pick(el, "rule");
+    expect(app.ws.active).toBe("kb/rule.md");
+    pick(el, "db");
+    expect(app.selectedBlock).toBe("catalog.flo#acceso");
+    expect(el.preview.querySelector('section.flo-block-selected [data-flo-entity="db"].flo-selected')).not.toBeNull();
+  });
+
+  it("expanded, a note clicked in the graph re-centers it instead of opening the editor", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    document.body.classList.add("flo-expanded");
+    app.toggleGraph();
+    click(el.preview.querySelector('.flo-kg g[data-flo-entity="rule"] text')!);
+    expect(app.ws.active).toBe("login.flo");
+    expect(app.graph.from).toEqual(["rule"]);
+    expect(selected(el)).toEqual(["rule"]);
+  });
+
+  it("fills the pane and offers 'Ajustar' in map and graph", () => {
+    const el = elements();
+    const app = new App(el, KG_FILES);
+    app.toggleMap();
+    const map = el.preview.querySelector(".flo-map svg")!;
+    expect(map.getAttribute("width")).toBe("100%");
+    click(el.preview.querySelector("[data-flo-fit]")!);
+    app.toggleGraph();
+    expect(el.preview.querySelector(".flo-kg svg")!.getAttribute("height")).toBe("100%");
+    click(el.preview.querySelector("[data-flo-fit]")!);
+    expect(el.preview.querySelector(".flo-kg")).not.toBeNull();
+  });
+});

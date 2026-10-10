@@ -1,4 +1,5 @@
 import { MEMORY_FILL, MEMORY_TYPES, escapeXml, type EntityId, type LinkResult, type MemoryType, type TagCatalog, type Where } from "@tejo/core";
+import { FIT_BUTTON } from "./map-view.js";
 import type { ViewBox } from "./pan-zoom.js";
 
 /** Lo que muestra la vista de grafo (decisión #45); un preset es esto con nombre (#46). */
@@ -109,5 +110,5 @@ export function graphBarHtml(link: LinkResult, tags: TagCatalog, graph: GraphQue
 
 export function graphHtml(svg: string, empty: boolean): string {
   const body = empty ? '<p class="flo-empty">Ninguna nota coincide con el filtro</p>' : svg;
-  return `<section class="flo-block flo-kg"><h2 class="flo-block-title">Grafo de conocimiento</h2>${body}</section>`;
+  return `<section class="flo-block flo-kg"><h2 class="flo-block-title">Grafo de conocimiento</h2>${FIT_BUTTON}${body}</section>`;
 }

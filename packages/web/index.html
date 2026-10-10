@@ -177,12 +177,12 @@
       }
       #side-pane {
         flex: 0 0 260px;
-        overflow: auto;
+        overflow: hidden auto;
         background: var(--surface);
         border-right: 1px solid var(--border);
         font-size: 13px;
       }
-      body.flo-expanded #side-pane,
+      /* Ampliar: el lienzo ocupa todo salvo el catálogo, que sigue para recorrerlo. */
       body.flo-expanded #editor-pane {
         display: none;
       }
@@ -256,6 +256,19 @@
         font: 11px var(--mono);
         color: var(--muted);
       }
+      /* Catálogo: título arriba, id abajo; en 260 px lado a lado se parte en palabras sueltas. */
+      #explorer .flo-tree-item[data-flo-entity] {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        line-height: 1.3;
+      }
+      #explorer .flo-tree-item[data-flo-entity] small {
+        margin-left: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       .flo-tree-item:hover {
         background: var(--surface-2);
         color: var(--text);
@@ -272,8 +285,14 @@
       }
 
       /* Panel de entidad / arista. */
+      /* Fijo al pie del catálogo: con muchas entidades, debajo de la lista no se vería. */
       #panel:not(:empty) {
-        margin: 8px 12px 16px;
+        position: sticky;
+        bottom: 8px;
+        z-index: 2;
+        max-height: 45%;
+        overflow: hidden auto;
+        margin: 8px 12px;
         padding: 14px;
         border: 1px solid var(--border);
         border-radius: var(--radius);
@@ -304,6 +323,9 @@
         margin: 0 0 12px;
       }
       #panel [data-flo-definition] {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
         font: 12px var(--mono);
       }
       #panel h4 {
@@ -315,7 +337,9 @@
         color: var(--muted);
       }
       #panel .flo-tree .flo-tree-item {
+        display: block;
         font-size: 12px;
+        overflow-wrap: anywhere;
       }
 
       /* Editor (CodeMirror). */
@@ -685,17 +709,69 @@
         border: 1px solid rgb(0 0 0 / 0.15);
         vertical-align: -1px;
       }
-      .flo-kg {
-        width: auto;
+      /* Lienzo (mapa y grafo): ocupa todo el panel, se recorre con rueda y arrastre. */
+      #preview-pane.flo-canvas-mode {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        overflow: hidden;
       }
-      .flo-kg svg {
+      .flo-canvas-mode .flo-kg-bar {
+        flex: 0 0 auto;
+        margin: 0;
+        border-width: 0 0 1px;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      .flo-canvas-mode > .flo-block {
+        position: relative;
+        flex: 1 1 auto;
+        width: auto;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+      .flo-canvas-mode > .flo-block > .flo-block-title {
+        position: absolute;
+        top: 12px;
+        left: 16px;
+        z-index: 1;
+        margin: 0;
+        padding: 4px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+        box-shadow: var(--shadow-sm);
+        cursor: default;
+      }
+      #preview-pane .flo-canvas-fit {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        z-index: 1;
+      }
+      .flo-canvas-mode > .flo-block > svg {
+        width: 100%;
+        height: 100%;
         cursor: grab;
         touch-action: none;
-        max-width: 100%;
-        height: auto;
       }
-      .flo-kg svg:active {
+      .flo-canvas-mode > .flo-block > svg:active {
         cursor: grabbing;
+      }
+      .flo-canvas-mode > .flo-block > .flo-empty {
+        padding: 64px 16px;
+        text-align: center;
+      }
+      /* La entidad elegida en el catálogo resalta en el lienzo. */
+      .flo-canvas-mode g.flo-selected > :first-child {
+        stroke: var(--accent);
+        stroke-width: 4px;
+        filter: drop-shadow(0 0 8px rgb(79 70 229 / 0.6));
       }
       .flo-kg [data-flo-block] {
         cursor: pointer;

@@ -24,7 +24,12 @@ const item = (attribute: string, value: string, label: string, extraClass = "") 
   `<button type="button" class="flo-tree-item${extraClass}" ${attribute}="${escapeXml(value)}">${label}</button>`;
 
 /** Catálogo filtrable por type y tag (#6) y archivos con sus bloques (spec §8). */
-export function explorerHtml(ws: EditorWorkspace, filter: ExplorerFilter, selectedBlock: BlockId | null): string {
+export function explorerHtml(
+  ws: EditorWorkspace,
+  filter: ExplorerFilter,
+  selectedBlock: BlockId | null,
+  selectedEntity: EntityId | null = null
+): string {
   const link = ws.link();
   const entities = [...link.entities.values()];
   const types = [...new Set(entities.flatMap((entity) => (entity.type ? [entity.type] : [])))];
@@ -35,7 +40,15 @@ export function explorerHtml(ws: EditorWorkspace, filter: ExplorerFilter, select
 
   const catalog = entities
     .filter((entity) => (type === null || entity.type === type) && (tag === null || entity.tags.includes(tag)))
-    .map((entity) => `<li>${item("data-flo-entity", entity.id, `${escapeXml(entity.label)} <small>${escapeXml(entity.id)}</small>`)}</li>`)
+    .map(
+      (entity) =>
+        `<li>${item(
+          "data-flo-entity",
+          entity.id,
+          `<span>${escapeXml(entity.label)}</span> <small>${escapeXml(entity.id)}</small>`,
+          entity.id === selectedEntity ? " flo-selected" : ""
+        )}</li>`
+    )
     .join("");
 
   const files = ws

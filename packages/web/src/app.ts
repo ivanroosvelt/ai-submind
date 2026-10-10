@@ -21,7 +21,7 @@ import { edgePanelHtml, entityPanelHtml } from "./entity-panel.js";
 import { bindExplorer, explorerHtml, type ExplorerFilter } from "./explorer.js";
 import { DEFAULT_GRAPH, graphBarHtml, graphHtml, readBar, whereOf, type GraphQuery } from "./knowledge-view.js";
 import { addEdgeHitAreas, mapHtml } from "./map-view.js";
-import { bindPanZoom } from "./pan-zoom.js";
+import { bindPanZoom, centerViewBox, fitViewBox, parseViewBox, type ViewBox } from "./pan-zoom.js";
 import { byName, isPresetName, listLocalPresets, listPresets, presetJson, presetUri, savePreset, type Preset } from "./presets.js";
 import { nextPreviewState, previewHtml, renderActive, scopeMarkerIds, type PreviewState } from "./preview.js";
 import { ask, confirmDialog, notify } from "./dialogs.js";
@@ -43,6 +43,11 @@ const NEW_SOURCE: Record<DiagramKind, string> = {
 
 // Mismo debounce que el preview del editor (decisión #48).
 const SEARCH_DEBOUNCE_MS = 200;
+
+// Escala mínima con la que abre un lienzo (mapa, grafo): más chico no se lee.
+const MIN_CANVAS_SCALE = 0.75;
+// Escala con la que se centra una entidad elegida en el catálogo.
+const FOCUS_SCALE = 1;
 
 export function newWorkspace(kind: DiagramKind = "flowchart"): WorkspaceSnapshot {
   return { files: { "nuevo.flo": NEW_SOURCE[kind] }, saved: {}, active: "nuevo.flo", dir: null, local: false };
@@ -98,6 +103,10 @@ export class App {
   private shown: DocumentUri | null = null;
   /** Modo local (#66): los archivos ya avisados como cambiados en el disco mientras se editaban. */
   private readonly conflicts = new Set<DocumentUri>();
+  /** El viewBox del lienzo del mapa; null = ajustado al contenido. */
+  private mapViewBox: ViewBox | null = null;
+  /** Entidad a centrar en el próximo render del lienzo (una sola vez). */
+  private centerOn: EntityId | null = null;
   /** El debounce de la búsqueda de la barra del grafo (#48). */
   private searchTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly host: EditorHost = {
@@ -144,7 +153,7 @@ export class App {
     bindExplorer(el.explorer, {
       onOpenDocument: (uri) => this.openDocument(uri),
       onSelectBlock: (id) => this.selectBlock(id),
-      onSelectEntity: (id) => this.selectEntity(id),
+      onSelectEntity: (id) => this.focusEntity(id),
       onFilter: (filter) => {
         this.filter = filter;
         this.renderExplorer();
@@ -224,6 +233,8 @@ export class App {
     this.panel = null;
     this.mode = "document";
     this.graph = DEFAULT_GRAPH;
+    this.mapViewBox = null;
+    this.centerOn = null;
     this.presets = null;
     clearTimeout(this.searchTimer);
     this.openDocument(this.ws.active);
@@ -241,9 +252,12 @@ export class App {
   /** Todo lo que depende del link, desde un link nuevo; y el borrador. */
   refresh(): void {
     const link = this.ws.link();
+    this.el.preview.classList.toggle("flo-canvas-mode", this.mode !== "document");
     if (this.mode === "map") {
       this.el.preview.innerHTML = mapHtml(renderMap(link));
       addEdgeHitAreas(this.el.preview);
+      const svg = this.el.preview.querySelector<SVGSVGElement>(".flo-map svg");
+      if (svg) this.canvas(svg, this.mapViewBox, (next) => (this.mapViewBox = next));
     } else if (this.mode === "graph") {
       this.renderGraph(link);
     } else {
@@ -347,10 +361,83 @@ export class App {
     }
     const svg = this.el.preview.querySelector<SVGSVGElement>(".flo-kg svg");
     if (!svg) return;
-    if (viewBox) svg.setAttribute("viewBox", viewBox.join(" "));
     // Las aristas a un bloque se clickean (drill-down): franja ancha como en el mapa.
     addEdgeHitAreas(this.el.preview);
-    bindPanZoom(svg, (next) => (this.graph = { ...this.graph, viewBox: next }));
+    this.canvas(svg, viewBox, (next) => (this.graph = { ...this.graph, viewBox: next }));
+  }
+
+  /**
+   * Un SVG de mapa o grafo como lienzo: ocupa todo el panel, abre ajustado
+   * al contenido (sin bajar de una escala legible) y se recorre con rueda y
+   * arrastre. La entidad resaltada se marca y, si se pidió, se centra.
+   */
+  private canvas(svg: SVGSVGElement, stored: ViewBox | null, save: (viewBox: ViewBox) => void): void {
+    const content = parseViewBox(svg.getAttribute("viewBox"));
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    if (content) svg.dataset.floContent = content.join(" ");
+    const box = svg.getBoundingClientRect();
+    let viewBox = stored ?? (content ? fitViewBox(content, box, MIN_CANVAS_SCALE) : null);
+    const targets = this.highlight ? byData(svg, "[data-flo-entity]", "data-flo-entity", this.highlight) : [];
+    for (const node of targets) node.classList.add("flo-selected");
+    const target = targets[0] as SVGGraphicsElement | undefined;
+    if (this.centerOn !== null && this.centerOn === this.highlight && target?.getBBox && viewBox && box.width > 0) {
+      const { x, y, width, height } = target.getBBox();
+      const scale = Math.max(box.width / viewBox[2], FOCUS_SCALE);
+      viewBox = centerViewBox([0, 0, box.width / scale, box.height / scale], x + width / 2, y + height / 2);
+      save(viewBox);
+    }
+    this.centerOn = null;
+    if (viewBox) svg.setAttribute("viewBox", viewBox.join(" "));
+    bindPanZoom(svg, save);
+  }
+
+  /** "Ajustar": el lienzo vuelve a mostrar todo el contenido. */
+  private fitCanvas(): void {
+    const svg = this.el.preview.querySelector<SVGSVGElement>(".flo-map svg, .flo-kg svg");
+    const content = parseViewBox(svg?.dataset.floContent ?? null);
+    if (!svg || !content) return;
+    const viewBox = fitViewBox(content, svg.getBoundingClientRect());
+    svg.setAttribute("viewBox", viewBox.join(" "));
+    if (this.mode === "map") this.mapViewBox = viewBox;
+    else this.graph = { ...this.graph, viewBox };
+  }
+
+  /**
+   * Elegir una entidad en el catálogo la muestra en la vista activa: en el
+   * mapa o el grafo se resalta y se centra (si no está en el mapa, se pasa al
+   * grafo centrado en ella); en el documento, se abre su nota o su flujo.
+   */
+  focusEntity(id: EntityId): void {
+    const link = this.ws.link();
+    const entity = link.entities.get(id);
+    if (!entity) return;
+    this.panel = { kind: "entity", id };
+    this.highlight = id;
+    this.centerOn = id;
+    if (this.mode === "map" && !renderMap(link).edges.some((edge) => edge.from === id || edge.to === id)) {
+      this.mode = "graph";
+    }
+    if (this.mode === "graph") {
+      const { where, from, depth } = this.graph;
+      const shown = query(link, { where, from: from ?? undefined, depth }).nodes.some((node) => node.id === id);
+      // Las semillas se intersecan con el filtro: el de la barra la escondía, se suelta.
+      // `{ and: [] }` acepta toda entidad; `{ text: "" }` solo las notas (#31).
+      const seed = entity.knowledge ? DEFAULT_GRAPH.where : { and: [] };
+      if (!shown) this.graph = { where: seed, from: [id], depth: Math.max(depth, 1), viewBox: null };
+      this.showGraph(this.graph);
+      return;
+    }
+    if (this.mode === "map") return this.refresh();
+    if (entity.knowledge) {
+      this.selectedBlock = null;
+      if (entity.uri === this.ws.active) this.refresh();
+      else this.openDocument(entity.uri);
+      return;
+    }
+    const block = link.xref.flowsUsing(id)[0];
+    if (block) this.selectBlock(block, id);
+    else this.refresh();
   }
 
   private onPreviewChange(target: Element): void {
@@ -387,6 +474,7 @@ export class App {
   }
 
   private onGraphClick(target: Element): void {
+    if (target.closest("[data-flo-fit]")) return this.fitCanvas();
     if (target.closest("[data-flo-kg-save]")) {
       void this.run("Guardar vista", () => this.savePreset());
       return;
@@ -407,6 +495,15 @@ export class App {
     const link = this.ws.link();
     if (!link.entities.get(id)?.knowledge) {
       this.selectEntity(id);
+      return;
+    }
+    // Sin editor a la vista (lienzo ampliado), una nota re-centra el grafo en ella.
+    if (document.body.classList.contains("flo-expanded") || document.body.classList.contains("flo-hide-editor")) {
+      this.panel = { kind: "entity", id };
+      this.highlight = id;
+      this.centerOn = id;
+      this.graph = { ...this.graph, from: [id], viewBox: null };
+      this.refresh();
       return;
     }
     const location = link.xref.definitionOf(id);
@@ -525,6 +622,7 @@ export class App {
 
   private onPreviewClick(target: Element): void {
     if (this.mode === "graph") return this.onGraphClick(target);
+    if (target.closest("[data-flo-fit]")) return this.fitCanvas();
     const edge = target.closest("[data-flo-from]");
     if (this.mode === "map" && edge) {
       this.panel = { kind: "edge", from: edge.getAttribute("data-flo-from")!, to: edge.getAttribute("data-flo-to")! };
@@ -585,7 +683,8 @@ export class App {
   }
 
   private renderExplorer(): void {
-    this.el.explorer.innerHTML = explorerHtml(this.ws, this.filter, this.selectedBlock);
+    const entity = this.panel?.kind === "entity" ? this.panel.id : null;
+    this.el.explorer.innerHTML = explorerHtml(this.ws, this.filter, this.selectedBlock, entity);
   }
 
   /** Abre el documento del bloque y lo selecciona (es el que se exporta); con `entity`, resalta su nodo. */
