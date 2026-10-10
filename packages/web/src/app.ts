@@ -21,6 +21,7 @@ import { edgePanelHtml, entityPanelHtml } from "./entity-panel.js";
 import { bindExplorer, explorerHtml, type ExplorerFilter } from "./explorer.js";
 import { DEFAULT_GRAPH, graphBarHtml, graphHtml, readBar, whereOf, type GraphQuery } from "./knowledge-view.js";
 import { addEdgeHitAreas, mapHtml } from "./map-view.js";
+import { applyFocus, bindFocus } from "./focus.js";
 import { bindPanZoom, centerViewBox, fitViewBox, parseViewBox, type ViewBox } from "./pan-zoom.js";
 import { byName, isPresetName, listLocalPresets, listPresets, presetJson, presetUri, savePreset, type Preset } from "./presets.js";
 import { nextPreviewState, previewHtml, renderActive, scopeMarkerIds, type PreviewState } from "./preview.js";
@@ -390,6 +391,19 @@ export class App {
     this.centerOn = null;
     if (viewBox) svg.setAttribute("viewBox", viewBox.join(" "));
     bindPanZoom(svg, save);
+    bindFocus(svg, () => this.highlight);
+  }
+
+  /** Click en el fondo del lienzo: suelta la entidad enfocada, sin mover la vista. */
+  private clearFocus(svg: Element): void {
+    if (this.highlight === null) return;
+    this.highlight = null;
+    if (this.panel?.kind === "entity") this.panel = null;
+    for (const node of svg.querySelectorAll(".flo-selected")) node.classList.remove("flo-selected");
+    applyFocus(svg, null);
+    this.renderPanel();
+    this.renderExplorer();
+    this.remember();
   }
 
   /** "Ajustar": el lienzo vuelve a mostrar todo el contenido. */
@@ -490,7 +504,11 @@ export class App {
       return;
     }
     const node = target.closest("[data-flo-entity]");
-    if (!node) return;
+    if (!node) {
+      const svg = target.closest(".flo-kg svg");
+      if (svg && !target.closest("polyline, .flo-kg-label")) this.clearFocus(svg);
+      return;
+    }
     const id = node.getAttribute("data-flo-entity")!;
     const link = this.ws.link();
     if (!link.entities.get(id)?.knowledge) {
@@ -624,6 +642,8 @@ export class App {
     if (this.mode === "graph") return this.onGraphClick(target);
     if (target.closest("[data-flo-fit]")) return this.fitCanvas();
     const edge = target.closest("[data-flo-from]");
+    const mapSvg = this.mode === "map" ? target.closest(".flo-map svg") : null;
+    if (mapSvg && !edge && !target.closest("[data-flo-entity]")) return this.clearFocus(mapSvg);
     if (this.mode === "map" && edge) {
       this.panel = { kind: "edge", from: edge.getAttribute("data-flo-from")!, to: edge.getAttribute("data-flo-to")! };
       this.renderPanel();

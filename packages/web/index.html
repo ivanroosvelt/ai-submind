@@ -767,6 +767,39 @@
         padding: 64px 16px;
         text-align: center;
       }
+      /* Foco (#69): la entidad enfocada y sus vecinos a la vista, el resto atenuado. */
+      .flo-canvas-mode svg g[data-flo-entity],
+      .flo-canvas-mode svg g[data-flo-block],
+      .flo-canvas-mode svg polyline,
+      .flo-canvas-mode svg .flo-kg-label {
+        transition: opacity 120ms var(--ease);
+      }
+      .flo-canvas-mode svg.flo-dense polyline:not(.flo-map-hit) {
+        stroke-opacity: 0.35;
+      }
+      .flo-canvas-mode svg.flo-dense .flo-kg-label {
+        display: none;
+      }
+      .flo-canvas-mode svg.flo-dim g[data-flo-entity]:not(.flo-near),
+      .flo-canvas-mode svg.flo-dim g[data-flo-block]:not(.flo-near) {
+        opacity: 0.18;
+      }
+      .flo-canvas-mode svg.flo-dim polyline:not(.flo-near) {
+        opacity: 0.06;
+      }
+      .flo-canvas-mode svg.flo-dim polyline.flo-near:not(.flo-map-hit) {
+        stroke: var(--accent);
+        stroke-opacity: 1;
+      }
+      .flo-canvas-mode svg.flo-dim .flo-kg-label.flo-near {
+        display: inline;
+      }
+      .flo-canvas-mode svg.flo-dim .flo-kg-label:not(.flo-near) {
+        opacity: 0;
+      }
+      .flo-canvas-mode svg .flo-kg-group {
+        pointer-events: none;
+      }
       /* La entidad elegida en el catálogo resalta en el lienzo. */
       .flo-canvas-mode g.flo-selected > :first-child {
         stroke: var(--accent);

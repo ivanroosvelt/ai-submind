@@ -1,6 +1,6 @@
-import dagre from "dagre";
 import type { MemoryType, NodeShape } from "../ast.js";
-import { GRAPH_OPTIONS, finiteOrZero, measureFlowchartNode } from "../layout/flowchart.js";
+import { measureFlowchartNode } from "../layout/flowchart.js";
+import { layoutKnowledge } from "../layout/knowledge.js";
 import { parseBlockId } from "../workspace/uri.js";
 import type { QueryResult } from "../workspace/query.js";
 import type { LinkResult } from "../workspace/workspace.js";
@@ -23,6 +23,10 @@ export const MEMORY_FILL: Record<MemoryType, string> = {
   short_term: "#e0e7ff",
   long_term: "#dcfce7",
 };
+
+const GROUP_FILL = "#f8fafc";
+const GROUP_STROKE = "#cbd5e1";
+const GROUP_TEXT = "#64748b";
 
 // Los títulos de notas suelen ser frases: en una sola línea un nodo mide
 // cientos de px y el grafo se vuelve una franja ilegible.
@@ -135,34 +139,62 @@ function graphOf(link: LinkResult, result: QueryResult): { nodes: GraphNode[]; e
   return { nodes, edges };
 }
 
-/** Vista de grafo de conocimiento (spec de conocimiento §7, decisión #44). */
+/** La carpeta común a todos los nombres, por segmentos ("a/b" de "a/b/c" y "a/b/d"). */
+function commonDirPrefix(names: string[]): string {
+  const split = names.map((name) => name.split("/"));
+  const common: string[] = [];
+  for (let i = 0; split.every((parts) => i < parts.length && parts[i] === split[0][i]); i++) common.push(split[0][i]);
+  return common.join("/");
+}
+
+/** La carpeta de una uri: el grupo de su nodo en el layout (#69). */
+function groupOf(uri: string): string {
+  const slash = uri.lastIndexOf("/");
+  return slash === -1 ? "" : uri.slice(0, slash);
+}
+
+/** Vista de grafo de conocimiento (spec de conocimiento §7, decisiones #44 y #69). */
 export function renderKnowledge(link: LinkResult, result: QueryResult): string {
   const { nodes, edges } = graphOf(link, result);
-  // Multigrafo: dos tipos de relación entre el mismo par son dos aristas.
-  const graph = new dagre.graphlib.Graph({ multigraph: true });
-  graph.setGraph({ ...GRAPH_OPTIONS });
-  graph.setDefaultEdgeLabel(() => ({}));
   const lines = new Map(nodes.map((node) => [node.id, wrapLabel(node.label)]));
-  for (const node of nodes) graph.setNode(node.id, measureNode(node.shape, lines.get(node.id)!));
-  edges.forEach((edge, index) => graph.setEdge(edge.from, edge.to, {}, String(index)));
-  dagre.layout(graph);
+  const layout = layoutKnowledge(
+    nodes.map((node) => ({ id: node.id, group: groupOf(node.data.uri), ...measureNode(node.shape, lines.get(node.id)!) })),
+    edges
+  );
 
+  // El nombre de la región sin la carpeta que comparten todas (`knowledge/`).
+  const names = layout.groups.map((group) => group.name);
+  const prefix = names.length === 0 ? 0 : commonDirPrefix(names).length;
+  // Regiones de carpeta detrás de todo; etiquetas de arista encima de los nodos.
+  const groupElements = layout.groups.map(
+    (group) =>
+      `<g class="flo-kg-group" data-flo-group="${escapeXml(group.name)}"><rect x="${group.x}" y="${group.y}" width="${group.width}" height="${group.height}" rx="16" fill="${GROUP_FILL}" stroke="${GROUP_STROKE}" stroke-dasharray="6 4" />` +
+      `<text x="${group.x + 14}" y="${group.y + 18}" font-family="sans-serif" font-size="13" font-weight="600" fill="${GROUP_TEXT}">${escapeXml(group.name.slice(prefix).replace(/^\//, "") || group.name || "/")}</text></g>`
+  );
   const nodeElements = nodes.map((node) => {
-    const { x, y, width, height } = graph.node(node.id);
+    const { x, y, width, height } = layout.nodes.get(node.id)!;
     const shape = shapeElement({ x, y, width, height, shape: node.shape }, false, node.fill);
     const className = node.className ? ` class="${node.className}"` : "";
     return `<g${className}${dataAttributes(node.data)}>${shape}${nodeText(x, y, lines.get(node.id)!)}</g>`;
   });
-  const edgeElements = edges.map((edge, index) => {
-    const points = graph.edge({ v: edge.from, w: edge.to, name: String(index) }).points;
-    const line = `<polyline points="${points.map((p) => `${p.x},${p.y}`).join(" ")}" fill="none" stroke="${STROKE_COLOR}" stroke-width="2" marker-end="url(#${ARROW_MARKER_ID})"${dataAttributes(edge.data)} />`;
-    if (edge.type === "flow") return line;
-    const mid = points[Math.floor(points.length / 2)];
-    return `${line}${svgLabel(mid.x, mid.y - 8, edge.type)}`;
+  const edgeElements: string[] = [];
+  const labelElements: string[] = [];
+  edges.forEach((edge, index) => {
+    const points = layout.edges[index];
+    if (points.length === 0) return;
+    edgeElements.push(
+      `<polyline points="${points.map((p) => `${p.x},${p.y}`).join(" ")}" fill="none" stroke="${STROKE_COLOR}" stroke-width="2" marker-end="url(#${ARROW_MARKER_ID})"${dataAttributes(edge.data)} />`
+    );
+    if (edge.type === "flow") return;
+    const mid =
+      points.length % 2 === 1
+        ? points[(points.length - 1) / 2]
+        : { x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 };
+    labelElements.push(
+      `<g class="flo-kg-label"${dataAttributes({ from: edge.from, to: edge.to })}>${svgLabel(mid.x, mid.y, edge.type)}</g>`
+    );
   });
 
-  const size = graph.graph();
-  const width = finiteOrZero(size.width);
-  const height = finiteOrZero(size.height);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${arrowMarkerDefs()}${nodeElements.join("")}${edgeElements.join("")}</svg>`;
+  const { width, height } = layout;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${arrowMarkerDefs()}${groupElements.join("")}${edgeElements.join("")}${nodeElements.join("")}${labelElements.join("")}</svg>`;
 }
