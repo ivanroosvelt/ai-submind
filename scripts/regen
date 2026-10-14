@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+"""Regenera los artefactos derivados (nunca se editan a mano):
+
+- docs/system/inventory/INDEX.md      inventario de IDs y relaciones
+- docs/system/traceability/MATRIX.md  matriz de trazabilidad
+- .ai/registry/agents-index.md        índice de agentes
+- .ai/registry/skills-index.md        índice de skills
+- .github/copilot-instructions.md     bloque embebido de AGENTS.md
+
+Uso: scripts/regen
+"""
+import argparse
+import sys
+
+from smtools.common import Report, repo_root
+from smtools.env import regen_environment
+from smtools.model import regen_model
+
+
+def main() -> int:
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
+    root = repo_root()
+    report = Report()
+    changed = regen_model(root, report) + regen_environment(root, report)
+    for c in changed:
+        print(f"actualizado: {c}")
+    if not changed:
+        print("sin cambios")
+    if report.errors:
+        print(report.render("Errores al regenerar"))
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

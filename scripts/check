@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Ejecuta todas las verificaciones deterministas del repositorio.
+# Uso: scripts/check [--strict]   (lo usa CI; ver .ai/policies/verification.md)
+set -u
+cd "$(dirname "$0")/.."
+export PYTHONDONTWRITEBYTECODE=1
+strict=()
+for arg in "$@"; do
+  case "$arg" in
+    --strict) strict=(--strict) ;;
+    *) echo "uso: scripts/check [--strict]" >&2; exit 2 ;;
+  esac
+done
+status=0
+python3 scripts/validate-ai-environment ${strict[@]+"${strict[@]}"} || status=1
+echo
+python3 scripts/validate-system-model ${strict[@]+"${strict[@]}"} || status=1
+echo
+echo "== Pruebas de las herramientas =="
+python3 -m unittest discover -s scripts/tests -t scripts -q || status=1
+exit $status

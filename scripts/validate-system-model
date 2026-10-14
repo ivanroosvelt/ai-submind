@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+"""Valida el modelo estructural del producto (docs/system/).
+
+Uso: scripts/validate-system-model [--since <rev>] [--strict]
+  --since <rev>  avisa si el diff contra <rev> toca code_roots sin tocar docs/system/
+  --strict       trata las advertencias como errores
+Salida: 0 sin errores, 1 con errores.
+"""
+import argparse
+import sys
+
+from smtools.common import Report, repo_root
+from smtools.model import check_model
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--since")
+    ap.add_argument("--strict", action="store_true")
+    args = ap.parse_args()
+    report = Report()
+    model = check_model(repo_root(), report, since=args.since)
+    n = len(model.elements) if model else 0
+    print(report.render(f"Modelo estructural ({n} elemento(s))", strict=args.strict))
+    return 1 if report.errors or (args.strict and report.warnings) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

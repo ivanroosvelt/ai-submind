@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# Sistema / editores
+.DS_Store
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Locales de herramientas de IA (no compartidos)
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Secretos
+.env
+.env.*
+!.env.example

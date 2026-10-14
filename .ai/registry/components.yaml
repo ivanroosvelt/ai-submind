@@ -1,0 +1,56 @@
+# Registro canónico de agentes y skills (IDs estables ↔ archivo nativo).
+# La definición vive en el formato nativo de la plataforma (.claude/agents, .claude/skills).
+# Cambios: seguir .ai/policies/lifecycle.md. Tras editar: scripts/regen && scripts/check.
+# Los IDs nunca se reutilizan: un componente retirado conserva su fila con status: retired.
+
+agents:
+  - id: AGT-001
+    name: requirements-analyst
+    path: .claude/agents/requirements-analyst.md
+    status: active
+  - id: AGT-002
+    name: system-modeler
+    path: .claude/agents/system-modeler.md
+    status: active
+  - id: AGT-003
+    name: change-verifier
+    path: .claude/agents/change-verifier.md
+    status: active
+  - id: AGT-004
+    name: environment-steward
+    path: .claude/agents/environment-steward.md
+    status: active
+
+skills:
+  - id: SKL-001
+    name: task-intake
+    path: .claude/skills/task-intake/SKILL.md
+    status: active
+  - id: SKL-002
+    name: impact-analysis
+    path: .claude/skills/impact-analysis/SKILL.md
+    status: active
+  - id: SKL-003
+    name: staged-plan
+    path: .claude/skills/staged-plan/SKILL.md
+    status: active
+  - id: SKL-004
+    name: model-update
+    path: .claude/skills/model-update/SKILL.md
+    status: active
+  - id: SKL-005
+    name: decision-record
+    path: .claude/skills/decision-record/SKILL.md
+    status: active
+  - id: SKL-006
+    name: verify-change
+    path: .claude/skills/verify-change/SKILL.md
+    status: active
+  - id: SKL-007
+    name: environment-audit
+    path: .claude/skills/environment-audit/SKILL.md
+    status: active
+  - id: SKL-008
+    name: requirements-analysis
+    path: .claude/skills/requirements-analysis/SKILL.md
+    status: active

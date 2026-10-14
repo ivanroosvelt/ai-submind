@@ -1,0 +1,55 @@
+# Perspectivas que el orquestador evalúa en cada requerimiento (AGENTS.md §4)
+# y las capacidades que las cubren. Usado por el skill task-intake.
+
+perspectives:
+  - key: actors
+    name: Actores y sistemas externos
+    capabilities: [CAP-002]
+  - key: requirements
+    name: Requisitos funcionales y no funcionales
+    capabilities: [CAP-002]
+  - key: business_rules
+    name: Reglas de negocio
+    capabilities: [CAP-002, CAP-005]
+  - key: io_validations
+    name: Entradas, salidas y validaciones
+    capabilities: [CAP-002, CAP-005]
+  - key: states
+    name: Estados y transiciones
+    capabilities: [CAP-002, CAP-010]
+  - key: data
+    name: Datos y persistencia
+    capabilities: [CAP-014, CAP-005]
+  - key: contracts
+    name: Contratos e integraciones
+    capabilities: [CAP-009, CAP-005]
+  - key: architecture
+    name: Arquitectura y dependencias
+    capabilities: [CAP-010, CAP-003]
+  - key: security
+    name: Seguridad, permisos y privacidad
+    capabilities: [CAP-013, CAP-002]
+  - key: errors
+    name: Errores y casos límite
+    capabilities: [CAP-002, CAP-012]
+  - key: quality
+    name: Pruebas y observabilidad
+    capabilities: [CAP-012, CAP-015, CAP-007]
+  - key: traceability
+    name: Documentación y trazabilidad
+    capabilities: [CAP-005, CAP-016]
+  - key: migrations
+    name: Migraciones y compatibilidad
+    capabilities: [CAP-014, CAP-009]
+  - key: impact
+    name: Impacto sobre componentes existentes
+    capabilities: [CAP-003]
+  - key: implementation
+    name: Implementación
+    capabilities: [CAP-011]
+  - key: decisions
+    name: Decisiones y planificación
+    capabilities: [CAP-006, CAP-004, CAP-001]
+  - key: environment
+    name: Mantenimiento del propio entorno de IA
+    capabilities: [CAP-008]

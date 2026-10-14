@@ -1,0 +1,2 @@
+# Ledger append-only de IDs del producto (prefijos en docs/system/schema.yaml).
+# Nunca borrar ni reutilizar. Reservar con: scripts/sysq claim <PREFIJO>

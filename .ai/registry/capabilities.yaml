@@ -1,0 +1,84 @@
+# Capacidades que el entorno necesita y qué componentes las proveen.
+# status: covered | partial | gap | deferred
+#   partial/gap/deferred exigen 'notes' (por qué y qué lo desbloquea) y generan advertencia
+#   salvo que una EDR las acepte explícitamente ('accepted_by: EDR-NNN').
+
+capabilities:
+  - id: CAP-001
+    name: Análisis de tareas y selección de agentes/skills
+    providers: [SKL-001]
+    status: covered
+  - id: CAP-002
+    name: Requerimientos, actores, permisos, reglas y casos de uso
+    providers: [SKL-008, AGT-001]
+    status: covered
+  - id: CAP-003
+    name: Análisis de impacto y de diferencias en Git
+    providers: [SKL-002]
+    status: covered
+  - id: CAP-004
+    name: Planificación por etapas y reanudación
+    providers: [SKL-003]
+    status: covered
+  - id: CAP-005
+    name: Mantenimiento del modelo estructural y trazabilidad
+    providers: [SKL-004, AGT-002]
+    status: covered
+  - id: CAP-006
+    name: Registro de decisiones (producto y entorno)
+    providers: [SKL-005]
+    status: covered
+  - id: CAP-007
+    name: Verificación independiente y registro de evidencias
+    providers: [SKL-006, AGT-003]
+    status: covered
+  - id: CAP-008
+    name: Auditoría y ciclo de vida de agentes, skills y políticas
+    providers: [SKL-007, AGT-004]
+    status: covered
+  - id: CAP-009
+    name: Integraciones previas y posteriores a un cambio
+    providers: [SKL-002, SKL-003]
+    status: partial
+    notes: "Procedimiento genérico (detección en impact-analysis, ejecución en staged-plan). Sin sistemas externos aún; especializar al definir el primer INT."
+    accepted_by: EDR-005
+  - id: CAP-010
+    name: Arquitectura y diseño de dominio
+    providers: [SKL-005, AGT-002]
+    status: partial
+    notes: "Se registran decisiones y modelo; no hay guía de diseño específica porque no existe stack. Revisar al aceptar la primera DEC de arquitectura."
+    accepted_by: EDR-005
+  - id: CAP-011
+    name: Implementación en el stack del producto
+    providers: []
+    status: deferred
+    notes: "Sin código ni stack. El agente principal implementa siguiendo AGENTS.md; crear skill/agente solo si el stack lo justifica."
+    accepted_by: EDR-005
+  - id: CAP-012
+    name: Pruebas automatizadas del producto
+    providers: [SKL-006]
+    status: partial
+    notes: "verify-change ejecuta lo que exista; no hay framework de pruebas del producto todavía."
+    accepted_by: EDR-005
+  - id: CAP-013
+    name: Seguridad y privacidad
+    providers: [AGT-003]
+    status: partial
+    notes: "Checklist genérico en change-verifier. Especializar cuando existan datos, auth o superficies expuestas."
+    accepted_by: EDR-005
+  - id: CAP-014
+    name: Datos, persistencia y migraciones
+    providers: []
+    status: deferred
+    notes: "Sin persistencia definida."
+    accepted_by: EDR-005
+  - id: CAP-015
+    name: Rendimiento y observabilidad
+    providers: []
+    status: deferred
+    notes: "Sin sistema en ejecución."
+    accepted_by: EDR-005
+  - id: CAP-016
+    name: Detección de documentación obsoleta e inconsistencias
+    providers: [SKL-007, AGT-003]
+    status: covered

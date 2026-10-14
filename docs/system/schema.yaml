@@ -1,0 +1,123 @@
+# Esquema del modelo estructural del producto.
+# Fuente canónica de: prefijos de ID, tipos, directorios y relaciones permitidas.
+# Lo leen scripts/validate-system-model, scripts/regen y scripts/sysq.
+# Formato: subconjunto YAML documentado en docs/system/conventions.md.
+# Cambiar este archivo es un cambio de modelo: registrar DEC si altera semántica.
+
+version: 1
+
+# Estados de ciclo de vida (comunes a todos los tipos).
+statuses: [proposed, active, deprecated, retired]
+
+# Estado de implementación (solo tipos con implementable: true).
+implementation_states: [none, partial, implemented, verified]
+
+# Nivel de evidencia de la ficha.
+#   verified-code  comprobado leyendo código/pruebas (requiere `code` o `test_code`)
+#   declared-doc   declarado por documentación o por una persona
+#   inferred       inferido con evidencia parcial
+#   unknown        pendiente de investigación
+evidence_levels: [verified-code, declared-doc, inferred, unknown]
+
+# Raíces de código del producto. Vacío hasta elegir stack (ver context.md).
+# Si un diff toca estas rutas sin tocar docs/system/, el validador avisa.
+code_roots: []
+
+# Campos que toda ficha debe declarar.
+common_required: [id, type, name, status, evidence]
+
+# Campos opcionales comunes.
+common_optional: [summary, aliases, tags, implementation, code, test_code, relations, uncertainties, commits]
+
+types:
+  ACT:
+    type: actor
+    dir: docs/system/actors
+    implementable: false
+    relations:
+      specializes: [ACT]
+  REQ:
+    type: requirement
+    dir: docs/system/requirements
+    implementable: false
+    relations:
+      actors: [ACT]
+      features: [FEAT]
+      constraints: [NFR, VAL]
+      depends_on: [REQ]
+      decisions: [DEC]
+  NFR:
+    type: quality-attribute
+    dir: docs/system/quality
+    implementable: false
+    relations:
+      tests: [TST]
+      decisions: [DEC]
+  FEAT:
+    type: feature
+    dir: docs/system/features
+    implementable: true
+    relations:
+      entities: [ENT]
+      functions: [FUN]
+      interfaces: [API]
+      integrations: [INT]
+      depends_on: [FEAT]
+      decisions: [DEC]
+  ENT:
+    type: entity
+    dir: docs/system/domain/entities
+    implementable: true
+    relations:
+      related: [ENT]
+      validations: [VAL]
+      decisions: [DEC]
+  FUN:
+    type: function
+    dir: docs/system/domain/functions
+    implementable: true
+    relations:
+      entities: [ENT]
+      validations: [VAL]
+      calls: [FUN, API, INT]
+      tests: [TST]
+      decisions: [DEC]
+  VAL:
+    type: validation
+    dir: docs/system/domain/validations
+    implementable: true
+    relations:
+      tests: [TST]
+      decisions: [DEC]
+  API:
+    type: interface
+    dir: docs/system/interfaces
+    implementable: true
+    relations:
+      providers: [FUN, INT]
+      consumers: [ACT, FEAT, FUN, INT]
+      entities: [ENT]
+      validations: [VAL]
+      tests: [TST]
+      decisions: [DEC]
+  INT:
+    type: integration
+    dir: docs/system/integrations
+    implementable: true
+    relations:
+      interfaces: [API]
+      depends_on: [INT]
+      tests: [TST]
+      decisions: [DEC]
+  DEC:
+    type: decision
+    dir: docs/system/decisions
+    implementable: false
+    relations:
+      affects: [ACT, REQ, NFR, FEAT, ENT, FUN, VAL, API, INT, TST]
+      supersedes: [DEC]
+  TST:
+    type: test
+    dir: docs/system/quality/tests
+    implementable: true
+    relations: {}
