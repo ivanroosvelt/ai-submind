@@ -36,4 +36,5 @@ Alternativa 2.
 ## Verificación
 - Aprobación humana del cambio de CI (G3): usuario, 2026-10-14, en la conversación de PLAN-002 S3.
 - 2026-10-14: `scripts/check` local en verde con la sección de producto.
-- Pendiente: revisión `change-verifier`; ejecución real del workflow en GitHub (requiere push).
+- Revisión `change-verifier`: aprobado con observaciones; re-revisión aprobada tras correcciones.
+- CI: workflow validate, run 38640883010 (commit 6392f37), success en Python 3.10 y 3.12 con Node 22.

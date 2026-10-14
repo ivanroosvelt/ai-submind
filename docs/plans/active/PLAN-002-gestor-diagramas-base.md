@@ -7,7 +7,7 @@ updated: 2026-10-14
 class: T2
 related: [DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007, DEC-008, EDR-006, REP-003]
 blockers: []
-next_action: "S3 executed: falta revisión change-verifier (EDR-006, scripts/check, CI) y ejecución real del workflow en GitHub; luego S3 verified y empezar S4 (serializador canónico + validación Ajv; convertir corpus spec/format/examples en pruebas Vitest, cierra H12)."
+next_action: "S4: serializador canónico + validación Ajv y pasada referencial en src/format; convertir el corpus spec/format/examples en pruebas Vitest (cierra H12 de S2); elegir herramienta de ciclos entre módulos (NFR-008)."
 stages:
   - id: S1
     name: "Decisiones aceptadas y modelo estructural registrado"
@@ -19,8 +19,8 @@ stages:
     evidence: "2026-10-14 spec/format/README.md + schema/1.0 (defs, ai-submind, model, layout) compilan en Ajv 8.20.0 Ajv2020 strict. Prototipo desechable (scratchpad check.mjs: schema + pasada referencial + canonicalizador): valid/garaje 0 hallazgos e idempotente; 32/32 casos invalid/ con exactamente el conjunto de códigos esperado; canonical/input reescrito = canonical/expected. Revisión independiente change-verifier: aprobado con observaciones (H1-H12), corregidas H1-H11; H12 reproducibilidad pendiente hasta S4. Ficha API-004. scripts/check: entorno 0/0; modelo 87 elementos 0 errores 0 advertencias; 42 pruebas OK."
   - id: S3
     name: "Andamiaje del paquete TypeScript, pruebas y code_roots"
-    status: executed
-    evidence: "2026-10-14 DEC-008 (paquete único, Vitest 5.0.4, ESLint 10.12.0 + typescript-eslint 8.71.2, Prettier 3.9.10, TypeScript 6.0.3) y EDR-006 (scripts/check ejecuta npm run check; CI con setup-node + npm ci, aprobado por el usuario como G3). npm ci + scripts/check: entorno 0/0; modelo 0/0; 42 pruebas herramientas OK; producto typecheck+lint+formato OK, 1 prueba Vitest OK. npm run build genera dist/; node dist/cli/main.js imprime ai-submind. Negativos: sin node_modules → exit 1 con 'npm ci'; error de tipos en src/ → exit 1. code_roots [src/]. Build de UI diferido a S9 (sin código de UI)."
+    status: verified
+    evidence: "2026-10-14 DEC-008 (paquete único, Vitest 5.0.4, ESLint 10.12.0 + typescript-eslint 8.71.2, Prettier 3.9.10, TypeScript 6.0.3) y EDR-006 (scripts/check ejecuta npm run check; CI con setup-node + npm ci, aprobado por el usuario como G3). npm ci + scripts/check: entorno 0/0; modelo 0/0; 42 pruebas herramientas OK; producto typecheck+lint+formato OK, 1 prueba Vitest OK. npm run build genera dist/; node dist/cli/main.js imprime ai-submind. Negativos: sin node_modules → exit 1 con 'npm ci'; error de tipos en src/ → exit 1. code_roots [src/]. Build de UI diferido a S9 (sin código de UI). Revisión change-verifier: aprobado con observaciones (H1-H10), corregidas H1-H6, H8 (a S12), H10; re-revisión aprobada (devEngines aplicado por npm 10.9.8, control negativo EBADDEVENGINES). Commit 6392f37; CI validate run 38640883010 success (Python 3.10 y 3.12, Node v22.23.3: npm ci, entorno 0/0, modelo 0/0, 42 pruebas, producto lint/formato/Vitest 1/1)."
   - id: S4
     name: "Núcleo de formato: serialización canónica y validación"
     status: proposed
@@ -194,5 +194,6 @@ S11 tras S9/S10; S12 tras S7..S11.
 - 2026-10-14 · S2 revisada por change-verifier: aprobado con observaciones. Corregido en spec: versión posterior → lectura tolerante en solo lectura (H1), reglas entre fases (H2), reglas de `rename` con cascada de prefijo, `RENAME_COLLISION`/`RENAME_BLOCKED` (H3, entrada de S5), derivación NFC/recortes/truncado (H4), mapeo `CODE_REF_INVALID` y `codes` como conjunto (H5), `visibility` (H6), escapes y orden en §9 (H7), patrón estricto de `code_refs.path` (H8); fichas REQ-009, DEC-002, ENT-002, ENT-004 (H9); corpus ampliado con kinds found/unknown, indicadores, style.text y 4 casos inválidos (H10); `UMJ.pdf` en `.git/info/exclude` (H11). H12: el corpus solo se comprueba con un prototipo del scratchpad hasta que S4 lo convierta en pruebas versionadas.
 
 - 2026-10-14 · S3: usuario elige paquete único, Vitest y ESLint + typescript-eslint + Prettier (DEC-008) y aprueba el cambio de CI (EDR-006, G3). Build de UI con Vite diferido a S9; herramienta de ciclos (NFR-008) diferida a S4. `"private": true` hasta S12.
+- 2026-10-14 · S3 verified: commit 6392f37 empujado a origin/v2; workflow validate 38640883010 en verde. devEngines ajustado a `^22.13.0 || ^24.0.0 || >=26.0.0` (Vitest 5 excluye Node 25). Avisos de CI no bloqueantes: acciones v4/v5 sobre Node 20 deprecado; ubuntu-latest migra a Ubuntu 26 desde 2026-10-19.
 
 ## Resultado (al cerrar)

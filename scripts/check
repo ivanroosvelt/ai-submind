@@ -22,7 +22,7 @@ if [ -f package.json ]; then
   echo
   echo "== Producto (typecheck, lint, formato, pruebas) =="
   if ! command -v npm >/dev/null 2>&1; then
-    echo "ERROR: npm no está disponible (desarrollo: Node ^22.13 o >=24, DEC-008)" >&2
+    echo "ERROR: npm no está disponible (desarrollo: Node ^22.13, ^24 o >=26, DEC-008)" >&2
     status=1
   elif [ ! -d node_modules ]; then
     echo "ERROR: faltan dependencias; ejecutar 'npm ci'" >&2

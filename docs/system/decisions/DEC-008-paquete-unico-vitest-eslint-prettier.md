@@ -42,7 +42,7 @@ uncertainties:
 - Prettier solo sobre código y configuración del producto (`.prettierignore` en lista blanca):
   `spec/` contiene ejemplos canónicos byte a byte y no se reformatea.
 - `npm run check` = typecheck + lint + formato + pruebas; `scripts/check` lo ejecuta (EDR-006).
-- Node para desarrollo: `^22.13.0 || >=24` (mínimo de ESLint 10 y Vitest 5); el runtime publicado
+- Node para desarrollo: `^22.13.0 || ^24.0.0 || >=26.0.0` (intersección de ESLint 10 y Vitest 5); el runtime publicado
   mantiene `engines.node >=22` (DEC-001). Se declara en `devEngines` de `package.json`.
 - Dependencias de desarrollo con versión exacta (`--save-exact`) y `package-lock.json` versionado.
 
