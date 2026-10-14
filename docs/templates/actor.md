@@ -1,10 +1,10 @@
 ---
 id: ACT-XXX            # scripts/sysq claim ACT
 type: actor
-name: "<nombre canónico>"
+name: "<canonical name>"
 status: proposed      # proposed | active | deprecated | retired
 evidence: unknown     # verified-code | declared-doc | inferred | unknown
-summary: "<una línea>"
+summary: "<one line>"
 aliases: []
 tags: []
 relations:
@@ -12,15 +12,15 @@ relations:
 uncertainties: []
 ---
 
-# ACT-XXX · <nombre canónico>
+# ACT-XXX · <canonical name>
 
-## Descripción
+## Description
 
-## Objetivos
+## Goals
 
-## Permisos
+## Permissions
 
-| Recurso / operación | Permitido | Condiciones |
-|---------------------|-----------|-------------|
+| Resource / operation | Allowed | Conditions |
+|----------------------|---------|------------|
 
-## Notas
+## Notes

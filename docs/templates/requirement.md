@@ -1,10 +1,10 @@
 ---
 id: REQ-XXX            # scripts/sysq claim REQ
 type: requirement
-name: "<nombre canónico>"
+name: "<canonical name>"
 status: proposed      # proposed | active | deprecated | retired
 evidence: unknown     # verified-code | declared-doc | inferred | unknown
-summary: "<una línea>"
+summary: "<one line>"
 aliases: []
 tags: []
 relations:
@@ -16,22 +16,22 @@ relations:
 uncertainties: []
 ---
 
-# REQ-XXX · <nombre canónico>
+# REQ-XXX · <canonical name>
 
-## Enunciado
+## Statement
 
-<Actor> puede/debe <acción> para <resultado>.
+<Actor> can/must <action> in order to <outcome>.
 
-## Fuente
+## Source
 
-<usuario / documento / código: cita>
+<user / document / code: quote>
 
-## Criterios de aceptación
+## Acceptance criteria
 
-1. Dado …, cuando …, entonces …
+1. Given …, when …, then …
 
-## Reglas de negocio
+## Business rules
 
-## Errores y casos límite
+## Errors and edge cases
 
-## Fuera de alcance
+## Out of scope

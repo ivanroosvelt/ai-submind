@@ -19,8 +19,8 @@ Pregunta de decisión, alternativas reales, hechos con fuente, elementos afectad
 ## Procedimiento
 1. ¿Existe ya? `scripts/sysq find <tema>`; buscar en `.ai/decisions/` y `docs/system/decisions/`.
 2. `scripts/sysq claim DEC` o `scripts/sysq claim EDR`.
-3. Copiar la plantilla. DEC → `docs/system/decisions/<ID>-<slug>.md` (front matter del modelo,
-   relación `affects`). EDR → `.ai/decisions/<ID>-<slug>.md` (front matter EDR de la plantilla).
+3. Copiar la plantilla. DEC → `docs/system/decisions/<ID>-<slug>.md` (bloque A, en inglés: EDR-007;
+   relación `affects`). EDR → `.ai/decisions/<ID>-<slug>.md` (bloque B, en español).
 4. Contexto (hechos con fuente), alternativas reales consideradas, decisión, consecuencias
    (positivas y negativas), elementos afectados, cómo se verificó.
 5. Si sustituye otra: nueva con `supersedes`; la anterior pasa a `superseded`/`retired`

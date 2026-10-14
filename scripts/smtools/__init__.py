@@ -1,1 +1,1 @@
-"""Herramientas de mantenimiento del entorno IA y del modelo estructural (solo stdlib)."""
+"""Maintenance tools for the AI environment and the structural model (stdlib only)."""

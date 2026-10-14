@@ -1,4 +1,4 @@
-# Dominio
+# Domain
 
 - [entities/](entities/) — ENT
 - [functions/](functions/) — FUN

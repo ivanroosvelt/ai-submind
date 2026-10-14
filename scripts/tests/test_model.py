@@ -55,25 +55,25 @@ class ModelTestBase(unittest.TestCase):
         (self.root / "tests").mkdir()
         (self.root / "tests/test_users.py").write_text("def test_create_user(): pass\n")
         self.add("docs/system/actors", "ACT-001-admin.md", card("ACT-001", "actor", "Admin"))
-        self.add("docs/system/requirements", "REQ-001-alta.md", card("REQ-001", "requirement", "Alta", """\
+        self.add("docs/system/requirements", "REQ-001-signup.md", card("REQ-001", "requirement", "Signup", """\
             relations:
               actors: [ACT-001]
               features: [FEAT-001]
             """))
-        self.add("docs/system/features", "FEAT-001-usuarios.md", card("FEAT-001", "feature", "Usuarios", """\
+        self.add("docs/system/features", "FEAT-001-users.md", card("FEAT-001", "feature", "Users", """\
             implementation: verified
             code: [src/users.py]
             relations:
               functions: [FUN-001]
             """))
-        self.add("docs/system/domain/functions", "FUN-001-crear.md", card("FUN-001", "function", "Crear usuario", """\
+        self.add("docs/system/domain/functions", "FUN-001-create.md", card("FUN-001", "function", "Create user", """\
             implementation: verified
             code: [src/users.py#create_user]
             test_code: [tests/test_users.py#test_create_user]
             relations:
               tests: [TST-001]
             """))
-        self.add("docs/system/quality/tests", "TST-001-usuarios.md", card("TST-001", "test", "Pruebas usuarios", """\
+        self.add("docs/system/quality/tests", "TST-001-users.md", card("TST-001", "test", "User tests", """\
             implementation: implemented
             test_code: [tests/test_users.py]
             """))
@@ -103,7 +103,7 @@ class ModelValidationTest(ModelTestBase):
         self.add("docs/system/actors", "ACT-001-a.md", card("ACT-001", "actor", "A"))
         self.add("docs/system/actors", "ACT-002-b.md", card("ACT-001", "actor", "B"), ledger=False)
         self.add("docs/system/actors", "ACT-003-c.md", card("REQ-003", "requirement", "C"), ledger=False)
-        self.add("docs/system/actors", "otro-nombre.md", card("ACT-004", "actor", "D"), ledger=False)
+        self.add("docs/system/actors", "other-name.md", card("ACT-004", "actor", "D"), ledger=False)
         self.add("docs/system/actors", "ACT-005-e.md", card("ACT-005", "requirement", "E"))
         codes = self.codes(self.check())
         for expected in ("ID-DUP", "ID-PREFIX", "FILE-NAME", "TYPE-MISMATCH", "LEDGER-UNREGISTERED"):
@@ -122,7 +122,7 @@ class ModelValidationTest(ModelTestBase):
         (self.root / "src").mkdir()
         (self.root / "src/a.py").write_text("def real_fn(): pass\n")
         self.add("docs/system/domain/functions", "FUN-001-x.md", card("FUN-001", "function", "X", """\
-            code: [src/a.py#real_fn, src/a.py#missing_fn, src/nope.py, ../fuera.py]
+            code: [src/a.py#real_fn, src/a.py#missing_fn, src/nope.py, ../outside.py]
             """))
         report = self.check()
         msgs = [f.message for f in report.findings if f.code == "CODE-REF"]
@@ -138,7 +138,7 @@ class ModelValidationTest(ModelTestBase):
 
     def test_dependency_does_not_count_as_tests(self):
         self.valid_chain()
-        self.add("docs/system/features", "FEAT-002-otra.md", card("FEAT-002", "feature", "Otra", """\
+        self.add("docs/system/features", "FEAT-002-other.md", card("FEAT-002", "feature", "Other", """\
             implementation: verified
             code: [src/users.py]
             relations:
@@ -162,7 +162,7 @@ class ModelValidationTest(ModelTestBase):
     def test_stale_generated_files_fail(self):
         self.valid_chain()
         self.check()
-        (self.root / m.INVENTORY_PATH).write_text("editado a mano\n")
+        (self.root / m.INVENTORY_PATH).write_text("edited by hand\n")
         report = Report()
         m.check_model(self.root, report)
         self.assertIn("GENERATED-STALE", self.codes(report))
@@ -181,7 +181,7 @@ class ModelValidationTest(ModelTestBase):
 
 
 class TemplatesTest(ModelTestBase):
-    """Cada plantilla de ficha, instanciada, produce una ficha válida."""
+    """Every card template, once instantiated, yields a valid card."""
 
     def test_card_templates_instantiate(self):
         report = Report()
@@ -193,10 +193,10 @@ class TemplatesTest(ModelTestBase):
                 continue
             type_ = text.split("\ntype: ", 1)[1].split("\n", 1)[0].strip()
             prefix, spec = by_type[type_]
-            self.add(spec["dir"], f"{prefix}-001-plantilla.md", text.replace(f"{prefix}-XXX", f"{prefix}-001"))
-        self.assertEqual(len(self.ledger), len(schema["types"]) - 1)  # DEC usa la plantilla común
+            self.add(spec["dir"], f"{prefix}-001-template.md", text.replace(f"{prefix}-XXX", f"{prefix}-001"))
+        self.assertEqual(len(self.ledger), len(schema["types"]) - 1)  # DEC uses the shared template
         report = self.check()
-        self.assertEqual(self.codes(report), [], report.render("plantillas"))
+        self.assertEqual(self.codes(report), [], report.render("templates"))
 
 
 class RealRepoTest(unittest.TestCase):

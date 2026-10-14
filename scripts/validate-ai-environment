@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Valida el entorno de orquestación de IA.
+"""Validates the AI orchestration environment.
 
-Comprueba puntos de entrada, adaptadores, registro de agentes/skills y su
-formato nativo, capacidades y cobertura, decisiones del entorno, planes,
-informes, ledger de IDs, referencias y duplicidades.
+Checks entry points, adapters, the agent/skill registry and its native
+format, capabilities and coverage, environment decisions, plans, reports,
+the ID ledger, references and duplication.
 
-Uso: scripts/validate-ai-environment [--strict]
-Salida: 0 sin errores, 1 con errores.
+Usage: scripts/validate-ai-environment [--strict]
+Exit: 0 without errors, 1 with errors.
 """
 import argparse
 import sys
@@ -17,11 +17,11 @@ from smtools.env import check_environment
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--strict", action="store_true")
+    ap.add_argument("--strict", action="store_true", help="treat warnings as errors")
     args = ap.parse_args()
     report = Report()
     check_environment(repo_root(), report)
-    print(report.render("Entorno de IA", strict=args.strict))
+    print(report.render("AI environment", strict=args.strict))
     return 1 if report.errors or (args.strict and report.warnings) else 0
 
 

@@ -1,32 +1,32 @@
-# Esquema del modelo estructural del producto.
-# Fuente canónica de: prefijos de ID, tipos, directorios y relaciones permitidas.
-# Lo leen scripts/validate-system-model, scripts/regen y scripts/sysq.
-# Formato: subconjunto YAML documentado en docs/system/conventions.md.
-# Cambiar este archivo es un cambio de modelo: registrar DEC si altera semántica.
+# Schema of the product structural model.
+# Canonical source of: ID prefixes, types, directories and allowed relations.
+# Read by scripts/validate-system-model, scripts/regen and scripts/sysq.
+# Format: YAML subset documented in docs/system/conventions.md.
+# Changing this file is a model change: record a DEC if it alters semantics.
 
 version: 1
 
-# Estados de ciclo de vida (comunes a todos los tipos).
+# Lifecycle states (common to all types).
 statuses: [proposed, active, deprecated, retired]
 
-# Estado de implementación (solo tipos con implementable: true).
+# Implementation state (only types with implementable: true).
 implementation_states: [none, partial, implemented, verified]
 
-# Nivel de evidencia de la ficha.
-#   verified-code  comprobado leyendo código/pruebas (requiere `code` o `test_code`)
-#   declared-doc   declarado por documentación o por una persona
-#   inferred       inferido con evidencia parcial
-#   unknown        pendiente de investigación
+# Evidence level of the card.
+#   verified-code  checked by reading code/tests (requires `code` or `test_code`)
+#   declared-doc   declared by documentation or by a person
+#   inferred       inferred with partial evidence
+#   unknown        pending investigation
 evidence_levels: [verified-code, declared-doc, inferred, unknown]
 
-# Raíces de código del producto (DEC-008).
-# Si un diff toca estas rutas sin tocar docs/system/, el validador avisa.
+# Product code roots (DEC-008).
+# If a diff touches these paths without touching docs/system/, the validator warns.
 code_roots: [src/]
 
-# Campos que toda ficha debe declarar.
+# Fields every card must declare.
 common_required: [id, type, name, status, evidence]
 
-# Campos opcionales comunes.
+# Common optional fields.
 common_optional: [summary, aliases, tags, implementation, code, test_code, relations, uncertainties, commits]
 
 types:

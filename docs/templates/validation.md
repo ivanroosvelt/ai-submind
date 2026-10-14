@@ -1,14 +1,14 @@
 ---
 id: VAL-XXX            # scripts/sysq claim VAL
 type: validation
-name: "<nombre canónico>"
+name: "<canonical name>"
 status: proposed      # proposed | active | deprecated | retired
 evidence: unknown     # verified-code | declared-doc | inferred | unknown
-summary: "<una línea>"
+summary: "<one line>"
 aliases: []
 tags: []
 implementation: none  # none | partial | implemented | verified
-code: []              # rutas existentes: ruta o ruta#símbolo
+code: []              # existing paths: path or path#symbol
 test_code: []
 relations:
   tests: []
@@ -16,15 +16,15 @@ relations:
 uncertainties: []
 ---
 
-# VAL-XXX · <nombre canónico>
+# VAL-XXX · <canonical name>
 
-## Regla
+## Rule
 
-## Aplica a
+## Applies to
 
-## Mensaje / código de error
+## Message / error code
 
-## Ejemplos
+## Examples
 
-| Entrada | Resultado |
-|---------|-----------|
+| Input | Result |
+|-------|--------|

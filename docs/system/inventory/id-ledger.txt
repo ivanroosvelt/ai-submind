@@ -1,5 +1,5 @@
-# Ledger append-only de IDs del producto (prefijos en docs/system/schema.yaml).
-# Nunca borrar ni reutilizar. Reservar con: scripts/sysq claim <PREFIJO>
+# Append-only ledger of product IDs (prefixes in docs/system/schema.yaml).
+# Never delete or reuse. Reserve with: scripts/sysq claim <PREFIX>
 DEC-001
 DEC-002
 DEC-003
@@ -88,3 +88,5 @@ API-002
 API-003
 API-004
 DEC-008
+DEC-009
+DEC-010

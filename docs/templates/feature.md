@@ -1,14 +1,14 @@
 ---
 id: FEAT-XXX            # scripts/sysq claim FEAT
 type: feature
-name: "<nombre canónico>"
+name: "<canonical name>"
 status: proposed      # proposed | active | deprecated | retired
 evidence: unknown     # verified-code | declared-doc | inferred | unknown
-summary: "<una línea>"
+summary: "<one line>"
 aliases: []
 tags: []
 implementation: none  # none | partial | implemented | verified
-code: []              # rutas existentes: ruta o ruta#símbolo
+code: []              # existing paths: path or path#symbol
 test_code: []
 relations:
   entities: []
@@ -20,14 +20,14 @@ relations:
 uncertainties: []
 ---
 
-# FEAT-XXX · <nombre canónico>
+# FEAT-XXX · <canonical name>
 
-## Descripción
+## Description
 
-## Comportamiento
+## Behavior
 
-## Estados y transiciones
+## States and transitions
 
-## Dependencias
+## Dependencies
 
-## Riesgos
+## Risks

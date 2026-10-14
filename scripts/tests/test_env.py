@@ -11,7 +11,7 @@ COPY = ["AGENTS.md", "CLAUDE.md", ".github", ".ai", ".claude", "docs", "scripts"
 
 
 class EnvTestBase(unittest.TestCase):
-    """Copia el repositorio real a un directorio temporal y lo altera."""
+    """Copies the real repository to a temporary directory and mutates it."""
 
     def setUp(self):
         self.root = Path(tempfile.mkdtemp())
@@ -45,7 +45,7 @@ class MutationTest(EnvTestBase):
 
     def test_agents_md_change_desyncs_copilot(self):
         with (self.root / "AGENTS.md").open("a") as fh:
-            fh.write("\nNueva regla.\n")
+            fh.write("\nNew rule.\n")
         self.assertIn("GENERATED-STALE", self.codes(self.check()))
         env.regen_environment(self.root, Report())
         self.assertEqual(self.check().errors, [])
@@ -87,7 +87,7 @@ class MutationTest(EnvTestBase):
 
     def test_broken_references(self):
         with (self.root / "AGENTS.md").open("a") as fh:
-            fh.write("\nVer `docs/no-existe.md` y [x](nada.md) y SKL-099.\n")
+            fh.write("\nSee `docs/missing.md` and [x](nothing.md) and SKL-099.\n")
         env.regen_environment(self.root, Report())
         codes = self.codes(self.check())
         for c in ("PATH-BROKEN", "LINK-BROKEN", "ID-BROKEN"):
@@ -133,7 +133,7 @@ class MutationTest(EnvTestBase):
     def test_unknown_tool_and_missing_section(self):
         p = self.root / ".claude/agents/change-verifier.md"
         p.write_text(p.read_text().replace("tools: Read, Grep, Glob, Bash", "tools: Read, Frobnicate")
-                     .replace("## Finalización", "## Fin"))
+                     .replace("## Finalización", "## Fin"))  # Spanish heading required by env.REQUIRED_SECTIONS
         report = self.check()
         self.assertIn("NATIVE-TOOL", self.codes(report, "warning"))
         self.assertIn("COMP-SECTION", self.codes(report))

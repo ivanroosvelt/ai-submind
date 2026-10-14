@@ -1,44 +1,44 @@
-# Modelo estructural del producto
+# Product structural model
 
-Representación textual, atómica y verificable de **qué es submind**: actores, requerimientos,
-características, dominio, interfaces, integraciones, decisiones y pruebas.
+Textual, atomic and verifiable representation of **what submind is**: actors, requirements,
+features, domain, interfaces, integrations, decisions and tests.
 
-- **Estado vigente** aquí; **historia** en Git (`git log -- docs/system/`).
-- El **código** es la autoridad sobre el comportamiento implementado; la ficha declara qué fuente
-  es autoritativa en su campo `evidence`.
-- Convenciones (IDs, nombres, front matter, relaciones, búsqueda): [conventions.md](conventions.md).
-- Esquema de tipos y relaciones: [schema.yaml](schema.yaml).
+- **Current state** here; **history** in Git (`git log -- docs/system/`).
+- **Code** is the authority on implemented behavior; each card declares which source is
+  authoritative in its `evidence` field.
+- Conventions (IDs, names, front matter, relations, search): [conventions.md](conventions.md).
+- Schema of types and relations: [schema.yaml](schema.yaml).
 
-## Por dónde empezar
+## Where to start
 
-1. [context.md](context.md) — qué se sabe y qué no del producto.
-2. [inventory/INDEX.md](inventory/INDEX.md) — todos los elementos y relaciones (generado).
-3. [traceability/MATRIX.md](traceability/MATRIX.md) — REQ → FEAT → elementos → validaciones → pruebas → decisiones (generado).
-4. [glossary.md](glossary.md) — términos de dominio → IDs.
+1. [context.md](context.md) — what is and is not known about the product.
+2. [inventory/INDEX.md](inventory/INDEX.md) — all elements and relations (generated).
+3. [traceability/MATRIX.md](traceability/MATRIX.md) — REQ → FEAT → elements → validations → tests → decisions (generated).
+4. [glossary.md](glossary.md) — domain terms → IDs.
 
-## Directorios
+## Directories
 
-| Prefijo | Tipo | Directorio |
-|---------|------|------------|
+| Prefix | Type | Directory |
+|--------|------|-----------|
 | ACT | actor | [actors/](actors/) |
-| REQ | requerimiento | [requirements/](requirements/) |
-| NFR | atributo de calidad / requisito no funcional | [quality/](quality/) |
-| FEAT | característica | [features/](features/) |
-| ENT | entidad de dominio | [domain/entities/](domain/entities/) |
-| FUN | función / comportamiento | [domain/functions/](domain/functions/) |
-| VAL | validación / regla | [domain/validations/](domain/validations/) |
-| API | contrato de interfaz | [interfaces/](interfaces/) |
-| INT | integración | [integrations/](integrations/) |
-| DEC | decisión del producto | [decisions/](decisions/) |
-| TST | prueba o conjunto de pruebas | [quality/tests/](quality/tests/) |
+| REQ | requirement | [requirements/](requirements/) |
+| NFR | quality attribute / non-functional requirement | [quality/](quality/) |
+| FEAT | feature | [features/](features/) |
+| ENT | domain entity | [domain/entities/](domain/entities/) |
+| FUN | function / behavior | [domain/functions/](domain/functions/) |
+| VAL | validation / rule | [domain/validations/](domain/validations/) |
+| API | interface contract | [interfaces/](interfaces/) |
+| INT | integration | [integrations/](integrations/) |
+| DEC | product decision | [decisions/](decisions/) |
+| TST | test or test suite | [quality/tests/](quality/tests/) |
 
-Vista de arquitectura (narrativa, enlaza IDs): [architecture/](architecture/).
+Architecture view (narrative, links IDs): [architecture/](architecture/).
 
-## Consultas
+## Queries
 
 ```sh
-scripts/sysq find <término>   # por nombre, alias, tag, ruta o símbolo
-scripts/sysq show <ID>        # ficha + relaciones entrantes/salientes + historial + menciones
-scripts/sysq impact <ID>      # qué se rompería al cambiarlo
-scripts/sysq claim <PREFIJO>  # reservar el siguiente ID
+scripts/sysq find <term>      # by name, alias, tag, path or symbol
+scripts/sysq show <ID>        # card + incoming/outgoing relations + history + mentions
+scripts/sysq impact <ID>      # what would break if it changed
+scripts/sysq claim <PREFIX>   # reserve the next ID
 ```

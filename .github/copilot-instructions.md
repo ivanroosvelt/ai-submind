@@ -15,7 +15,7 @@ incrustado: editar `AGENTS.md` y ejecutar `scripts/regen`.**
   distinta; Copilot no aprueba sus propios cambios del entorno.
 - Para comandos, usar los de `scripts/` (AGENTS.md §12).
 
-<!-- BEGIN AGENTS.md · generado por scripts/regen · sha256:c664436b5605c35a · no editar -->
+<!-- BEGIN AGENTS.md · generado por scripts/regen · sha256:9812a4f35e2023f6 · no editar -->
 # AGENTS.md — submind
 
 Fuente canónica de instrucciones para todo agente de IA que trabaje en este repositorio
@@ -224,8 +224,10 @@ riesgos y limitaciones.
 
 ## 14. Convenciones
 
-- Documentación en español; identificadores de código, nombres de archivos de agentes/skills y
-  claves de esquema en inglés (`kebab-case` / `snake_case`).
+- Idioma (EDR-007): **inglés** para código y pruebas (`src/`, `test/`, `scripts/`), especificación (`spec/`)
+  y modelo estructural (`docs/system/`, plantillas de fichas); **español** para el resto de la documentación
+  (este archivo, adaptadores, `.ai/`, `.claude/`, planes, informes). Identificadores, nombres de archivos de
+  agentes/skills y claves de esquema en inglés (`kebab-case` / `snake_case`).
 - Commits: Conventional Commits en español (`feat(core): ...`), referenciando IDs afectados
   en el cuerpo (`Refs: REQ-001, FEAT-002`).
 - Decisiones del producto: `docs/system/decisions/DEC-NNN-*.md`. Decisiones del entorno:

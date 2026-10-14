@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Ejecuta todas las verificaciones deterministas del repositorio.
-# Uso: scripts/check [--strict]   (lo usa CI; ver .ai/policies/verification.md)
+# Runs every deterministic check of the repository.
+# Usage: scripts/check [--strict]   (used by CI; see .ai/policies/verification.md)
 set -u
 cd "$(dirname "$0")/.."
 export PYTHONDONTWRITEBYTECODE=1
@@ -8,7 +8,7 @@ strict=()
 for arg in "$@"; do
   case "$arg" in
     --strict) strict=(--strict) ;;
-    *) echo "uso: scripts/check [--strict]" >&2; exit 2 ;;
+    *) echo "usage: scripts/check [--strict]" >&2; exit 2 ;;
   esac
 done
 status=0
@@ -16,16 +16,16 @@ python3 scripts/validate-ai-environment ${strict[@]+"${strict[@]}"} || status=1
 echo
 python3 scripts/validate-system-model ${strict[@]+"${strict[@]}"} || status=1
 echo
-echo "== Pruebas de las herramientas =="
+echo "== Tooling tests =="
 python3 -m unittest discover -s scripts/tests -t scripts -q || status=1
 if [ -f package.json ]; then
   echo
-  echo "== Producto (typecheck, lint, formato, pruebas) =="
+  echo "== Product (typecheck, lint, format, tests) =="
   if ! command -v npm >/dev/null 2>&1; then
-    echo "ERROR: npm no está disponible (desarrollo: Node ^22.13, ^24 o >=26, DEC-008)" >&2
+    echo "ERROR: npm is not available (development: Node ^22.13, ^24 or >=26, DEC-008)" >&2
     status=1
   elif [ ! -d node_modules ]; then
-    echo "ERROR: faltan dependencias; ejecutar 'npm ci'" >&2
+    echo "ERROR: dependencies missing; run 'npm ci'" >&2
     status=1
   else
     npm run --silent check || status=1

@@ -1,5 +1,5 @@
-# Integraciones (INT)
+# Integrations (INT)
 
-Integraciones con sistemas externos o entre componentes, con procedimiento, verificación y recuperación.
+Integrations with external systems or between components, with procedure, verification and recovery.
 
-Plantilla: [integration.md](../../templates/integration.md). Reglas: [conventions.md](../conventions.md).
+Template: [integration.md](../../templates/integration.md). Rules: [conventions.md](../conventions.md).

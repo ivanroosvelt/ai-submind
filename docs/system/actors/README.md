@@ -1,5 +1,5 @@
-# Actores (ACT)
+# Actors (ACT)
 
-Personas, roles y sistemas externos que interactúan con el producto.
+People, roles and external systems that interact with the product.
 
-Plantilla: [actor.md](../../templates/actor.md). Reglas: [conventions.md](../conventions.md).
+Template: [actor.md](../../templates/actor.md). Rules: [conventions.md](../conventions.md).

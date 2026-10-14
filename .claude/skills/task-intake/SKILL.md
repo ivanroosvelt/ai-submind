@@ -18,7 +18,8 @@ Petición; `docs/plans/active/` (¿hay plan relacionado?); `git status`; modelo 
 1. **¿Reanudación?** Si un plan activo cubre la petición → `staged-plan` (modo reanudar) y parar aquí.
 2. **Objetivo y criterios de aceptación**: una frase de objetivo y criterios verificables.
    Si no se pueden formular, es una duda bloqueante → preguntar.
-3. **Localizar el modelo**: `scripts/sysq find <término>` por cada término de dominio de la petición.
+3. **Localizar el modelo**: `scripts/sysq find <término>` por cada término de dominio de la petición,
+   en inglés (el modelo está en inglés, EDR-007).
    Anotar IDs encontrados o "sin elementos registrados".
 4. **Clasificar** T0/T1/T2 según `AGENTS.md` §4. En duda entre dos clases, elegir la mayor.
 5. **Perspectivas**: para cada entrada de `coverage.yaml`, marcar `aplica` / `no aplica: <motivo>`.

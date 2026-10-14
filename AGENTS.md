@@ -206,8 +206,10 @@ riesgos y limitaciones.
 
 ## 14. Convenciones
 
-- Documentación en español; identificadores de código, nombres de archivos de agentes/skills y
-  claves de esquema en inglés (`kebab-case` / `snake_case`).
+- Idioma (EDR-007): **inglés** para código y pruebas (`src/`, `test/`, `scripts/`), especificación (`spec/`)
+  y modelo estructural (`docs/system/`, plantillas de fichas); **español** para el resto de la documentación
+  (este archivo, adaptadores, `.ai/`, `.claude/`, planes, informes). Identificadores, nombres de archivos de
+  agentes/skills y claves de esquema en inglés (`kebab-case` / `snake_case`).
 - Commits: Conventional Commits en español (`feat(core): ...`), referenciando IDs afectados
   en el cuerpo (`Refs: REQ-001, FEAT-002`).
 - Decisiones del producto: `docs/system/decisions/DEC-NNN-*.md`. Decisiones del entorno:

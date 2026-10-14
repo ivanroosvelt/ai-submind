@@ -1,5 +1,5 @@
-# Funciones (FUN)
+# Functions (FUN)
 
-Comportamientos atómicos: entradas, salidas, pre/postcondiciones, reglas, errores.
+Atomic behaviors: inputs, outputs, pre/postconditions, rules, errors.
 
-Plantilla: [function.md](../../../templates/function.md). Reglas: [conventions.md](../../conventions.md).
+Template: [function.md](../../../templates/function.md). Rules: [conventions.md](../../conventions.md).

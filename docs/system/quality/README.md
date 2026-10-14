@@ -1,5 +1,5 @@
-# Atributos de calidad (NFR)
+# Quality attributes (NFR)
 
-Requisitos no funcionales: rendimiento, seguridad, disponibilidad, accesibilidad… Las pruebas (TST) viven en [tests/](tests/).
+Non-functional requirements: performance, security, availability, accessibility… Tests (TST) live in [tests/](tests/).
 
-Plantilla: [quality-attribute.md](../../templates/quality-attribute.md). Reglas: [conventions.md](../conventions.md).
+Template: [quality-attribute.md](../../templates/quality-attribute.md). Rules: [conventions.md](../conventions.md).

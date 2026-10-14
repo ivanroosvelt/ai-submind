@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Consulta el modelo estructural y el registro del entorno de forma determinista.
+"""Deterministic queries over the structural model and the environment registry.
 
-Uso:
-  scripts/sysq show <ID>            ficha, relaciones salientes/entrantes, código, pruebas,
-                                    historial git y menciones en el repositorio
-  scripts/sysq find <término>       busca en IDs, nombres, aliases, tags y símbolos de código
-  scripts/sysq impact <ID>          cierre transitivo: de qué depende y qué depende de él
-  scripts/sysq list [PREFIJO]       lista elementos (opcionalmente de un prefijo)
-  scripts/sysq next <PREFIJO>       siguiente ID libre según el ledger
-  scripts/sysq claim <PREFIJO>      reserva el siguiente ID (lo añade al ledger) y lo imprime
+Usage:
+  scripts/sysq show <ID>            card, outgoing/incoming relations, code, tests,
+                                    git history and mentions in the repository
+  scripts/sysq find <term>          search IDs, names, aliases, tags and code symbols
+  scripts/sysq impact <ID>          transitive closure: what it depends on and what depends on it
+  scripts/sysq list [PREFIX]        list elements (optionally of one prefix)
+  scripts/sysq next <PREFIX>        next free ID according to the ledger
+  scripts/sysq claim <PREFIX>       reserve the next ID (append it to the ledger) and print it
 """
 import argparse
 import sys
@@ -20,7 +20,7 @@ from smtools.model import LEDGER_PATH, load_model
 
 
 def env_entries(root: Path) -> dict[str, dict]:
-    """IDs del entorno con su archivo canónico."""
+    """Environment IDs with their canonical file."""
     r = Report()
     out: dict[str, dict] = {}
     for cid, c in envmod.load_components(root, r).items():
@@ -41,8 +41,8 @@ def ledger_for(prefix: str, root: Path, schema: dict) -> Path:
         return root / LEDGER_PATH
     if prefix in envmod.ENV_PREFIXES:
         return root / envmod.LEDGER
-    raise SystemExit(f"Prefijo desconocido: {prefix}. Producto: {sorted(schema['types'])}; "
-                     f"entorno: {sorted(envmod.ENV_PREFIXES)}")
+    raise SystemExit(f"Unknown prefix: {prefix}. Product: {sorted(schema['types'])}; "
+                     f"environment: {sorted(envmod.ENV_PREFIXES)}")
 
 
 def mentions(root: Path, term: str) -> list[str]:
@@ -57,38 +57,38 @@ def cmd_show(root, model, ident):
     if e is None:
         entry = env_entries(root).get(ident)
         if entry is None:
-            print(f"{ident}: no existe en el modelo ni en el registro del entorno")
+            print(f"{ident}: not found in the model or in the environment registry")
             return 1
-        print(f"{ident} · {entry.get('name')} · {entry.get('status', '')}\n  archivo: {entry.get('path')}")
+        print(f"{ident} · {entry.get('name')} · {entry.get('status', '')}\n  file: {entry.get('path')}")
         if entry.get("providers"):
-            print(f"  proveedores: {', '.join(map(str, entry['providers']))}")
+            print(f"  providers: {', '.join(map(str, entry['providers']))}")
     else:
         f = e.fields
-        print(f"{e.id} · {e.name}\n  tipo: {f.get('type')}  estado: {e.status}  "
-              f"implementación: {f.get('implementation') or '-'}  evidencia: {f.get('evidence')}")
-        print(f"  ficha: {e.path}")
+        print(f"{e.id} · {e.name}\n  type: {f.get('type')}  status: {e.status}  "
+              f"implementation: {f.get('implementation') or '-'}  evidence: {f.get('evidence')}")
+        print(f"  card: {e.path}")
         if f.get("summary"):
-            print(f"  resumen: {f['summary']}")
-        for label, key in (("aliases", "aliases"), ("tags", "tags"), ("código", "code"), ("pruebas (código)", "test_code"),
+            print(f"  summary: {f['summary']}")
+        for label, key in (("aliases", "aliases"), ("tags", "tags"), ("code", "code"), ("tests (code)", "test_code"),
                            ("commits", "commits")):
             if as_list(f.get(key)):
                 print(f"  {label}: {', '.join(map(str, as_list(f.get(key))))}")
-        print("  salientes:")
+        print("  outgoing:")
         for k, ts in sorted(e.relations.items()):
             for t in ts:
-                print(f"    {e.id} --{k}--> {t}  {model.elements[t].name if t in model.elements else '(NO EXISTE)'}")
-        print("  entrantes:")
+                print(f"    {e.id} --{k}--> {t}  {model.elements[t].name if t in model.elements else '(DOES NOT EXIST)'}")
+        print("  incoming:")
         for s, k in sorted(model.incoming().get(e.id, [])):
             print(f"    {s} --{k}--> {e.id}  {model.elements[s].name}")
         for u in as_list(f.get("uncertainties")):
-            print(f"  incertidumbre: {u}")
+            print(f"  uncertainty: {u}")
         log = git(root, "log", "--oneline", "-n", "10", "--", e.path)
         if log:
-            print("  historial (git):")
+            print("  history (git):")
             print("\n".join(f"    {l}" for l in log.splitlines()))
     hits = mentions(root, ident)
     if hits:
-        print(f"  menciones ({len(hits)}):")
+        print(f"  mentions ({len(hits)}):")
         print("\n".join(f"    {h}" for h in hits[:40]))
     return 0
 
@@ -104,13 +104,13 @@ def cmd_find(root, model, term):
     for i, entry in sorted(env_entries(root).items()):
         if t in i.lower() or t in str(entry.get("name", "")).lower():
             found.append(f"{i}  {entry.get('name')}  [{entry.get('status', '')}]  {entry.get('path')}")
-    print("\n".join(found) if found else f"Sin coincidencias registradas para '{term}'.")
+    print("\n".join(found) if found else f"No registered matches for '{term}'.")
     return 0 if found else 1
 
 
 def cmd_impact(model, ident):
     if ident not in model.elements:
-        print(f"{ident} no existe en el modelo")
+        print(f"{ident} does not exist in the model")
         return 1
     inc = model.incoming()
 
@@ -127,10 +127,10 @@ def cmd_impact(model, ident):
     out = walk(ident, lambda c: [(t, k) for k, ts in model.elements.get(c).relations.items() for t in ts]
                if c in model.elements else [])
     up = walk(ident, lambda c: inc.get(c, []))
-    print(f"{ident} depende de / se relaciona con ({len(out)}):")
+    print(f"{ident} depends on / relates to ({len(out)}):")
     for i, (via, k) in sorted(out.items()):
         print(f"  {i}  ← {via} --{k}")
-    print(f"Elementos que dependen de {ident} (posible impacto) ({len(up)}):")
+    print(f"Elements that depend on {ident} (possible impact) ({len(up)}):")
     for i, (via, k) in sorted(up.items()):
         print(f"  {i}  --{k}--> {via}")
     return 0
@@ -145,10 +145,10 @@ def main() -> int:
     report = Report()
     model = load_model(root, report)
     if model is None:
-        print(report.render("No se pudo cargar el modelo"))
+        print(report.render("Could not load the model"))
         return 2
     if args.command in ("show", "find", "impact", "next", "claim") and not args.arg:
-        ap.error(f"'{args.command}' requiere un argumento")
+        ap.error(f"'{args.command}' requires an argument")
     if args.command == "show":
         return cmd_show(root, model, args.arg)
     if args.command == "find":

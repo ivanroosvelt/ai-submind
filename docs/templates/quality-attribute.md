@@ -1,10 +1,10 @@
 ---
 id: NFR-XXX            # scripts/sysq claim NFR
 type: quality-attribute
-name: "<nombre canónico>"
+name: "<canonical name>"
 status: proposed      # proposed | active | deprecated | retired
 evidence: unknown     # verified-code | declared-doc | inferred | unknown
-summary: "<una línea>"
+summary: "<one line>"
 aliases: []
 tags: []
 relations:
@@ -13,13 +13,13 @@ relations:
 uncertainties: []
 ---
 
-# NFR-XXX · <nombre canónico>
+# NFR-XXX · <canonical name>
 
-## Requisito
+## Requirement
 
-## Métrica y umbral
+## Metric and threshold
 
-| Métrica | Umbral | Cómo se mide |
-|---------|--------|--------------|
+| Metric | Threshold | How it is measured |
+|--------|-----------|--------------------|
 
-## Alcance
+## Scope

@@ -1,5 +1,5 @@
 # Interfaces (API)
 
-Contratos expuestos o consumidos: operaciones, formatos, errores, versionado, proveedores y consumidores.
+Exposed or consumed contracts: operations, formats, errors, versioning, providers and consumers.
 
-Plantilla: [interface.md](../../templates/interface.md). Reglas: [conventions.md](../conventions.md).
+Template: [interface.md](../../templates/interface.md). Rules: [conventions.md](../conventions.md).

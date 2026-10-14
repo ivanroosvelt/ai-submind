@@ -7,7 +7,7 @@ updated: 2026-10-14
 class: T2
 related: [DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007, DEC-008, EDR-006, REP-003]
 blockers: []
-next_action: "S4: serializador canónico + validación Ajv y pasada referencial en src/format; convertir el corpus spec/format/examples en pruebas Vitest (cierra H12 de S2); elegir herramienta de ciclos entre módulos (NFR-008)."
+next_action: "Commit de S4 (separado del entorno: EDR-007/PLAN-003) cuando el usuario lo pida; terminar PLAN-003; después S5 (motor), con el criterio de entrada de H9."
 stages:
   - id: S1
     name: "Decisiones aceptadas y modelo estructural registrado"
@@ -23,8 +23,8 @@ stages:
     evidence: "2026-10-14 DEC-008 (paquete único, Vitest 5.0.4, ESLint 10.12.0 + typescript-eslint 8.71.2, Prettier 3.9.10, TypeScript 6.0.3) y EDR-006 (scripts/check ejecuta npm run check; CI con setup-node + npm ci, aprobado por el usuario como G3). npm ci + scripts/check: entorno 0/0; modelo 0/0; 42 pruebas herramientas OK; producto typecheck+lint+formato OK, 1 prueba Vitest OK. npm run build genera dist/; node dist/cli/main.js imprime ai-submind. Negativos: sin node_modules → exit 1 con 'npm ci'; error de tipos en src/ → exit 1. code_roots [src/]. Build de UI diferido a S9 (sin código de UI). Revisión change-verifier: aprobado con observaciones (H1-H10), corregidas H1-H6, H8 (a S12), H10; re-revisión aprobada (devEngines aplicado por npm 10.9.8, control negativo EBADDEVENGINES). Commit 6392f37; CI validate run 38640883010 success (Python 3.10 y 3.12, Node v22.23.3: npm ci, entorno 0/0, modelo 0/0, 42 pruebas, producto lint/formato/Vitest 1/1)."
   - id: S4
     name: "Núcleo de formato: serialización canónica y validación"
-    status: proposed
-    evidence: ""
+    status: verified
+    evidence: "2026-10-14 src/format (canonical, document, semantic, knowledge, schema, findings, types) con Ajv 8.20.0 y dependency-cruiser 18.6.0 (DEC-009). test/format/corpus.test.ts: garaje 0 hallazgos y 5/5 archivos canónicos; 33/33 casos invalid/ con exactamente sus códigos; canonical/input (manifiesto, pedidos, sequence) = expected byte a byte e idempotente (cierra H12 de S2). test/format/rules.test.ts: 32 pruebas (symlinks, FIFO, directorios no previstos, UTF-8, U+2028/CR, lectura tolerante con punteros originales, conjuntos, CODE_REF_MISSING, ciclos, BigInt, escapes). scripts/check: entorno 0/0; modelo 0/0; 42 pruebas herramientas; producto typecheck+lint+formato+deps+78 Vitest OK. Mutaciones: ciclo temporal → npm run deps exit 1; sin mapeo de punteros o con regex /m → fallan sus pruebas. change-verifier: aprobado con observaciones (H1-H12, corregidas salvo H9 → S5 y H12 → commit aparte); re-revisión aprobada con observaciones (N1-N7, corregidas)."
   - id: S5
     name: "Motor de conocimiento: carga, grafo, transacciones, rename, recarga"
     status: proposed
@@ -75,7 +75,7 @@ en una UI JointJS.
 - Incluye: diagramas de clases (render + layout, S9) y secuencia (formato + validación en S2/S4; render y layout como etapa madura S11);
   motor embebido (DEC-004); consultas estructuradas y léxicas; daemon + proxy MCP (DEC-005); UI explorar +
   layout (DEC-006); integridad post-merge.
-- Excluye (plan posterior): búsqueda semántica con embeddings (DEC-007), merge driver semántico de git,
+- Excluye (plan posterior): búsqueda semántica con embeddings (DEC-007), migraciones de formato (DEC-010), merge driver semántico de git,
   lenguaje de caminos, importadores XMI, nuevos tipos de diagrama, edición de modelo desde la UI.
 
 ## Análisis (salida de task-intake e impact-analysis)
@@ -124,6 +124,8 @@ S11 tras S9/S10; S12 tras S7..S11.
 - Pruebas: ida y vuelta sin diff; ejemplos S2; marcadores de conflicto detectados.
 
 ### S5 · Motor de conocimiento
+- Criterios de entrada: toda escritura pasa por la validación de schema antes de `serialize` (que descarta claves
+  desconocidas: revisión S4, H9).
 - Acciones: carga de `knowledge/`, grafo e índices (tipo, refs directas/inversas), transacciones por lote
   con validación previa, revisión optimista, escritura atómica, `rename` con reescritura de referencias,
   watcher con recarga y diff semántico.
@@ -195,5 +197,12 @@ S11 tras S9/S10; S12 tras S7..S11.
 
 - 2026-10-14 · S3: usuario elige paquete único, Vitest y ESLint + typescript-eslint + Prettier (DEC-008) y aprueba el cambio de CI (EDR-006, G3). Build de UI con Vite diferido a S9; herramienta de ciclos (NFR-008) diferida a S4. `"private": true` hasta S12.
 - 2026-10-14 · S3 verified: commit 6392f37 empujado a origin/v2; workflow validate 38640883010 en verde. devEngines ajustado a `^22.13.0 || ^24.0.0 || >=26.0.0` (Vitest 5 excluye Node 25). Avisos de CI no bloqueantes: acciones v4/v5 sobre Node 20 deprecado; ubuntu-latest migra a Ubuntu 26 desde 2026-10-19.
+
+- 2026-10-14 · S4: usuario elige Ajv 8 y dependency-cruiser (DEC-009). Spec §10.4/§11: versión anterior sin migración (0.x) se trata como posterior (solo lectura). NFR-008 resuelta. VAL-002 `partial`: derivación de IDs (§3.3) pasa a S5. S4 executed; pendiente change-verifier.
+- 2026-10-14 · S4 revisada por change-verifier: aprobado con observaciones (H1-H12). Corregidas H1 (punteros de documentos `read_only` mapeados al archivo leído), H2 (FEAT-003 `partial`), H3 (API-004 `partial`, sin repetir §11; NFR-011), H4 (marcador de conflicto tras U+2028), H5 (`uniqueItems` en `members`, `covered` y `elements` de diagrama + caso `schema-duplicate-reference-in-set`), H6 (multiplicidades con BigInt), H7 (rama `then` por `$ref` reemplaza, en línea refina), H8 (symlink hacia `.ai-submind/`, directorios no previstos, FIFO), H10 (caso canónico `sequence` y pruebas de lectura tolerante con fragmentos y layout), H11 (context). H9 → criterio de entrada de S5. H12: cambios del entorno (EDR-007, PLAN-003) van en commit aparte. La regla «versión anterior sin migración = solo lectura» (spec §11) es propuesta del agente: pendiente de confirmación del usuario.
+- 2026-10-14 · re-revisión change-verifier: aprobado con observaciones N1-N7, corregidas: N1 VAL-004 `partial` y atribución separada; N2 lectura tolerante deduplica conjuntos; N3 evidencia; N4 mensaje de symlink; N5 pruebas de `covered` y `elements` repetidos; N6 marcadores tras CR; N7 aviso cuando la lectura tolerante no recupera nada. S4 verified.
+- 2026-10-14 · PLAN-003 (EDR-007) traduce spec, corpus y modelo al inglés: la evidencia de S2/S4 cita nombres anteriores del corpus (`valid/garaje` → `valid/garage`, `pedidos` → `orders`, casos `invalid/` en inglés) y slugs anteriores de fichas; los IDs no cambian.
+
+- 2026-10-14 · usuario confirma la regla «versión anterior sin migración = solo lectura» (spec §11) y pide un mecanismo de actualización sencillo: DEC-010 (proposed), guías versionadas from→to para agentes LLM con corpus antes/después y operación `migrate`; se implementa con el primer cambio de versión del formato (fuera de PLAN-002).
 
 ## Resultado (al cerrar)

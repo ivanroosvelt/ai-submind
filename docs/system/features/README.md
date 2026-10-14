@@ -1,5 +1,5 @@
-# Características (FEAT)
+# Features (FEAT)
 
-Capacidades del producto visibles para un actor. Se componen de entidades, funciones, interfaces e integraciones.
+Product capabilities visible to an actor. They are composed of entities, functions, interfaces and integrations.
 
-Plantilla: [feature.md](../../templates/feature.md). Reglas: [conventions.md](../conventions.md).
+Template: [feature.md](../../templates/feature.md). Rules: [conventions.md](../conventions.md).

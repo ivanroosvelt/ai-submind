@@ -1,40 +1,40 @@
-# Glosario
+# Glossary
 
-Término de dominio → definición breve → ID canónico. La definición completa vive en la ficha;
-aquí solo se enlaza. Mantener en orden alfabético.
+Domain term → short definition → canonical ID. The full definition lives in the card;
+here it is only linked. Keep in alphabetical order.
 
-| Término | Definición breve | ID |
-|---------|------------------|----|
-| ai-submind (comando) | CLI `npx ai-submind` con `serve`, `mcp`, `init`, `status`, `stop` | API-003 |
-| ai-submind.json | Manifiesto de `knowledge/` con versión de formato | ENT-001 |
-| API HTTP de la UI | Lectura y escritura solo de layout para la UI | API-002 |
-| Búsqueda léxica | Búsqueda por texto libre con ranking léxico | REQ-038 |
-| Búsqueda semántica | Búsqueda por similitud con embeddings (posterior) | FEAT-005 |
-| Daemon | Proceso único por proyecto que sirve UI y MCP | REQ-037 |
-| Diagrama | Vista de un modelo (`kind` clases o secuencia) hecha de referencias | ENT-004 |
-| Elemento de modelo | Elemento UML con `id` legible dentro de un modelo | ENT-003 |
-| Extensiones del formato | `stereotypes`, `tags`, `documentation`, `code_refs`, `external_id` | API-004 |
-| Formato de conocimiento | Formato propio derivado de UMJ con JSON Schema | FEAT-003 |
-| Formato 1.0 (spec) | Contrato de archivos de `knowledge/` en `spec/format/` | API-004 |
-| ID de archivo / ID de elemento | Gramáticas de ID para modelos y diagramas / resto de elementos, en un espacio global | API-004 |
-| idref | Referencia a un elemento por su `id` | VAL-003 |
-| Layout | Posiciones y vértices de un diagrama, archivo separado | ENT-005 |
-| Modelo | Árbol de elementos, relaciones y diagramas en un archivo | ENT-002 |
-| Motor de conocimiento | Equivalente portable propio de TerminusDB | FEAT-002 |
-| Proxy MCP stdio | `ai-submind mcp`: reenvía stdio al daemon | REQ-003 |
-| Rename | Cambio de `id` con reescritura de referencias | REQ-039 |
-| Servidor MCP | Tools MCP de consulta y administración | API-001 |
-| Serialización canónica | Escritura determinista para diffs mínimos | REQ-005 |
-| UMJ | Formato JSON de intercambio UML de referencia (paper ENASE 2026) | DEC-002 |
-| Visor web | UI JointJS para explorar y ajustar layout | FEAT-007 |
+| Term | Short definition | ID |
+|------|------------------|----|
+| ai-submind (command) | CLI `npx ai-submind` with `serve`, `mcp`, `init`, `status`, `stop` | API-003 |
+| ai-submind.json | Manifest of `knowledge/` with format version | ENT-001 |
+| Canonical serialization | Deterministic writing for minimal diffs | REQ-005 |
+| Daemon | Single process per project that serves UI and MCP | REQ-037 |
+| Diagram | View of a model (`kind` class or sequence) made of references | ENT-004 |
+| File ID / element ID | ID grammars for models and diagrams / other elements, in a global namespace | API-004 |
+| Format 1.0 (spec) | Contract of the `knowledge/` files in `spec/format/` | API-004 |
+| Format extensions | `stereotypes`, `tags`, `documentation`, `code_refs`, `external_id` | API-004 |
+| idref | Reference to an element by its `id` | VAL-003 |
+| Knowledge engine | Own portable equivalent of TerminusDB | FEAT-002 |
+| Knowledge format | Own format derived from UMJ with JSON Schema | FEAT-003 |
+| Layout | Positions and vertices of a diagram, separate file | ENT-005 |
+| Lexical search | Free-text search with lexical ranking | REQ-038 |
+| MCP server | MCP tools for querying and management | API-001 |
+| Model | Tree of elements, relations and diagrams in one file | ENT-002 |
+| Model element | UML element with a readable `id` inside a model | ENT-003 |
+| Rename | Change of `id` with reference rewriting | REQ-039 |
+| Semantic search | Similarity search with embeddings (later) | FEAT-005 |
+| stdio MCP proxy | `ai-submind mcp`: forwards stdio to the daemon | REQ-003 |
+| UI HTTP API | Read and layout-only write for the UI | API-002 |
+| UMJ | Reference UML interchange JSON format (ENASE 2026 paper) | DEC-002 |
+| Web viewer | JointJS UI to explore and adjust layout | FEAT-007 |
 
-Términos del entorno de orquestación (no del producto):
+Orchestration environment terms (not product terms):
 
-| Término | Significado |
-|---------|-------------|
-| Ficha | Archivo canónico de un elemento del modelo, con front matter e ID |
-| Ledger | Registro append-only de IDs asignados |
-| T0/T1/T2 | Clases de tarea según riesgo (`AGENTS.md` §4) |
-| G0–G3 | Niveles de impacto de cambios del entorno (`.ai/policies/governance.md`) |
-| Capacidad (CAP) | Habilidad que el entorno necesita, provista por agentes/skills |
-| EDR | Registro de decisión del entorno de IA |
+| Term | Meaning |
+|------|---------|
+| Capability (CAP) | Ability the environment needs, provided by agents/skills |
+| Card | Canonical file of a model element, with front matter and ID |
+| EDR | AI environment decision record |
+| G0–G3 | Impact levels of environment changes (`.ai/policies/governance.md`) |
+| Ledger | Append-only record of assigned IDs |
+| T0/T1/T2 | Task classes by risk (`AGENTS.md` §4) |

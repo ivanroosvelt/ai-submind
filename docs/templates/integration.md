@@ -1,14 +1,14 @@
 ---
 id: INT-XXX            # scripts/sysq claim INT
 type: integration
-name: "<nombre canónico>"
+name: "<canonical name>"
 status: proposed      # proposed | active | deprecated | retired
 evidence: unknown     # verified-code | declared-doc | inferred | unknown
-summary: "<una línea>"
+summary: "<one line>"
 aliases: []
 tags: []
 implementation: none  # none | partial | implemented | verified
-code: []              # rutas existentes: ruta o ruta#símbolo
+code: []              # existing paths: path or path#symbol
 test_code: []
 relations:
   interfaces: []
@@ -18,26 +18,26 @@ relations:
 uncertainties: []
 ---
 
-# INT-XXX · <nombre canónico>
+# INT-XXX · <canonical name>
 
-## Objetivo
+## Goal
 
-## Sistemas participantes
+## Participating systems
 
-## Momento
+## Timing
 
-pre-cambio | post-cambio | continuo
+pre-change | post-change | continuous
 
-## Condiciones previas
+## Preconditions
 
-## Procedimiento
+## Procedure
 
 1.
 
-## Verificaciones y condiciones de éxito
+## Checks and success conditions
 
-## Estrategia de recuperación
+## Recovery strategy
 
-## Riesgos
+## Risks
 
-## Evidencias
+## Evidence

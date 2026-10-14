@@ -1,27 +1,27 @@
 ---
 id: TST-XXX            # scripts/sysq claim TST
 type: test
-name: "<nombre canónico>"
+name: "<canonical name>"
 status: proposed      # proposed | active | deprecated | retired
 evidence: unknown     # verified-code | declared-doc | inferred | unknown
-summary: "<una línea>"
+summary: "<one line>"
 aliases: []
 tags: []
 implementation: none  # none | partial | implemented | verified
-code: []              # rutas existentes: ruta o ruta#símbolo
+code: []              # existing paths: path or path#symbol
 test_code: []
 relations: {}
 uncertainties: []
 ---
 
-# TST-XXX · <nombre canónico>
+# TST-XXX · <canonical name>
 
-## Qué verifica
+## What it verifies
 
-## Cómo ejecutar
+## How to run
 
 ```sh
-<comando>
+<command>
 ```
 
-## Datos y entorno
+## Data and environment

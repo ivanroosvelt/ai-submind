@@ -1,0 +1,48 @@
+---
+id: DEC-006
+type: decision
+name: "Visualization with @joint/core and own components; REA and clean-room policy"
+status: active
+evidence: declared-doc
+summary: "UI with JointJS core (MPL-2.0) and own UML shapes/tools; JointJS+-like capabilities are reimplemented clean-room; REA only for artifacts without source whose license allows it."
+aliases: [jointjs, ui, viewer, rea, clean-room, licenses]
+tags: [ui, licenses, security]
+relations:
+  affects: [REQ-028, REQ-029, REQ-032, REQ-040, NFR-009, FEAT-007, FEAT-009, API-002]
+  supersedes: []
+uncertainties:
+  - "The UI framework (vanilla TS vs a lightweight library) is fixed in the UI stage."
+---
+
+# DEC-006 · Visualization with JointJS core and REA policy
+
+## Context
+- User: "jointjs for visualization to users"; "every part of the system will be modular, own implementation";
+  REA "for all the features, they must be regenerated with the approach we have" [declared].
+- `@joint/core` 4.3.3 and `@joint/layout-directed-graph` 4.3.0 are MPL-2.0; core does not include UML shapes;
+  JointJS+ is commercial (navigator, inspector, stencil, undo, export…) [verified: npm, tech-research].
+- REA (`rea-agents` 6.5.0, MIT) analyzes distributed artifacts (bundled JS, native, .NET, WASM…);
+  its own guide advises against using it on repos with source code [verified: tech-research].
+- User chose the "Explore + adjust layout" UI for the first iteration [declared].
+
+## Decision
+- UI: `@joint/core` as a dependency; UML shapes (class, interface, enum, relationships; sequence lifelines and
+  messages) and tools (zoom/pan, selection, auto-layout, SVG export, minimap)
+  implemented in own modules.
+- Initial auto-layout with `@joint/layout-directed-graph` (dagre); own sequence layout.
+- Reverse engineering policy:
+  - Open source software: study the source code respecting its license; REA does not apply.
+  - Commercial/proprietary software (e.g. JointJS+): clean-room only, from public documentation
+    and observable behavior; decompiling or copying its code is forbidden.
+  - REA is used for artifacts without source when the license allows it, recording the finding.
+- Dependencies with a strong copyleft license (e.g. elkjs EPL) require review before being used.
+
+## Consequences
+- Positive: no commercial dependencies; bounded legal risks.
+- Negative / costs: more own work in the UI.
+
+## Affected elements
+UI, packaging, licenses.
+
+## Verification
+Pending: dependency license audit (`npm ls` + licenses) in the packaging stage.

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Regenera los artefactos derivados (nunca se editan a mano):
+"""Regenerates the derived artifacts (never edited by hand):
 
-- docs/system/inventory/INDEX.md      inventario de IDs y relaciones
-- docs/system/traceability/MATRIX.md  matriz de trazabilidad
-- .ai/registry/agents-index.md        índice de agentes
-- .ai/registry/skills-index.md        índice de skills
-- .github/copilot-instructions.md     bloque embebido de AGENTS.md
+- docs/system/inventory/INDEX.md      inventory of IDs and relations (English)
+- docs/system/traceability/MATRIX.md  traceability matrix (English)
+- .ai/registry/agents-index.md        agents index (Spanish environment doc)
+- .ai/registry/skills-index.md        skills index (Spanish environment doc)
+- .github/copilot-instructions.md     embedded AGENTS.md block
 
-Uso: scripts/regen
+Usage: scripts/regen
 """
 import argparse
 import sys
@@ -23,11 +23,11 @@ def main() -> int:
     report = Report()
     changed = regen_model(root, report) + regen_environment(root, report)
     for c in changed:
-        print(f"actualizado: {c}")
+        print(f"updated: {c}")
     if not changed:
-        print("sin cambios")
+        print("no changes")
     if report.errors:
-        print(report.render("Errores al regenerar"))
+        print(report.render("Regeneration errors"))
         return 1
     return 0
 

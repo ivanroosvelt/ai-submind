@@ -1,5 +1,5 @@
-# Entidades (ENT)
+# Entities (ENT)
 
-Conceptos del dominio con identidad, propiedades, restricciones y persistencia.
+Domain concepts with identity, properties, constraints and persistence.
 
-Plantilla: [entity.md](../../../templates/entity.md). Reglas: [conventions.md](../../conventions.md).
+Template: [entity.md](../../../templates/entity.md). Rules: [conventions.md](../../conventions.md).

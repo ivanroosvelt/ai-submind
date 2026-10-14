@@ -1,14 +1,14 @@
 ---
 id: API-XXX            # scripts/sysq claim API
 type: interface
-name: "<nombre canónico>"
+name: "<canonical name>"
 status: proposed      # proposed | active | deprecated | retired
 evidence: unknown     # verified-code | declared-doc | inferred | unknown
-summary: "<una línea>"
+summary: "<one line>"
 aliases: []
 tags: []
 implementation: none  # none | partial | implemented | verified
-code: []              # rutas existentes: ruta o ruta#símbolo
+code: []              # existing paths: path or path#symbol
 test_code: []
 relations:
   providers: []
@@ -20,15 +20,15 @@ relations:
 uncertainties: []
 ---
 
-# API-XXX · <nombre canónico>
+# API-XXX · <canonical name>
 
-## Contrato
+## Contract
 
-## Operaciones
+## Operations
 
-| Operación | Entrada | Salida | Errores |
-|-----------|---------|--------|---------|
+| Operation | Input | Output | Errors |
+|-----------|-------|--------|--------|
 
-## Autenticación y permisos
+## Authentication and permissions
 
-## Versionado y compatibilidad
+## Versioning and compatibility

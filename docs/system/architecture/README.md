@@ -1,9 +1,9 @@
-# Arquitectura
+# Architecture
 
-Vista narrativa de la arquitectura: componentes, capas, dependencias y despliegue. **No duplica
-fichas**: describe la estructura y enlaza IDs (FEAT, API, INT, DEC).
+Narrative view of the architecture: components, layers, dependencies and deployment. **It does not duplicate
+cards**: it describes the structure and links IDs (FEAT, API, INT, DEC).
 
-Estado: **stack fijado, sin funcionalidad** (ver [../context.md](../context.md)). Paquete npm único
-`ai-submind` (DEC-001, DEC-008): módulos en `src/<módulo>/` (format, engine, query, cli, daemon, mcp, ui),
-pruebas en `test/`, `code_roots: [src/]` en [../schema.yaml](../schema.yaml). Proceso daemon + proxy MCP
-(DEC-005). Diagrama de componentes: se añade cuando existan módulos (PLAN-002 S4+).
+Status: **stack fixed, no functionality** (see [../context.md](../context.md)). Single npm package
+`ai-submind` (DEC-001, DEC-008): modules in `src/<module>/` (format, engine, query, cli, daemon, mcp, ui),
+tests in `test/`, `code_roots: [src/]` in [../schema.yaml](../schema.yaml). Daemon process + MCP proxy
+(DEC-005). Component diagram: added when modules exist (PLAN-002 S4+).

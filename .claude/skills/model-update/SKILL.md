@@ -16,7 +16,8 @@ IDs afectados (de `impact-analysis`) o elementos nuevos; código y pruebas relac
 ## Procedimiento
 
 ### Crear
-1. Comprobar que no existe: `scripts/sysq find <nombre y sinónimos>`.
+1. Comprobar que no existe: `scripts/sysq find <nombre y sinónimos>` en inglés. Fichas, aliases y
+   cuerpo en inglés (EDR-007).
 2. `scripts/sysq claim <PREFIJO>` → ID (queda en el ledger aunque luego no se use: no reutilizar).
 3. Copiar la plantilla del tipo desde `docs/templates/` al directorio del tipo indicado en
    `schema.yaml`, como `<ID>-<slug-kebab>.md`.

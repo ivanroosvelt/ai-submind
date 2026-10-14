@@ -1,5 +1,8 @@
-# Decisiones del producto (DEC)
+# Product decisions (DEC)
 
-Decisiones de arquitectura y producto. Las del entorno de IA viven en `.ai/decisions/`.
+Architecture and product decisions. Those of the AI environment live in `.ai/decisions/`.
 
-Plantilla: [decision.md](../../templates/decision.md). Reglas: [conventions.md](../conventions.md).
+Quotes of people in these cards were translated from Spanish (EDR-007); the original wording is in
+the Git history.
+
+Template: [decision.md](../../templates/decision.md) (block A). Rules: [conventions.md](../conventions.md).

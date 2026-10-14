@@ -1,5 +1,5 @@
-# Requerimientos (REQ)
+# Requirements (REQ)
 
-Comportamientos requeridos, con actores y criterios de aceptación. Relación canónica hacia FEAT, NFR/VAL y DEC.
+Required behaviors, with actors and acceptance criteria. Canonical relation towards FEAT, NFR/VAL and DEC.
 
-Plantilla: [requirement.md](../../templates/requirement.md). Reglas: [conventions.md](../conventions.md).
+Template: [requirement.md](../../templates/requirement.md). Rules: [conventions.md](../conventions.md).

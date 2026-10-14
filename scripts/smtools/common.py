@@ -1,4 +1,4 @@
-"""Utilidades compartidas por los validadores y generadores."""
+"""Utilities shared by the validators and generators."""
 
 from __future__ import annotations
 
@@ -45,8 +45,8 @@ class Report:
         for f in sorted(self.findings, key=lambda f: (f.level != "error", f.path, f.code)):
             where = f" [{f.path}]" if f.path else ""
             out.append(f"{f.level.upper():7} {f.code}{where}: {f.message}")
-        out.append(f"Resultado: {len(self.errors)} error(es), {len(self.warnings)} advertencia(s)"
-                   + (" — modo strict: las advertencias cuentan como error" if strict and self.warnings else ""))
+        out.append(f"Result: {len(self.errors)} error(s), {len(self.warnings)} warning(s)"
+                   + (" — strict mode: warnings count as errors" if strict and self.warnings else ""))
         return "\n".join(out)
 
 
@@ -55,7 +55,7 @@ def repo_root(start: Path | None = None) -> Path:
     for p in [here, *here.parents]:
         if (p / "AGENTS.md").exists() and (p / "scripts").is_dir():
             return p
-    raise SystemExit("No se encontró la raíz del repositorio (AGENTS.md + scripts/)")
+    raise SystemExit("Repository root not found (AGENTS.md + scripts/)")
 
 
 def rel(root: Path, path: Path) -> str:
@@ -69,26 +69,26 @@ def read_yaml(path: Path, report: Report, root: Path):
     try:
         return miniyaml.parse(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        report.error("FILE-MISSING", "archivo requerido no existe", rel(root, path))
+        report.error("FILE-MISSING", "required file does not exist", rel(root, path))
     except miniyaml.YamlError as exc:
         report.error("YAML-INVALID", str(exc), rel(root, path))
     return None
 
 
 def read_front_matter(path: Path, report: Report, root: Path):
-    """Devuelve (dict front matter, body). dict es None si falla."""
+    """Return (front matter dict, body). The dict is None on failure."""
     text = path.read_text(encoding="utf-8")
     try:
         fm_text, body = miniyaml.split_front_matter(text)
         if fm_text is None:
-            report.error("FM-MISSING", "falta front matter '---'", rel(root, path))
+            report.error("FM-MISSING", "missing '---' front matter", rel(root, path))
             return None, text
         data = miniyaml.parse(fm_text)
     except miniyaml.YamlError as exc:
         report.error("FM-INVALID", str(exc), rel(root, path))
         return None, text
     if not isinstance(data, dict):
-        report.error("FM-INVALID", "el front matter debe ser un mapa", rel(root, path))
+        report.error("FM-INVALID", "front matter must be a map", rel(root, path))
         return None, body
     return data, body
 
@@ -114,27 +114,27 @@ def read_ledger(path: Path) -> list[str]:
 
 def check_ledger(ledger_path: Path, current_ids: set[str], prefixes: set[str],
                  report: Report, root: Path) -> None:
-    """El ledger es append-only: todo ID asignado alguna vez figura en él."""
+    """The ledger is append-only: every ID ever assigned is listed in it."""
     where = rel(root, ledger_path)
     if not ledger_path.exists():
-        report.error("LEDGER-MISSING", "no existe el registro de IDs asignados", where)
+        report.error("LEDGER-MISSING", "the assigned-ID ledger does not exist", where)
         return
     ledger = read_ledger(ledger_path)
     seen = set()
     for i in ledger:
         m = ID_RE.match(i)
         if not m or m.group(1) not in prefixes:
-            report.error("LEDGER-ID", f"ID inválido o de prefijo ajeno en ledger: {i}", where)
+            report.error("LEDGER-ID", f"invalid ID or foreign prefix in ledger: {i}", where)
         if i in seen:
-            report.error("LEDGER-DUP", f"ID repetido en ledger: {i}", where)
+            report.error("LEDGER-DUP", f"duplicate ID in ledger: {i}", where)
         seen.add(i)
     for i in sorted(current_ids - seen):
         report.error("LEDGER-UNREGISTERED",
-                     f"{i} existe pero no está en el ledger (añadirlo; usar `scripts/sysq next`)", where)
+                     f"{i} exists but is not in the ledger (add it; use `scripts/sysq next`)", where)
     for i in sorted(seen - current_ids):
         report.warn("LEDGER-NO-CARD",
-                    f"{i} figura en el ledger sin ficha: si es una reserva sin usar, ignorar; si la ficha se borró, "
-                    f"restaurarla con status retired", where)
+                    f"{i} is in the ledger without a card: if it is an unused reservation, ignore; if the card was deleted, "
+                    f"restore it with status retired", where)
 
 
 def next_id(ledger_path: Path, prefix: str) -> str:
@@ -144,22 +144,22 @@ def next_id(ledger_path: Path, prefix: str) -> str:
 
 
 def check_code_ref(root: Path, ref: str, report: Report, where: str, code: str) -> None:
-    """Valida `ruta` o `ruta#símbolo` relativa a la raíz del repositorio."""
+    """Validate `path` or `path#symbol` relative to the repository root."""
     path_part, _, symbol = str(ref).partition("#")
     target = (root / path_part).resolve()
     if root.resolve() not in [target, *target.parents]:
-        report.error(code, f"ruta fuera del repositorio: {ref}", where)
+        report.error(code, f"path outside the repository: {ref}", where)
         return
     if not target.exists():
-        report.error(code, f"ruta referenciada no existe: {path_part}", where)
+        report.error(code, f"referenced path does not exist: {path_part}", where)
         return
     if symbol:
         if target.is_dir():
-            report.error(code, f"símbolo sobre directorio: {ref}", where)
+            report.error(code, f"symbol on a directory: {ref}", where)
             return
         text = target.read_text(encoding="utf-8", errors="replace")
         if not re.search(rf"(?<![\w$]){re.escape(symbol)}(?![\w$])", text):
-            report.error(code, f"símbolo '{symbol}' no encontrado en {path_part}", where)
+            report.error(code, f"symbol '{symbol}' not found in {path_part}", where)
 
 
 def git(root: Path, *args: str) -> str | None:
@@ -171,13 +171,13 @@ def git(root: Path, *args: str) -> str | None:
 
 
 def write_or_check(path: Path, content: str, check: bool, report: Report, root: Path,
-                   regen_hint: str = "ejecutar scripts/regen") -> bool:
-    """En modo check informa si el archivo generado está desactualizado."""
+                   regen_hint: str = "run scripts/regen") -> bool:
+    """In check mode, report whether the generated file is stale."""
     current = path.read_text(encoding="utf-8") if path.exists() else None
     if current == content:
         return False
     if check:
-        report.error("GENERATED-STALE", f"archivo generado desactualizado: {regen_hint}", rel(root, path))
+        report.error("GENERATED-STALE", f"generated file is stale: {regen_hint}", rel(root, path))
         return True
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")

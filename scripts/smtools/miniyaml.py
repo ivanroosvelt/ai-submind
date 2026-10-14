@@ -1,16 +1,16 @@
-"""Parser de un subconjunto estricto de YAML, sin dependencias externas.
+"""Parser for a strict subset of YAML, with no external dependencies.
 
-Subconjunto admitido (ver docs/system/conventions.md):
-- Mapas en bloque (`clave: valor`) y secuencias en bloque (`- valor`).
-- Elementos de secuencia que son mapas (`- clave: valor` + claves siguientes).
-- Listas en línea de escalares: `[A, B, "c d"]`. Mapa vacío en línea: `{}`.
-- Escalares: cadenas sin comillas, "dobles" (escapes JSON), 'simples',
-  enteros, true/false, null/~.
-- Comentarios con `#` al inicio o precedidos de espacio.
+Supported subset (see docs/system/conventions.md):
+- Block maps (`key: value`) and block sequences (`- value`).
+- Sequence items that are maps (`- key: value` + following keys).
+- Inline lists of scalars: `[A, B, "c d"]`. Inline empty map: `{}`.
+- Scalars: unquoted strings, "double" (JSON escapes), 'single',
+  integers, true/false, null/~.
+- Comments with `#` at line start or preceded by whitespace.
 
-No admitido (se rechaza con error): tabuladores de indentación, escalares de
-bloque (`|`, `>`), anclas/alias, mapas en línea no vacíos, cadenas sin
-comillas que contengan ": ".
+Not supported (rejected with an error): tab indentation, block scalars
+(`|`, `>`), anchors/aliases, non-empty inline maps, unquoted strings
+containing ": ".
 """
 
 from __future__ import annotations
@@ -57,16 +57,16 @@ def _split_inline(body: str, lineno: int) -> list[str]:
             parts.append("".join(buf).strip())
             buf = []
         elif ch in "[]{}":
-            raise YamlError(f"línea {lineno}: estructuras anidadas en línea no admitidas")
+            raise YamlError(f"line {lineno}: nested inline structures are not supported")
         else:
             buf.append(ch)
     if quote:
-        raise YamlError(f"línea {lineno}: comilla sin cerrar")
+        raise YamlError(f"line {lineno}: unclosed quote")
     tail = "".join(buf).strip()
     if tail or parts:
         parts.append(tail)
     if any(p == "" for p in parts):
-        raise YamlError(f"línea {lineno}: elemento vacío en lista en línea")
+        raise YamlError(f"line {lineno}: empty item in inline list")
     return parts
 
 
@@ -76,25 +76,25 @@ def parse_scalar(text: str, lineno: int = 0):
         return None
     if text.startswith("["):
         if not text.endswith("]"):
-            raise YamlError(f"línea {lineno}: lista en línea sin cerrar")
+            raise YamlError(f"line {lineno}: unclosed inline list")
         return [parse_scalar(p, lineno) for p in _split_inline(text[1:-1], lineno)]
     if text.startswith("{"):
         if text == "{}":
             return {}
-        raise YamlError(f"línea {lineno}: mapas en línea no vacíos no admitidos")
+        raise YamlError(f"line {lineno}: non-empty inline maps are not supported")
     if text.startswith('"'):
         if len(text) < 2 or not text.endswith('"'):
-            raise YamlError(f"línea {lineno}: cadena con comillas dobles sin cerrar")
+            raise YamlError(f"line {lineno}: unclosed double-quoted string")
         try:
             return json.loads(text)
         except json.JSONDecodeError as exc:
-            raise YamlError(f"línea {lineno}: cadena inválida: {exc}") from None
+            raise YamlError(f"line {lineno}: invalid string: {exc}") from None
     if text.startswith("'"):
         if len(text) < 2 or not text.endswith("'"):
-            raise YamlError(f"línea {lineno}: cadena con comillas simples sin cerrar")
+            raise YamlError(f"line {lineno}: unclosed single-quoted string")
         return text[1:-1].replace("''", "'")
     if text in ("|", ">") or text[0] in "&*!|>%@`":
-        raise YamlError(f"línea {lineno}: sintaxis YAML no admitida: {text!r}")
+        raise YamlError(f"line {lineno}: unsupported YAML syntax: {text!r}")
     if text == "true":
         return True
     if text == "false":
@@ -102,7 +102,7 @@ def parse_scalar(text: str, lineno: int = 0):
     if INT_RE.match(text):
         return int(text)
     if ": " in text or text.endswith(":"):
-        raise YamlError(f"línea {lineno}: usa comillas en cadenas que contienen ': '")
+        raise YamlError(f"line {lineno}: quote strings that contain ': '")
     return text
 
 
@@ -116,13 +116,13 @@ def parse(text: str):
             continue
         lead = content[: len(content) - len(content.lstrip())]
         if "\t" in lead:
-            raise YamlError(f"línea {n}: tabulador en indentación")
+            raise YamlError(f"line {n}: tab in indentation")
         lines.append([n, len(lead), content.strip()])
     if not lines:
         return None
     value, i = _parse_block(lines, 0, lines[0][1])
     if i != len(lines):
-        raise YamlError(f"línea {lines[i][0]}: indentación inconsistente")
+        raise YamlError(f"line {lines[i][0]}: inconsistent indentation")
     return value
 
 
@@ -143,7 +143,7 @@ def _parse_seq(lines, i, indent):
         if ind < indent:
             break
         if ind > indent:
-            raise YamlError(f"línea {n}: indentación inesperada")
+            raise YamlError(f"line {n}: unexpected indentation")
         if not _is_seq_item(content):
             break
         rest = content[1:].strip()
@@ -171,15 +171,15 @@ def _parse_map(lines, i, indent):
         if ind < indent:
             break
         if ind > indent:
-            raise YamlError(f"línea {n}: indentación inesperada")
+            raise YamlError(f"line {n}: unexpected indentation")
         if _is_seq_item(content):
             break
         m = KEY_RE.match(content)
         if not m:
-            raise YamlError(f"línea {n}: se esperaba 'clave: valor': {content!r}")
+            raise YamlError(f"line {n}: expected 'key: value': {content!r}")
         key, rest = m.group(1), m.group(2)
         if key in result:
-            raise YamlError(f"línea {n}: clave duplicada {key!r}")
+            raise YamlError(f"line {n}: duplicate key {key!r}")
         i += 1
         if rest is None or rest.strip() == "":
             if i < len(lines) and (
@@ -195,7 +195,7 @@ def _parse_map(lines, i, indent):
 
 
 def split_front_matter(text: str):
-    """Devuelve (front_matter_text, body) o (None, text) si no hay front matter."""
+    """Return (front_matter_text, body), or (None, text) if there is no front matter."""
     if not text.startswith("---\n"):
         return None, text
     end = text.find("\n---\n", 4)
@@ -203,5 +203,5 @@ def split_front_matter(text: str):
         if text.endswith("\n---"):
             end = len(text) - 4
         else:
-            raise YamlError("front matter sin cierre '---'")
+            raise YamlError("front matter without closing '---'")
     return text[4:end], text[end + 5 :]

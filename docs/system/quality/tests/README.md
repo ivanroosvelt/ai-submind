@@ -1,5 +1,5 @@
-# Pruebas (TST)
+# Tests (TST)
 
-Conjuntos o casos de prueba con significado propio, enlazados a su código con `test_code`.
+Test suites or test cases with their own meaning, linked to their code with `test_code`.
 
-Plantilla: [test.md](../../../templates/test.md). Reglas: [conventions.md](../../conventions.md).
+Template: [test.md](../../../templates/test.md). Rules: [conventions.md](../../conventions.md).

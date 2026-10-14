@@ -26,10 +26,10 @@ class ParseTest(unittest.TestCase):
                          {"a": True, "b": False, "c": None, "d": None, "e": "it's", "f": -3})
 
     def test_comments(self):
-        self.assertEqual(parse("# c\na: x # comentario\nb: \"x # no\"\n"), {"a": "x", "b": "x # no"})
+        self.assertEqual(parse("# c\na: x # comment\nb: \"x # no\"\n"), {"a": "x", "b": "x # no"})
 
     def test_escaped_quote_in_double_quotes(self):
-        self.assertEqual(parse('a: "di \\"hola\\" # x"\n'), {"a": 'di "hola" # x'})
+        self.assertEqual(parse('a: "say \\"hi\\" # x"\n'), {"a": 'say "hi" # x'})
 
     def test_apostrophe_inside_plain_scalar(self):
         self.assertEqual(parse("a: l'agent # c\n"), {"a": "l'agent"})
@@ -46,13 +46,13 @@ class ParseTest(unittest.TestCase):
     def test_front_matter_split(self):
         fm, body = miniyaml.split_front_matter("---\na: 1\n---\n# T\n")
         self.assertEqual((fm, body), ("a: 1", "# T\n"))
-        self.assertEqual(miniyaml.split_front_matter("# sin fm\n"), (None, "# sin fm\n"))
+        self.assertEqual(miniyaml.split_front_matter("# no fm\n"), (None, "# no fm\n"))
         with self.assertRaises(YamlError):
             miniyaml.split_front_matter("---\na: 1\n")
 
 
 def _dates_as_text(value):
-    """Divergencia documentada: el subconjunto lee las fechas como texto ISO."""
+    """Documented divergence: the subset reads dates as ISO text."""
     import datetime
     if isinstance(value, dict):
         return {k: _dates_as_text(v) for k, v in value.items()}
@@ -64,13 +64,13 @@ def _dates_as_text(value):
 
 
 class PyYamlAgreementTest(unittest.TestCase):
-    """El subconjunto debe interpretarse igual que YAML estándar en los archivos reales."""
+    """The subset must be interpreted like standard YAML on the real files."""
 
     def test_repo_files_match_pyyaml(self):
         try:
             import yaml
         except ImportError:
-            self.skipTest("PyYAML no instalado")
+            self.skipTest("PyYAML not installed")
         docs = [p.read_text(encoding="utf-8") for p in ROOT.glob(".ai/registry/*.yaml")]
         docs.append((ROOT / "docs/system/schema.yaml").read_text(encoding="utf-8"))
         md = [*ROOT.glob(".claude/**/*.md"), *ROOT.glob(".ai/decisions/*.md"), *ROOT.glob("docs/**/*.md")]
