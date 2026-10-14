@@ -1,0 +1,10 @@
+{
+  "format_version": "1.0",
+  "diagram": {"idref": "c"},
+  "nodes": {
+    "A": {
+      "x": 0.5,
+      "y": 0
+    }
+  }
+}

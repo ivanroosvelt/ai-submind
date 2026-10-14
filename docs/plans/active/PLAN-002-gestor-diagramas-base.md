@@ -7,7 +7,7 @@ updated: 2026-10-14
 class: T2
 related: [DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007, REP-003]
 blockers: []
-next_action: "S2: redactar spec del formato (gramática de IDs DEC-003, modelo clases/secuencia, diagramas, layout, ai-submind.json) y JSON Schemas 2020-12 con ejemplos válidos/inválidos; resolver dudas de S2 listadas en Riesgos."
+next_action: "S3: decidir paquete único vs monorepo y framework de pruebas (node:test vs vitest); crear package.json, tsconfig estricto, lint/format, code_roots en schema.yaml e integrar npm test en scripts/check. Incluir spec/ en files del paquete."
 stages:
   - id: S1
     name: "Decisiones aceptadas y modelo estructural registrado"
@@ -15,11 +15,11 @@ stages:
     evidence: "2026-10-14 scripts/check: entorno 0 errores 0 advertencias; modelo 86 elementos 0 errores 0 advertencias; 42 pruebas OK. Fichas ACT-001..004, REQ-001..040, NFR-001..011, VAL-001..007, FEAT-001..009, ENT-001..005, API-001..003; DEC-001..007 active con affects."
   - id: S2
     name: "Especificación del formato y JSON Schema (clases, secuencia, layout)"
-    status: ready
-    evidence: ""
+    status: verified
+    evidence: "2026-10-14 spec/format/README.md + schema/1.0 (defs, ai-submind, model, layout) compilan en Ajv 8.20.0 Ajv2020 strict. Prototipo desechable (scratchpad check.mjs: schema + pasada referencial + canonicalizador): valid/garaje 0 hallazgos e idempotente; 32/32 casos invalid/ con exactamente el conjunto de códigos esperado; canonical/input reescrito = canonical/expected. Revisión independiente change-verifier: aprobado con observaciones (H1-H12), corregidas H1-H11; H12 reproducibilidad pendiente hasta S4. Ficha API-004. scripts/check: entorno 0/0; modelo 87 elementos 0 errores 0 advertencias; 42 pruebas OK."
   - id: S3
     name: "Andamiaje del paquete TypeScript, pruebas y code_roots"
-    status: proposed
+    status: ready
     evidence: ""
   - id: S4
     name: "Núcleo de formato: serialización canónica y validación"
@@ -181,7 +181,7 @@ S11 tras S9/S10; S12 tras S7..S11.
 - Un archivo por modelo aumenta conflictos de merge → mitigado en S10, merge driver en plan posterior.
 - Licencia de ai-submind sin definir (afecta publicación, no desarrollo).
 - Daemon: procesos huérfanos y puertos → pruebas en S7.
-- Dudas abiertas por etapa (de fichas `uncertainties`): S2 gramática de IDs, refs entre modelos, ubicación de la spec, versión de formato más nueva que el binario; S3 paquete único vs monorepo, framework de pruebas; S7 apagado del daemon, puerto, entrega del token al navegador; S8 si MCP puede modificar layout, init implícito en primera escritura; REQ-027 dry_run y NFR-007 umbrales sin confirmar.
+- Dudas abiertas por etapa (de fichas `uncertainties`): S3 paquete único vs monorepo, framework de pruebas; S7 apagado del daemon, puerto, entrega del token al navegador; S8 si MCP puede modificar layout, init implícito en primera escritura; REQ-027 dry_run y NFR-007 umbrales sin confirmar.
 
 ## Bitácora
 - 2026-10-14 · creado tras task-intake, REP-003 y respuestas del usuario (archivos, IDs, proceso, stack).
@@ -189,5 +189,8 @@ S11 tras S9/S10; S12 tras S7..S11.
 - 2026-10-14 · todo lo visible del producto renombrado a `ai-submind`: servidor MCP, `ai-submind.json`, `.ai-submind/` (DEC-001, DEC-002, DEC-005, DEC-007).
 - 2026-10-14 · usuario aprueba DEC-001..007 y el plan; render de secuencia pasa a etapa madura S11 (empaquetado S12, cierre S13). Plan in_progress; S1 in_progress.
 - 2026-10-14 · S1 verified (system-modeler; evidencia en front matter). REQ-019 caminos simples activado y añadido a S6 por DEC-004.
+
+- 2026-10-14 · S2: usuario decide IDs globales simples (refs entre modelos sin cualificar), versión posterior → solo lectura, extensiones v1 `documentation`, `tags`, `code_refs`, `stereotypes`. Spec en `spec/format/`, `format_version` `MAYOR.MENOR` por archivo. Desviaciones de UMJ en spec §12. Nueva API-004; uncertainties resueltas en DEC-002/003, ENT-001..005, VAL-002/003/004/007, NFR-011 (active), FEAT-003.
+- 2026-10-14 · S2 revisada por change-verifier: aprobado con observaciones. Corregido en spec: versión posterior → lectura tolerante en solo lectura (H1), reglas entre fases (H2), reglas de `rename` con cascada de prefijo, `RENAME_COLLISION`/`RENAME_BLOCKED` (H3, entrada de S5), derivación NFC/recortes/truncado (H4), mapeo `CODE_REF_INVALID` y `codes` como conjunto (H5), `visibility` (H6), escapes y orden en §9 (H7), patrón estricto de `code_refs.path` (H8); fichas REQ-009, DEC-002, ENT-002, ENT-004 (H9); corpus ampliado con kinds found/unknown, indicadores, style.text y 4 casos inválidos (H10); `UMJ.pdf` en `.git/info/exclude` (H11). H12: el corpus solo se comprueba con un prototipo del scratchpad hasta que S4 lo convierta en pruebas versionadas.
 
 ## Resultado (al cerrar)

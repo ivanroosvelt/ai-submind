@@ -1,0 +1,67 @@
+{
+  "format_version": "1.0",
+  "id": "m",
+  "name": "M",
+  "elements": {
+    "classes": [
+      {
+        "id": "A",
+        "name": "A",
+        "visibility": "public"
+      },
+      {
+        "id": "B",
+        "name": "B",
+        "visibility": "public"
+      }
+    ],
+    "interactions": [
+      {
+        "id": "I",
+        "name": "I",
+        "visibility": "public",
+        "lifelines": [
+          {
+            "id": "I.a",
+            "name": "a",
+            "represents": {"idref": "A"}
+          },
+          {
+            "id": "I.b",
+            "name": "b",
+            "represents": {"idref": "B"}
+          }
+        ],
+        "messages": [
+          {
+            "id": "I.m",
+            "name": "m",
+            "sort": "synch_call",
+            "kind": "complete",
+            "send_event": {"idref": "I.m.send"},
+            "receive_event": {"idref": "I.m.receive"}
+          },
+          {
+            "id": "I.n",
+            "name": "n",
+            "sort": "asynch_signal",
+            "kind": "lost",
+            "send_event": {"idref": "I.m.send"}
+          }
+        ],
+        "fragments": [
+          {
+            "id": "I.m.send",
+            "type": "occurrence",
+            "covered": {"idref": "I.a"}
+          },
+          {
+            "id": "I.m.receive",
+            "type": "occurrence",
+            "covered": {"idref": "I.b"}
+          }
+        ]
+      }
+    ]
+  }
+}

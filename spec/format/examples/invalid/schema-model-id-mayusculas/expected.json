@@ -1,0 +1,6 @@
+{
+  "description": "ID de modelo con mayúsculas (debe ser ID de archivo)",
+  "codes": [
+    "SCHEMA_VIOLATION"
+  ]
+}

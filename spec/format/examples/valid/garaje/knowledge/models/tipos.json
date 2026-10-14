@@ -1,0 +1,34 @@
+{
+  "format_version": "1.0",
+  "id": "tipos",
+  "name": "Tipos",
+  "documentation": "Tipos primitivos compartidos; otros modelos los referencian por ID global.",
+  "elements": {
+    "primitive_types": [
+      {
+        "id": "Boolean",
+        "name": "Boolean",
+        "visibility": "public",
+        "kind": "boolean"
+      },
+      {
+        "id": "Integer",
+        "name": "Integer",
+        "visibility": "public",
+        "kind": "integer"
+      },
+      {
+        "id": "Real",
+        "name": "Real",
+        "visibility": "public",
+        "kind": "real"
+      },
+      {
+        "id": "String",
+        "name": "String",
+        "visibility": "public",
+        "kind": "string"
+      }
+    ]
+  }
+}

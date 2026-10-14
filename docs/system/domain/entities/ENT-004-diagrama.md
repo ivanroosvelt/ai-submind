@@ -14,8 +14,7 @@ relations:
   related: [ENT-003]
   validations: [VAL-001, VAL-002, VAL-003]
   decisions: []
-uncertainties:
-  - "Propiedades exactas pendientes de la spec y JSON Schema (S2)."
+uncertainties: []
 ---
 
 # ENT-004 · Diagrama
@@ -27,7 +26,8 @@ Conjunto de referencias a elementos del modelo, sin layout; `kind` declara el ti
 
 | Propiedad | Tipo | Obligatoria | Restricciones |
 |-----------|------|-------------|---------------|
-| id | id legible | sí | VAL-002 |
+| id | ID de archivo | sí | VAL-002; nombra su layout |
+| name | texto | sí |  |
 | kind | enumeración | sí | clases, secuencia; extensible (REQ-013) |
 | elementos | lista de idref | no | VAL-003 |
 
@@ -40,4 +40,4 @@ Dentro de ENT-002.
 ## Ciclo de vida
 Gestionado vía MCP (REQ-025).
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (API-004).

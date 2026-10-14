@@ -1,0 +1,29 @@
+{
+  "format_version": "1.0",
+  "id": "m",
+  "name": "M",
+  "elements": {
+    "classes": [
+      {
+        "id": "A",
+        "name": "A",
+        "visibility": "public"
+      },
+      {
+        "id": "B",
+        "name": "B",
+        "visibility": "public"
+      }
+    ]
+  },
+  "diagrams": [
+    {
+      "id": "c",
+      "kind": "class",
+      "name": "C",
+      "elements": [
+        {"idref": "A"}
+      ]
+    }
+  ]
+}

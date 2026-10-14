@@ -14,9 +14,7 @@ relations:
   related: []
   validations: [VAL-001, VAL-002, VAL-003, VAL-007]
   decisions: []
-uncertainties:
-  - "Propiedades exactas pendientes de la spec y JSON Schema (S2)."
-  - "Si cada tipo UML (clase, lifeline, ...) tendrá ficha ENT propia tras S2."
+uncertainties: []
 ---
 
 # ENT-003 · Elemento de modelo
@@ -42,4 +40,4 @@ Dentro de ENT-002.
 ## Ciclo de vida
 Crear/actualizar/eliminar vía MCP; rename reescribe referencias.
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (API-004); los tipos UML concretos (clase, lifeline, ...) no tienen ficha ENT propia: su fuente única es la spec.

@@ -13,14 +13,15 @@ test_code: []
 relations:
   tests: []
   decisions: []
-uncertainties:
-  - "P13 / DEC-003: referencias entre modelos (`model-id:element-id` o IDs globales)."
+uncertainties: []
 ---
 
 # VAL-003 · Integridad referencial de idref
 
 ## Regla
 Todo `idref` apunta a un id existente y de tipo compatible (p. ej. extremos de generalización → clase; proveedor de realización → interfaz; eventos de mensaje → occurrence specification; `covered` → lifeline; diagrama de clases → elementos admitidos por su `kind`).
+
+Como los IDs son globales (DEC-003), una referencia a otro modelo es un `idref` simple.
 
 ## Aplica a
 ENT-002, ENT-003, ENT-004, ENT-005.
@@ -35,4 +36,4 @@ Severidad error; las referencias rotas se reportan sin bloquear la carga del res
 | Generalización hacia un id inexistente | error |
 | `covered` apuntando a una clase | error |
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (API-004, §10).

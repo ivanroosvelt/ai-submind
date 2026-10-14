@@ -13,15 +13,13 @@ test_code: []
 relations:
   tests: []
   decisions: []
-uncertainties:
-  - "Nombre del campo de versión (DEC-002)."
-  - "P14: solo lectura o exclusión."
+uncertainties: []
 ---
 
 # VAL-004 · Versión de formato soportada
 
 ## Regla
-Campo de versión presente en `ai-submind.json` (y donde la spec lo exija). Versión soportada → carga; anterior soportada → aviso y migración explícita; mayor desconocida → error y archivo no escribible.
+Campo de versión presente en `ai-submind.json` (y donde la spec lo exija). Versión soportada → carga; anterior soportada → aviso y migración explícita; posterior a la soportada → `FORMAT_VERSION_UNSUPPORTED`, documento en solo lectura (usuario, 2026-10-14; spec §11).
 
 ## Aplica a
 ENT-001 y documentos versionados.
@@ -34,6 +32,6 @@ Error o aviso según caso.
 | Entrada | Resultado |
 |---------|-----------|
 | Sin campo de versión | error |
-| Versión mayor futura | error, solo lectura o exclusión (P14) |
+| Versión posterior (`2.0`) | FORMAT_VERSION_UNSUPPORTED, solo lectura |
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (API-004, §10).

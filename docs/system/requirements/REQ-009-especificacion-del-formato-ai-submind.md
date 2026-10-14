@@ -13,8 +13,7 @@ relations:
   constraints: [NFR-009, VAL-001]
   depends_on: []
   decisions: []
-uncertainties:
-  - "P18: ubicación de la spec en el repo y en el paquete."
+uncertainties: []
 ---
 
 # REQ-009 · Especificación del formato ai-submind

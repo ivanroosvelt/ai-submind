@@ -34,4 +34,4 @@ Severidad error; código estable con JSON Pointer (REQ-012).
 | Clase sin `name` | error |
 | `visibility: friend` | error |
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (API-004, §10).

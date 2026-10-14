@@ -17,8 +17,13 @@
 - Formato: propio, derivado de UMJ, JSON Schema 2020-12, un archivo por modelo
   (`knowledge/models/<model-id>.json`), layout separado (`knowledge/layout/<diagram-id>.json`), manifiesto
   `knowledge/ai-submind.json`, derivados en `knowledge/.ai-submind/` ignorados por git; serialización canónica (DEC-002, FEAT-003) **[declarado]**.
-- IDs de elementos legibles con ámbito (`Car`, `Car.start()`), únicos globales, estables al cambiar `name`;
-  rename solo vía motor con reescritura de referencias (DEC-003, REQ-039) **[declarado]**.
+- Contrato del formato 1.0: `spec/format/README.md` + JSON Schema 2020-12 en `spec/format/schema/1.0/` + corpus de
+  ejemplos (API-004). Schemas compilados con Ajv 8 en modo estricto; corpus comprobado con un prototipo desechable
+  (PLAN-002 S2); validador definitivo en S4 **[declarado]**.
+- IDs de elementos legibles con ámbito (`Car`, `Car.start()`), únicos en un espacio global (también modelos y
+  diagramas), estables al cambiar `name`; referencias entre modelos con `idref` simple; rename solo vía motor con
+  reescritura de referencias (DEC-003, REQ-039, API-004) **[declarado]**.
+- Versión de formato posterior a la soportada → documento en solo lectura (VAL-004, NFR-011) **[declarado]**.
 - Motor de conocimiento propio embebido en lugar de TerminusDB (DEC-004, FEAT-002) **[declarado]**.
 - Proceso: daemon único por proyecto (HTTP en 127.0.0.1, token, Host/Origin) + proxy MCP stdio
   `ai-submind mcp` (DEC-005, FEAT-001, REQ-037) **[declarado]**.
@@ -32,13 +37,11 @@
 
 ## Qué no se sabe (pendiente)
 
-- Gramática exacta de IDs y referencias entre modelos (DEC-003; PLAN-002 S2) **[desconocido]**.
 - Paquete único vs monorepo, framework de pruebas y `code_roots` (PLAN-002 S3) **[desconocido]**.
 - Apagado del daemon, entrega del token al navegador, puerto por defecto (DEC-005, NFR-004) **[desconocido]**.
-- Si el agente MCP puede modificar layout (P9), init implícito (P10), versión de formato más nueva que el binario (P14) **[desconocido]**.
-- Inclusión de caminos entre elementos en PLAN-002 (REQ-019: DEC-004 los cita, PLAN-002 S6 no) **[desconocido]**.
+- Si el agente MCP puede modificar layout (P9), init implícito (P10) **[desconocido]**.
 - Licencia de ai-submind **[desconocido]**.
 
 ## Próximo paso
 
-PLAN-002 S2 (especificación del formato y JSON Schema).
+PLAN-002 S3 (andamiaje del paquete TypeScript, pruebas y `code_roots`).

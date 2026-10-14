@@ -13,7 +13,10 @@ aquí solo se enlaza. Mantener en orden alfabético.
 | Daemon | Proceso único por proyecto que sirve UI y MCP | REQ-037 |
 | Diagrama | Vista de un modelo (`kind` clases o secuencia) hecha de referencias | ENT-004 |
 | Elemento de modelo | Elemento UML con `id` legible dentro de un modelo | ENT-003 |
+| Extensiones del formato | `stereotypes`, `tags`, `documentation`, `code_refs`, `external_id` | API-004 |
 | Formato de conocimiento | Formato propio derivado de UMJ con JSON Schema | FEAT-003 |
+| Formato 1.0 (spec) | Contrato de archivos de `knowledge/` en `spec/format/` | API-004 |
+| ID de archivo / ID de elemento | Gramáticas de ID para modelos y diagramas / resto de elementos, en un espacio global | API-004 |
 | idref | Referencia a un elemento por su `id` | VAL-003 |
 | Layout | Posiciones y vértices de un diagrama, archivo separado | ENT-005 |
 | Modelo | Árbol de elementos, relaciones y diagramas en un archivo | ENT-002 |

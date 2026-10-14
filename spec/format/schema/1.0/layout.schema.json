@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-submind:format:1.0:layout",
+  "title": "ai-submind 1.0 · layout (knowledge/layout/<diagram-id>.json)",
+  "type": "object",
+  "required": [
+    "format_version",
+    "diagram"
+  ],
+  "properties": {
+    "format_version": {
+      "$ref": "urn:ai-submind:format:1.0:defs#/$defs/formatVersion"
+    },
+    "diagram": {
+      "$ref": "urn:ai-submind:format:1.0:defs#/$defs/ref"
+    },
+    "nodes": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "urn:ai-submind:format:1.0:defs#/$defs/elementId"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "urn:ai-submind:format:1.0:defs#/$defs/elementId"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/edge"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "style": {
+      "type": "object",
+      "properties": {
+        "fill": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/color"
+        },
+        "stroke": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/color"
+        },
+        "text": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/color"
+        }
+      },
+      "additionalProperties": false
+    },
+    "point": {
+      "type": "object",
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/integer"
+        },
+        "y": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/integer"
+        },
+        "y": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/integer"
+        },
+        "width": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/size"
+        },
+        "height": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/size"
+        },
+        "style": {
+          "$ref": "#/$defs/style"
+        }
+      },
+      "additionalProperties": false
+    },
+    "edge": {
+      "type": "object",
+      "properties": {
+        "vertices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/point"
+          }
+        },
+        "style": {
+          "$ref": "#/$defs/style"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "format_version": "1.0",
+  "id": "M",
+  "name": "M",
+  "elements": {
+    "classes": [
+      {
+        "id": "A",
+        "name": "A",
+        "visibility": "public"
+      },
+      {
+        "id": "B",
+        "name": "B",
+        "visibility": "public"
+      }
+    ]
+  }
+}

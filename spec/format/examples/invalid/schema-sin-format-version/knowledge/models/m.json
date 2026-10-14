@@ -1,0 +1,18 @@
+{
+  "id": "m",
+  "name": "M",
+  "elements": {
+    "classes": [
+      {
+        "id": "A",
+        "name": "A",
+        "visibility": "public"
+      },
+      {
+        "id": "B",
+        "name": "B",
+        "visibility": "public"
+      }
+    ]
+  }
+}

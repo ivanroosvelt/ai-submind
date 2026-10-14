@@ -1,0 +1,6 @@
+{
+  "description": "Layout con posición de B, que no está en el diagrama (aviso)",
+  "codes": [
+    "LAYOUT_ORPHAN"
+  ]
+}

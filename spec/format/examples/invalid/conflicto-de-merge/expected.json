@@ -1,0 +1,6 @@
+{
+  "description": "Marcadores de conflicto de Git",
+  "codes": [
+    "MERGE_CONFLICT"
+  ]
+}

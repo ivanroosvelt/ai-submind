@@ -8,11 +8,9 @@ summary: "Los elementos usan IDs legibles (slugs con ámbito) y el motor garanti
 aliases: [ids, idref, slug, rename, referencias]
 tags: [formato, datos, integridad]
 relations:
-  affects: [REQ-023, REQ-035, REQ-039, VAL-002, VAL-003, ENT-003, FEAT-006]
+  affects: [REQ-023, REQ-035, REQ-039, VAL-002, VAL-003, ENT-003, FEAT-006, API-004]
   supersedes: []
-uncertainties:
-  - "Gramática exacta del ID (separadores, prefijo de tipo, ámbito modelo/global) se fija en la spec de PLAN-002."
-  - "Referencias entre modelos: sintaxis `model-id:element-id` o IDs globales."
+uncertainties: []
 ---
 
 # DEC-003 · IDs legibles con garantía de referencias
@@ -29,6 +27,9 @@ uncertainties:
 ## Decisión
 - IDs legibles derivados del nombre con ámbito (p. ej. `Car`, `Car.yearOfProduction`, `Car.start()`),
   únicos en todo `knowledge/`; colisiones resueltas con sufijo determinista.
+- Espacio de nombres único para todo `knowledge/` (elementos, modelos y diagramas); por eso una
+  referencia a otro modelo es un `idref` simple, sin cualificar (usuario, 2026-10-14). Gramática y
+  derivación determinista: spec §3 (API-004).
 - El ID es estable: cambiar `name` no cambia el `id`. Renombrar un `id` solo vía operación del motor
   (`rename`), que reescribe atómicamente todas las referencias (modelo, diagramas, layout).
 - Validación obligatoria: unicidad global, toda referencia resuelve a un elemento de tipo compatible.

@@ -1,0 +1,19 @@
+{
+  "format_version": "1.0",
+  "id": "m",
+  "name": "M",
+  "elements": {
+    "classes": [
+      {
+        "id": "B",
+        "name": "B",
+        "visibility": "public"
+      },
+      {
+        "id": "Car..start",
+        "name": "A",
+        "visibility": "public"
+      }
+    ]
+  }
+}

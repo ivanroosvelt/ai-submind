@@ -13,6 +13,7 @@ Una fila por elemento. Relaciones: una línea `ORIGEN relación DESTINO` (buscab
 | API-001 | interface | Servidor MCP ai-submind | active | none | declared-doc | [API-001-servidor-mcp-ai-submind.md](../../../docs/system/interfaces/API-001-servidor-mcp-ai-submind.md) |
 | API-002 | interface | API HTTP de la UI | active | none | declared-doc | [API-002-api-http-de-la-ui.md](../../../docs/system/interfaces/API-002-api-http-de-la-ui.md) |
 | API-003 | interface | CLI ai-submind | active | none | declared-doc | [API-003-cli-ai-submind.md](../../../docs/system/interfaces/API-003-cli-ai-submind.md) |
+| API-004 | interface | Formato de conocimiento ai-submind 1.0 | active | none | declared-doc | [API-004-formato-de-conocimiento-1-0.md](../../../docs/system/interfaces/API-004-formato-de-conocimiento-1-0.md) |
 | DEC-001 | decision | Stack Node.js ≥22 + TypeScript ESM distribuido como paquete npm ai-submind (npx) | active | - | declared-doc | [DEC-001-stack-node-typescript-npx.md](../../../docs/system/decisions/DEC-001-stack-node-typescript-npx.md) |
 | DEC-002 | decision | Formato de conocimiento propio derivado de UMJ: un archivo por modelo + layout separado | active | - | declared-doc | [DEC-002-formato-conocimiento-derivado-de-umj.md](../../../docs/system/decisions/DEC-002-formato-conocimiento-derivado-de-umj.md) |
 | DEC-003 | decision | IDs legibles por humanos con garantía y mantenimiento de referencias | active | - | declared-doc | [DEC-003-ids-legibles-con-mantenimiento-de-referencias.md](../../../docs/system/decisions/DEC-003-ids-legibles-con-mantenimiento-de-referencias.md) |
@@ -44,7 +45,7 @@ Una fila por elemento. Relaciones: una línea `ORIGEN relación DESTINO` (buscab
 | NFR-008 | quality-attribute | Modularidad | active | - | declared-doc | [NFR-008-modularidad.md](../../../docs/system/quality/NFR-008-modularidad.md) |
 | NFR-009 | quality-attribute | Cumplimiento de licencias | active | - | declared-doc | [NFR-009-cumplimiento-de-licencias.md](../../../docs/system/quality/NFR-009-cumplimiento-de-licencias.md) |
 | NFR-010 | quality-attribute | Observabilidad | proposed | - | inferred | [NFR-010-observabilidad.md](../../../docs/system/quality/NFR-010-observabilidad.md) |
-| NFR-011 | quality-attribute | Compatibilidad del formato | proposed | - | inferred | [NFR-011-compatibilidad-del-formato.md](../../../docs/system/quality/NFR-011-compatibilidad-del-formato.md) |
+| NFR-011 | quality-attribute | Compatibilidad del formato | active | - | inferred | [NFR-011-compatibilidad-del-formato.md](../../../docs/system/quality/NFR-011-compatibilidad-del-formato.md) |
 | REQ-001 | requirement | Lanzar ai-submind en el proyecto anfitrión | active | - | declared-doc | [REQ-001-lanzar-ai-submind-en-el-proyecto-anfitrion.md](../../../docs/system/requirements/REQ-001-lanzar-ai-submind-en-el-proyecto-anfitrion.md) |
 | REQ-002 | requirement | Inicializar knowledge/ | active | - | declared-doc | [REQ-002-inicializar-knowledge.md](../../../docs/system/requirements/REQ-002-inicializar-knowledge.md) |
 | REQ-003 | requirement | Exponer servidor MCP | active | - | declared-doc | [REQ-003-exponer-servidor-mcp.md](../../../docs/system/requirements/REQ-003-exponer-servidor-mcp.md) |
@@ -112,6 +113,24 @@ Una fila por elemento. Relaciones: una línea `ORIGEN relación DESTINO` (buscab
 - `API-003 consumers ACT-001`
 - `API-003 consumers ACT-002`
 - `API-003 entities ENT-001`
+- `API-004 consumers ACT-001`
+- `API-004 consumers ACT-002`
+- `API-004 consumers FEAT-002`
+- `API-004 consumers FEAT-007`
+- `API-004 decisions DEC-002`
+- `API-004 decisions DEC-003`
+- `API-004 entities ENT-001`
+- `API-004 entities ENT-002`
+- `API-004 entities ENT-003`
+- `API-004 entities ENT-004`
+- `API-004 entities ENT-005`
+- `API-004 validations VAL-001`
+- `API-004 validations VAL-002`
+- `API-004 validations VAL-003`
+- `API-004 validations VAL-004`
+- `API-004 validations VAL-005`
+- `API-004 validations VAL-006`
+- `API-004 validations VAL-007`
 - `DEC-001 affects REQ-001`
 - `DEC-001 affects REQ-002`
 - `DEC-001 affects NFR-001`
@@ -131,6 +150,7 @@ Una fila por elemento. Relaciones: una línea `ORIGEN relación DESTINO` (buscab
 - `DEC-002 affects VAL-005`
 - `DEC-002 affects VAL-007`
 - `DEC-002 affects FEAT-003`
+- `DEC-002 affects API-004`
 - `DEC-002 affects ENT-001`
 - `DEC-002 affects ENT-002`
 - `DEC-002 affects ENT-003`
@@ -143,6 +163,7 @@ Una fila por elemento. Relaciones: una línea `ORIGEN relación DESTINO` (buscab
 - `DEC-003 affects VAL-003`
 - `DEC-003 affects ENT-003`
 - `DEC-003 affects FEAT-006`
+- `DEC-003 affects API-004`
 - `DEC-004 affects REQ-006`
 - `DEC-004 affects REQ-007`
 - `DEC-004 affects REQ-008`
@@ -214,11 +235,14 @@ Una fila por elemento. Relaciones: una línea `ORIGEN relación DESTINO` (buscab
 - `FEAT-002 entities ENT-003`
 - `FEAT-002 entities ENT-004`
 - `FEAT-002 entities ENT-005`
+- `FEAT-003 decisions DEC-002`
+- `FEAT-003 decisions DEC-003`
 - `FEAT-003 entities ENT-001`
 - `FEAT-003 entities ENT-002`
 - `FEAT-003 entities ENT-003`
 - `FEAT-003 entities ENT-004`
 - `FEAT-003 entities ENT-005`
+- `FEAT-003 interfaces API-004`
 - `FEAT-004 depends_on FEAT-002`
 - `FEAT-004 interfaces API-001`
 - `FEAT-005 depends_on FEAT-004`
@@ -241,6 +265,7 @@ Una fila por elemento. Relaciones: una línea `ORIGEN relación DESTINO` (buscab
 - `FEAT-009 entities ENT-004`
 - `FEAT-009 entities ENT-005`
 - `FEAT-009 interfaces API-002`
+- `NFR-011 decisions DEC-002`
 - `REQ-001 actors ACT-001`
 - `REQ-001 constraints NFR-001`
 - `REQ-001 constraints NFR-006`

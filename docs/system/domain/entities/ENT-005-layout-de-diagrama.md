@@ -14,8 +14,7 @@ relations:
   related: [ENT-004]
   validations: [VAL-001, VAL-005, VAL-006]
   decisions: []
-uncertainties:
-  - "Propiedades exactas pendientes de la spec y JSON Schema (S2)."
+uncertainties: []
 ---
 
 # ENT-005 · Layout de diagrama
@@ -41,4 +40,4 @@ Ver VAL-005.
 ## Ciclo de vida
 Se crea al mover algo en la UI (no antes, REQ-010); rename de ids lo actualiza (REQ-039).
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (API-004).

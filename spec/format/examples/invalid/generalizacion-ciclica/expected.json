@@ -1,0 +1,6 @@
+{
+  "description": "A hereda de B y B de A",
+  "codes": [
+    "GENERALIZATION_CYCLE"
+  ]
+}

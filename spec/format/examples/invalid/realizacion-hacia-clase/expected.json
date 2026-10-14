@@ -1,0 +1,6 @@
+{
+  "description": "Realización cuyo supplier es una clase, no una interfaz",
+  "codes": [
+    "REF_TYPE_MISMATCH"
+  ]
+}

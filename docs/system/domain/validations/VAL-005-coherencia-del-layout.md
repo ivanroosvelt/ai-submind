@@ -34,4 +34,4 @@ Aviso (`LAYOUT_ORPHAN`) o error (diagrama inexistente, valores no finitos).
 | Posición de un elemento quitado del diagrama | aviso LAYOUT_ORPHAN |
 | x = NaN | error |
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (API-004, §10).

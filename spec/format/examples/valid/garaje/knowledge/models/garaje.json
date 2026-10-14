@@ -1,0 +1,683 @@
+{
+  "format_version": "1.0",
+  "id": "garaje",
+  "name": "Garaje",
+  "visibility": "public",
+  "documentation": "Alquiler de coches. Equivale al ejemplo Car del paper UMJ, reexpresado y ampliado.",
+  "elements": {
+    "packages": [
+      {
+        "id": "Flota",
+        "name": "Flota",
+        "visibility": "public",
+        "members": [
+          {"idref": "Car"},
+          {"idref": "Car--Engine"},
+          {"idref": "Engine"},
+          {"idref": "FuelType"},
+          {"idref": "Truck"}
+        ]
+      }
+    ],
+    "actors": [
+      {
+        "id": "Customer",
+        "name": "Customer",
+        "visibility": "public"
+      }
+    ],
+    "classes": [
+      {
+        "id": "Car",
+        "name": "Car",
+        "visibility": "public",
+        "is_abstract": false,
+        "stereotypes": [
+          "entity"
+        ],
+        "tags": [
+          "alquiler",
+          "core"
+        ],
+        "documentation": "Vehículo alquilable.",
+        "code_refs": [
+          {
+            "path": "src/fleet/car.ts",
+            "symbol": "Car"
+          }
+        ],
+        "external_id": "EAID_0D1E8743",
+        "attributes": [
+          {
+            "id": "Car.yearOfProduction",
+            "name": "yearOfProduction",
+            "visibility": "private",
+            "type": {"idref": "Integer"},
+            "multiplicity": "1",
+            "is_static": false
+          },
+          {
+            "id": "Car.fuel",
+            "name": "fuel",
+            "visibility": "private",
+            "type": {"idref": "FuelType"},
+            "default_value": "Petrol"
+          },
+          {
+            "id": "Car.registration",
+            "name": "registration",
+            "visibility": "public",
+            "type": {"idref": "Registration"},
+            "multiplicity": "0..1"
+          },
+          {
+            "id": "Car.mileage",
+            "name": "mileage",
+            "visibility": "private",
+            "type": {"idref": "Integer"},
+            "is_static": false,
+            "is_ordered": false,
+            "is_unique": true,
+            "is_read_only": true,
+            "is_derived": true,
+            "is_derived_union": false
+          }
+        ],
+        "operations": [
+          {
+            "id": "Car.start()",
+            "name": "start",
+            "visibility": "public",
+            "return_type": {"idref": "Boolean"},
+            "is_static": false,
+            "is_abstract": false
+          },
+          {
+            "id": "Car.refuel()",
+            "name": "refuel",
+            "visibility": "public",
+            "parameters": [
+              {
+                "id": "Car.refuel().liters",
+                "name": "liters",
+                "direction": "in",
+                "type": {"idref": "Real"}
+              }
+            ]
+          },
+          {
+            "id": "Car.canDrive()",
+            "name": "canDrive",
+            "visibility": "public",
+            "return_type": {"idref": "Boolean"},
+            "is_query": true,
+            "exceptions": [
+              {"idref": "EngineFailure"}
+            ]
+          }
+        ]
+      },
+      {
+        "id": "Contract",
+        "name": "Contract",
+        "visibility": "public"
+      },
+      {
+        "id": "Engine",
+        "name": "Engine",
+        "visibility": "public",
+        "attributes": [
+          {
+            "id": "Engine.power",
+            "name": "power",
+            "visibility": "private",
+            "type": {"idref": "Integer"}
+          }
+        ]
+      },
+      {
+        "id": "EngineFailure",
+        "name": "EngineFailure",
+        "visibility": "public"
+      },
+      {
+        "id": "Garage",
+        "name": "Garage",
+        "visibility": "public",
+        "operations": [
+          {
+            "id": "Garage.rent()",
+            "name": "rent",
+            "visibility": "public",
+            "parameters": [
+              {
+                "id": "Garage.rent().customer",
+                "name": "customer",
+                "direction": "in"
+              },
+              {
+                "id": "Garage.rent().contract",
+                "name": "contract",
+                "direction": "out",
+                "type": {"idref": "Contract"}
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "Mechanic",
+        "name": "Mechanic",
+        "visibility": "package",
+        "operations": [
+          {
+            "id": "Mechanic.repair()",
+            "name": "repair",
+            "visibility": "public",
+            "parameters": [
+              {
+                "id": "Mechanic.repair().car",
+                "name": "car",
+                "direction": "inout",
+                "type": {"idref": "Car"}
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "Truck",
+        "name": "Truck",
+        "visibility": "public",
+        "attributes": [
+          {
+            "id": "Truck.capacity",
+            "name": "capacity",
+            "visibility": "protected",
+            "type": {"idref": "Real"}
+          }
+        ]
+      }
+    ],
+    "interfaces": [
+      {
+        "id": "Drivable",
+        "name": "Drivable",
+        "visibility": "public",
+        "operations": [
+          {
+            "id": "Drivable.drive()",
+            "name": "drive",
+            "visibility": "public",
+            "is_abstract": true
+          }
+        ]
+      }
+    ],
+    "data_types": [
+      {
+        "id": "Registration",
+        "name": "Registration",
+        "visibility": "public",
+        "attributes": [
+          {
+            "id": "Registration.plate",
+            "name": "plate",
+            "visibility": "public",
+            "type": {"idref": "String"}
+          },
+          {
+            "id": "Registration.country",
+            "name": "country",
+            "visibility": "public",
+            "type": {"idref": "String"}
+          }
+        ]
+      }
+    ],
+    "enumerations": [
+      {
+        "id": "FuelType",
+        "name": "FuelType",
+        "visibility": "public",
+        "literals": [
+          "Petrol",
+          "Diesel",
+          "Electric"
+        ]
+      }
+    ],
+    "associations": [
+      {
+        "id": "Car--Engine",
+        "visibility": "public",
+        "type": "composition",
+        "direction": "directed",
+        "end1": {
+          "id": "Car--Engine.end1",
+          "element": {"idref": "Car"},
+          "multiplicity": "1",
+          "navigability": false
+        },
+        "end2": {
+          "id": "Car--Engine.end2",
+          "element": {"idref": "Engine"},
+          "role": "engine",
+          "multiplicity": "1",
+          "navigability": true
+        }
+      },
+      {
+        "id": "Garage--Car",
+        "type": "aggregation",
+        "direction": "undirected",
+        "end1": {
+          "id": "Garage--Car.end1",
+          "element": {"idref": "Garage"},
+          "multiplicity": "0..1"
+        },
+        "end2": {
+          "id": "Garage--Car.end2",
+          "element": {"idref": "Car"},
+          "role": "fleet",
+          "multiplicity": "*"
+        }
+      },
+      {
+        "id": "employs",
+        "name": "employs",
+        "visibility": "public",
+        "type": "association",
+        "direction": "undirected",
+        "end1": {
+          "id": "employs.end1",
+          "element": {"idref": "Garage"},
+          "multiplicity": "1"
+        },
+        "end2": {
+          "id": "employs.end2",
+          "element": {"idref": "Mechanic"},
+          "multiplicity": "1..*"
+        }
+      }
+    ],
+    "generalizations": [
+      {
+        "id": "Truck--extends--Car",
+        "specific": {"idref": "Truck"},
+        "general": {"idref": "Car"}
+      }
+    ],
+    "dependencies": [
+      {
+        "id": "Mechanic--uses--Engine",
+        "client": {"idref": "Mechanic"},
+        "supplier": {"idref": "Engine"}
+      }
+    ],
+    "realizations": [
+      {
+        "id": "Car--implements--Drivable",
+        "client": {"idref": "Car"},
+        "supplier": {"idref": "Drivable"}
+      }
+    ],
+    "interactions": [
+      {
+        "id": "CheckFuel",
+        "name": "CheckFuel",
+        "visibility": "public",
+        "documentation": "Fragmentos anidados: opt que contiene un alt de dos operandos.",
+        "lifelines": [
+          {
+            "id": "CheckFuel.garage",
+            "name": "garage",
+            "represents": {"idref": "Garage"}
+          },
+          {
+            "id": "CheckFuel.car",
+            "name": "car",
+            "represents": {"idref": "Car"}
+          }
+        ],
+        "messages": [
+          {
+            "id": "CheckFuel.alarm",
+            "name": "alarm",
+            "sort": "asynch_signal",
+            "kind": "found",
+            "receive_event": {"idref": "CheckFuel.alarm.receive"}
+          },
+          {
+            "id": "CheckFuel.charge",
+            "name": "charge",
+            "sort": "synch_call",
+            "kind": "complete",
+            "send_event": {"idref": "CheckFuel.charge.send"},
+            "receive_event": {"idref": "CheckFuel.charge.receive"}
+          },
+          {
+            "id": "CheckFuel.fuelLevel",
+            "name": "fuelLevel",
+            "sort": "asynch_call",
+            "kind": "complete",
+            "send_event": {"idref": "CheckFuel.fuelLevel.send"},
+            "receive_event": {"idref": "CheckFuel.fuelLevel.receive"}
+          },
+          {
+            "id": "CheckFuel.ping",
+            "name": "ping",
+            "sort": "asynch_signal",
+            "kind": "unknown",
+            "send_event": {"idref": "CheckFuel.ping.send"}
+          },
+          {
+            "id": "CheckFuel.refuel",
+            "name": "refuel",
+            "sort": "synch_call",
+            "kind": "complete",
+            "arguments": [
+              "40"
+            ],
+            "send_event": {"idref": "CheckFuel.refuel.send"},
+            "receive_event": {"idref": "CheckFuel.refuel.receive"},
+            "signature": {"idref": "Car.refuel()"}
+          }
+        ],
+        "fragments": [
+          {
+            "id": "CheckFuel.alarm.receive",
+            "type": "occurrence",
+            "covered": {"idref": "CheckFuel.garage"}
+          },
+          {
+            "id": "CheckFuel.ping.send",
+            "type": "occurrence",
+            "covered": {"idref": "CheckFuel.garage"}
+          },
+          {
+            "id": "CheckFuel.fuelLevel.send",
+            "type": "occurrence",
+            "covered": {"idref": "CheckFuel.garage"}
+          },
+          {
+            "id": "CheckFuel.fuelLevel.receive",
+            "type": "occurrence",
+            "covered": {"idref": "CheckFuel.car"}
+          },
+          {
+            "id": "CheckFuel.opt",
+            "type": "combined_fragment",
+            "operator": "opt",
+            "covered": [
+              {"idref": "CheckFuel.car"},
+              {"idref": "CheckFuel.garage"}
+            ],
+            "operands": [
+              {
+                "id": "CheckFuel.opt.op1",
+                "guard": "[fuel < 10%]",
+                "fragments": [
+                  {
+                    "id": "CheckFuel.alt",
+                    "type": "combined_fragment",
+                    "operator": "alt",
+                    "covered": [
+                      {"idref": "CheckFuel.car"},
+                      {"idref": "CheckFuel.garage"}
+                    ],
+                    "operands": [
+                      {
+                        "id": "CheckFuel.alt.op1",
+                        "guard": "[fuel == Electric]",
+                        "fragments": [
+                          {
+                            "id": "CheckFuel.charge.send",
+                            "type": "occurrence",
+                            "covered": {"idref": "CheckFuel.garage"}
+                          },
+                          {
+                            "id": "CheckFuel.charge.receive",
+                            "type": "occurrence",
+                            "covered": {"idref": "CheckFuel.car"}
+                          }
+                        ]
+                      },
+                      {
+                        "id": "CheckFuel.alt.op2",
+                        "guard": "[else]",
+                        "fragments": [
+                          {
+                            "id": "CheckFuel.refuel.send",
+                            "type": "occurrence",
+                            "covered": {"idref": "CheckFuel.garage"}
+                          },
+                          {
+                            "id": "CheckFuel.refuel.receive",
+                            "type": "occurrence",
+                            "covered": {"idref": "CheckFuel.car"}
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "RentCar",
+        "name": "RentCar",
+        "visibility": "public",
+        "lifelines": [
+          {
+            "id": "RentCar.customer",
+            "name": "customer",
+            "represents": {"idref": "Customer"}
+          },
+          {
+            "id": "RentCar.garage",
+            "name": "garage",
+            "represents": {"idref": "Garage"}
+          },
+          {
+            "id": "RentCar.car",
+            "name": "",
+            "represents": {"idref": "Car"}
+          },
+          {
+            "id": "RentCar.contract",
+            "name": "contract",
+            "represents": {"idref": "Contract"}
+          }
+        ],
+        "messages": [
+          {
+            "id": "RentCar.canDrive",
+            "name": "canDrive",
+            "sort": "synch_call",
+            "kind": "complete",
+            "send_event": {"idref": "RentCar.canDrive.send"},
+            "receive_event": {"idref": "RentCar.canDrive.receive"},
+            "signature": {"idref": "Car.canDrive()"}
+          },
+          {
+            "id": "RentCar.create",
+            "name": "create",
+            "sort": "create_message",
+            "kind": "complete",
+            "send_event": {"idref": "RentCar.create.send"},
+            "receive_event": {"idref": "RentCar.create.receive"}
+          },
+          {
+            "id": "RentCar.destroy",
+            "name": "destroy",
+            "sort": "delete_message",
+            "kind": "complete",
+            "send_event": {"idref": "RentCar.destroy.send"},
+            "receive_event": {"idref": "RentCar.destroy.receive"}
+          },
+          {
+            "id": "RentCar.log",
+            "name": "log",
+            "sort": "asynch_signal",
+            "kind": "lost",
+            "send_event": {"idref": "RentCar.log.send"}
+          },
+          {
+            "id": "RentCar.rent",
+            "name": "rent",
+            "sort": "synch_call",
+            "kind": "complete",
+            "arguments": [
+              "customer"
+            ],
+            "send_event": {"idref": "RentCar.rent.send"},
+            "receive_event": {"idref": "RentCar.rent.receive"},
+            "signature": {"idref": "Garage.rent()"}
+          },
+          {
+            "id": "RentCar.rent-2",
+            "name": "rent",
+            "sort": "reply",
+            "kind": "complete",
+            "send_event": {"idref": "RentCar.rent-2.send"},
+            "receive_event": {"idref": "RentCar.rent-2.receive"}
+          },
+          {
+            "id": "RentCar.start",
+            "name": "start",
+            "sort": "synch_call",
+            "kind": "complete",
+            "send_event": {"idref": "RentCar.start.send"},
+            "receive_event": {"idref": "RentCar.start.receive"},
+            "signature": {"idref": "Car.start()"}
+          }
+        ],
+        "fragments": [
+          {
+            "id": "RentCar.rent.send",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.customer"}
+          },
+          {
+            "id": "RentCar.rent.receive",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.garage"}
+          },
+          {
+            "id": "RentCar.create.send",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.garage"}
+          },
+          {
+            "id": "RentCar.create.receive",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.contract"}
+          },
+          {
+            "id": "RentCar.ref--CheckFuel",
+            "type": "interaction_use",
+            "covered": [
+              {"idref": "RentCar.car"},
+              {"idref": "RentCar.garage"}
+            ],
+            "interaction": {"idref": "CheckFuel"}
+          },
+          {
+            "id": "RentCar.start.send",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.garage"}
+          },
+          {
+            "id": "RentCar.start.receive",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.car"}
+          },
+          {
+            "id": "RentCar.canDrive.send",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.car"}
+          },
+          {
+            "id": "RentCar.canDrive.receive",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.car"}
+          },
+          {
+            "id": "RentCar.log.send",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.garage"}
+          },
+          {
+            "id": "RentCar.destroy.send",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.garage"}
+          },
+          {
+            "id": "RentCar.destroy.receive",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.contract"}
+          },
+          {
+            "id": "RentCar.rent-2.send",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.garage"}
+          },
+          {
+            "id": "RentCar.rent-2.receive",
+            "type": "occurrence",
+            "covered": {"idref": "RentCar.customer"}
+          }
+        ]
+      }
+    ]
+  },
+  "diagrams": [
+    {
+      "id": "check-fuel",
+      "kind": "sequence",
+      "name": "Revisar combustible",
+      "elements": [
+        {"idref": "CheckFuel"}
+      ]
+    },
+    {
+      "id": "rent-car",
+      "kind": "sequence",
+      "name": "Alquilar coche",
+      "elements": [
+        {"idref": "RentCar"}
+      ]
+    },
+    {
+      "id": "vista-general",
+      "kind": "class",
+      "name": "Vista general",
+      "documentation": "Todas las construcciones de clases.",
+      "elements": [
+        {"idref": "Car"},
+        {"idref": "Car--Engine"},
+        {"idref": "Car--implements--Drivable"},
+        {"idref": "Contract"},
+        {"idref": "Customer"},
+        {"idref": "Drivable"},
+        {"idref": "Engine"},
+        {"idref": "EngineFailure"},
+        {"idref": "Flota"},
+        {"idref": "FuelType"},
+        {"idref": "Garage"},
+        {"idref": "Garage--Car"},
+        {"idref": "Integer"},
+        {"idref": "Mechanic"},
+        {"idref": "Mechanic--uses--Engine"},
+        {"idref": "Registration"},
+        {"idref": "Truck"},
+        {"idref": "Truck--extends--Car"},
+        {"idref": "employs"}
+      ]
+    }
+  ]
+}

@@ -14,8 +14,7 @@ relations:
   related: []
   validations: [VAL-001, VAL-004, VAL-006]
   decisions: []
-uncertainties:
-  - "Propiedades exactas pendientes de la spec y JSON Schema (S2)."
+uncertainties: []
 ---
 
 # ENT-001 · Configuración del proyecto ai-submind
@@ -27,8 +26,9 @@ Documento raíz de `knowledge/`; su presencia indica un directorio inicializado 
 
 | Propiedad | Tipo | Obligatoria | Restricciones |
 |-----------|------|-------------|---------------|
-| versión de formato | texto | sí | VAL-004 |
-| configuración | objeto | no | por definir |
+| format_version | texto `MAYOR.MENOR` | sí | VAL-004 |
+| name | texto | no |  |
+| documentation | texto Markdown | no |  |
 
 ## Invariantes
 Único por `knowledge/`.
@@ -39,4 +39,4 @@ Documento raíz de `knowledge/`; su presencia indica un directorio inicializado 
 ## Ciclo de vida
 Creado por `ai-submind init`; nunca sobrescrito al reinicializar.
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (API-004).

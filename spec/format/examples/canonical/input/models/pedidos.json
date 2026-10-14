@@ -1,0 +1,8 @@
+{"name": "Pedidos", "elements": {"interactions": [], "classes": [
+  {"visibility": "public", "operations": [], "name": "Pedido", "id": "Pedido", "tags": ["z-tag", "a-tag"], "is_abstract": null,
+   "attributes": [{"name": "total", "id": "Pedido.total", "visibility": "private", "is_static": null, "type": {"idref": "Linea"}},
+                  {"id": "Pedido.fecha", "visibility": "private", "name": "fecha"}]},
+  {"id": "Linea", "name": "Línea", "visibility": "public", "documentation": null}],
+ "associations": []},
+ "id": "pedidos", "format_version": "1.0", "diagrams": [
+  {"elements": [{"idref": "Pedido"}, {"idref": "Linea"}], "name": "Pedidos", "kind": "class", "id": "vista-pedidos"}]}

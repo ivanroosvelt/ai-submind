@@ -1,0 +1,43 @@
+{
+  "format_version": "1.0",
+  "diagram": {"idref": "vista-general"},
+  "nodes": {
+    "Car": {
+      "x": 320,
+      "y": 200,
+      "width": 200,
+      "height": 140,
+      "style": {
+        "fill": "#fff8e1",
+        "stroke": "#8d6e63",
+        "text": "#3e2723"
+      }
+    },
+    "Drivable": {
+      "x": 320,
+      "y": 20
+    },
+    "Engine": {
+      "x": 640,
+      "y": 200
+    },
+    "Garage": {
+      "x": 40,
+      "y": 200
+    },
+    "Truck": {
+      "x": 320,
+      "y": 440
+    }
+  },
+  "edges": {
+    "Car--Engine": {
+      "vertices": [
+        {
+          "x": 560,
+          "y": 260
+        }
+      ]
+    }
+  }
+}

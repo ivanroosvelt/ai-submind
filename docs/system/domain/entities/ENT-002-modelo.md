@@ -14,8 +14,7 @@ relations:
   related: [ENT-003, ENT-004]
   validations: [VAL-001, VAL-002, VAL-003, VAL-006, VAL-007]
   decisions: []
-uncertainties:
-  - "Propiedades exactas pendientes de la spec y JSON Schema (S2)."
+uncertainties: []
 ---
 
 # ENT-002 · Modelo
@@ -27,7 +26,8 @@ Raíz de un árbol de elementos; dueño de todas las relaciones (asociaciones, g
 
 | Propiedad | Tipo | Obligatoria | Restricciones |
 |-----------|------|-------------|---------------|
-| id | id legible | sí | VAL-002 |
+| format_version | texto `MAYOR.MENOR` | sí | VAL-004 |
+| id | ID de archivo | sí | VAL-002; igual al nombre del archivo |
 | name | texto | sí |  |
 | elementos/relaciones/diagramas | colecciones | no | VAL-001, VAL-007 |
 
@@ -40,4 +40,4 @@ Ver VAL-003, VAL-007.
 ## Ciclo de vida
 Creado y modificado vía MCP (REQ-021, REQ-023) o editado a mano y revalidado.
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Propiedades indicativas; la definición exacta es la spec y el JSON Schema (API-004).

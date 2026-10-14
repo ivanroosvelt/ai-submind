@@ -1,0 +1,25 @@
+{
+  "format_version": "1.0",
+  "diagram": {"idref": "rent-car"},
+  "nodes": {
+    "RentCar.car": {
+      "x": 440,
+      "y": 20
+    },
+    "RentCar.contract": {
+      "x": 640,
+      "y": 120
+    },
+    "RentCar.customer": {
+      "x": 40,
+      "y": 20,
+      "width": 120,
+      "height": 600
+    },
+    "RentCar.garage": {
+      "x": 240,
+      "y": 20,
+      "width": 120
+    }
+  }
+}

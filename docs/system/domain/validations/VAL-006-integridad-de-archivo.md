@@ -34,4 +34,4 @@ Error; estado de documento `invalid_parse` o `conflicted`, con línea/columna.
 | Archivo con marcadores de conflicto | conflicted, escrituras bloqueadas |
 | JSON truncado | invalid_parse |
 
-Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (PLAN-002 S2).
+Fuente: REP-003 Anexo A, ajustado a DEC-001..DEC-007. Gramática y códigos exactos: spec del formato (API-004, §10).
