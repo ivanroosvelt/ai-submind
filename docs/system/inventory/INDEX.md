@@ -24,13 +24,14 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | DEC-008 | decision | Single npm package with Vitest, ESLint (typescript-eslint) and Prettier | active | - | declared-doc | [DEC-008-single-package-vitest-eslint-prettier.md](../../../docs/system/decisions/DEC-008-single-package-vitest-eslint-prettier.md) |
 | DEC-009 | decision | Ajv 8 as the JSON Schema validator of the format and dependency-cruiser for module boundaries | active | - | declared-doc | [DEC-009-ajv-and-dependency-cruiser.md](../../../docs/system/decisions/DEC-009-ajv-and-dependency-cruiser.md) |
 | DEC-010 | decision | Format migrations as versioned from→to guides for LLM agents | proposed | - | declared-doc | [DEC-010-versioned-llm-migration-guides.md](../../../docs/system/decisions/DEC-010-versioned-llm-migration-guides.md) |
+| DEC-011 | decision | Engine persistence: per-file atomic writes, SHA-256 revisions, no-new-errors acceptance and native recursive fs.watch | active | - | declared-doc | [DEC-011-engine-persistence-and-reload.md](../../../docs/system/decisions/DEC-011-engine-persistence-and-reload.md) |
 | ENT-001 | entity | ai-submind project configuration | active | none | declared-doc | [ENT-001-ai-submind-project-configuration.md](../../../docs/system/domain/entities/ENT-001-ai-submind-project-configuration.md) |
 | ENT-002 | entity | Model | active | none | declared-doc | [ENT-002-model.md](../../../docs/system/domain/entities/ENT-002-model.md) |
 | ENT-003 | entity | Model element | active | none | declared-doc | [ENT-003-model-element.md](../../../docs/system/domain/entities/ENT-003-model-element.md) |
 | ENT-004 | entity | Diagram | active | none | declared-doc | [ENT-004-diagram.md](../../../docs/system/domain/entities/ENT-004-diagram.md) |
 | ENT-005 | entity | Diagram layout | active | none | declared-doc | [ENT-005-diagram-layout.md](../../../docs/system/domain/entities/ENT-005-diagram-layout.md) |
 | FEAT-001 | feature | Per-project CLI and daemon | active | none | declared-doc | [FEAT-001-per-project-cli-and-daemon.md](../../../docs/system/features/FEAT-001-per-project-cli-and-daemon.md) |
-| FEAT-002 | feature | Embedded knowledge engine | active | none | declared-doc | [FEAT-002-embedded-knowledge-engine.md](../../../docs/system/features/FEAT-002-embedded-knowledge-engine.md) |
+| FEAT-002 | feature | Embedded knowledge engine | active | partial | verified-code | [FEAT-002-embedded-knowledge-engine.md](../../../docs/system/features/FEAT-002-embedded-knowledge-engine.md) |
 | FEAT-003 | feature | Knowledge format, layout and validation | active | partial | verified-code | [FEAT-003-knowledge-format-layout-and-validation.md](../../../docs/system/features/FEAT-003-knowledge-format-layout-and-validation.md) |
 | FEAT-004 | feature | Structured queries and lexical search | active | none | declared-doc | [FEAT-004-structured-queries-and-lexical-search.md](../../../docs/system/features/FEAT-004-structured-queries-and-lexical-search.md) |
 | FEAT-005 | feature | Semantic search | proposed | none | declared-doc | [FEAT-005-semantic-search.md](../../../docs/system/features/FEAT-005-semantic-search.md) |
@@ -90,7 +91,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | REQ-039 | requirement | Rename id with reference rewriting | active | - | declared-doc | [REQ-039-rename-id-with-reference-rewriting.md](../../../docs/system/requirements/REQ-039-rename-id-with-reference-rewriting.md) |
 | REQ-040 | requirement | Explore and adjust sequence diagram layout | active | - | declared-doc | [REQ-040-explore-and-adjust-sequence-diagram-layout.md](../../../docs/system/requirements/REQ-040-explore-and-adjust-sequence-diagram-layout.md) |
 | VAL-001 | validation | Conformance with the format JSON Schema | active | verified | verified-code | [VAL-001-conformance-with-format-json-schema.md](../../../docs/system/domain/validations/VAL-001-conformance-with-format-json-schema.md) |
-| VAL-002 | validation | Element ID uniqueness and format | active | partial | verified-code | [VAL-002-element-id-uniqueness-and-format.md](../../../docs/system/domain/validations/VAL-002-element-id-uniqueness-and-format.md) |
+| VAL-002 | validation | Element ID uniqueness and format | active | verified | verified-code | [VAL-002-element-id-uniqueness-and-format.md](../../../docs/system/domain/validations/VAL-002-element-id-uniqueness-and-format.md) |
 | VAL-003 | validation | idref referential integrity | active | verified | verified-code | [VAL-003-idref-referential-integrity.md](../../../docs/system/domain/validations/VAL-003-idref-referential-integrity.md) |
 | VAL-004 | validation | Supported format version | active | partial | verified-code | [VAL-004-supported-format-version.md](../../../docs/system/domain/validations/VAL-004-supported-format-version.md) |
 | VAL-005 | validation | Layout consistency | active | verified | verified-code | [VAL-005-layout-consistency.md](../../../docs/system/domain/validations/VAL-005-layout-consistency.md) |
@@ -214,6 +215,13 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `DEC-010 affects VAL-004`
 - `DEC-010 affects NFR-011`
 - `DEC-010 affects API-004`
+- `DEC-011 affects FEAT-002`
+- `DEC-011 affects REQ-007`
+- `DEC-011 affects REQ-008`
+- `DEC-011 affects REQ-011`
+- `DEC-011 affects REQ-022`
+- `DEC-011 affects REQ-026`
+- `DEC-011 affects NFR-005`
 - `ENT-001 validations VAL-001`
 - `ENT-001 validations VAL-004`
 - `ENT-001 validations VAL-006`
@@ -239,6 +247,8 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `FEAT-001 depends_on FEAT-002`
 - `FEAT-001 entities ENT-001`
 - `FEAT-001 interfaces API-003`
+- `FEAT-002 decisions DEC-004`
+- `FEAT-002 decisions DEC-011`
 - `FEAT-002 depends_on FEAT-003`
 - `FEAT-002 entities ENT-001`
 - `FEAT-002 entities ENT-002`
@@ -374,6 +384,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `REQ-025 features FEAT-006`
 - `REQ-026 actors ACT-002`
 - `REQ-026 constraints NFR-005`
+- `REQ-026 decisions DEC-011`
 - `REQ-026 depends_on REQ-011`
 - `REQ-026 features FEAT-006`
 - `REQ-026 features FEAT-002`

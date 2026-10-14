@@ -108,7 +108,8 @@ export async function readKnowledgeDir(
   return { files, findings };
 }
 
-const byLocation = (a: Finding, b: Finding): number =>
+/** Report order of findings: by file, pointer and code. */
+export const compareFindings = (a: Finding, b: Finding): number =>
   compareCodeUnits(a.file, b.file) ||
   compareCodeUnits(a.pointer, b.pointer) ||
   compareCodeUnits(a.code, b.code);
@@ -132,7 +133,7 @@ export function validateFiles(
     findings.push(...doc.findings);
   }
   findings.push(...checkKnowledge(documents.filter(isLoaded), options));
-  return { documents, findings: findings.sort(byLocation) };
+  return { documents, findings: findings.sort(compareFindings) };
 }
 
 /** Reads and validates the knowledge/ directory at `root`. */
@@ -144,6 +145,6 @@ export async function validateKnowledgeDir(
   const report = validateFiles(read.files, options);
   return {
     documents: report.documents,
-    findings: [...read.findings, ...report.findings].sort(byLocation),
+    findings: [...read.findings, ...report.findings].sort(compareFindings),
   };
 }

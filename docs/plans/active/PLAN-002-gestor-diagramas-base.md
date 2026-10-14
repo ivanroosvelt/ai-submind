@@ -7,7 +7,7 @@ updated: 2026-10-14
 class: T2
 related: [DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007, DEC-008, EDR-006, REP-003]
 blockers: []
-next_action: "Commit de S4 (separado del entorno: EDR-007/PLAN-003) cuando el usuario lo pida; terminar PLAN-003; después S5 (motor), con el criterio de entrada de H9."
+next_action: "S6 (consultas y búsqueda léxica): diseño con subagente Plan, implementación con subagentes, revisión change-verifier."
 stages:
   - id: S1
     name: "Decisiones aceptadas y modelo estructural registrado"
@@ -27,8 +27,8 @@ stages:
     evidence: "2026-10-14 src/format (canonical, document, semantic, knowledge, schema, findings, types) con Ajv 8.20.0 y dependency-cruiser 18.6.0 (DEC-009). test/format/corpus.test.ts: garaje 0 hallazgos y 5/5 archivos canónicos; 33/33 casos invalid/ con exactamente sus códigos; canonical/input (manifiesto, pedidos, sequence) = expected byte a byte e idempotente (cierra H12 de S2). test/format/rules.test.ts: 32 pruebas (symlinks, FIFO, directorios no previstos, UTF-8, U+2028/CR, lectura tolerante con punteros originales, conjuntos, CODE_REF_MISSING, ciclos, BigInt, escapes). scripts/check: entorno 0/0; modelo 0/0; 42 pruebas herramientas; producto typecheck+lint+formato+deps+78 Vitest OK. Mutaciones: ciclo temporal → npm run deps exit 1; sin mapeo de punteros o con regex /m → fallan sus pruebas. change-verifier: aprobado con observaciones (H1-H12, corregidas salvo H9 → S5 y H12 → commit aparte); re-revisión aprobada con observaciones (N1-N7, corregidas)."
   - id: S5
     name: "Motor de conocimiento: carga, grafo, transacciones, rename, recarga"
-    status: proposed
-    evidence: ""
+    status: verified
+    evidence: "2026-10-14 src/engine (engine, store, rename, ids, diff, errors) sobre src/format; DEC-011. test/engine/engine.test.ts (32): carga ok/degradada, limpieza de temporales, escritura canónica con revisión, creación con expectedRevision null, lote inválido sin escritura (snapshot idéntico), unknown key rechazada antes de serializar (H9), versión distinta rechazada, lote aceptado en knowledge/ degradado si no añade errores, rutas fuera/no documento/duplicadas, symlink no escrito, DOCUMENT_INVALID en invalid_parse y read_only, REVISION_CONFLICT por revisión vieja y por cambio externo no recargado, transacciones concurrentes serializadas, rename (prefijos, referencias, layout, mover modelo y layout, colisión directa y derivada, INVALID_ID, NOT_FOUND, RENAME_BLOCKED, errores previos renombrados), recarga con diff semántico sin eco de escrituras propias, watcher agrupa ráfaga en un evento, archivo que se invalida y se recupera. test/engine/ids.test.ts (44): seg/slug, tabla §3.3, sufijos, truncado y límites de longitud. Mutaciones (chequeo de disco, validación previa, regla de errores nuevos, traducción en rename, bloqueo): cada una rompe una prueba. Watcher 5/5 corridas estables. Regla depcruise engine-on-format con control negativo. Medición 10 010 elementos: open 121 ms, transacción 50 ms, rename 56 ms, recarga 44 ms. scripts/check: entorno 0/0; modelo 91 elementos 0/0; 42 pruebas herramientas; producto typecheck+lint+formato+deps+154 Vitest OK. change-verifier: aprobado con observaciones (H1-H10, corregidas con pruebas de regresión); re-revisión aprobada con observaciones R1-R3, corregidas (evidencia, clave por subjects vacíos, status().localError)."
   - id: S6
     name: "Consultas estructuradas y búsqueda léxica"
     status: proposed
@@ -204,5 +204,9 @@ S11 tras S9/S10; S12 tras S7..S11.
 - 2026-10-14 · PLAN-003 (EDR-007) traduce spec, corpus y modelo al inglés: la evidencia de S2/S4 cita nombres anteriores del corpus (`valid/garaje` → `valid/garage`, `pedidos` → `orders`, casos `invalid/` en inglés) y slugs anteriores de fichas; los IDs no cambian.
 
 - 2026-10-14 · usuario confirma la regla «versión anterior sin migración = solo lectura» (spec §11) y pide un mecanismo de actualización sencillo: DEC-010 (proposed), guías versionadas from→to para agentes LLM con corpus antes/después y operación `migrate`; se implementa con el primer cambio de versión del formato (fuera de PLAN-002).
+
+- 2026-10-14 · S5: usuario elige `node:fs.watch` recursivo, atomicidad por archivo y alcance documentos + rename + derivación (DEC-011). Crear/actualizar/borrar elementos con derivación y cascade (REQ-023/024) pasa a S8 sobre las transacciones. VAL-002 `verified`; FEAT-002 `partial`. Criterio de entrada H9 cumplido: `transact` valida las fases 1–3 sobre los datos tal como llegan antes de `serialize`. S5 executed; pendiente change-verifier.
+- 2026-10-14 · S5 revisada por change-verifier: aprobado con observaciones (H1-H10), corregidas con pruebas de regresión: H1 (cada lote y rename recargan antes de validar; lote sobre documento cambiado → REVISION_CONFLICT), H2 (`status().watchError`; `error` solo con listener), H3 (hallazgos de fase 4 con `subjects`, spec §10.4; comparación por sujetos), H4 (mover solo archivos nombrados por su propio ID), H5 (rutas de documento no leídas bloquean rename), H6 (truncado recorta finales inválidos; sin espacio → INVALID_ID; spec §3.3), H7 (`representsName`), H8 (`.ai-submind` roto no impide abrir; TOCTOU y symlinks en DEC-011), H9 (datos no JSON → VALIDATION_FAILED; IDs resultantes inválidos → INVALID_ID), H10 (REQ-026 → DEC-011; `maxWaitMs`; lote vacío sin evento). scripts/check: entorno 0/0; modelo 0/0; 42 pruebas herramientas; 154 Vitest OK.
+- 2026-10-14 · re-revisión change-verifier de S5: aprobado con observaciones R1-R3, corregidas. S5 verified; commit pedido por el usuario.
 
 ## Resultado (al cerrar)

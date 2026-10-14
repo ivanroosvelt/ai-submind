@@ -87,8 +87,10 @@ Helper functions:
   outside `[a-z0-9]` with `-`, truncates to 64 characters and then trims `-` at both ends.
 - Every ID is written in NFC; the grammar (§3.1) rejects stray combining marks, so an ID in NFD
   fails schema validation.
-- If a compound ID exceeds 256 characters, its last derived segment is truncated (without touching `()` or the
-  owner prefix) until it fits, counting the possible collision suffix, and trailing `-` are trimmed.
+- If a compound ID exceeds 256 characters (64 for file IDs), its last derived segment is truncated (without touching
+  `()` or the owner prefix) until it fits, counting the possible collision suffix, and the trailing characters that
+  cannot end an ID (§3.1) are trimmed. If not even one character of the segment fits, derivation fails
+  (`INVALID_ID`).
 
 | Element | Derived ID | Example |
 |---------|------------|---------|
@@ -352,7 +354,8 @@ Rules between phases:
 
 ### 10.4 Codes
 
-Report format: `{code, severity, file, pointer, message}` with `pointer` as a JSON Pointer (RFC 6901).
+Report format: `{code, severity, file, pointer, message, subjects?}` with `pointer` as a JSON Pointer (RFC 6901)
+and, in phase 4, `subjects`: the IDs the finding is about (empty when it is not about IDs, e.g. `MULTIPLICITY_INVALID`).
 
 | Code | Severity | Phase | Meaning |
 |------|----------|-------|---------|

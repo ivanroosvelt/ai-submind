@@ -7,18 +7,20 @@ evidence: verified-code
 summary: "Every id is readable, non-empty, conforms to the grammar and is unique across all of knowledge/."
 aliases: ["duplicate id", "uniqueness"]
 tags: [validation]
-implementation: partial
+implementation: verified
 code:
   - src/format/semantic.ts#checkKnowledge
   - spec/format/schema/1.0/defs.schema.json
+  - src/engine/ids.ts#deriveId
 test_code:
   - test/format/corpus.test.ts
   - test/format/rules.test.ts
+  - test/engine/ids.test.ts
 relations:
   tests: []
   decisions: []
 uncertainties:
-  - "ID derivation and collision suffixes (spec §3.3) are implemented by the engine when creating elements (PLAN-002 S5); S4 only validates grammar and uniqueness."
+  - "Derivation and collision suffixes (spec §3.3) are implemented as engine functions; they are applied when creating elements without an id (REQ-023, PLAN-002 S8)."
 ---
 
 # VAL-002 · Element ID uniqueness and format

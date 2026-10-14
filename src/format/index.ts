@@ -17,6 +17,7 @@ export {
   type ValidationCode,
 } from "./findings.js";
 export {
+  compareFindings,
   LOCAL_DIR,
   readKnowledgeDir,
   resolveKnowledgePath,

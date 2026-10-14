@@ -17,6 +17,13 @@ module.exports = {
       to: { path: "^src/(?!format/)" },
     },
     {
+      name: "engine-on-format",
+      severity: "error",
+      comment: "src/engine depends only on src/format (DEC-004, DEC-011).",
+      from: { path: "^src/engine/" },
+      to: { path: "^src/(?!format/|engine/)" },
+    },
+    {
       name: "not-to-unresolvable",
       severity: "error",
       from: {},

@@ -23,7 +23,7 @@ relations:
   depends_on: []
   decisions: [DEC-002, DEC-003, DEC-009]
 uncertainties:
-  - "Implemented: reading, validation (phases 1–4) and in-memory canonical serialization (PLAN-002 S4). Pending: validation before each write, atomic writes and rejection of writes on non-writable documents (REQ-011, S5), layout creation on first modification (REQ-010, S5/S9) and validation report via CLI and MCP (REQ-012, S7/S8)."
+  - "Implemented: reading, validation (phases 1–4) and canonical serialization (PLAN-002 S4); validation before each write, atomic writes and rejection of writes on non-writable documents through the engine (FEAT-002, S5). Pending: layout creation on first modification (REQ-010, S9) and validation report via CLI and MCP (REQ-012, S7/S8)."
 ---
 
 # FEAT-003 · Knowledge format, layout and validation

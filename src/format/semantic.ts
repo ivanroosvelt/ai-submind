@@ -445,7 +445,9 @@ export function checkKnowledge(
       const id = (d.data as Model).id;
       if (d.path !== `models/${id}.json`) {
         out.push(
-          finding("FILE_ID_MISMATCH", d.path, "/id", `model ${id} must be in models/${id}.json`),
+          finding("FILE_ID_MISMATCH", d.path, "/id", `model ${id} must be in models/${id}.json`, [
+            id,
+          ]),
         );
       }
     } else if (d.kind === "layout") {
@@ -457,6 +459,7 @@ export function checkKnowledge(
             d.path,
             "/diagram",
             `layout of diagram ${id} must be in layout/${id}.json`,
+            [id],
           ),
         );
       }
@@ -472,6 +475,7 @@ export function checkKnowledge(
           x.file,
           x.pointer,
           `id ${id} appears ${String(list.length)} times in knowledge/`,
+          [id],
         ),
       );
     }
@@ -490,6 +494,7 @@ export function checkKnowledge(
           r.file,
           r.pointer,
           `reference to ${r.idref}, which does not exist`,
+          [r.idref],
         ),
       );
       continue;
@@ -504,6 +509,7 @@ export function checkKnowledge(
           r.file,
           r.pointer,
           `${r.idref} is a ${t.type}, not allowed here`,
+          [r.idref],
         ),
       );
     } else if (
@@ -516,11 +522,18 @@ export function checkKnowledge(
           r.file,
           r.pointer,
           `${r.idref} belongs to another interaction`,
+          [r.idref],
         ),
       );
     } else if (r.rule === "used_interaction" && t.id === r.interaction) {
       out.push(
-        finding("REF_TYPE_MISMATCH", r.file, r.pointer, `interaction ${r.idref} cannot use itself`),
+        finding(
+          "REF_TYPE_MISMATCH",
+          r.file,
+          r.pointer,
+          `interaction ${r.idref} cannot use itself`,
+          [r.idref],
+        ),
       );
     }
   }
@@ -546,6 +559,7 @@ export function checkKnowledge(
             x.file,
             x.pointer,
             `${g.id} joins a ${s.type} with a ${p.type}`,
+            [g.id],
           ),
         );
       }
@@ -565,6 +579,7 @@ export function checkKnowledge(
         e.file,
         e.pointer,
         `${e.id} is part of a generalization cycle`,
+        [e.id],
       ),
     );
   }
@@ -590,6 +605,7 @@ export function checkKnowledge(
           s.file,
           s.pointer,
           `${id} belongs to ${String(sites.length)} packages`,
+          [id],
         ),
       );
     }
@@ -601,6 +617,7 @@ export function checkKnowledge(
         e.site.file,
         e.site.pointer,
         `${e.to} is part of a package cycle`,
+        [e.to],
       ),
     );
   }
@@ -624,6 +641,7 @@ export function checkKnowledge(
             x.file,
             x.pointer,
             `events of ${m.id} do not match kind ${m.kind}`,
+            [m.id],
           ),
         );
       }
@@ -640,6 +658,7 @@ export function checkKnowledge(
               x.file,
               `${x.pointer}/${key}`,
               `${ev.idref} is already an event of ${prev}`,
+              [ev.idref, prev],
             ),
           );
         } else usedOccurrences.set(ev.idref, m.id);
@@ -650,7 +669,9 @@ export function checkKnowledge(
     for (const x of list) {
       if (x.type === "occurrence" && !usedOccurrences.has(id)) {
         out.push(
-          finding("OCCURRENCE_UNUSED", x.file, x.pointer, `${id} is not an event of any message`),
+          finding("OCCURRENCE_UNUSED", x.file, x.pointer, `${id} is not an event of any message`, [
+            id,
+          ]),
         );
       }
     }
@@ -666,6 +687,7 @@ export function checkKnowledge(
           m.file,
           m.pointer,
           `multiplicity ${m.value}: lower bound greater than upper bound`,
+          [],
         ),
       );
     }
@@ -693,6 +715,7 @@ export function checkKnowledge(
               d.path,
               pointer(map, key),
               `${key} is not shown as a diagram ${map === "nodes" ? "node" : "edge"}`,
+              [key],
             ),
           );
         }
@@ -712,6 +735,7 @@ export function checkKnowledge(
               d.path,
               s.pointer,
               `path ${s.path} does not exist in the repository`,
+              [],
             ),
           );
         }

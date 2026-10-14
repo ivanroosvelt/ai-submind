@@ -26,8 +26,11 @@
   diagrams too), stable when `name` changes; cross-model references with a simple `idref`; rename only via the engine with
   reference rewriting (DEC-003, REQ-039, API-004) **[declared]**.
 - Format version other than the supported one (1.0) → the validator marks the document `read_only` and applies tolerant
-  reading **[verified]**; rejection of writes arrives with the engine (PLAN-002 S5) **[declared]** (VAL-004, NFR-011).
-- Own embedded knowledge engine instead of TerminusDB (DEC-004, FEAT-002) **[declared]**.
+  reading **[verified]**; the engine rejects writes to it (`DOCUMENT_INVALID`) **[verified]** (VAL-004, NFR-011).
+- Own embedded knowledge engine instead of TerminusDB (DEC-004, FEAT-002) in `src/engine/`: loading and indexes,
+  document-level batch transactions validated before writing with revision control, per-file atomic writes,
+  rename with reference rewriting, ID derivation and reload with `fs.watch` (DEC-011) **[verified]**.
+  Element-level create/update/delete (REQ-023, REQ-024) arrives with MCP (PLAN-002 S8) **[declared]**.
 - Process: single daemon per project (HTTP on 127.0.0.1, token, Host/Origin) + stdio MCP proxy
   `ai-submind mcp` (DEC-005, FEAT-001, REQ-037) **[declared]**.
 - UI: `@joint/core` with own shapes; explore and adjust layout; model changes only via MCP
@@ -37,7 +40,7 @@
 - Interfaces: API-001 MCP server, API-002 UI HTTP API, API-003 CLI **[declared]**.
 - Single npm package at the root: `src/` (code, `code_roots`), `test/` (Vitest), ESLint + typescript-eslint + Prettier;
   `scripts/check` runs `npm run check` (DEC-008, EDR-006) **[verified]**.
-- Only the format core is implemented (FEAT-003, VAL-001..007); engine, queries, CLI, MCP and UI remain at
+- Implemented: format core (FEAT-003, VAL-001..007) and engine (FEAT-002, partial); queries, CLI, MCP and UI remain at
   `implementation: none` **[verified]**.
 - Cycles and boundaries between modules checked by dependency-cruiser in `npm run check` (NFR-008, DEC-009) **[verified]**.
 - Target scale ~10,000 elements per project (NFR-007, thresholds unconfirmed) **[inferred]**.
@@ -50,4 +53,4 @@
 
 ## Next step
 
-PLAN-003 (code, spec and model in English, EDR-007); then PLAN-002 S5 (knowledge engine).
+PLAN-002 S6 (structured queries and lexical search) over the engine.

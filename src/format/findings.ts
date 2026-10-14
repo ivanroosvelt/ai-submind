@@ -36,6 +36,11 @@ export interface Finding {
   /** JSON Pointer (RFC 6901) into the document as read; "" = whole document. */
   pointer: string;
   message: string;
+  /**
+   * IDs the finding is about (phase 4), so that a report can be compared across a rename without parsing
+   * `message`. Empty when the finding is not about IDs.
+   */
+  subjects?: string[];
 }
 
 export function finding(
@@ -43,8 +48,11 @@ export function finding(
   file: string,
   pointer: string,
   message: string,
+  subjects?: string[],
 ): Finding {
-  return { code, severity: VALIDATION_CODES[code], file, pointer, message };
+  const f: Finding = { code, severity: VALIDATION_CODES[code], file, pointer, message };
+  if (subjects !== undefined) f.subjects = subjects;
+  return f;
 }
 
 /** Escapes a JSON Pointer segment (RFC 6901 §4). */
