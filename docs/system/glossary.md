@@ -5,7 +5,25 @@ aquí solo se enlaza. Mantener en orden alfabético.
 
 | Término | Definición breve | ID |
 |---------|------------------|----|
-| _(sin términos registrados todavía)_ | | |
+| ai-submind (comando) | CLI `npx ai-submind` con `serve`, `mcp`, `init`, `status`, `stop` | API-003 |
+| ai-submind.json | Manifiesto de `knowledge/` con versión de formato | ENT-001 |
+| API HTTP de la UI | Lectura y escritura solo de layout para la UI | API-002 |
+| Búsqueda léxica | Búsqueda por texto libre con ranking léxico | REQ-038 |
+| Búsqueda semántica | Búsqueda por similitud con embeddings (posterior) | FEAT-005 |
+| Daemon | Proceso único por proyecto que sirve UI y MCP | REQ-037 |
+| Diagrama | Vista de un modelo (`kind` clases o secuencia) hecha de referencias | ENT-004 |
+| Elemento de modelo | Elemento UML con `id` legible dentro de un modelo | ENT-003 |
+| Formato de conocimiento | Formato propio derivado de UMJ con JSON Schema | FEAT-003 |
+| idref | Referencia a un elemento por su `id` | VAL-003 |
+| Layout | Posiciones y vértices de un diagrama, archivo separado | ENT-005 |
+| Modelo | Árbol de elementos, relaciones y diagramas en un archivo | ENT-002 |
+| Motor de conocimiento | Equivalente portable propio de TerminusDB | FEAT-002 |
+| Proxy MCP stdio | `ai-submind mcp`: reenvía stdio al daemon | REQ-003 |
+| Rename | Cambio de `id` con reescritura de referencias | REQ-039 |
+| Servidor MCP | Tools MCP de consulta y administración | API-001 |
+| Serialización canónica | Escritura determinista para diffs mínimos | REQ-005 |
+| UMJ | Formato JSON de intercambio UML de referencia (paper ENASE 2026) | DEC-002 |
+| Visor web | UI JointJS para explorar y ajustar layout | FEAT-007 |
 
 Términos del entorno de orquestación (no del producto):
 

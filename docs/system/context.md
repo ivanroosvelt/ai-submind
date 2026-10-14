@@ -5,21 +5,40 @@
 
 ## Qué se sabe
 
-- Nombre del repositorio: `submind` **[verificado]** (remoto de Git).
-- Rama de trabajo `v2` iniciada sin historia y sin relación con otras ramas, por decisión del
-  usuario: nuevo proyecto (EDR-002) **[declarado]**.
-- No existe código del producto, stack, dependencias ni pruebas **[verificado]** (árbol vacío al
-  iniciar el bootstrap, ver `docs/reports/current/`).
+- Nombre del repositorio: `submind` **[verificado]** (remoto de Git). Nombre del producto, paquete npm,
+  comando y servidor MCP: `ai-submind` (DEC-001) **[declarado]**.
+- Rama de trabajo `v2` iniciada sin historia (EDR-002) **[declarado]**.
+- Propósito: gestor de diagramas (clases y secuencia en el primer alcance) que vive en `knowledge/` del
+  proyecto anfitrión, versionado con Git como única fuente de verdad; agentes lo consultan y administran vía
+  MCP y personas lo exploran en una UI web (REQ-001..040, REP-003) **[declarado]**.
+- Actores: ACT-001 Desarrollador, ACT-002 Agente IA (cliente MCP), ACT-003 Repositorio Git anfitrión;
+  ACT-004 Proveedor de embeddings (posterior) **[declarado]**. Usuario único local, sin roles **[inferido]**.
+- Stack: Node.js ≥22, TypeScript estricto, ESM, distribuido con `npx ai-submind`; raíz = git root del cwd (DEC-001) **[declarado]**.
+- Formato: propio, derivado de UMJ, JSON Schema 2020-12, un archivo por modelo
+  (`knowledge/models/<model-id>.json`), layout separado (`knowledge/layout/<diagram-id>.json`), manifiesto
+  `knowledge/ai-submind.json`, derivados en `knowledge/.ai-submind/` ignorados por git; serialización canónica (DEC-002, FEAT-003) **[declarado]**.
+- IDs de elementos legibles con ámbito (`Car`, `Car.start()`), únicos globales, estables al cambiar `name`;
+  rename solo vía motor con reescritura de referencias (DEC-003, REQ-039) **[declarado]**.
+- Motor de conocimiento propio embebido en lugar de TerminusDB (DEC-004, FEAT-002) **[declarado]**.
+- Proceso: daemon único por proyecto (HTTP en 127.0.0.1, token, Host/Origin) + proxy MCP stdio
+  `ai-submind mcp` (DEC-005, FEAT-001, REQ-037) **[declarado]**.
+- UI: `@joint/core` con shapes propias; explorar y ajustar layout; cambios de modelo solo vía MCP
+  (DEC-006, FEAT-007; secuencia en FEAT-009, PLAN-002 S11) **[declarado]**.
+- Búsqueda: estructurada + léxica en el núcleo (FEAT-004); semántica con embeddings posterior y fuera de
+  PLAN-002 (DEC-007, FEAT-005) **[declarado]**.
+- Interfaces: API-001 servidor MCP, API-002 API HTTP de la UI, API-003 CLI **[declarado]**.
+- No existe código del producto ni pruebas: todo elemento implementable tiene `implementation: none` **[verificado]**.
+- Escala objetivo ~10 000 elementos por proyecto (NFR-007, umbrales sin confirmar) **[inferido]**.
 
-## Qué no se sabe (pendiente de definir con el usuario)
+## Qué no se sabe (pendiente)
 
-- Propósito del producto, usuarios y problema que resuelve **[desconocido]**.
-- Actores, requerimientos y alcance del primer incremento **[desconocido]**.
-- Stack tecnológico, plataforma de ejecución y despliegue **[desconocido]**.
-- Datos que manejará (incluidos datos personales) y requisitos de seguridad **[desconocido]**.
-- Integraciones con sistemas externos **[desconocido]**.
+- Gramática exacta de IDs y referencias entre modelos (DEC-003; PLAN-002 S2) **[desconocido]**.
+- Paquete único vs monorepo, framework de pruebas y `code_roots` (PLAN-002 S3) **[desconocido]**.
+- Apagado del daemon, entrega del token al navegador, puerto por defecto (DEC-005, NFR-004) **[desconocido]**.
+- Si el agente MCP puede modificar layout (P9), init implícito (P10), versión de formato más nueva que el binario (P14) **[desconocido]**.
+- Inclusión de caminos entre elementos en PLAN-002 (REQ-019: DEC-004 los cita, PLAN-002 S6 no) **[desconocido]**.
+- Licencia de ai-submind **[desconocido]**.
 
-## Próximo paso recomendado
+## Próximo paso
 
-Definir el producto con `requirements-analysis` a partir de una descripción del usuario; registrar
-la elección de stack como primera DEC y declarar `code_roots` en `schema.yaml`.
+PLAN-002 S2 (especificación del formato y JSON Schema).
