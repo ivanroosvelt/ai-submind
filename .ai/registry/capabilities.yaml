@@ -51,15 +51,13 @@ capabilities:
   - id: CAP-011
     name: Implementación en el stack del producto
     providers: []
-    status: deferred
-    notes: "Sin código ni stack. El agente principal implementa siguiendo AGENTS.md; crear skill/agente solo si el stack lo justifica."
-    accepted_by: EDR-005
+    status: partial
+    notes: "Stack fijado (DEC-001, DEC-008). El agente principal implementa siguiendo AGENTS.md; reevaluar un skill de stack tras PLAN-002 S5."
+    accepted_by: EDR-006
   - id: CAP-012
     name: Pruebas automatizadas del producto
     providers: [SKL-006]
-    status: partial
-    notes: "verify-change ejecuta lo que exista; no hay framework de pruebas del producto todavía."
-    accepted_by: EDR-005
+    status: covered
   - id: CAP-013
     name: Seguridad y privacidad
     providers: [AGT-003]

@@ -15,7 +15,7 @@ incrustado: editar `AGENTS.md` y ejecutar `scripts/regen`.**
   distinta; Copilot no aprueba sus propios cambios del entorno.
 - Para comandos, usar los de `scripts/` (AGENTS.md §12).
 
-<!-- BEGIN AGENTS.md · generado por scripts/regen · sha256:ed1ba235220c8518 · no editar -->
+<!-- BEGIN AGENTS.md · generado por scripts/regen · sha256:c664436b5605c35a · no editar -->
 # AGENTS.md — submind
 
 Fuente canónica de instrucciones para todo agente de IA que trabaje en este repositorio
@@ -26,8 +26,8 @@ contradice a este archivo, prevalece este archivo.
 ## 0. Estado actual
 
 - Proyecto **greenfield**: rama `v2` iniciada sin historia previa (EDR-002).
-- El producto **aún no está definido**: no hay código, stack ni requerimientos registrados.
-  Ver `docs/system/context.md` antes de suponer cualquier comportamiento.
+- Producto `ai-submind` en construcción (PLAN-002): paquete npm TypeScript en `src/`, pruebas en `test/`
+  (DEC-001, DEC-008). Ver `docs/system/context.md` antes de suponer cualquier comportamiento.
 - Entorno de orquestación: estado y verificación en el último informe de `docs/reports/current/`.
 
 ## 1. Misión y principios
@@ -123,7 +123,7 @@ Toda tarea empieza con el skill `task-intake` (SKL-001). Resultado mínimo:
 | Cambiar agentes, skills, políticas o este archivo | skill `environment-audit`; agente `environment-steward` |
 
 La implementación de código la realiza el agente principal siguiendo este archivo
-(no existe agente de implementación: CAP-011 diferida hasta definir stack).
+(no existe agente de implementación: CAP-011 parcial, EDR-006).
 
 ## 6. Ciclo de desarrollo
 
@@ -206,7 +206,7 @@ afirmar resultados no ejecutados. Commits y push solo cuando el usuario lo pida.
 
 | Comando | Qué valida |
 |---------|------------|
-| `scripts/check` | Todo lo siguiente + pruebas de las herramientas (lo ejecuta CI) |
+| `scripts/check` | Todo lo siguiente + pruebas de las herramientas + `npm run check` del producto (tipos, lint, formato, Vitest; requiere `npm ci`). Lo ejecuta CI |
 | `scripts/validate-ai-environment` | Entradas, adaptadores, registro, formato nativo, cobertura, planes, ledger, referencias, duplicidades |
 | `scripts/validate-system-model` | Fichas, IDs, relaciones, rutas de código/pruebas, implementación vs evidencia, generados al día |
 | `scripts/validate-system-model --since <rev>` | Además avisa si cambió código sin cambiar el modelo |

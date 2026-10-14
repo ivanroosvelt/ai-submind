@@ -32,16 +32,17 @@
 - Búsqueda: estructurada + léxica en el núcleo (FEAT-004); semántica con embeddings posterior y fuera de
   PLAN-002 (DEC-007, FEAT-005) **[declarado]**.
 - Interfaces: API-001 servidor MCP, API-002 API HTTP de la UI, API-003 CLI **[declarado]**.
-- No existe código del producto ni pruebas: todo elemento implementable tiene `implementation: none` **[verificado]**.
+- Paquete npm único en la raíz: `src/` (código, `code_roots`), `test/` (Vitest), ESLint + typescript-eslint + Prettier;
+  `scripts/check` ejecuta `npm run check` (DEC-008, EDR-006) **[verificado]**.
+- Solo existe andamiaje (sin funcionalidad): todo elemento implementable tiene `implementation: none` **[verificado]**.
 - Escala objetivo ~10 000 elementos por proyecto (NFR-007, umbrales sin confirmar) **[inferido]**.
 
 ## Qué no se sabe (pendiente)
 
-- Paquete único vs monorepo, framework de pruebas y `code_roots` (PLAN-002 S3) **[desconocido]**.
 - Apagado del daemon, entrega del token al navegador, puerto por defecto (DEC-005, NFR-004) **[desconocido]**.
 - Si el agente MCP puede modificar layout (P9), init implícito (P10) **[desconocido]**.
 - Licencia de ai-submind **[desconocido]**.
 
 ## Próximo paso
 
-PLAN-002 S3 (andamiaje del paquete TypeScript, pruebas y `code_roots`).
+PLAN-002 S4 (núcleo de formato: serialización canónica y validación).

@@ -18,4 +18,17 @@ python3 scripts/validate-system-model ${strict[@]+"${strict[@]}"} || status=1
 echo
 echo "== Pruebas de las herramientas =="
 python3 -m unittest discover -s scripts/tests -t scripts -q || status=1
+if [ -f package.json ]; then
+  echo
+  echo "== Producto (typecheck, lint, formato, pruebas) =="
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "ERROR: npm no está disponible (desarrollo: Node ^22.13 o >=24, DEC-008)" >&2
+    status=1
+  elif [ ! -d node_modules ]; then
+    echo "ERROR: faltan dependencias; ejecutar 'npm ci'" >&2
+    status=1
+  else
+    npm run --silent check || status=1
+  fi
+fi
 exit $status

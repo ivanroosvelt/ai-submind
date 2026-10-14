@@ -17,3 +17,9 @@ CLAUDE.local.md
 .env
 .env.*
 !.env.example
+
+# Node / producto
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo

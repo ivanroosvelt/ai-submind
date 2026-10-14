@@ -19,9 +19,9 @@ implementation_states: [none, partial, implemented, verified]
 #   unknown        pendiente de investigación
 evidence_levels: [verified-code, declared-doc, inferred, unknown]
 
-# Raíces de código del producto. Vacío hasta elegir stack (ver context.md).
+# Raíces de código del producto (DEC-008).
 # Si un diff toca estas rutas sin tocar docs/system/, el validador avisa.
-code_roots: []
+code_roots: [src/]
 
 # Campos que toda ficha debe declarar.
 common_required: [id, type, name, status, evidence]

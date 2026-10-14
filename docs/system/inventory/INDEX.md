@@ -21,6 +21,7 @@ Una fila por elemento. Relaciones: una línea `ORIGEN relación DESTINO` (buscab
 | DEC-005 | decision | Daemon único por proyecto con proxy MCP stdio | active | - | declared-doc | [DEC-005-proceso-daemon-y-proxy-mcp.md](../../../docs/system/decisions/DEC-005-proceso-daemon-y-proxy-mcp.md) |
 | DEC-006 | decision | Visualización con @joint/core y componentes propios; política de REA y clean-room | active | - | declared-doc | [DEC-006-visualizacion-jointjs-core-y-politica-rea.md](../../../docs/system/decisions/DEC-006-visualizacion-jointjs-core-y-politica-rea.md) |
 | DEC-007 | decision | Búsqueda léxica siempre disponible y semántica local opcional | active | - | declared-doc | [DEC-007-busqueda-lexica-y-semantica-opcional.md](../../../docs/system/decisions/DEC-007-busqueda-lexica-y-semantica-opcional.md) |
+| DEC-008 | decision | Paquete npm único con Vitest, ESLint (typescript-eslint) y Prettier | active | - | declared-doc | [DEC-008-paquete-unico-vitest-eslint-prettier.md](../../../docs/system/decisions/DEC-008-paquete-unico-vitest-eslint-prettier.md) |
 | ENT-001 | entity | Configuración del proyecto ai-submind | active | none | declared-doc | [ENT-001-configuracion-del-proyecto-ai-submind.md](../../../docs/system/domain/entities/ENT-001-configuracion-del-proyecto-ai-submind.md) |
 | ENT-002 | entity | Modelo | active | none | declared-doc | [ENT-002-modelo.md](../../../docs/system/domain/entities/ENT-002-modelo.md) |
 | ENT-003 | entity | Elemento de modelo | active | none | declared-doc | [ENT-003-elemento-de-modelo.md](../../../docs/system/domain/entities/ENT-003-elemento-de-modelo.md) |
@@ -204,6 +205,7 @@ Una fila por elemento. Relaciones: una línea `ORIGEN relación DESTINO` (buscab
 - `DEC-007 affects ACT-004`
 - `DEC-007 affects FEAT-004`
 - `DEC-007 affects FEAT-005`
+- `DEC-008 affects NFR-008`
 - `ENT-001 validations VAL-001`
 - `ENT-001 validations VAL-004`
 - `ENT-001 validations VAL-006`

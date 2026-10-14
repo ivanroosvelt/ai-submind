@@ -1,0 +1,12 @@
+# Solo se formatea el código del producto y su configuración.
+# spec/ contiene ejemplos canónicos byte a byte: nunca reformatear.
+*
+!src/
+!src/**
+!test/
+!test/**
+!*.config.ts
+!*.config.js
+!tsconfig*.json
+!package.json
+!.prettierrc.json

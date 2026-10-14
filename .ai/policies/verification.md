@@ -37,7 +37,7 @@ evidencia de nada.
 - No detectan contradicciones semánticas entre textos; solo duplicación literal de líneas.
 - La comprobación de símbolos (`ruta#símbolo`) es textual (palabra completa), no semántica.
 - La detección de "modelo no actualizado" depende de `code_roots` en `docs/system/schema.yaml`
-  (vacío mientras no haya código).
+  (hoy `[src/]`, DEC-008).
 - "Pruebas alcanzables" (`verified`) sigue relaciones de composición fijas (`tests`, `validations`,
   `functions`, `entities`, `interfaces`, `integrations`) sin distinguir tipo de origen: p. ej. una FUN
   puede heredar pruebas de una ENT que solo usa. Revisión humana en esos casos.

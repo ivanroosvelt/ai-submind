@@ -20,6 +20,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Dependencias del producto
+        run: npm ci
       - name: Validadores y pruebas de herramientas
         run: scripts/check
       - name: Modelo actualizado junto con el código (aviso)

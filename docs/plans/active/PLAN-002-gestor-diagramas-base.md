@@ -5,9 +5,9 @@ status: in_progress
 created: 2026-10-14
 updated: 2026-10-14
 class: T2
-related: [DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007, REP-003]
+related: [DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007, DEC-008, EDR-006, REP-003]
 blockers: []
-next_action: "S3: decidir paquete único vs monorepo y framework de pruebas (node:test vs vitest); crear package.json, tsconfig estricto, lint/format, code_roots en schema.yaml e integrar npm test en scripts/check. Incluir spec/ en files del paquete."
+next_action: "S3 executed: falta revisión change-verifier (EDR-006, scripts/check, CI) y ejecución real del workflow en GitHub; luego S3 verified y empezar S4 (serializador canónico + validación Ajv; convertir corpus spec/format/examples en pruebas Vitest, cierra H12)."
 stages:
   - id: S1
     name: "Decisiones aceptadas y modelo estructural registrado"
@@ -19,8 +19,8 @@ stages:
     evidence: "2026-10-14 spec/format/README.md + schema/1.0 (defs, ai-submind, model, layout) compilan en Ajv 8.20.0 Ajv2020 strict. Prototipo desechable (scratchpad check.mjs: schema + pasada referencial + canonicalizador): valid/garaje 0 hallazgos e idempotente; 32/32 casos invalid/ con exactamente el conjunto de códigos esperado; canonical/input reescrito = canonical/expected. Revisión independiente change-verifier: aprobado con observaciones (H1-H12), corregidas H1-H11; H12 reproducibilidad pendiente hasta S4. Ficha API-004. scripts/check: entorno 0/0; modelo 87 elementos 0 errores 0 advertencias; 42 pruebas OK."
   - id: S3
     name: "Andamiaje del paquete TypeScript, pruebas y code_roots"
-    status: ready
-    evidence: ""
+    status: executed
+    evidence: "2026-10-14 DEC-008 (paquete único, Vitest 5.0.4, ESLint 10.12.0 + typescript-eslint 8.71.2, Prettier 3.9.10, TypeScript 6.0.3) y EDR-006 (scripts/check ejecuta npm run check; CI con setup-node + npm ci, aprobado por el usuario como G3). npm ci + scripts/check: entorno 0/0; modelo 0/0; 42 pruebas herramientas OK; producto typecheck+lint+formato OK, 1 prueba Vitest OK. npm run build genera dist/; node dist/cli/main.js imprime ai-submind. Negativos: sin node_modules → exit 1 con 'npm ci'; error de tipos en src/ → exit 1. code_roots [src/]. Build de UI diferido a S9 (sin código de UI)."
   - id: S4
     name: "Núcleo de formato: serialización canónica y validación"
     status: proposed
@@ -181,7 +181,7 @@ S11 tras S9/S10; S12 tras S7..S11.
 - Un archivo por modelo aumenta conflictos de merge → mitigado en S10, merge driver en plan posterior.
 - Licencia de ai-submind sin definir (afecta publicación, no desarrollo).
 - Daemon: procesos huérfanos y puertos → pruebas en S7.
-- Dudas abiertas por etapa (de fichas `uncertainties`): S3 paquete único vs monorepo, framework de pruebas; S7 apagado del daemon, puerto, entrega del token al navegador; S8 si MCP puede modificar layout, init implícito en primera escritura; REQ-027 dry_run y NFR-007 umbrales sin confirmar.
+- Dudas abiertas por etapa (de fichas `uncertainties`): S7 apagado del daemon, puerto, entrega del token al navegador; S8 si MCP puede modificar layout, init implícito en primera escritura; REQ-027 dry_run y NFR-007 umbrales sin confirmar.
 
 ## Bitácora
 - 2026-10-14 · creado tras task-intake, REP-003 y respuestas del usuario (archivos, IDs, proceso, stack).
@@ -192,5 +192,7 @@ S11 tras S9/S10; S12 tras S7..S11.
 
 - 2026-10-14 · S2: usuario decide IDs globales simples (refs entre modelos sin cualificar), versión posterior → solo lectura, extensiones v1 `documentation`, `tags`, `code_refs`, `stereotypes`. Spec en `spec/format/`, `format_version` `MAYOR.MENOR` por archivo. Desviaciones de UMJ en spec §12. Nueva API-004; uncertainties resueltas en DEC-002/003, ENT-001..005, VAL-002/003/004/007, NFR-011 (active), FEAT-003.
 - 2026-10-14 · S2 revisada por change-verifier: aprobado con observaciones. Corregido en spec: versión posterior → lectura tolerante en solo lectura (H1), reglas entre fases (H2), reglas de `rename` con cascada de prefijo, `RENAME_COLLISION`/`RENAME_BLOCKED` (H3, entrada de S5), derivación NFC/recortes/truncado (H4), mapeo `CODE_REF_INVALID` y `codes` como conjunto (H5), `visibility` (H6), escapes y orden en §9 (H7), patrón estricto de `code_refs.path` (H8); fichas REQ-009, DEC-002, ENT-002, ENT-004 (H9); corpus ampliado con kinds found/unknown, indicadores, style.text y 4 casos inválidos (H10); `UMJ.pdf` en `.git/info/exclude` (H11). H12: el corpus solo se comprueba con un prototipo del scratchpad hasta que S4 lo convierta en pruebas versionadas.
+
+- 2026-10-14 · S3: usuario elige paquete único, Vitest y ESLint + typescript-eslint + Prettier (DEC-008) y aprueba el cambio de CI (EDR-006, G3). Build de UI con Vite diferido a S9; herramienta de ciclos (NFR-008) diferida a S4. `"private": true` hasta S12.
 
 ## Resultado (al cerrar)

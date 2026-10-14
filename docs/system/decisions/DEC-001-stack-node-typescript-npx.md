@@ -11,7 +11,6 @@ relations:
   affects: [REQ-001, REQ-002, NFR-001, NFR-008, FEAT-001, ENT-001, API-003]
   supersedes: []
 uncertainties:
-  - "Gestor de paquetes y estructura del repo (paquete único vs monorepo con workspaces) se fija en PLAN-002 S1."
   - "Licencia de ai-submind sin definir."
 ---
 
@@ -36,6 +35,7 @@ uncertainties:
 - Directorio de conocimiento: `<raíz>/knowledge` por defecto, configurable con `--knowledge <dir>`;
   siempre confinado dentro de la raíz.
 - Módulos propios, desacoplados por interfaces (núcleo de formato, motor, consultas, MCP, servidor HTTP, UI).
+  Estructura (paquete único, npm) y herramientas de desarrollo: DEC-008.
 
 ## Consecuencias
 - Positivas: una sola lengua en todo el stack; distribución trivial.

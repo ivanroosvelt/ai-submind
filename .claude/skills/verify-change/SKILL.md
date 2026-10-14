@@ -14,7 +14,7 @@ Descripción del cambio, criterios de aceptación, rango de Git o lista de archi
 1. **Alcance**: `git status --short` y `git diff --stat` (o el rango indicado). Comparar con lo que
    se dijo que se cambió; cualquier archivo inesperado se explica o se revierte (con permiso).
 2. **Pruebas del producto**: ejecutar las pertinentes con las herramientas del proyecto
-   (si aún no existen, declararlo: CAP-012).
+   (`npm test`; las ejecuta también `scripts/check` vía `npm run check`, DEC-008).
 3. **Estáticos**: tipos, lint, formato, build, si el stack los tiene.
 4. **Validadores**: `scripts/check` (añadir `--strict` al cerrar planes T2).
    Si el cambio tocó código del producto: `scripts/validate-system-model --since <base>`.
