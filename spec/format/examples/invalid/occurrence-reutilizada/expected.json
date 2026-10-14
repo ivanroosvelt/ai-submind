@@ -1,6 +1,0 @@
-{
-  "description": "Dos mensajes usan la misma occurrence specification",
-  "codes": [
-    "OCCURRENCE_REUSED"
-  ]
-}

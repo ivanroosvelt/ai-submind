@@ -1,6 +1,0 @@
-{
-  "description": "Versión 2.0, posterior a la soportada: lectura tolerante en solo lectura",
-  "codes": [
-    "FORMAT_VERSION_UNSUPPORTED"
-  ]
-}

@@ -1,0 +1,6 @@
+{
+  "description": "Key not defined in the schema",
+  "codes": [
+    "SCHEMA_VIOLATION"
+  ]
+}

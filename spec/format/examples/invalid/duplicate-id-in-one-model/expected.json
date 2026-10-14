@@ -1,0 +1,6 @@
+{
+  "description": "Class and interface with the same id in one model",
+  "codes": [
+    "ID_DUPLICATE"
+  ]
+}

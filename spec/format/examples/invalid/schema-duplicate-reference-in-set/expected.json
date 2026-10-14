@@ -1,0 +1,6 @@
+{
+  "description": "Package listing the same member twice (members is a set)",
+  "codes": [
+    "SCHEMA_VIOLATION"
+  ]
+}

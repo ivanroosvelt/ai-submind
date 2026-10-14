@@ -1,0 +1,103 @@
+{
+  "format_version": "1.0",
+  "id": "sequence",
+  "name": "Sequence",
+  "elements": {
+    "interactions": [
+      {
+        "id": "Order",
+        "name": "Order",
+        "visibility": "public",
+        "lifelines": [
+          {
+            "id": "Order.server",
+            "name": "server"
+          },
+          {
+            "id": "Order.client",
+            "name": ""
+          }
+        ],
+        "messages": [
+          {
+            "id": "Order.ack",
+            "name": "ack",
+            "sort": "reply",
+            "kind": "lost",
+            "send_event": {"idref": "Order.ack.send"}
+          },
+          {
+            "id": "Order.place",
+            "name": "place",
+            "sort": "synch_call",
+            "kind": "complete",
+            "arguments": [
+              "qty",
+              "sku"
+            ],
+            "send_event": {"idref": "Order.place.send"},
+            "receive_event": {"idref": "Order.place.receive"}
+          }
+        ],
+        "fragments": [
+          {
+            "id": "Order.place.send",
+            "type": "occurrence",
+            "covered": {"idref": "Order.client"}
+          },
+          {
+            "id": "Order.opt",
+            "type": "combined_fragment",
+            "operator": "opt",
+            "covered": [
+              {"idref": "Order.client"},
+              {"idref": "Order.server"}
+            ],
+            "operands": [
+              {
+                "id": "Order.opt.op1",
+                "guard": "[stock]",
+                "fragments": [
+                  {
+                    "id": "Order.place.receive",
+                    "type": "occurrence",
+                    "covered": {"idref": "Order.server"}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "Order.ref--Pay",
+            "type": "interaction_use",
+            "covered": [
+              {"idref": "Order.client"},
+              {"idref": "Order.server"}
+            ],
+            "interaction": {"idref": "Pay"}
+          },
+          {
+            "id": "Order.ack.send",
+            "type": "occurrence",
+            "covered": {"idref": "Order.server"}
+          }
+        ]
+      },
+      {
+        "id": "Pay",
+        "name": "Pay",
+        "visibility": "public"
+      }
+    ]
+  },
+  "diagrams": [
+    {
+      "id": "order-flow",
+      "kind": "sequence",
+      "name": "Order flow",
+      "elements": [
+        {"idref": "Order"}
+      ]
+    }
+  ]
+}

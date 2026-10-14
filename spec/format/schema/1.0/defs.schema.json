@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ai-submind:format:1.0:defs",
-  "title": "ai-submind 1.0 · definiciones comunes",
+  "title": "ai-submind 1.0 · common definitions",
   "$defs": {
     "formatVersion": {
       "type": "string",

@@ -1,0 +1,6 @@
+{
+  "description": "visibility outside the enumeration",
+  "codes": [
+    "SCHEMA_VIOLATION"
+  ]
+}

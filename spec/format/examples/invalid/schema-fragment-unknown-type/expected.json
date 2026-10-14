@@ -1,0 +1,6 @@
+{
+  "description": "Fragment with an unknown type",
+  "codes": [
+    "SCHEMA_VIOLATION"
+  ]
+}

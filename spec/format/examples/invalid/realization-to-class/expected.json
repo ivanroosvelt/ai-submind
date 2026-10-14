@@ -1,0 +1,6 @@
+{
+  "description": "Realization whose supplier is a class, not an interface",
+  "codes": [
+    "REF_TYPE_MISMATCH"
+  ]
+}

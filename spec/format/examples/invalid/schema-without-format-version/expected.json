@@ -1,0 +1,6 @@
+{
+  "description": "Model without format_version",
+  "codes": [
+    "SCHEMA_VIOLATION"
+  ]
+}

@@ -1,424 +1,429 @@
-# Formato de conocimiento ai-submind · versión 1.0
+# ai-submind knowledge format · version 1.0
 
-Especificación normativa del contenido de `knowledge/` que gestiona ai-submind. Los JSON Schema
-2020-12 de [`schema/1.0/`](schema/1.0/) son la fuente canónica de la **estructura** (claves, tipos,
-enumeraciones y orden de claves); este documento es la fuente canónica de la **semántica**
-(identificadores, referencias, reglas de coherencia, serialización canónica y versionado).
+Normative specification of the contents of `knowledge/` managed by ai-submind. The JSON Schema
+2020-12 files in [`schema/1.0/`](schema/1.0/) are the canonical source of the **structure** (keys, types,
+enumerations and key order); this document is the canonical source of the **semantics**
+(identifiers, references, consistency rules, canonical serialization and versioning).
 
-Las palabras **debe**, **no debe** y **puede** son normativas.
+The words **must**, **must not** and **may** are normative.
 
-## 1. Origen y cita
+## 1. Origin and citation
 
-El formato se deriva de UMJ (*UML JSON*), propuesto en:
+The format is derived from UMJ (*UML JSON*), proposed in:
 
-> Malanowska, A. y Pawłowski, F. (2026). *Unifying Non-Uniform Formats of UML Model Interchange Using
+> Malanowska, A. and Pawłowski, F. (2026). *Unifying Non-Uniform Formats of UML Model Interchange Using
 > JSON*. Proceedings of the 21st International Conference on Evaluation of Novel Approaches to Software
 > Engineering (ENASE 2026), pp. 394–401. SciTePress. DOI
 > [10.5220/0014828700004015](https://doi.org/10.5220/0014828700004015).
 
-Ese trabajo se publica bajo CC BY-NC-ND 4.0; esta especificación no reproduce su texto ni sus tablas:
-toma sus ideas (identificadores con `id` y referencias `{"idref": ...}`, el modelo como raíz y dueño de
-las relaciones, el orden de eventos de una interacción dado por el orden del array, los diagramas como
-conjuntos de referencias) y las redefine con palabras propias, adaptadas a ai-submind. Las diferencias
-se listan en la §12. Decisiones del producto que la sustentan: DEC-002 (formato) y DEC-003 (IDs).
+That work is published under CC BY-NC-ND 4.0; this specification does not reproduce its text or its tables:
+it takes its ideas (identifiers with `id` and references `{"idref": ...}`, the model as the root and owner of
+the relationships, the event order of an interaction given by the array order, diagrams as
+sets of references) and redefines them in its own words, adapted to ai-submind. The differences
+are listed in §12. Product decisions that support it: DEC-002 (format) and DEC-003 (IDs).
 
-## 2. Estructura de `knowledge/`
+## 2. Structure of `knowledge/`
 
 ```
 knowledge/
-  ai-submind.json             # manifiesto (§5)
-  models/<model-id>.json      # un archivo por modelo (§6)
-  layout/<diagram-id>.json    # un archivo por diagrama con layout (§8)
-  .ai-submind/                # derivados locales; ignorado por git y por el validador
+  ai-submind.json             # manifest (§5)
+  models/<model-id>.json      # one file per model (§6)
+  layout/<diagram-id>.json    # one file per diagram with layout (§8)
+  .ai-submind/                # local derived data; ignored by git and by the validator
 ```
 
-- El nombre de cada archivo de modelo **debe** ser `<id del modelo>.json`; el de layout,
-  `<id del diagrama>.json` (`FILE_ID_MISMATCH`).
-- Cualquier otro archivo o directorio fuera de `.ai-submind/` produce el aviso `UNKNOWN_FILE`.
-- Todos los archivos son JSON en UTF-8 sin BOM (§9).
+- The name of each model file **must** be `<model id>.json`; that of a layout file,
+  `<diagram id>.json` (`FILE_ID_MISMATCH`).
+- Any other file or directory outside `.ai-submind/` produces the warning `UNKNOWN_FILE`.
+- All files are JSON in UTF-8 without BOM (§9).
 
-## 3. Identificadores
+## 3. Identifiers
 
-### 3.1 Gramática
+### 3.1 Grammar
 
-Hay dos clases de ID, ambas en un **único espacio de nombres global** para todo `knowledge/`: no puede
-haber dos elementos, modelos ni diagramas con el mismo `id`, aunque estén en archivos distintos
-(`ID_DUPLICATE`). La comparación distingue mayúsculas.
+There are two classes of ID, both in a **single global namespace** for the whole of `knowledge/`: there
+cannot be two elements, models or diagrams with the same `id`, even if they are in different files
+(`ID_DUPLICATE`). Comparison is case-sensitive.
 
-| Clase | Usada por | Expresión regular (ECMA-262, flag `u`) | Longitud |
-|-------|-----------|----------------------------------------|----------|
-| ID de archivo | modelos y diagramas | `^[a-z0-9]+(-[a-z0-9]+)*$` | 1..64 |
-| ID de elemento | todo lo demás | `^[\p{L}\p{N}_$]([\p{L}\p{N}_$().-]*[\p{L}\p{N}_$)])?$`, sin `..` | 1..256 |
+| Class | Used by | Regular expression (ECMA-262, flag `u`) | Length |
+|-------|---------|-----------------------------------------|--------|
+| file ID | models and diagrams | `^[a-z0-9]+(-[a-z0-9]+)*$` | 1..64 |
+| element ID | everything else | `^[\p{L}\p{N}_$]([\p{L}\p{N}_$().-]*[\p{L}\p{N}_$)])?$`, without `..` | 1..256 |
 
-- Los ID de archivo se limitan a ASCII en minúsculas porque nombran archivos (sistemas de archivos que no
-  distinguen mayúsculas, portabilidad entre sistemas operativos).
-- Los caracteres `:`, `/`, `#`, `@` y los espacios quedan reservados para usos futuros
-  (p. ej. caminos o referencias cualificadas) y no se admiten.
-- Todo ID de archivo cumple también la gramática de ID de elemento.
+- File IDs are restricted to lowercase ASCII because they name files (case-insensitive file systems,
+  portability across operating systems).
+- The characters `:`, `/`, `#`, `@` and spaces are reserved for future use
+  (e.g. paths or qualified references) and are not allowed.
+- Every file ID also satisfies the element ID grammar.
 
-### 3.2 Estabilidad
+### 3.2 Stability
 
-- El `id` es estable: cambiar `name` **no** cambia el `id`.
-- Cambiar un `id` solo es válido mediante la operación `rename` del motor, que reescribe en una sola
-  transacción todas las referencias (modelos, diagramas, claves de layout y nombres de archivo).
-  Una edición manual que cambie un `id` deja referencias rotas que el validador informa; nunca se
-  reparan en silencio.
-- Reglas de `rename(viejo, nuevo)`:
-  - **Ámbito**: también se renombran los ID que empiezan por `viejo.` (atributos, operaciones, parámetros,
-    extremos, lifelines, mensajes, fragmentos…), sustituyendo ese prefijo por `nuevo.`. Los ID de relaciones
-    derivados que mencionan `viejo` en otra posición (p. ej. `Truck--extends--Car`) **no** cambian: son
-    estables y opacos tras su creación.
-  - **Colisión**: si `nuevo` o cualquier ID resultante ya existe, la operación falla (`RENAME_COLLISION`) y
-    no escribe nada.
-  - **Bloqueo**: si algún documento de `knowledge/` no está cargado como escribible (`conflicted`,
-    `invalid_parse`, `SCHEMA_VIOLATION` o solo lectura por versión), la operación falla
-    (`RENAME_BLOCKED`): no puede garantizarse que no contenga referencias.
-  - `nuevo` debe cumplir la gramática de su clase de ID (§3.1).
-- Los identificadores de herramientas externas (importaciones) se conservan en `external_id` (§7.1).
+- The `id` is stable: changing `name` does **not** change the `id`.
+- Changing an `id` is only valid through the engine's `rename` operation, which rewrites in a single
+  transaction all references (models, diagrams, layout keys and file names).
+  A manual edit that changes an `id` leaves broken references that the validator reports; they are never
+  repaired silently.
+- Rules of `rename(old, new)`:
+  - **Scope**: IDs that start with `old.` (attributes, operations, parameters, ends, lifelines, messages,
+    fragments…) are also renamed, replacing that prefix with `new.`. Derived relationship IDs that mention
+    `old` in another position (e.g. `Truck--extends--Car`) do **not** change: they are stable and opaque
+    after their creation.
+  - **Collision**: if `new` or any resulting ID already exists, the operation fails (`RENAME_COLLISION`) and
+    writes nothing.
+  - **Blocking**: if any document of `knowledge/` is not loaded as writable (`conflicted`,
+    `invalid_parse`, `SCHEMA_VIOLATION` or read-only because of its version), the operation fails
+    (`RENAME_BLOCKED`): it cannot be guaranteed that it contains no references.
+  - `new` must satisfy the grammar of its ID class (§3.1).
+- Identifiers from external tools (imports) are preserved in `external_id` (§7.1).
 
-### 3.3 Derivación (normativa para el motor al crear elementos sin `id` explícito)
+### 3.3 Derivation (normative for the engine when creating elements without an explicit `id`)
 
-Funciones auxiliares:
+Helper functions:
 
-- `seg(texto)`: normaliza a NFC, sustituye cada secuencia de espacios en blanco por `_`, elimina los
-  caracteres que no sean letra (`\p{L}`), dígito (`\p{N}`), `_`, `$` o `-`, y recorta los `-` del final;
-  si el resultado está vacío o empieza por `-`, antepone `_`.
-- `slug(texto)`: descompone en NFD, elimina diacríticos, pasa a minúsculas, sustituye cada secuencia de
-  caracteres fuera de `[a-z0-9]` por `-`, trunca a 64 caracteres y después recorta los `-` de los extremos.
-- Todo ID se escribe en NFC; la gramática (§3.1) rechaza marcas combinantes sueltas, por lo que un ID en NFD
-  falla la validación de schema.
-- Si un ID compuesto supera 256 caracteres, se trunca su último segmento derivado (sin tocar `()` ni el
-  prefijo del dueño) hasta que quepa, contando el posible sufijo de colisión, y se recortan los `-` finales.
+- `seg(text)`: normalizes to NFC, replaces each run of whitespace with `_`, removes the characters that
+  are not a letter (`\p{L}`), digit (`\p{N}`), `_`, `$` or `-`, and trims trailing `-`;
+  if the result is empty or starts with `-`, prepends `_`.
+- `slug(text)`: decomposes into NFD, removes diacritics, lowercases, replaces each run of characters
+  outside `[a-z0-9]` with `-`, truncates to 64 characters and then trims `-` at both ends.
+- Every ID is written in NFC; the grammar (§3.1) rejects stray combining marks, so an ID in NFD
+  fails schema validation.
+- If a compound ID exceeds 256 characters, its last derived segment is truncated (without touching `()` or the
+  owner prefix) until it fits, counting the possible collision suffix, and trailing `-` are trimmed.
 
-| Elemento | ID derivado | Ejemplo |
-|----------|-------------|---------|
-| modelo, diagrama | `slug(name)` (vacío → `model` / `diagram`) | `garaje`, `vista-general` |
-| paquete, actor, clase, interfaz, data type, enumeración, primitive type, interacción | `seg(name)` | `Car`, `RentCar` |
-| atributo | `<dueño>.<seg(name)>` | `Car.yearOfProduction` |
-| operación | `<dueño>.<seg(name)>()` | `Car.start()` |
-| parámetro | `<operación>.<seg(name)>` | `Car.refuel().liters` |
-| asociación con nombre / sin nombre | `seg(name)` / `<end1.element>--<end2.element>` | `Garage--Car` |
-| extremos de asociación | `<asociación>.end1`, `<asociación>.end2` | `Garage--Car.end1` |
-| generalización | `<specific>--extends--<general>` | `Truck--extends--Car` |
-| realización | `<client>--implements--<supplier>` | `Car--implements--Drivable` |
-| dependencia con nombre / sin nombre | `seg(name)` / `<client>--uses--<supplier>` | `Garage--uses--Mechanic` |
-| lifeline | `<interacción>.<seg(name)>` (nombre vacío → `seg` del nombre del clasificador representado, o `lifeline`) | `RentCar.car` |
-| mensaje | `<interacción>.<seg(name)>` (vacío → `msg`) | `RentCar.start` |
-| occurrence specification de un mensaje | `<mensaje>.send` / `<mensaje>.receive` | `RentCar.start.send` |
-| otra occurrence specification | `<interacción>.occ` | |
-| combined fragment | `<interacción>.<operator>` | `RentCar.opt` |
-| interaction operand | `<fragmento>.op<n>` (n = posición al crearlo, desde 1; no se renumera) | `RentCar.opt.op1` |
-| interaction use | `<interacción>.ref--<interacción usada>` | `RentCar.ref--Payment` |
+| Element | Derived ID | Example |
+|---------|------------|---------|
+| model, diagram | `slug(name)` (empty → `model` / `diagram`) | `garage`, `overview` |
+| package, actor, class, interface, data type, enumeration, primitive type, interaction | `seg(name)` | `Car`, `RentCar` |
+| attribute | `<owner>.<seg(name)>` | `Car.yearOfProduction` |
+| operation | `<owner>.<seg(name)>()` | `Car.start()` |
+| parameter | `<operation>.<seg(name)>` | `Car.refuel().liters` |
+| named / unnamed association | `seg(name)` / `<end1.element>--<end2.element>` | `Garage--Car` |
+| association ends | `<association>.end1`, `<association>.end2` | `Garage--Car.end1` |
+| generalization | `<specific>--extends--<general>` | `Truck--extends--Car` |
+| realization | `<client>--implements--<supplier>` | `Car--implements--Drivable` |
+| named / unnamed dependency | `seg(name)` / `<client>--uses--<supplier>` | `Garage--uses--Mechanic` |
+| lifeline | `<interaction>.<seg(name)>` (empty name → `seg` of the name of the represented classifier, or `lifeline`) | `RentCar.car` |
+| message | `<interaction>.<seg(name)>` (empty → `msg`) | `RentCar.start` |
+| occurrence specification of a message | `<message>.send` / `<message>.receive` | `RentCar.start.send` |
+| other occurrence specification | `<interaction>.occ` | |
+| combined fragment | `<interaction>.<operator>` | `RentCar.opt` |
+| interaction operand | `<fragment>.op<n>` (n = position when created, from 1; never renumbered) | `RentCar.opt.op1` |
+| interaction use | `<interaction>.ref--<used interaction>` | `RentCar.ref--Payment` |
 
-Colisiones: si el ID derivado ya existe, se añade `-2`, `-3`, … (el menor libre) al final del último
-segmento, antes de `()` si lo hay: `Car-2`, `Car.start-2()`. La derivación solo se aplica al crear; nunca
-se recalcula.
+Collisions: if the derived ID already exists, `-2`, `-3`, … (the lowest free one) is appended to the end of the last
+segment, before `()` if present: `Car-2`, `Car.start-2()`. Derivation only applies on creation; it is never
+recomputed.
 
-## 4. Referencias
+## 4. References
 
-- Una referencia es siempre un objeto `{"idref": "<id>"}` y nada más. Esta forma uniforme permite encontrar
-  todas las referencias de un documento sin conocer su tipo (lo usa `rename`).
-- Toda referencia **debe** resolver a un `id` existente en `knowledge/` (`REF_UNRESOLVED`) y de un tipo
-  admitido por la clave que la contiene (`REF_TYPE_MISMATCH`; tabla en §10.2).
-- Como los ID son globales, una referencia puede apuntar a un elemento de **otro modelo** sin sintaxis
-  adicional (p. ej. tipos primitivos compartidos en un modelo `tipos`).
-- Las claves de los mapas de layout (§8) son ID, no objetos `idref`; `rename` también las reescribe.
+- A reference is always an object `{"idref": "<id>"}` and nothing else. This uniform shape makes it possible to
+  find all references of a document without knowing its type (`rename` relies on it).
+- Every reference **must** resolve to an existing `id` in `knowledge/` (`REF_UNRESOLVED`) of a type
+  allowed by the key that contains it (`REF_TYPE_MISMATCH`; table in §10.2).
+- Since IDs are global, a reference may point to an element of **another model** without additional
+  syntax (e.g. primitive types shared in a `types` model).
+- The keys of layout maps (§8) are IDs, not `idref` objects; `rename` rewrites them too.
 
-## 5. Manifiesto `ai-submind.json`
+## 5. Manifest `ai-submind.json`
 
 Schema: [`ai-submind.schema.json`](schema/1.0/ai-submind.schema.json).
 
-| Clave | Tipo | Oblig. | Significado |
-|-------|------|--------|-------------|
-| `format_version` | texto `MAYOR.MENOR` | sí | versión del formato del manifiesto (§11) |
-| `name` | texto | no | nombre legible del proyecto de conocimiento |
-| `documentation` | texto | no | descripción libre en Markdown |
+| Key | Type | Req. | Meaning |
+|-----|------|------|---------|
+| `format_version` | text `MAJOR.MINOR` | yes | format version of the manifest (§11) |
+| `name` | text | no | human-readable name of the knowledge project |
+| `documentation` | text | no | free description in Markdown |
 
-Su presencia indica que `knowledge/` está inicializado. `ai-submind init` lo crea y nunca lo sobrescribe.
+Its presence indicates that `knowledge/` is initialized. `ai-submind init` creates it and never overwrites it.
 
-## 6. Modelo (`models/<model-id>.json`)
+## 6. Model (`models/<model-id>.json`)
 
-Schema: [`model.schema.json`](schema/1.0/model.schema.json). Las tablas resumen la semántica; tipos,
-obligatoriedad y orden exacto de claves están en el schema.
+Schema: [`model.schema.json`](schema/1.0/model.schema.json). The tables summarize the semantics; types,
+requiredness and exact key order are in the schema.
 
-### 6.1 Convenciones comunes
+### 6.1 Common conventions
 
-- **Elemento con nombre**: lleva `name` (texto no vacío, salvo en lifelines y mensajes, donde puede estar vacío) y, si el schema lo
-  exige, `visibility` ∈ `public`, `private`, `protected`, `package`.
-- **Valor desconocido**: un campo opcional ausente significa *no especificado*. No se imponen valores por
-  defecto (un `is_static` ausente no significa `false`). El lector acepta también `null` explícito con el
-  mismo significado; la serialización canónica lo omite (§9).
-- **Colecciones**: una colección ausente equivale a vacía; la serialización canónica omite las vacías.
-- **Multiplicidad**: texto `n`, `n..m`, `n..*` o `*` con `n ≤ m` (p. ej. `1`, `0..1`, `1..*`).
-- **Extensiones** (todo elemento con `id`, el modelo y los diagramas): ver §7.
+- **Named element**: has `name` (non-empty text, except in lifelines and messages, where it may be empty) and, if the schema
+  requires it, `visibility` ∈ `public`, `private`, `protected`, `package`.
+- **Unknown value**: an absent optional field means *unspecified*. No default values are imposed
+  (an absent `is_static` does not mean `false`). The reader also accepts an explicit `null` with the
+  same meaning; canonical serialization omits it (§9).
+- **Collections**: an absent collection is equivalent to an empty one; canonical serialization omits empty ones.
+- **Multiplicity**: text `n`, `n..m`, `n..*` or `*` with `n ≤ m` (e.g. `1`, `0..1`, `1..*`).
+- **Extensions** (every element with an `id`, the model and the diagrams): see §7.
 
-### 6.2 Raíz del modelo
+### 6.2 Model root
 
-| Clave | Contenido |
-|-------|-----------|
-| `format_version` | versión del formato (§11) |
-| `id`, `name`, `visibility` | ID de archivo, nombre, visibilidad opcional |
-| `elements` | objeto con las colecciones de la tabla 6.3; el modelo es dueño de todos sus elementos y relaciones |
-| `diagrams` | lista de diagramas (§6.6) |
+| Key | Contents |
+|-----|----------|
+| `format_version` | format version (§11) |
+| `id`, `name`, `visibility` | file ID, name, optional visibility |
+| `elements` | object with the collections of table 6.3; the model owns all its elements and relationships |
+| `diagrams` | list of diagrams (§6.6) |
 
-### 6.3 Colecciones de `elements`
+### 6.3 Collections of `elements`
 
-| Clave | Elemento | Contenido propio |
-|-------|----------|------------------|
-| `packages` | paquete | `members`: referencias a elementos de primer nivel que agrupa (no los posee) |
-| `actors` | actor | solo nombre (extensión: UMJ no tiene actores; se usan en lifelines y futuros casos de uso) |
-| `classes` | clase | `is_abstract`, `attributes`, `operations` |
-| `interfaces` | interfaz | `attributes`, `operations` |
+| Key | Element | Own contents |
+|-----|---------|--------------|
+| `packages` | package | `members`: references to the top-level elements it groups (it does not own them) |
+| `actors` | actor | name only (extension: UMJ has no actors; they are used in lifelines and future use cases) |
+| `classes` | class | `is_abstract`, `attributes`, `operations` |
+| `interfaces` | interface | `attributes`, `operations` |
 | `data_types` | data type | `attributes`, `operations` |
-| `enumerations` | enumeración | `literals`: lista ordenada de textos únicos |
-| `primitive_types` | tipo primitivo | `kind`: texto libre opcional con el tipo base de origen |
-| `associations` | asociación | `type` ∈ `association`, `aggregation`, `composition`; `direction` ∈ `directed`, `undirected`; `end1`, `end2` |
-| `generalizations` | generalización | `specific` (hijo), `general` (padre) |
-| `dependencies` | dependencia | `client` (depende), `supplier` (de quién depende), `name` opcional |
-| `realizations` | realización | `client` (clasificador que implementa), `supplier` (interfaz) |
-| `interactions` | interacción | `lifelines`, `messages`, `fragments` (§6.5) |
+| `enumerations` | enumeration | `literals`: ordered list of unique texts |
+| `primitive_types` | primitive type | `kind`: optional free text with the source base type |
+| `associations` | association | `type` ∈ `association`, `aggregation`, `composition`; `direction` ∈ `directed`, `undirected`; `end1`, `end2` |
+| `generalizations` | generalization | `specific` (child), `general` (parent) |
+| `dependencies` | dependency | `client` (depends), `supplier` (what it depends on), optional `name` |
+| `realizations` | realization | `client` (implementing classifier), `supplier` (interface) |
+| `interactions` | interaction | `lifelines`, `messages`, `fragments` (§6.5) |
 
-### 6.4 Características de clasificadores
+### 6.4 Classifier features
 
-| Elemento | Contenido |
-|----------|-----------|
-| atributo | `type` (ref), `multiplicity`, `default_value` (texto), indicadores `is_static`, `is_ordered`, `is_unique`, `is_read_only`, `is_derived`, `is_derived_union` |
-| operación | `parameters` (ordenada), `return_type` (ref), `exceptions` (refs), indicadores `is_static`, `is_abstract`, `is_query` |
-| parámetro | `direction` ∈ `in`, `out`, `inout`; `type` (ref), `multiplicity`, `default_value` |
-| extremo de asociación | `element` (ref, obligatorio), `role`, `multiplicity`, `navigability` (booleano), `visibility` |
+| Element | Contents |
+|---------|----------|
+| attribute | `type` (ref), `multiplicity`, `default_value` (text), flags `is_static`, `is_ordered`, `is_unique`, `is_read_only`, `is_derived`, `is_derived_union` |
+| operation | `parameters` (ordered), `return_type` (ref), `exceptions` (refs), flags `is_static`, `is_abstract`, `is_query` |
+| parameter | `direction` ∈ `in`, `out`, `inout`; `type` (ref), `multiplicity`, `default_value` |
+| association end | `element` (ref, required), `role`, `multiplicity`, `navigability` (boolean), `visibility` |
 
-Reglas:
-- Una asociación `directed` va de `end1` a `end2`.
-- En `aggregation` y `composition`, `end1` es el todo (lado del rombo) y `end2` la parte.
-- Las listas `attributes`, `operations`, `parameters` y `literals` son **ordenadas**: su orden es el de
-  presentación y no se reordena.
+Rules:
+- A `directed` association goes from `end1` to `end2`.
+- In `aggregation` and `composition`, `end1` is the whole (diamond side) and `end2` the part.
+- The lists `attributes`, `operations`, `parameters` and `literals` are **ordered**: their order is the
+  presentation order and is not reordered.
 
-### 6.5 Interacciones (secuencia)
+### 6.5 Interactions (sequence)
 
-| Elemento | Contenido |
-|----------|-----------|
-| lifeline | `name`, `represents` (ref opcional a clasificador o actor) |
-| mensaje | `name`, `sort`, `kind`, `arguments` (textos), `send_event`, `receive_event` (refs a occurrence specifications), `signature` (ref a operación) |
-| fragmento `occurrence` | `covered`: ref a una lifeline |
-| fragmento `combined_fragment` | `name` opcional, `operator`, `covered` (refs a lifelines), `operands` (ordenados) |
-| interaction operand | `guard` (texto opcional), `fragments` (ordenados) |
-| fragmento `interaction_use` | `name` opcional, `covered` (refs a lifelines), `interaction` (ref), `arguments` |
+| Element | Contents |
+|---------|----------|
+| lifeline | `name`, `represents` (optional ref to a classifier or actor) |
+| message | `name`, `sort`, `kind`, `arguments` (texts), `send_event`, `receive_event` (refs to occurrence specifications), `signature` (ref to an operation) |
+| `occurrence` fragment | `covered`: ref to a lifeline |
+| `combined_fragment` fragment | optional `name`, `operator`, `covered` (refs to lifelines), `operands` (ordered) |
+| interaction operand | `guard` (optional text), `fragments` (ordered) |
+| `interaction_use` fragment | optional `name`, `covered` (refs to lifelines), `interaction` (ref), `arguments` |
 
 - `sort` ∈ `synch_call`, `asynch_call`, `asynch_signal`, `create_message`, `delete_message`, `reply`.
-- `kind` ∈ `complete` (exige `send_event` y `receive_event`), `lost` (solo `send_event`),
-  `found` (solo `receive_event`), `unknown` (sin restricción).
+- `kind` ∈ `complete` (requires `send_event` and `receive_event`), `lost` (only `send_event`),
+  `found` (only `receive_event`), `unknown` (no restriction).
 - `operator` ∈ `alt`, `opt`, `par`, `loop`, `critical`, `neg`, `assert`, `strict`, `seq`, `ignore`,
-  `consider`, `break`. Los límites de `loop` se expresan en `guard` (p. ej. `[1..3]`).
-- Cada fragmento declara su clase en `type`. En cada instante ocurre un solo evento: el **orden de
-  `fragments`** (en la interacción y en cada operando) es el orden temporal y **no se reordena**.
-- `lifelines` es ordenada: su orden es el orden horizontal por defecto (el layout puede cambiarlo).
-- `messages` es un conjunto (ordenado por `id`): el orden temporal lo dan sus occurrence specifications.
-- Un mensaje síncrono sin respuesta es válido (no se exige `reply`).
+  `consider`, `break`. The bounds of `loop` are expressed in `guard` (e.g. `[1..3]`).
+- Each fragment declares its class in `type`. A single event occurs at each instant: the **order of
+  `fragments`** (in the interaction and in each operand) is the temporal order and **is not reordered**.
+- `lifelines` is ordered: its order is the default horizontal order (the layout may change it).
+- `messages` is a set (sorted by `id`): the temporal order is given by their occurrence specifications.
+- A synchronous message without a reply is valid (`reply` is not required).
 
-### 6.6 Diagramas
+### 6.6 Diagrams
 
-| Clave | Contenido |
-|-------|-----------|
-| `id`, `name` | ID de archivo (nombra su layout) y nombre |
-| `kind` | `class` o `sequence`; registro extensible por versión de formato |
-| `elements` | referencias a los elementos mostrados (conjunto) |
+| Key | Contents |
+|-----|----------|
+| `id`, `name` | file ID (names its layout) and name |
+| `kind` | `class` or `sequence`; registry extensible per format version |
+| `elements` | references to the elements shown (set) |
 
-- `class`: puede mostrar paquetes, actores, clases, interfaces, data types, enumeraciones, tipos
-  primitivos, asociaciones, generalizaciones, dependencias y realizaciones (`DIAGRAM_ELEMENT_NOT_ALLOWED`).
-  Atributos y operaciones se muestran con su clasificador.
-- `sequence`: exactamente una interacción; muestra todas sus lifelines, mensajes y fragmentos.
-- Un diagrama puede mostrar elementos de otros modelos (ID globales).
+- `class`: may show packages, actors, classes, interfaces, data types, enumerations, primitive
+  types, associations, generalizations, dependencies and realizations (`DIAGRAM_ELEMENT_NOT_ALLOWED`).
+  Attributes and operations are shown with their classifier.
+- `sequence`: exactly one interaction; shows all its lifelines, messages and fragments.
+- A diagram may show elements from other models (global IDs).
 
-## 7. Extensiones propias
+## 7. Own extensions
 
-### 7.1 Metadatos de elemento
+### 7.1 Element metadata
 
-Admitidas en todo elemento con `id`, en el modelo y en los diagramas; siempre opcionales.
+Allowed on every element with an `id`, on the model and on the diagrams; always optional.
 
-| Clave | Tipo | Uso |
-|-------|------|-----|
-| `stereotypes` | lista de textos únicos | estereotipos UML sin `«»` (p. ej. `entity`, `service`) |
-| `tags` | lista de textos únicos | etiquetas libres para filtrar y buscar |
-| `documentation` | texto Markdown | descripción para personas y agentes; entra en la búsqueda léxica |
-| `code_refs` | lista de `{path, symbol?}` | enlaces al código del repositorio anfitrión |
-| `external_id` | texto | ID original en una herramienta externa (DEC-003) |
+| Key | Type | Use |
+|-----|------|-----|
+| `stereotypes` | list of unique texts | UML stereotypes without `«»` (e.g. `entity`, `service`) |
+| `tags` | list of unique texts | free labels for filtering and searching |
+| `documentation` | Markdown text | description for people and agents; included in lexical search |
+| `code_refs` | list of `{path, symbol?}` | links to the code of the host repository |
+| `external_id` | text | original ID in an external tool (DEC-003) |
 
-`code_refs[].path` es una ruta relativa a la raíz del repositorio con `/` como separador y sin barra final;
-no puede empezar por `/` ni `~`, contener `:`, `\`, caracteres de control, segmentos vacíos (`//`) ni
-segmentos `.` o `..` (`CODE_REF_INVALID`). Los errores de schema dentro de `code_refs[].path` se informan
-con el código `CODE_REF_INVALID` en lugar de `SCHEMA_VIOLATION`. Si la ruta no existe se emite el aviso
-`CODE_REF_MISSING` (no bloquea: el código evoluciona por separado). `symbol` es opcional y libre
-(nombre de clase, función, etc.).
+`code_refs[].path` is a path relative to the repository root with `/` as separator and no trailing slash;
+it must not start with `/` or `~`, or contain `:`, `\`, control characters, empty segments (`//`) or
+`.` or `..` segments (`CODE_REF_INVALID`). Schema errors inside `code_refs[].path` are reported
+with the code `CODE_REF_INVALID` instead of `SCHEMA_VIOLATION`. If the path does not exist, the warning
+`CODE_REF_MISSING` is emitted (it does not block: code evolves separately). `symbol` is optional and free
+(name of a class, function, etc.).
 
 ### 7.2 Layout
 
-UMJ no define layout; ai-submind lo guarda aparte (§8) para que mover un nodo no ensucie el modelo.
+UMJ does not define layout; ai-submind stores it separately (§8) so that moving a node does not pollute the model.
 
 ## 8. Layout (`layout/<diagram-id>.json`)
 
 Schema: [`layout.schema.json`](schema/1.0/layout.schema.json).
 
-| Clave | Contenido |
-|-------|-----------|
-| `format_version` | versión (§11) |
-| `diagram` | ref al diagrama; debe coincidir con el nombre del archivo |
-| `nodes` | mapa `id → {x, y, width?, height?, style?}` |
-| `edges` | mapa `id → {vertices?, style?}`; `vertices` es la lista ordenada de puntos intermedios |
+| Key | Contents |
+|-----|----------|
+| `format_version` | version (§11) |
+| `diagram` | ref to the diagram; must match the file name |
+| `nodes` | map `id → {x, y, width?, height?, style?}` |
+| `edges` | map `id → {vertices?, style?}`; `vertices` is the ordered list of intermediate points |
 
-- Coordenadas y tamaños son enteros en píxeles de diagrama, |valor| ≤ 10 000 000; tamaños ≥ 1.
-- `style` admite `fill`, `stroke` y `text` como color `#rrggbb` en minúsculas.
-- Diagrama `class`: claves de `nodes` = paquetes, actores y clasificadores mostrados; claves de `edges` =
-  relaciones mostradas. Diagrama `sequence`: claves de `nodes` = lifelines (`x` y `width` fijan su
-  posición horizontal, `y` la cabecera, `height` la longitud); claves de `edges` = mensajes.
-- Una clave que no corresponde a un elemento mostrado es el aviso `LAYOUT_ORPHAN`, no un error.
-- Un elemento mostrado sin entrada de layout se coloca con el layout automático y no se persiste hasta que
-  una persona lo mueve.
-- El archivo no existe hasta la primera modificación del layout (REQ-010).
+- Coordinates and sizes are integers in diagram pixels, |value| ≤ 10 000 000; sizes ≥ 1.
+- `style` allows `fill`, `stroke` and `text` as a lowercase `#rrggbb` color.
+- `class` diagram: `nodes` keys = packages, actors and classifiers shown; `edges` keys =
+  relationships shown. `sequence` diagram: `nodes` keys = lifelines (`x` and `width` set their
+  horizontal position, `y` the header, `height` the length); `edges` keys = messages.
+- A key that does not correspond to an element shown is the warning `LAYOUT_ORPHAN`, not an error.
+- An element shown without a layout entry is placed by the automatic layout and is not persisted until
+  a person moves it.
+- The file does not exist until the first layout modification (REQ-010).
 
-## 9. Serialización canónica
+## 9. Canonical serialization
 
-Toda escritura del motor produce exactamente esta forma; leer y volver a escribir un documento canónico no
-produce diferencias.
+Every write by the engine produces exactly this form; reading and rewriting a canonical document produces
+no differences.
 
-1. UTF-8 sin BOM, fin de línea LF, salto de línea final, indentación de 2 espacios, separador `": "`;
-   sin espacios finales. Cada clave y cada elemento de array en su propia línea, salvo las referencias,
-   que se escriben en una sola línea: `{"idref": "Car"}`. Arrays y objetos vacíos que deban escribirse
-   (obligatorios) se escriben `[]` / `{}`.
-2. Orden de claves: el orden de `properties` en el schema del objeto; para un fragmento, el del subschema
-   concreto según su `type` (`occurrence`, `combinedFragment`, `interactionUse`). En mapas (`nodes`,
-   `edges`), claves ordenadas por punto de código.
-3. Se omiten las claves no obligatorias cuyo valor sea `null`, texto vacío (`""`), array vacío u objeto
-   vacío (incluidas las entradas vacías de `nodes`/`edges`). Las obligatorias se escriben siempre
-   (p. ej. `"name": ""` en una lifeline).
-4. Arrays **ordenados** (orden significativo, se conservan): `attributes`, `operations`, `parameters`,
+1. UTF-8 without BOM, LF line endings, final newline, 2-space indentation, separator `": "`;
+   no trailing whitespace. Each key and each array element on its own line, except references,
+   which are written on a single line: `{"idref": "Car"}`. Empty arrays and objects that must be written
+   (required) are written `[]` / `{}`.
+2. Key order: the order of `properties` in the object's schema; for a fragment, that of the concrete
+   subschema according to its `type` (`occurrence`, `combinedFragment`, `interactionUse`). In maps (`nodes`,
+   `edges`), keys sorted by code point.
+3. Non-required keys whose value is `null`, empty text (`""`), an empty array or an empty object are omitted
+   (including empty entries of `nodes`/`edges`). Required keys are always written
+   (e.g. `"name": ""` in a lifeline).
+4. **Ordered** arrays (significant order, preserved): `attributes`, `operations`, `parameters`,
    `literals`, `lifelines`, `fragments`, `operands`, `arguments`, `exceptions`, `vertices`.
-5. Arrays **conjunto** (se ordenan): colecciones de `elements`, `diagrams`, `messages` y las listas de
-   referencias `members`, `covered` y diagrama `elements` por `id`/`idref` en orden de punto de código;
-   `stereotypes` y `tags` por valor; `code_refs` por `path` y luego `symbol` (sin `symbol` va primero).
-   "Orden de punto de código" compara las cadenas por unidades UTF-16, como el operador `<` de ECMAScript.
-6. Números: enteros sin parte decimal ni exponente.
-7. Texto: el escape de `JSON.stringify` de ECMAScript: `\"`, `\\`, `\b`, `\f`, `\n`, `\r`, `\t`; los
-   demás caracteres de control U+0000–U+001F como `\u00xx` con hexadecimal en minúsculas; sustitutos
-   sueltos como `\udxxx`; el resto de Unicode (incluido U+007F) se escribe literal.
+5. **Set** arrays (sorted): collections of `elements`, `diagrams`, `messages` and the reference lists
+   `members`, `covered` and diagram `elements` by `id`/`idref` in code point order;
+   `stereotypes` and `tags` by value; `code_refs` by `path` and then `symbol` (without `symbol` comes first).
+   "Code point order" compares strings by UTF-16 code units, like the ECMAScript `<` operator.
+6. Numbers: integers without fractional part or exponent.
+7. Text: the escaping of ECMAScript `JSON.stringify`: `\"`, `\\`, `\b`, `\f`, `\n`, `\r`, `\t`; the
+   other control characters U+0000–U+001F as `\u00xx` with lowercase hexadecimal; lone
+   surrogates as `\udxxx`; the rest of Unicode (including U+007F) is written literally.
 
-## 10. Validación
+## 10. Validation
 
-### 10.1 Fases
+### 10.1 Phases
 
-1. **Archivo** (VAL-006): ruta dentro de `knowledge/`, UTF-8, sin marcadores de conflicto de Git
-   (líneas que empiezan por `<<<<<<<`, `=======` o `>>>>>>>`), JSON sintácticamente válido.
-2. **Versión** (VAL-004, §11).
-3. **Schema** (VAL-001): JSON Schema 2020-12 de la versión del documento.
-4. **Referencial y semántica** (VAL-002, VAL-003, VAL-005, VAL-007) sobre el conjunto de `knowledge/`.
+1. **File** (VAL-006): path inside `knowledge/`, UTF-8, no Git conflict markers
+   (lines starting with `<<<<<<<`, `=======` or `>>>>>>>`), syntactically valid JSON.
+2. **Version** (VAL-004, §11).
+3. **Schema** (VAL-001): JSON Schema 2020-12 of the document's version.
+4. **Referential and semantic** (VAL-002, VAL-003, VAL-005, VAL-007) over the whole of `knowledge/`.
 
-Reglas entre fases:
-- Un error de las fases 1 o 3 deja el documento **sin cargar**: no participa en la fase 4 ni en las
-  consultas, y las referencias a ID que solo existían en él se informan como `REF_UNRESOLVED`. El resto de
-  documentos sigue cargándose (REQ-036).
-- `FORMAT_VERSION_UNSUPPORTED` (fase 2) no detiene la carga: el documento pasa a **lectura tolerante**
-  (§11), queda en solo lectura y sí participa en la fase 4 (cuenta para `ID_DUPLICATE` y como destino de
-  referencias).
-- `FORMAT_VERSION_OUTDATED` es un aviso: el documento se valida con el schema de su propia versión.
-- Los avisos nunca impiden cargar ni escribir.
+Rules between phases:
+- An error in phase 1 or 3 leaves the document **not loaded**: it does not take part in phase 4 or in
+  queries, and references to IDs that only existed in it are reported as `REF_UNRESOLVED`. The other
+  documents are still loaded (REQ-036).
+- `FORMAT_VERSION_UNSUPPORTED` (phase 2) does not stop loading: the document switches to **tolerant reading**
+  (§11), becomes read-only and does take part in phase 4 (it counts for `ID_DUPLICATE` and as a reference
+  target).
+- `FORMAT_VERSION_OUTDATED` is a warning: the document is validated with the schema of its own version.
+- Warnings never prevent loading or writing.
 
-### 10.2 Tipos admitidos por referencia
+### 10.2 Types allowed per reference
 
-"Clasificador" = clase, interfaz, data type, enumeración o tipo primitivo.
+"Classifier" = class, interface, data type, enumeration or primitive type.
 
-| Clave | Admite |
-|-------|--------|
-| `packages[].members` | paquete, actor, clasificador, asociación, generalización, dependencia, realización, interacción |
-| `attributes[].type`, `parameters[].type`, `return_type`, `exceptions[]` | clasificador |
-| `end1.element`, `end2.element` | clasificador o actor |
-| `generalizations[].specific`, `.general` | clasificador o actor, ambos de la misma colección |
-| `realizations[].client` / `.supplier` | clase o data type / interfaz |
-| `dependencies[].client`, `.supplier` | cualquier elemento (no modelo ni diagrama) |
-| `lifelines[].represents` | clasificador o actor |
-| `messages[].send_event`, `.receive_event` | fragmento `occurrence` de la misma interacción |
-| `messages[].signature` | operación |
-| `covered` (cualquier fragmento) | lifeline de la misma interacción |
-| `interaction_use.interaction` | interacción distinta de la que lo contiene |
-| `diagrams[].elements` | según `kind` (§6.6) |
-| layout `diagram` | diagrama |
+| Key | Allows |
+|-----|--------|
+| `packages[].members` | package, actor, classifier, association, generalization, dependency, realization, interaction |
+| `attributes[].type`, `parameters[].type`, `return_type`, `exceptions[]` | classifier |
+| `end1.element`, `end2.element` | classifier or actor |
+| `generalizations[].specific`, `.general` | classifier or actor, both from the same collection |
+| `realizations[].client` / `.supplier` | class or data type / interface |
+| `dependencies[].client`, `.supplier` | any element (not a model or diagram) |
+| `lifelines[].represents` | classifier or actor |
+| `messages[].send_event`, `.receive_event` | `occurrence` fragment of the same interaction |
+| `messages[].signature` | operation |
+| `covered` (any fragment) | lifeline of the same interaction |
+| `interaction_use.interaction` | interaction other than the one containing it |
+| `diagrams[].elements` | according to `kind` (§6.6) |
+| layout `diagram` | diagram |
 
-### 10.3 Reglas semánticas
+### 10.3 Semantic rules
 
-- Un elemento pertenece como máximo a un paquete; sin ciclos de paquetes (`PACKAGE_MEMBERSHIP`).
-- Sin ciclos de generalización y `specific ≠ general` (`GENERALIZATION_CYCLE`).
-- Eventos de mensaje según `kind` (§6.5) (`MESSAGE_EVENTS`); una occurrence specification es evento de
-  como máximo un mensaje (`OCCURRENCE_REUSED`); la que no es evento de ningún mensaje genera el aviso
+- An element belongs to at most one package; no package cycles (`PACKAGE_MEMBERSHIP`).
+- No generalization cycles and `specific ≠ general` (`GENERALIZATION_CYCLE`).
+- Message events according to `kind` (§6.5) (`MESSAGE_EVENTS`); an occurrence specification is the event of
+  at most one message (`OCCURRENCE_REUSED`); one that is not the event of any message produces the warning
   `OCCURRENCE_UNUSED`.
-- Multiplicidad con `n ≤ m` (`MULTIPLICITY_INVALID`).
+- Multiplicity with `n ≤ m` (`MULTIPLICITY_INVALID`).
 
-### 10.4 Códigos
+### 10.4 Codes
 
-Formato del informe: `{code, severity, file, pointer, message}` con `pointer` en JSON Pointer (RFC 6901).
+Report format: `{code, severity, file, pointer, message}` with `pointer` as a JSON Pointer (RFC 6901).
 
-| Código | Severidad | Fase | Significado |
-|--------|-----------|------|-------------|
-| `PATH_OUTSIDE_KNOWLEDGE` | error | 1 | ruta fuera de `knowledge/` |
-| `FILE_ENCODING` | error | 1 | no es UTF-8 o tiene BOM |
-| `MERGE_CONFLICT` | error | 1 | marcadores de conflicto; documento `conflicted`, escrituras bloqueadas |
-| `JSON_PARSE` | error | 1 | JSON inválido; documento `invalid_parse` |
-| `FORMAT_VERSION_UNSUPPORTED` | error | 2 | versión mayor que la soportada; documento de solo lectura |
-| `FORMAT_VERSION_OUTDATED` | aviso | 2 | versión anterior soportada; migración explícita disponible |
-| `SCHEMA_VIOLATION` | error | 3 | no cumple el schema (incluye versión ausente o mal formada) |
-| `UNKNOWN_FILE` | aviso | 1 | archivo no previsto en `knowledge/` |
-| `FILE_ID_MISMATCH` | error | 4 | nombre de archivo ≠ `id` del modelo o `diagram` del layout |
-| `ID_DUPLICATE` | error | 4 | `id` repetido en `knowledge/`; se informan todas las apariciones |
-| `REF_UNRESOLVED` | error | 4 | referencia a un `id` inexistente |
-| `REF_TYPE_MISMATCH` | error | 4 | referencia a un tipo no admitido (§10.2) |
-| `DIAGRAM_ELEMENT_NOT_ALLOWED` | error | 4 | elemento no admitido por el `kind` del diagrama |
-| `PACKAGE_MEMBERSHIP` | error | 4 | elemento en varios paquetes o ciclo de paquetes |
-| `GENERALIZATION_CYCLE` | error | 4 | ciclo de generalización |
-| `MESSAGE_EVENTS` | error | 4 | eventos incompatibles con `kind` del mensaje |
-| `OCCURRENCE_REUSED` | error | 4 | occurrence specification usada por dos eventos |
-| `OCCURRENCE_UNUSED` | aviso | 4 | occurrence specification sin mensaje |
-| `MULTIPLICITY_INVALID` | error | 4 | límite inferior mayor que el superior |
-| `CODE_REF_INVALID` | error | 3 | ruta de `code_refs` absoluta o con `..` / `\` |
-| `CODE_REF_MISSING` | aviso | 4 | ruta de `code_refs` inexistente |
-| `LAYOUT_ORPHAN` | aviso | 4 | entrada de layout de un elemento no mostrado |
+| Code | Severity | Phase | Meaning |
+|------|----------|-------|---------|
+| `PATH_OUTSIDE_KNOWLEDGE` | error | 1 | path outside `knowledge/` |
+| `FILE_ENCODING` | error | 1 | not UTF-8 or has a BOM |
+| `MERGE_CONFLICT` | error | 1 | conflict markers; document `conflicted`, writes blocked |
+| `JSON_PARSE` | error | 1 | invalid JSON; document `invalid_parse` |
+| `FORMAT_VERSION_UNSUPPORTED` | error | 2 | version later than the supported one, or earlier without migration; read-only document |
+| `FORMAT_VERSION_OUTDATED` | warning | 2 | earlier supported version; explicit migration available |
+| `SCHEMA_VIOLATION` | error | 3 | does not satisfy the schema (includes a missing or malformed version) |
+| `UNKNOWN_FILE` | warning | 1 | unexpected file in `knowledge/` |
+| `FILE_ID_MISMATCH` | error | 4 | file name ≠ `id` of the model or `diagram` of the layout |
+| `ID_DUPLICATE` | error | 4 | `id` repeated in `knowledge/`; all occurrences are reported |
+| `REF_UNRESOLVED` | error | 4 | reference to a nonexistent `id` |
+| `REF_TYPE_MISMATCH` | error | 4 | reference to a type that is not allowed (§10.2) |
+| `DIAGRAM_ELEMENT_NOT_ALLOWED` | error | 4 | element not allowed by the diagram's `kind` |
+| `PACKAGE_MEMBERSHIP` | error | 4 | element in several packages or package cycle |
+| `GENERALIZATION_CYCLE` | error | 4 | generalization cycle |
+| `MESSAGE_EVENTS` | error | 4 | events incompatible with the message's `kind` |
+| `OCCURRENCE_REUSED` | error | 4 | occurrence specification used by two events |
+| `OCCURRENCE_UNUSED` | warning | 4 | occurrence specification without a message |
+| `MULTIPLICITY_INVALID` | error | 4 | lower bound greater than the upper bound |
+| `CODE_REF_INVALID` | error | 3 | `code_refs` path that is absolute or contains `..` / `\` |
+| `CODE_REF_MISSING` | warning | 4 | nonexistent `code_refs` path |
+| `LAYOUT_ORPHAN` | warning | 4 | layout entry for an element not shown |
 
-Códigos de operación (API, no de validación): `AMBIGUOUS_ID` (consulta sobre un `id` duplicado),
-`RENAME_COLLISION` y `RENAME_BLOCKED` (§3.2).
+Operation codes (API, not validation): `AMBIGUOUS_ID` (query on a duplicated `id`),
+`RENAME_COLLISION` and `RENAME_BLOCKED` (§3.2).
 
-## 11. Versionado
+## 11. Versioning
 
-- Cada archivo declara `format_version` = `MAYOR.MENOR`. Esta especificación define `1.0`.
-- Un cambio **menor** solo añade claves o valores opcionales; un cambio **mayor** puede romper.
-- Versión igual a la soportada → carga normal.
-- Versión anterior soportada → carga con aviso `FORMAT_VERSION_OUTDATED`; solo se actualiza mediante una
-  migración explícita (nunca al escribir por otro motivo).
-- Versión posterior a la soportada (mayor o menor) → `FORMAT_VERSION_UNSUPPORTED`: el documento se carga
-  siempre en **solo lectura** con **lectura tolerante**: se interpreta con el schema de la versión soportada
-  más alta ignorando claves y valores desconocidos (no se informan como `SCHEMA_VIOLATION`); los elementos
-  sin `id` válido o sin la forma mínima reconocible se descartan de las consultas. Toda escritura sobre el
-  documento se rechaza, y también las operaciones que tendrían que modificarlo (p. ej. `rename`).
-- Los documentos de `knowledge/` pueden tener versiones distintas entre sí; cada uno se evalúa por separado.
+- Each file declares `format_version` = `MAJOR.MINOR`. This specification defines `1.0`.
+- A **minor** change only adds optional keys or values; a **major** change may break.
+- Version equal to the supported one → normal load.
+- Earlier supported version → load with warning `FORMAT_VERSION_OUTDATED`; it is only updated through an
+  explicit migration (never when writing for another reason).
+- Earlier version that is not supported (no schema or migration; in 1.0, every `0.x` version) → treated
+  as a later version.
+- Version later than the supported one (major or minor) → `FORMAT_VERSION_UNSUPPORTED`: the document is always
+  loaded **read-only** with **tolerant reading**: it is interpreted with the schema of the highest supported
+  version, ignoring unknown keys and values (they are not reported as `SCHEMA_VIOLATION`); elements
+  without a valid `id` or without the minimal recognizable shape are dropped from queries. Every write to the
+  document is rejected, as are the operations that would have to modify it (e.g. `rename`).
+- The documents of `knowledge/` may have different versions from one another; each one is evaluated separately.
+- Migrations (planned, DEC-010): each version change ships a guide `migrations/<from>-to-<to>/` for agents and
+  people, with a before/after example; the explicit `migrate` operation is the only write allowed on a document
+  whose version is not writable.
 
-## 12. Diferencias respecto de UMJ
+## 12. Differences from UMJ
 
-| UMJ | ai-submind 1.0 | Motivo |
+| UMJ | ai-submind 1.0 | Reason |
 |-----|----------------|--------|
-| Un único documento con el modelo | un archivo por modelo + manifiesto + layout separado | diffs y merges en Git (DEC-002) |
-| ID arbitrarios de la herramienta de origen | ID legibles, globales, con derivación determinista; el original va a `external_id` | legibilidad y consultas (DEC-003) |
-| `null` explícito para valores desconocidos | ausencia (o `null`) = desconocido; la forma canónica omite | archivos compactos, mismo significado |
-| La clase lista sus `generalizations` e `interfaces` además del modelo | solo en `generalizations`/`realizations` del modelo; las inversas las calcula el motor | una sola fuente; sin incoherencias |
-| Paquete con `elements` por categorías | paquete con `members` (refs de cualquier tipo de primer nivel) | más simple; el tipo se resuelve por ID |
-| `visibility` en todos los elementos con nombre | obligatoria en paquetes, clasificadores, interacciones, atributos y operaciones; opcional en modelo, actor, asociación y extremo de asociación; ausente en generalización, dependencia, realización, parámetro, lifeline, mensaje, fragmentos y diagramas | pertinente en UML; menos ruido |
-| Indicadores de atributo también en operaciones | operación: `is_static`, `is_abstract`, `is_query` | solo los significativos |
-| `exceptions` como textos | referencias a clasificadores | integridad referencial |
-| Extremo de asociación con `name` y `role` | solo `role` | eran redundantes |
-| Sin actores | colección `actors` | lifelines de actores y futuros casos de uso |
-| Fragmentos distinguidos por su forma | clave `type` explícita | validación y errores precisos |
-| `class_diagrams` / `sequence_diagrams` con refs por categoría | `diagrams` con `kind` y `elements` | registro extensible de tipos de diagrama |
-| Diagrama de secuencia con varias interacciones | exactamente una | layout y render inequívocos |
-| Diagramas con `visibility` y `description` | sin `visibility`; `documentation` | coherencia con las extensiones |
-| Sin multiplicidad ni valor por defecto en atributos/parámetros | `multiplicity`, `default_value` | necesarios para clases útiles |
-| Sin layout | `layout/<diagram-id>.json` | requisito del visor (REQ-010) |
-| Agregación sin lado explícito | `end1` = todo | semántica inequívoca |
+| A single document with the model | one file per model + manifest + separate layout | diffs and merges in Git (DEC-002) |
+| Arbitrary IDs from the source tool | readable, global IDs with deterministic derivation; the original goes to `external_id` | readability and queries (DEC-003) |
+| Explicit `null` for unknown values | absence (or `null`) = unknown; the canonical form omits it | compact files, same meaning |
+| The class lists its `generalizations` and `interfaces` in addition to the model | only in the model's `generalizations`/`realizations`; the engine computes the inverses | a single source; no inconsistencies |
+| Package with `elements` by category | package with `members` (refs of any top-level type) | simpler; the type is resolved by ID |
+| `visibility` on every named element | required on packages, classifiers, interactions, attributes and operations; optional on model, actor, association and association end; absent on generalization, dependency, realization, parameter, lifeline, message, fragments and diagrams | relevant in UML; less noise |
+| Attribute flags also on operations | operation: `is_static`, `is_abstract`, `is_query` | only the meaningful ones |
+| `exceptions` as texts | references to classifiers | referential integrity |
+| Association end with `name` and `role` | `role` only | they were redundant |
+| No actors | `actors` collection | actor lifelines and future use cases |
+| Fragments distinguished by their shape | explicit `type` key | precise validation and errors |
+| `class_diagrams` / `sequence_diagrams` with refs by category | `diagrams` with `kind` and `elements` | extensible registry of diagram types |
+| Sequence diagram with several interactions | exactly one | unambiguous layout and rendering |
+| Diagrams with `visibility` and `description` | no `visibility`; `documentation` | consistency with the extensions |
+| No multiplicity or default value on attributes/parameters | `multiplicity`, `default_value` | needed for useful classes |
+| No layout | `layout/<diagram-id>.json` | requirement of the viewer (REQ-010) |
+| Aggregation without an explicit side | `end1` = whole | unambiguous semantics |
 
-## 13. Ejemplos
+## 13. Examples
 
-[`examples/`](examples/README.md): un `knowledge/` válido completo (garaje: todas las construcciones) y
-casos inválidos con el código esperado.
+[`examples/`](examples/README.md): a complete valid `knowledge/` (garage: every construct) and
+invalid cases with the expected code.

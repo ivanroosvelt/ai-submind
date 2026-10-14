@@ -1,0 +1,6 @@
+{
+  "description": "Multiplicity '1..'",
+  "codes": [
+    "SCHEMA_VIOLATION"
+  ]
+}

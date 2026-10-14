@@ -1,0 +1,6 @@
+{
+  "description": "Version 2.0, later than the supported one: tolerant reading in read-only mode",
+  "codes": [
+    "FORMAT_VERSION_UNSUPPORTED"
+  ]
+}

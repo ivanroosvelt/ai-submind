@@ -1,0 +1,6 @@
+{
+  "description": "Git conflict markers",
+  "codes": [
+    "MERGE_CONFLICT"
+  ]
+}

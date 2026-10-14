@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ai-submind:format:1.0:ai-submind",
-  "title": "ai-submind 1.0 · manifiesto (knowledge/ai-submind.json)",
+  "title": "ai-submind 1.0 · manifest (knowledge/ai-submind.json)",
   "type": "object",
   "required": [
     "format_version"

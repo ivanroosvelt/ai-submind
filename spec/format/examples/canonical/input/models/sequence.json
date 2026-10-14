@@ -1,0 +1,15 @@
+{"diagrams": [{"kind": "sequence", "elements": [{"idref": "Order"}], "id": "order-flow", "name": "Order flow", "tags": []}],
+ "elements": {"interactions": [{"visibility": "public", "fragments": [
+   {"covered": {"idref": "Order.client"}, "type": "occurrence", "id": "Order.place.send"},
+   {"type": "combined_fragment", "operands": [
+      {"fragments": [{"id": "Order.place.receive", "covered": {"idref": "Order.server"}, "type": "occurrence"}], "guard": "[stock]", "id": "Order.opt.op1"}],
+    "covered": [{"idref": "Order.server"}, {"idref": "Order.client"}], "operator": "opt", "id": "Order.opt", "name": null},
+   {"interaction": {"idref": "Pay"}, "arguments": [], "type": "interaction_use", "covered": [{"idref": "Order.server"}, {"idref": "Order.client"}], "id": "Order.ref--Pay"},
+   {"type": "occurrence", "id": "Order.ack.send", "covered": {"idref": "Order.server"}}],
+  "messages": [
+   {"sort": "reply", "kind": "lost", "name": "ack", "id": "Order.ack", "send_event": {"idref": "Order.ack.send"}, "receive_event": null},
+   {"receive_event": {"idref": "Order.place.receive"}, "kind": "complete", "sort": "synch_call", "send_event": {"idref": "Order.place.send"}, "name": "place", "id": "Order.place", "arguments": ["qty", "sku"]}],
+  "lifelines": [{"name": "server", "id": "Order.server"}, {"id": "Order.client", "name": ""}],
+  "name": "Order", "id": "Order"},
+  {"id": "Pay", "name": "Pay", "visibility": "public"}]},
+ "name": "Sequence", "id": "sequence", "format_version": "1.0"}

@@ -1,0 +1,6 @@
+{
+  "description": "Element ID with a space",
+  "codes": [
+    "SCHEMA_VIOLATION"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "description": "A inherits from B and B from A",
+  "codes": [
+    "GENERALIZATION_CYCLE"
+  ]
+}

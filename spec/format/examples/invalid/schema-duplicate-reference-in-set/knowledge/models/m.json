@@ -1,0 +1,25 @@
+{
+  "format_version": "1.0",
+  "id": "m",
+  "name": "M",
+  "elements": {
+    "packages": [
+      {
+        "id": "P",
+        "name": "P",
+        "visibility": "public",
+        "members": [
+          {"idref": "A"},
+          {"idref": "A"}
+        ]
+      }
+    ],
+    "classes": [
+      {
+        "id": "A",
+        "name": "A",
+        "visibility": "public"
+      }
+    ]
+  }
+}

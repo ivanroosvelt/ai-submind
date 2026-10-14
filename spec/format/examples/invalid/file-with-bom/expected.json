@@ -1,0 +1,6 @@
+{
+  "description": "Model with a UTF-8 BOM",
+  "codes": [
+    "FILE_ENCODING"
+  ]
+}

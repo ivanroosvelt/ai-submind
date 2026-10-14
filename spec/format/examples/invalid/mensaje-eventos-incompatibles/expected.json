@@ -1,7 +1,0 @@
-{
-  "description": "Mensaje complete sin receive_event (la occurrence queda huérfana)",
-  "codes": [
-    "MESSAGE_EVENTS",
-    "OCCURRENCE_UNUSED"
-  ]
-}

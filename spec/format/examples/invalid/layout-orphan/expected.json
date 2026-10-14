@@ -1,0 +1,6 @@
+{
+  "description": "Layout with a position for B, which is not in the diagram (warning)",
+  "codes": [
+    "LAYOUT_ORPHAN"
+  ]
+}

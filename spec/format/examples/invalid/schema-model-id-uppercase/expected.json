@@ -1,0 +1,6 @@
+{
+  "description": "Model ID with uppercase letters (must be a file ID)",
+  "codes": [
+    "SCHEMA_VIOLATION"
+  ]
+}

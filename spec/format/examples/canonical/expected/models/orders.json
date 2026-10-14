@@ -1,0 +1,47 @@
+{
+  "format_version": "1.0",
+  "id": "orders",
+  "name": "Orders",
+  "elements": {
+    "classes": [
+      {
+        "id": "Line",
+        "name": "Línea",
+        "visibility": "public"
+      },
+      {
+        "id": "PurchaseOrder",
+        "name": "PurchaseOrder",
+        "visibility": "public",
+        "tags": [
+          "a-tag",
+          "z-tag"
+        ],
+        "attributes": [
+          {
+            "id": "PurchaseOrder.total",
+            "name": "total",
+            "visibility": "private",
+            "type": {"idref": "Line"}
+          },
+          {
+            "id": "PurchaseOrder.date",
+            "name": "date",
+            "visibility": "private"
+          }
+        ]
+      }
+    ]
+  },
+  "diagrams": [
+    {
+      "id": "orders-view",
+      "kind": "class",
+      "name": "Orders",
+      "elements": [
+        {"idref": "Line"},
+        {"idref": "PurchaseOrder"}
+      ]
+    }
+  ]
+}

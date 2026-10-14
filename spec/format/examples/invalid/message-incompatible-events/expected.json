@@ -1,0 +1,7 @@
+{
+  "description": "complete message without receive_event (the occurrence is left orphaned)",
+  "codes": [
+    "MESSAGE_EVENTS",
+    "OCCURRENCE_UNUSED"
+  ]
+}
