@@ -2,7 +2,7 @@
 id: DEC-013
 type: decision
 name: "Own lexical engine: BM25F with Unicode folding and camelCase splitting, in memory"
-status: proposed
+status: active
 evidence: declared-doc
 summary: "Lexical search is an own in-memory BM25F index over name, id, tags, stereotypes and documentation, with accent and case folding, camelCase splitting and prefix matching; no dependency, not persisted."
 aliases: [bm25, bm25f, minisearch, lexical, tokenizer, search]
@@ -10,8 +10,7 @@ tags: [queries]
 relations:
   affects: [FEAT-004, REQ-038]
   supersedes: []
-uncertainties:
-  - "Weights, prefix weight and folding (ñ → n) are defaults chosen by the agent on 2026-10-14, pending confirmation by the user; the role of an association end is indexed as its name; enumeration literals and guards are not indexed yet."
+uncertainties: []
 ---
 
 # DEC-013 · Own lexical engine

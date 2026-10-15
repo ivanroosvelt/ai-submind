@@ -2,7 +2,7 @@
 id: DEC-012
 type: decision
 name: "Query graph semantics: edge kinds, dependency direction, hubs and strict arguments"
-status: proposed
+status: active
 evidence: declared-doc
 summary: "Queries see knowledge/ as a graph where A→B means A depends on B (containers, packages and diagrams depend on their parts); impact follows incoming edges, undirected associations both ways; models and diagrams are not intermediate path steps by default; out-of-range arguments are rejected."
 aliases: [graph, impact, paths, edges, relations, hubs, pagination]
@@ -10,8 +10,7 @@ tags: [queries, architecture]
 relations:
   affects: [FEAT-004, REQ-016, REQ-017, REQ-018, REQ-019]
   supersedes: []
-uncertainties:
-  - "Defaults chosen by the agent on 2026-10-14, pending confirmation by the user (package membership counts for impact and paths; undirected association propagates both ways; arguments rejected, not clamped). Revisable once agents use them through MCP (S8)."
+uncertainties: []
 ---
 
 # DEC-012 · Query graph semantics
