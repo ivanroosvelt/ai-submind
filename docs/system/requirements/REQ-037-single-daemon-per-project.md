@@ -13,8 +13,7 @@ relations:
   constraints: [NFR-004, NFR-005]
   depends_on: []
   decisions: []
-uncertainties:
-  - "Shutdown: manual, on inactivity or when the last client closes (DEC-005)."
+uncertainties: []
 ---
 
 # REQ-037 · Single daemon per project
@@ -33,6 +32,7 @@ User (2026-10-14); DEC-005. Proposed in REP-003 Annex A.
 2. Given an orphan lockfile (dead pid), when starting, then it is recovered.
 3. The daemon writes `knowledge/.ai-submind/runtime.json` (pid, port, token) with 0600 permissions.
 4. `ai-submind status` reports the state; `ai-submind stop` stops it.
+5. The daemon stops by itself after the idle period (default 30 min, `--idle`, `0` disables) with no request in flight (DEC-014).
 
 ## Business rules
 

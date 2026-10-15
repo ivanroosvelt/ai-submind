@@ -31,6 +31,14 @@ module.exports = {
       to: { path: "^src/(?!format/|engine/|query/)" },
     },
     {
+      name: "daemon-on-format-engine-query",
+      severity: "error",
+      comment:
+        "src/daemon depends only on src/format, src/engine and src/query (DEC-005, DEC-014).",
+      from: { path: "^src/daemon/" },
+      to: { path: "^src/(?!format/|engine/|query/|daemon/)" },
+    },
+    {
       name: "not-to-unresolvable",
       severity: "error",
       from: {},

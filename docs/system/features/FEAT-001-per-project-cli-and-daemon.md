@@ -7,9 +7,9 @@ evidence: declared-doc
 summary: "npx ai-submind command that starts a single daemon per project and the stdio MCP proxy."
 aliases: ["cli", "daemon", "serve"]
 tags: [cli, process]
-implementation: none
-code: []
-test_code: []
+implementation: partial
+code: [src/cli/, src/daemon/]
+test_code: [test/daemon/]
 relations:
   entities: [ENT-001]
   functions: []
@@ -17,8 +17,7 @@ relations:
   integrations: []
   depends_on: [FEAT-002]
   decisions: []
-uncertainties:
-  - "Daemon shutdown: manual, on inactivity or when the last client closes (DEC-005)."
+uncertainties: []
 ---
 
 # FEAT-001 · Per-project CLI and daemon

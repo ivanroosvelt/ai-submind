@@ -13,8 +13,7 @@ relations:
   constraints: [NFR-004]
   depends_on: [REQ-037]
   decisions: []
-uncertainties:
-  - "How the browser receives the token (NFR-004)."
+uncertainties: []
 ---
 
 # REQ-004 · Serve local web UI

@@ -7,7 +7,7 @@ updated: 2026-10-14
 class: T2
 related: [DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007, DEC-008, EDR-006, REP-003]
 blockers: []
-next_action: "Confirmación del usuario de los defaults de DEC-012/DEC-013 (proposed); S7 (CLI y daemon)."
+next_action: "Commit de S7 (y aparte DEC-012/DEC-013) cuando el usuario lo pida; luego S8 (servidor MCP y subcomando mcp sobre ensureDaemon)."
 stages:
   - id: S1
     name: "Decisiones aceptadas y modelo estructural registrado"
@@ -35,8 +35,8 @@ stages:
     evidence: "2026-10-14 src/query (query, graph, traverse, filters, meta, limits, errors, lexical, text) sobre format y engine; RefSite.source, IndexedElement.parent y Engine.generation; DEC-012 y DEC-013. Diseño con subagente Plan; implementación con dos subagentes en paralelo (léxico y estructural). test/query: query.test.ts (23: listados, get con NOT_FOUND/AMBIGUOUS_ID, documento excluido, find con filtros y paginación, relations de Car 9 salientes/12 entrantes, grupos, impact con profundidad/tipos/ciclos, paths shortest/all/dirigidos/hubs/clique con truncado, search por fachada con filtros e incremental tras transact/rename/reload y reconstrucción por salto de generación), lexical.test.ts (10, incluida equivalencia incremental = reconstrucción en 15 consultas), text.test.ts (5). Diferencias con el diseño: search rental → [garage, Car]; 'fuel type enumeration' necesita el filtro type. Control negativo depcruise query-on-format-engine. Medición ~10,5k elementos: p95 find 2,5 ms, relations 0,02, impact 1,4, paths 15,7, search 7,6 (índice léxico 138 ms). Revisión change-verifier: aprobado con observaciones (H1-H10), corregidas: H1 eventos pendientes acotados (MAX_PENDING), H2 texto de búsqueda ≤1000 caracteres y ≤32 términos, H3 argumentos objeto plano con claves conocidas, H7 impacto truncado = prefijo del completo, H8 BFS de distancias cortado por presupuesto → truncated (sin prueba: requiere >200k nodos), H4/H9/H10 documentación y trazabilidad; mutaciones de H1 y H7 rompen sus pruebas. scripts/check: entorno 0/0; modelo 93 elementos 0/0; 42 pruebas herramientas; producto typecheck+lint+formato+deps+197 Vitest OK."
   - id: S7
     name: "CLI y daemon por proyecto con seguridad local"
-    status: proposed
-    evidence: ""
+    status: verified
+    evidence: "2026-10-14 src/daemon (project, runtime, server) y src/cli (main, commands, node-version) según DEC-005/DEC-014; regla depcruise daemon-on-format-engine-query. test/daemon 39 pruebas (project 10+, server, cli con dist/ construido en beforeAll): arranque concurrente, carrera multiproceso de lock huérfano (8 rondas × 6 procesos; el código previo falla 3/3), guardia de recuperación, runtime.json 0600, .ai-submind 0700, daemon.log 0600, Host/Origin ajenos/ausentes/mayúsculas/null → 403, sin token → 401, Bearer y ?token= → 303 + cookie HttpOnly SameSite=Strict, solo 127.0.0.1, 7777 con respaldo, puerto explícito ocupado → error, inactividad y petición en curso, /api/stop, petición malformada → 400 sin caída, handler que lanza → 500, serve sin knowledge/ (REQ-002 CA1), init sin sobrescribir, validate 0/1/2, symlinks fuera de la raíz y raíz rechazados, ensureDaemon reutiliza pid, guarda de Node. Mutaciones: sin Origin o sin token fallan sus pruebas. scripts/check: entorno 0/0; modelo 94 elementos 0/0; 42 pruebas herramientas; producto typecheck+lint+formato+deps+236 Vitest OK; test/daemon 3/3 estables; sin daemons residuales. change-verifier: rechazado (H1-H10) → corregido → re-revisión aprobada con observaciones R1-R5, corregidas (R4 zombi en stop: informativo para S8)."
   - id: S8
     name: "Servidor MCP (Streamable HTTP + proxy stdio) con tools de consulta y administración"
     status: proposed
@@ -137,12 +137,15 @@ S11 tras S9/S10; S12 tras S7..S11.
 - Pruebas: corpus de ejemplo con resultados esperados.
 
 ### S7 · CLI y daemon
-- Acciones: resolución de raíz (git root), `serve`, `mcp`, `status`, `stop`, `init`; lockfile y
-  `runtime.json` (0600, token); HTTP en 127.0.0.1; validación Host/Origin; confinamiento de rutas.
-- Pruebas: arranque doble usa el mismo daemon; lock huérfano recuperado; Origin ajeno rechazado; path traversal rechazado.
+- Acciones (DEC-014): resolución de raíz (git root), `serve`, `status`, `stop`, `init`, `validate`; lockfile y
+  `runtime.json` (0600, token); HTTP en 127.0.0.1:7777 con respaldo; token URL → cookie; validación Host/Origin;
+  apagado por inactividad; `ensureDaemon` para el proxy de S8; confinamiento de `--knowledge`. El subcomando
+  `mcp` (proxy stdio) pasa a S8 porque depende del SDK MCP.
+- Pruebas: arranque doble usa el mismo daemon; lock huérfano recuperado; Origin/Host ajenos rechazados; sin token
+  rechazado; solo loopback; `--knowledge` fuera de la raíz rechazado; init no sobrescribe; validate con código de salida.
 
 ### S8 · Servidor MCP
-- Acciones: `@modelcontextprotocol/server` v2; tools de consulta (S6) y administración (crear/modificar/
+- Acciones: subcomando `mcp` (proxy stdio sobre `ensureDaemon` de S7); `@modelcontextprotocol/server` v2; tools de consulta (S6) y administración (crear/modificar/
   eliminar elementos y diagramas, lotes, rename, validar); proxy stdio; recursos (modelos, diagramas, schema).
 - Pruebas: cliente MCP real (stdio y HTTP) ejecuta flujo crear→consultar→validar; errores tipados.
 
@@ -153,7 +156,7 @@ S11 tras S9/S10; S12 tras S7..S11.
 - Pruebas: render de ejemplos; mover nodo escribe `layout/<id>.json` canónico; verificación en navegador.
 
 ### S10 · Integridad con git
-- Acciones: `init` añade `.ai-submind/` a `.gitignore`; diagnóstico post-merge (conflictos, duplicados, refs
+- Acciones: `.ai-submind/` ya se autoignora desde S7 (DEC-014); diagnóstico post-merge (conflictos, duplicados, refs
   rotas) expuesto en CLI, MCP y UI; sin reparación silenciosa.
 - Pruebas: escenario de merge conflictivo en repo temporal.
 
@@ -210,5 +213,10 @@ S11 tras S9/S10; S12 tras S7..S11.
 - 2026-10-14 · re-revisión change-verifier de S5: aprobado con observaciones R1-R3, corregidas. S5 verified; commit pedido por el usuario.
 - 2026-10-14 · S6: diseño con subagente Plan; defaults elegidos por el agente, pendientes de confirmación del usuario (pertenencia a paquete cuenta en impacto y caminos; asociación no dirigida en ambos sentidos; argumentos fuera de rango rechazados; prefijo activo; ñ → n; literales, roles y guardas sin indexar) registrados en DEC-012/DEC-013. S6 executed; pendiente change-verifier.
 - 2026-10-14 · S6 revisada por change-verifier: aprobado con observaciones H1-H10, corregidas (detalle en la evidencia). DEC-012 y DEC-013 quedan `proposed` hasta que el usuario confirme los defaults (H6). S6 verified; commit y push pedidos por el usuario.
+- 2026-10-14 · reanudado en S7 (rama v2, implementación nueva; árbol limpio salvo `graft/` sin trackear, ajeno). Usuario decide apagado stop + inactividad, puerto 7777 con respaldo, token URL → cookie y `knowledge/.ai-submind/` autoignorado: DEC-014 (active). `mcp` pasa a S8; S10 ya no edita el `.gitignore` raíz. S7 in_progress.
+- 2026-10-14 · S7 executed (subagente implementador): src/daemon (project, runtime, server), src/cli (commands, node-version), test/daemon 27 pruebas; 224 Vitest OK. Desviaciones: `validate` solo lee (validateKnowledgeDir) para no vaciar `.ai-submind/tmp` de un daemon vivo; `startDaemon` devuelve `running` si otro daemon es dueño. Lint local falla solo por `packages/*/dist` (restos ignorados por git de la rama anterior). Pendiente change-verifier.
+- 2026-10-14 · usuario confirma los defaults de DEC-012 y DEC-013 → active.
+- 2026-10-14 · usuario autoriza borrar restos de la rama anterior: `packages/`, `.superpowers/`, `.worktrees/` (ignorados por git). `scripts/check` pasa completo en local.
+- 2026-10-14 · S7 revisada por change-verifier: rechazado (H1 petición malformada tumbaba el daemon, H2 token en daemon.log 0644, H3 carrera de recuperación del lock con dos daemons, H4 FEAT-001/API-003 → partial, H5 symlinks colgantes, H6 raíz como knowledge, H7 cookie no aislada por puerto → DEC-014, H8 validate con --knowledge inexistente → exit 2, H9 limpieza de procesos y pruebas negativas, H10 → test_code en NFR-004/NFR-006). Corregido; re-revisión aprobada con observaciones R1-R5, corregidas. R4 (stop ve zombis como vivos si el padre no recoge al hijo) queda como nota para el proxy de S8. S7 verified.
 
 ## Resultado (al cerrar)

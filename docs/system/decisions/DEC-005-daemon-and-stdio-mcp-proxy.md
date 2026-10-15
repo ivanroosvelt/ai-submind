@@ -10,8 +10,7 @@ tags: [architecture, security, contracts]
 relations:
   affects: [REQ-001, REQ-003, REQ-004, REQ-037, NFR-004, NFR-005, NFR-006, FEAT-001, API-001, API-002, API-003]
   supersedes: []
-uncertainties:
-  - "Daemon shutdown: manual, on inactivity or when the last client closes."
+uncertainties: []
 ---
 
 # DEC-005 · Single daemon per project with stdio MCP proxy
@@ -32,7 +31,7 @@ uncertainties:
   serves the UI, the UI API and the MCP Streamable HTTP endpoint.
 - `npx ai-submind mcp`: stdio transport; locates the daemon through `knowledge/.ai-submind/runtime.json`
   (pid, port, token) and starts it if it does not exist; forwards messages. Logs only to stderr.
-- A lockfile guarantees one daemon per project.
+- A lockfile guarantees one daemon per project. Shutdown, port, browser token and local directory: DEC-014.
 - Security: bind to loopback only; random per-session token in `runtime.json` (permissions 0600);
   `Host`/`Origin` validation (anti DNS-rebinding); paths confined to `knowledge/`.
 

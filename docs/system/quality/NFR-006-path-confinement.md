@@ -7,6 +7,7 @@ evidence: declared-doc
 summary: "No read or write outside knowledge/; tools do not accept arbitrary paths."
 aliases: ["path traversal"]
 tags: [security]
+test_code: [test/daemon/project.test.ts]
 relations:
   tests: []
   decisions: []

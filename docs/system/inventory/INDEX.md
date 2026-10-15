@@ -12,7 +12,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | ACT-004 | actor | Embeddings provider | proposed | - | declared-doc | [ACT-004-embeddings-provider.md](../../../docs/system/actors/ACT-004-embeddings-provider.md) |
 | API-001 | interface | ai-submind MCP server | active | none | declared-doc | [API-001-ai-submind-mcp-server.md](../../../docs/system/interfaces/API-001-ai-submind-mcp-server.md) |
 | API-002 | interface | UI HTTP API | active | none | declared-doc | [API-002-ui-http-api.md](../../../docs/system/interfaces/API-002-ui-http-api.md) |
-| API-003 | interface | ai-submind CLI | active | none | declared-doc | [API-003-ai-submind-cli.md](../../../docs/system/interfaces/API-003-ai-submind-cli.md) |
+| API-003 | interface | ai-submind CLI | active | partial | declared-doc | [API-003-ai-submind-cli.md](../../../docs/system/interfaces/API-003-ai-submind-cli.md) |
 | API-004 | interface | ai-submind knowledge format 1.0 | active | partial | verified-code | [API-004-ai-submind-knowledge-format-1-0.md](../../../docs/system/interfaces/API-004-ai-submind-knowledge-format-1-0.md) |
 | DEC-001 | decision | Node.js ≥22 + TypeScript ESM stack distributed as the npm package ai-submind (npx) | active | - | declared-doc | [DEC-001-node-typescript-npx-stack.md](../../../docs/system/decisions/DEC-001-node-typescript-npx-stack.md) |
 | DEC-002 | decision | Own knowledge format derived from UMJ: one file per model + separate layout | active | - | declared-doc | [DEC-002-knowledge-format-derived-from-umj.md](../../../docs/system/decisions/DEC-002-knowledge-format-derived-from-umj.md) |
@@ -25,14 +25,15 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | DEC-009 | decision | Ajv 8 as the JSON Schema validator of the format and dependency-cruiser for module boundaries | active | - | declared-doc | [DEC-009-ajv-and-dependency-cruiser.md](../../../docs/system/decisions/DEC-009-ajv-and-dependency-cruiser.md) |
 | DEC-010 | decision | Format migrations as versioned from→to guides for LLM agents | proposed | - | declared-doc | [DEC-010-versioned-llm-migration-guides.md](../../../docs/system/decisions/DEC-010-versioned-llm-migration-guides.md) |
 | DEC-011 | decision | Engine persistence: per-file atomic writes, SHA-256 revisions, no-new-errors acceptance and native recursive fs.watch | active | - | declared-doc | [DEC-011-engine-persistence-and-reload.md](../../../docs/system/decisions/DEC-011-engine-persistence-and-reload.md) |
-| DEC-012 | decision | Query graph semantics: edge kinds, dependency direction, hubs and strict arguments | proposed | - | declared-doc | [DEC-012-query-graph-semantics.md](../../../docs/system/decisions/DEC-012-query-graph-semantics.md) |
-| DEC-013 | decision | Own lexical engine: BM25F with Unicode folding and camelCase splitting, in memory | proposed | - | declared-doc | [DEC-013-own-lexical-engine-bm25f.md](../../../docs/system/decisions/DEC-013-own-lexical-engine-bm25f.md) |
+| DEC-012 | decision | Query graph semantics: edge kinds, dependency direction, hubs and strict arguments | active | - | declared-doc | [DEC-012-query-graph-semantics.md](../../../docs/system/decisions/DEC-012-query-graph-semantics.md) |
+| DEC-013 | decision | Own lexical engine: BM25F with Unicode folding and camelCase splitting, in memory | active | - | declared-doc | [DEC-013-own-lexical-engine-bm25f.md](../../../docs/system/decisions/DEC-013-own-lexical-engine-bm25f.md) |
+| DEC-014 | decision | Daemon lifecycle, port, browser token and self-ignored local directory | active | - | declared-doc | [DEC-014-daemon-lifecycle-port-token-and-local-dir.md](../../../docs/system/decisions/DEC-014-daemon-lifecycle-port-token-and-local-dir.md) |
 | ENT-001 | entity | ai-submind project configuration | active | none | declared-doc | [ENT-001-ai-submind-project-configuration.md](../../../docs/system/domain/entities/ENT-001-ai-submind-project-configuration.md) |
 | ENT-002 | entity | Model | active | none | declared-doc | [ENT-002-model.md](../../../docs/system/domain/entities/ENT-002-model.md) |
 | ENT-003 | entity | Model element | active | none | declared-doc | [ENT-003-model-element.md](../../../docs/system/domain/entities/ENT-003-model-element.md) |
 | ENT-004 | entity | Diagram | active | none | declared-doc | [ENT-004-diagram.md](../../../docs/system/domain/entities/ENT-004-diagram.md) |
 | ENT-005 | entity | Diagram layout | active | none | declared-doc | [ENT-005-diagram-layout.md](../../../docs/system/domain/entities/ENT-005-diagram-layout.md) |
-| FEAT-001 | feature | Per-project CLI and daemon | active | none | declared-doc | [FEAT-001-per-project-cli-and-daemon.md](../../../docs/system/features/FEAT-001-per-project-cli-and-daemon.md) |
+| FEAT-001 | feature | Per-project CLI and daemon | active | partial | declared-doc | [FEAT-001-per-project-cli-and-daemon.md](../../../docs/system/features/FEAT-001-per-project-cli-and-daemon.md) |
 | FEAT-002 | feature | Embedded knowledge engine | active | partial | verified-code | [FEAT-002-embedded-knowledge-engine.md](../../../docs/system/features/FEAT-002-embedded-knowledge-engine.md) |
 | FEAT-003 | feature | Knowledge format, layout and validation | active | partial | verified-code | [FEAT-003-knowledge-format-layout-and-validation.md](../../../docs/system/features/FEAT-003-knowledge-format-layout-and-validation.md) |
 | FEAT-004 | feature | Structured queries and lexical search | active | verified | verified-code | [FEAT-004-structured-queries-and-lexical-search.md](../../../docs/system/features/FEAT-004-structured-queries-and-lexical-search.md) |
@@ -231,6 +232,14 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `DEC-012 affects REQ-019`
 - `DEC-013 affects FEAT-004`
 - `DEC-013 affects REQ-038`
+- `DEC-014 affects REQ-001`
+- `DEC-014 affects REQ-002`
+- `DEC-014 affects REQ-004`
+- `DEC-014 affects REQ-037`
+- `DEC-014 affects NFR-004`
+- `DEC-014 affects FEAT-001`
+- `DEC-014 affects API-002`
+- `DEC-014 affects API-003`
 - `ENT-001 validations VAL-001`
 - `ENT-001 validations VAL-004`
 - `ENT-001 validations VAL-006`

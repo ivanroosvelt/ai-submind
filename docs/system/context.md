@@ -31,8 +31,9 @@
   document-level batch transactions validated before writing with revision control, per-file atomic writes,
   rename with reference rewriting, ID derivation and reload with `fs.watch` (DEC-011) **[verified]**.
   Element-level create/update/delete (REQ-023, REQ-024) arrives with MCP (PLAN-002 S8) **[declared]**.
-- Process: single daemon per project (HTTP on 127.0.0.1, token, Host/Origin) + stdio MCP proxy
-  `ai-submind mcp` (DEC-005, FEAT-001, REQ-037) **[declared]**.
+- Process: single daemon per project in `src/daemon/` (HTTP on 127.0.0.1:7777 with fallback, token by Bearer or
+  cookie, Host/Origin, lockfile, idle shutdown) and CLI `serve`/`status`/`stop`/`init`/`validate` in `src/cli/`
+  (DEC-005, DEC-014, FEAT-001, REQ-037) **[verified]**; stdio MCP proxy `ai-submind mcp` in PLAN-002 S8 **[declared]**.
 - UI: `@joint/core` with own shapes; explore and adjust layout; model changes only via MCP
   (DEC-006, FEAT-007; sequence in FEAT-009, PLAN-002 S11) **[declared]**.
 - Search: structured queries (list, get, find, relations, impact, paths) and own BM25F lexical search in
@@ -41,14 +42,13 @@
 - Interfaces: API-001 MCP server, API-002 UI HTTP API, API-003 CLI **[declared]**.
 - Single npm package at the root: `src/` (code, `code_roots`), `test/` (Vitest), ESLint + typescript-eslint + Prettier;
   `scripts/check` runs `npm run check` (DEC-008, EDR-006) **[verified]**.
-- Implemented: format core (FEAT-003, VAL-001..007), engine (FEAT-002, partial) and queries (FEAT-004); CLI, MCP and UI remain at
-  `implementation: none` **[verified]**.
+- Implemented: format core (FEAT-003, VAL-001..007), engine (FEAT-002, partial) and queries (FEAT-004); CLI and daemon (FEAT-001, API-003)
+  partial, without the `mcp` proxy (S8); MCP and UI remain at `implementation: none` **[verified]**.
 - Cycles and boundaries between modules checked by dependency-cruiser in `npm run check` (NFR-008, DEC-009) **[verified]**.
 - Target scale ~10,000 elements per project (NFR-007, thresholds unconfirmed) **[inferred]**.
 
 ## What is not known (pending)
 
-- Daemon shutdown, delivery of the token to the browser, default port (DEC-005, NFR-004) **[unknown]**.
 - Whether the MCP agent can modify layout (P9), implicit init (P10) **[unknown]**.
 - ai-submind license **[unknown]**.
 

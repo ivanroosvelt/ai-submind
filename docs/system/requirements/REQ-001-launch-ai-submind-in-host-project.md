@@ -13,8 +13,7 @@ relations:
   constraints: [NFR-001, NFR-006]
   depends_on: []
   decisions: []
-uncertainties:
-  - "P11: default port and automatic browser opening."
+uncertainties: []
 ---
 
 # REQ-001 · Launch ai-submind in the host project
@@ -33,6 +32,7 @@ User [U]; DEC-001, DEC-005. Proposed in REP-003 Annex A.
 2. Given startup, when loading finishes, then it reports on stderr the `knowledge/` path, loaded/invalid files and the UI URL.
 3. Given Node < 22, when it runs, then it exits with code ≠ 0 and an explicit message.
 4. Given a daemon already active for the project, when it runs again, then it reuses that daemon (REQ-037).
+5. The daemon listens on `127.0.0.1:7777`, or on a free port if 7777 is busy; an explicit `--port` that is busy fails. The browser is not opened automatically (DEC-014).
 
 ## Business rules
 

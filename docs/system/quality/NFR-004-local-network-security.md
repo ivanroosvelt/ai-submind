@@ -7,18 +7,18 @@ evidence: declared-doc
 summary: "HTTP on loopback only, per-session token and Host/Origin validation."
 aliases: ["loopback", "token", "dns rebinding", "origin"]
 tags: [security]
+test_code: [test/daemon/server.test.ts]
 relations:
   tests: []
   decisions: []
 uncertainties:
   - "Whether exposing on another interface with an explicit flag is allowed."
-  - "How the browser receives the token (startup URL, cookie, header)."
 ---
 
 # NFR-004 · Local network security
 
 ## Requirement
-The daemon listens only on 127.0.0.1 (DEC-005); every HTTP/MCP request requires the random session token stored in `knowledge/.ai-submind/runtime.json` (permissions 0600); `Host` and `Origin` are validated (anti DNS-rebinding); no open CORS.
+The daemon listens only on 127.0.0.1 (DEC-005); every HTTP/MCP request requires the random session token stored in `knowledge/.ai-submind/runtime.json` (permissions 0600); `Host` and `Origin` are validated (anti DNS-rebinding); no open CORS. Clients send `Authorization: Bearer`; the browser trades the one-time `?token=` URL for an HttpOnly SameSite=Strict cookie (DEC-014).
 
 ## Metric and threshold
 

@@ -7,9 +7,9 @@ evidence: declared-doc
 summary: "ai-submind command (npx) with subcommands serve, mcp, init, status, stop and validation."
 aliases: ["cli", "npx", "command"]
 tags: [contracts]
-implementation: none
-code: []
-test_code: []
+implementation: partial
+code: [src/cli/, src/daemon/]
+test_code: [test/daemon/]
 relations:
   providers: []
   consumers: [ACT-001, ACT-002]
@@ -17,9 +17,7 @@ relations:
   validations: []
   tests: []
   decisions: []
-uncertainties:
-  - "Name of the validation subcommand (e.g. `validate`)."
-  - "P11: default port and automatic browser opening."
+uncertainties: []
 ---
 
 # API-003 · ai-submind CLI
@@ -31,11 +29,11 @@ uncertainties:
 
 | Operation | Input | Output | Errors |
 |-----------|-------|--------|--------|
-| `ai-submind` / `serve` | options | daemon running, UI URL on stderr | Node < 22, lock |
-| `mcp` | - | stdio proxy to the daemon (starts it if missing) |  |
-| `init` | - | minimal structure of knowledge/ and .gitignore | does not overwrite |
+| `ai-submind` / `serve` | `--knowledge`, `--port` (default 7777, fallback to a free port), `--idle` minutes (default 30, 0 = never) | daemon running in the foreground, UI URL with one-time token on stderr; reuses a live daemon | Node < 22, `--knowledge` outside the root, explicit port busy |
+| `mcp` | - | stdio proxy to the daemon (starts it if missing); PLAN-002 S8 |  |
+| `init` | `--knowledge` | `ai-submind.json` and self-ignored `.ai-submind/` (DEC-014) | does not overwrite |
 | `status`, `stop` | - | daemon status/stop |  |
-| validate | - | report; exit code ≠ 0 if there are errors |  |
+| `validate` | `--knowledge` | one finding per line on stdout; exit 1 if there are errors (REQ-012); default `knowledge/` missing → notice, exit 0 | explicit `--knowledge` missing → exit 2 |
 
 ## Authentication and permissions
 Local user; no authentication of its own.
