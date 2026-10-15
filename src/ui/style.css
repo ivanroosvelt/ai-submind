@@ -125,6 +125,7 @@ aside ol {
   color: var(--accent);
 }
 button.ref {
+  text-align: left;
   border: 0;
   background: none;
   padding: 0;

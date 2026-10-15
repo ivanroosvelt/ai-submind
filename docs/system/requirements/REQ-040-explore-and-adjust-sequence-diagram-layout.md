@@ -12,7 +12,7 @@ relations:
   features: [FEAT-009]
   constraints: [VAL-005, VAL-007]
   depends_on: [REQ-028, REQ-029]
-  decisions: []
+  decisions: [DEC-018]
 uncertainties: []
 ---
 
@@ -28,9 +28,10 @@ User (2026-10-14, sequence render in PLAN-002 S11); DEC-006. Proposed in REP-003
 
 ## Acceptance criteria
 
-1. Render of lifelines, activations, messages (synchronous, asynchronous, reply, create, destroy), combined fragments with operands and guards, and interaction use.
-2. Event order = array order of the model; reordering lifelines persists canonical layout.
-3. Class ↔ lifeline navigation.
+1. Render of lifelines, activations (the interaction's `executions`, DEC-018), messages (synchronous, asynchronous, reply, create, destroy, lost, found), combined fragments with operands and guards (also nested), and interaction use.
+2. Event order = array order of the model (fragments flattened depth first); lifelines move only horizontally and their length can be changed; reordering lifelines persists canonical layout.
+3. Class ↔ lifeline navigation; an interaction use opens the diagram of the used interaction.
+4. Auto-layout of a sequence diagram from the UI and from the MCP tool `auto_layout_diagram` gives the same layout, without overlapping lifeline headers.
 
 ## Business rules
 

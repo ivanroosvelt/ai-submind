@@ -58,7 +58,7 @@ is the stdio proxy (DEC-005, DEC-016). Arguments are camelCase. Every result is 
 | `edit_diagram` | `id`, `add?`, `remove?`, `expectedRevision?`, `dryRun?` | write result | VALIDATION_FAILED (`DIAGRAM_ELEMENT_NOT_ALLOWED`), same |
 | `apply_batch` | `operations` (`op`: create, update, delete, edit_diagram), `dryRun?` | one write result, all or nothing | any of the above |
 | `rename` | `id`, `newId`, `dryRun?` | revisions, diff, `renamed` pairs | NOT_FOUND, AMBIGUOUS_ID, INVALID_ID, RENAME_COLLISION, RENAME_BLOCKED, VALIDATION_FAILED |
-| `auto_layout_diagram` | `diagram`, `dryRun?` | `{dryRun, initialized, layout, revisions, diff, generation}` | NOT_FOUND, AMBIGUOUS_ID, INVALID_ARGUMENT (not a class diagram), REVISION_CONFLICT, DOCUMENT_INVALID, VALIDATION_FAILED |
+| `auto_layout_diagram` | `diagram`, `dryRun?` | `{dryRun, initialized, layout, revisions, diff, generation}` | NOT_FOUND, AMBIGUOUS_ID, INVALID_ARGUMENT (not a diagram), REVISION_CONFLICT, DOCUMENT_INVALID, VALIDATION_FAILED |
 
 Write result: `{dryRun, initialized, created, affected, revisions, diff, generation}`; `affected` lists every
 cascade step as `{action: "removed_ref" | "unset" | "deleted", file, pointer, id}`, in execution order; each
@@ -67,7 +67,9 @@ twice when two consecutive items are removed). `__proto__`, `constructor` and `p
 `patch` are rejected with INVALID_ARGUMENT. `auto_layout_diagram` recomputes every node position of a class diagram with the module shared with the UI
 (`src/layout/`, DEC-017): node sizes from the shape text, dagre top-to-bottom with parents and interfaces above;
 explicit sizes (a minimum, spec §8) and styles are kept, link vertices dropped, entries of elements no longer shown removed; an
-unchanged layout is not rewritten. Agents never set coordinates (DEC-015). Every write tool except `create_element` is annotated
+unchanged layout is not rewritten. For a sequence diagram it uses `src/layout/sequence-layout.ts` (DEC-018): lifelines packed
+left to right in their current x order with the derived header `y`; explicit widths, lengths and styles kept; message entries
+keep only `style`. Agents never set coordinates (DEC-015). Every write tool except `create_element` is annotated
 `destructiveHint: true`. Creating a model is
 `create_element` with `type: "model"` (REQ-021); a diagram is created under its model, renamed with
 `update_element` and deleted (with its layout) with `delete_element`. The first write on a `knowledge/` without

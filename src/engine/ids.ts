@@ -117,7 +117,9 @@ export type DeriveInput =
   | { type: "occurrence"; interaction: string; message?: string; end?: "send" | "receive" }
   | { type: "combined_fragment"; interaction: string; operator: string }
   | { type: "operand"; fragment: string; position: number }
-  | { type: "interaction_use"; interaction: string; used: string };
+  | { type: "interaction_use"; interaction: string; used: string }
+  /** `start`: ID of its start occurrence; empty if unknown. */
+  | { type: "execution"; interaction: string; start: string };
 
 const blank = (s: string | undefined): boolean => s === undefined || s.trim() === "";
 
@@ -169,6 +171,8 @@ export function idParts(input: DeriveInput): IdParts {
       return { prefix: `${input.fragment}.`, segment: `op${String(input.position)}` };
     case "interaction_use":
       return { prefix: `${input.interaction}.`, segment: `ref--${input.used}` };
+    case "execution":
+      return { prefix: `${input.start || input.interaction}.`, segment: "exec" };
     default:
       return { segment: seg(input.name) };
   }

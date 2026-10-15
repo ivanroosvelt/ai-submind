@@ -41,7 +41,9 @@
 - UI: plain TypeScript over `@joint/core` with own shapes in `src/ui/`, bundled by Vite into `dist/ui/`; shapes sized by
   the pure module `src/layout/` (dagre via `@dagrejs/dagre`, shared with MCP); explore and adjust layout, SSE refresh;
   model changes only via MCP (DEC-006, DEC-017, FEAT-007): implemented; API/layout **[verified]** by tests; browser
-  check pending; sequence in FEAT-009, PLAN-002 S11 **[declared]**.
+  check of class diagrams done (S9). Sequence diagrams (FEAT-009, DEC-018): pure geometry module
+  `src/layout/sequence-layout.ts` shared by the UI and `auto_layout_diagram`, executions in format 1.0 (amended)
+  **[verified]** by tests; browser check of `rent-car` and `check-fuel` done by the user (2026-10-15, PLAN-002 S11).
 - Search: structured queries (list, get, find, relations, impact, paths) and own BM25F lexical search in
   `src/query/` over the engine (FEAT-004, DEC-012, DEC-013) **[verified]**; semantic with embeddings later and
   outside PLAN-002 (DEC-007, FEAT-005) **[declared]**.

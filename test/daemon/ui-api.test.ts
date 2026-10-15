@@ -11,6 +11,7 @@ import { startDaemon, type DaemonHandle } from "../../src/daemon/server.js";
 import { edit } from "../../src/engine/index.js";
 import { serialize } from "../../src/format/canonical.js";
 import { autoLayout, type DiagramInput } from "../../src/layout/class-layout.js";
+import { autoLayoutSequence, sequenceGeometry } from "../../src/layout/sequence-layout.js";
 
 const GARAGE = new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url)
   .pathname;
@@ -178,6 +179,27 @@ describe("layout writes (REQ-029, VAL-005, NFR-005)", () => {
     // A diagram without a layout gets one (revision with an empty layout part).
     const seq = json(await call("/api/diagram?id=check-fuel")) as View;
     expect(seq.revision).toMatch(/:$/);
+  });
+
+  it("reordering lifelines of a sequence diagram persists a canonical layout (DEC-018)", async () => {
+    const v = json(await call("/api/diagram?id=rent-car")) as View;
+    // What the UI saves after dragging car to the far left: the shown layout with car's new x.
+    const layout = autoLayoutSequence(v, { keep: true });
+    const car = layout.nodes?.["RentCar.car"];
+    if (!car) throw new Error("car has no entry");
+    car.x = 0;
+    const r = await put({ layout, revision: v.revision }, "rent-car");
+    expect(r.status).toBe(200);
+    const text = await readFile(join(dir, "knowledge", "layout", "rent-car.json"), "utf8");
+    expect(text).toBe(serialize("layout", layout));
+    const after = json(await call("/api/diagram?id=rent-car")) as View;
+    const order = [...sequenceGeometry(after).lifelines].sort((a, b) => a.x - b.x);
+    expect(order.map((l) => l.id)).toEqual([
+      "RentCar.car",
+      "RentCar.customer",
+      "RentCar.garage",
+      "RentCar.contract",
+    ]);
   });
 
   it("answers 409 REVISION_CONFLICT when the diagram or its layout changed since it was read", async () => {

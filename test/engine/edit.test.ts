@@ -285,19 +285,56 @@ describe("delete, cascade and diagrams (REQ-024, REQ-025, DEC-016)", () => {
       e.close();
     }
     expect(failures).toEqual([]);
-  });
+    // One real write per element of the garage corpus: its cost grows with the corpus.
+  }, 30_000);
 
-  it("cascade on a message deletes its occurrences that no other message uses", async () => {
+  it("cascade on a message deletes its occurrences that nothing else uses", async () => {
     const e = await open();
-    const r = await edit(e, [{ op: "delete", id: "RentCar.rent", cascade: true }]);
+    const r = await edit(e, [{ op: "delete", id: "RentCar.create", cascade: true }]);
     expect(r.diff.removed).toEqual(
-      expect.arrayContaining(["RentCar.rent", "RentCar.rent.send", "RentCar.rent.receive"]),
+      expect.arrayContaining(["RentCar.create", "RentCar.create.send", "RentCar.create.receive"]),
     );
     const deleted = r.affected.filter((a) => a.action === "deleted").map((a) => a.id);
     expect(deleted).toEqual(
-      expect.arrayContaining(["RentCar.rent", "RentCar.rent.send", "RentCar.rent.receive"]),
+      expect.arrayContaining(["RentCar.create", "RentCar.create.send", "RentCar.create.receive"]),
     );
     expect(e.status().findings.filter((f) => f.code === "OCCURRENCE_UNUSED")).toEqual([]);
+  });
+
+  it("executions (DEC-018): derived ID, cascade from lifelines and occurrences", async () => {
+    const e = await open();
+    const data = {
+      covered: { idref: "RentCar.customer" },
+      start: { idref: "RentCar.rent.send" },
+      finish: { idref: "RentCar.rent-2.receive" },
+    };
+    const c = await edit(e, [
+      { op: "create", type: "execution", parent: "RentCar", data },
+      { op: "create", type: "execution", parent: "RentCar", data },
+    ]);
+    expect(c.created).toEqual(["RentCar.rent.send.exec", "RentCar.rent.send.exec-2"]);
+    expect(e.status().findings).toEqual([]);
+    // An occurrence a message and an execution share: the execution cannot exist without it.
+    const o = await edit(e, [{ op: "delete", id: "RentCar.rent-2.send", cascade: true }], {
+      dryRun: true,
+    });
+    expect(o.diff.removed).toEqual(
+      expect.arrayContaining(["RentCar.rent-2", "RentCar.rent.receive.exec"]),
+    );
+    const l = await edit(e, [{ op: "delete", id: "RentCar.car", cascade: true }]);
+    expect(l.diff.removed).toEqual(
+      expect.arrayContaining(["RentCar.start.receive.exec", "RentCar.canDrive.receive.exec"]),
+    );
+    expect(e.status().findings.filter((f) => f.severity === "error")).toEqual([]);
+  });
+
+  it("cascade on a message keeps an occurrence an execution still uses", async () => {
+    const e = await open();
+    const r = await edit(e, [{ op: "delete", id: "RentCar.start", cascade: true }]);
+    expect(r.diff.removed).toContain("RentCar.start.send");
+    expect(r.diff.removed).not.toContain("RentCar.start.receive");
+    expect(e.get("RentCar.start.receive.exec")).toHaveLength(1);
+    expect(e.status().findings).toEqual([]);
   });
 
   it("cascade on an interaction deletes the sequence diagram left empty and its layout", async () => {

@@ -18,6 +18,7 @@ import { EngineError } from "../engine/errors.js";
 import { QueryError } from "../query/errors.js";
 import type { FindFilter } from "../query/filters.js";
 import { autoLayout } from "../layout/class-layout.js";
+import { autoLayoutSequence } from "../layout/sequence-layout.js";
 import { EDGE_KINDS } from "../query/graph.js";
 import type { PageArgs } from "../query/limits.js";
 import { RELATION_GROUPS, type Query } from "../query/query.js";
@@ -303,8 +304,10 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
 
   tool(
     "auto_layout_diagram",
-    "Recomputes the whole layout of a class diagram (dagre over the UI's shape sizes) and saves it; " +
-      "styles and explicit sizes are kept, link vertices dropped. The first write initializes knowledge/.",
+    "Recomputes the whole layout of a diagram with the UI's shape sizes and saves it. Class diagrams: " +
+      "dagre, link vertices dropped. Sequence diagrams: lifelines packed left to right in their current " +
+      "x order (rows always follow event order). Styles and explicit sizes are kept. The first write " +
+      "initializes knowledge/.",
     z.strictObject({ diagram: id, dryRun }),
     "write",
     async ({ diagram, dryRun: dry }) => {
@@ -313,15 +316,8 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
       const r = await engine.transact(
         () => {
           const view = query.diagram(diagram).data;
-          if (view.diagram.kind !== "class") {
-            throw new EngineError(
-              "INVALID_ARGUMENT",
-              `diagram: ${diagram} is a ${view.diagram.kind} diagram; only class diagrams (sequence: PLAN-002 S11)`,
-              { argument: "diagram" },
-            );
-          }
           const path = `layout/${view.diagram.id}.json`;
-          layout = autoLayout(view);
+          layout = view.diagram.kind === "sequence" ? autoLayoutSequence(view) : autoLayout(view);
           const ops: BatchOperation[] = [];
           initialized = engine.revision("ai-submind.json") === null;
           if (initialized) {

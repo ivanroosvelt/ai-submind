@@ -180,26 +180,26 @@ export function autoLayout(view: DiagramInput, options: { keep?: boolean } = {})
       SPACING.margin;
   }
 
-  const nodes: Record<string, LayoutNode> = {};
-  for (const n of g.nodes) {
-    const before = old(n.id);
-    if (before && keep) {
-      nodes[n.id] = before;
-      continue;
-    }
-    const p = placed.get(n.id) ?? { x: 0, y: 0 };
-    const entry: LayoutNode = { x: p.x + dx, y: p.y + dy };
-    if (before?.width !== undefined) entry.width = before.width;
-    if (before?.height !== undefined) entry.height = before.height;
-    if (before?.style !== undefined) entry.style = before.style;
-    nodes[n.id] = entry;
-  }
-  const edges: Record<string, LayoutEdge> = {};
-  for (const e of g.edges) {
-    const before = Object.hasOwn(prevEdges, e.id) ? prevEdges[e.id] : undefined;
-    if (before && keep) edges[e.id] = before;
-    else if (before?.style !== undefined) edges[e.id] = { style: before.style };
-  }
+  // Object.fromEntries keeps an ID `__proto__` as a key (an assignment would set the prototype).
+  const nodes = Object.fromEntries(
+    g.nodes.map((n): [string, LayoutNode] => {
+      const before = old(n.id);
+      if (before && keep) return [n.id, before];
+      const p = placed.get(n.id) ?? { x: 0, y: 0 };
+      const entry: LayoutNode = { x: p.x + dx, y: p.y + dy };
+      if (before?.width !== undefined) entry.width = before.width;
+      if (before?.height !== undefined) entry.height = before.height;
+      if (before?.style !== undefined) entry.style = before.style;
+      return [n.id, entry];
+    }),
+  );
+  const edges = Object.fromEntries(
+    g.edges.flatMap((e): [string, LayoutEdge][] => {
+      const before = Object.hasOwn(prevEdges, e.id) ? prevEdges[e.id] : undefined;
+      if (before && keep) return [[e.id, before]];
+      return before?.style !== undefined ? [[e.id, { style: before.style }]] : [];
+    }),
+  );
   const out: Layout = {
     format_version: view.layout?.format_version ?? view.formatVersion,
     diagram: { idref: view.diagram.id },

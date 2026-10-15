@@ -79,7 +79,7 @@ describe("queries over the garage corpus", () => {
         valid: true,
         errors: 0,
         warnings: 0,
-        elements: 89,
+        elements: 92,
         diagrams: 3,
       },
       {
@@ -282,6 +282,16 @@ describe("queries over the garage corpus", () => {
     expect(from({ direction: "out", kinds: ["realization"] })).toEqual(["Drivable"]);
     expect(from({ keys: ["represents"] })).toEqual(["CheckFuel.car", "RentCar.car"]);
     expect(q.relations("Integer", { groups: ["typing"] }).data.total).toBe(3);
+  });
+
+  it("groups the references of executions as sequence relations (DEC-018)", () => {
+    const seq = q.relations("RentCar.canDrive.receive", { direction: "in", groups: ["sequence"] });
+    expect(seq.data.items.map((r) => [r.from, r.key])).toEqual([
+      ["RentCar.canDrive", "receive_event"],
+      ["RentCar.canDrive.receive.exec", "finish"],
+      ["RentCar.canDrive.receive.exec", "start"],
+      ["RentCar.start.receive.exec", "finish"],
+    ]);
   });
 
   it("computes impact with kinds, depth and the files involved", () => {

@@ -1,0 +1,6 @@
+{
+  "description": "An execution whose start is a message, not an occurrence specification",
+  "codes": [
+    "REF_TYPE_MISMATCH"
+  ]
+}

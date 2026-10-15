@@ -13,14 +13,14 @@ test_code: []
 relations:
   related: [ENT-004]
   validations: [VAL-001, VAL-005, VAL-006]
-  decisions: []
+  decisions: [DEC-018]
 uncertainties: []
 ---
 
 # ENT-005 · Diagram layout
 
 ## Description
-Format-specific extension (UMJ does not define layout). In sequence diagrams: horizontal position of lifelines and heights; the order of events is given by the model.
+Format-specific extension (UMJ does not define layout). In sequence diagrams: horizontal position, minimum width and minimum length (`height`) of lifelines; `y` is derived (header top) and the order of events is given by the model; message entries only carry `style` (DEC-018).
 
 ## Properties
 

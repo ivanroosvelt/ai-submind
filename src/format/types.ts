@@ -197,12 +197,20 @@ export interface InteractionUse extends Identified {
 
 export type Fragment = Occurrence | CombinedFragment | InteractionUse;
 
+/** Execution specification (activation) of a lifeline between two of its occurrences (DEC-018). */
+export interface Execution extends Identified {
+  covered: Ref;
+  start: Ref;
+  finish: Ref;
+}
+
 export interface Interaction extends Identified {
   name: string;
   visibility: Visibility;
   lifelines?: Lifeline[];
   messages?: Message[];
   fragments?: Fragment[];
+  executions?: Execution[];
 }
 
 export interface Elements {

@@ -111,6 +111,7 @@ Helper functions:
 | combined fragment | `<interaction>.<operator>` | `RentCar.opt` |
 | interaction operand | `<fragment>.op<n>` (n = position when created, from 1; never renumbered) | `RentCar.opt.op1` |
 | interaction use | `<interaction>.ref--<used interaction>` | `RentCar.ref--Payment` |
+| execution specification | `<start>.exec` (no `start` → `<interaction>.exec`) | `RentCar.rent.receive.exec` |
 
 Collisions: if the derived ID already exists, `-2`, `-3`, … (the lowest free one) is appended to the end of the last
 segment, before `()` if present: `Car-2`, `Car.start-2()`. Derivation only applies on creation; it is never
@@ -178,7 +179,7 @@ requiredness and exact key order are in the schema.
 | `generalizations` | generalization | `specific` (child), `general` (parent) |
 | `dependencies` | dependency | `client` (depends), `supplier` (what it depends on), optional `name` |
 | `realizations` | realization | `client` (implementing classifier), `supplier` (interface) |
-| `interactions` | interaction | `lifelines`, `messages`, `fragments` (§6.5) |
+| `interactions` | interaction | `lifelines`, `messages`, `fragments`, `executions` (§6.5) |
 
 ### 6.4 Classifier features
 
@@ -205,6 +206,7 @@ Rules:
 | `combined_fragment` fragment | optional `name`, `operator`, `covered` (refs to lifelines), `operands` (ordered) |
 | interaction operand | `guard` (optional text), `fragments` (ordered) |
 | `interaction_use` fragment | optional `name`, `covered` (refs to lifelines), `interaction` (ref), `arguments` |
+| execution specification | `covered` (ref to a lifeline), `start`, `finish` (refs to `occurrence` fragments) |
 
 - `sort` ∈ `synch_call`, `asynch_call`, `asynch_signal`, `create_message`, `delete_message`, `reply`.
 - `kind` ∈ `complete` (requires `send_event` and `receive_event`), `lost` (only `send_event`),
@@ -216,6 +218,13 @@ Rules:
 - `lifelines` is ordered: its order is the default horizontal order (the layout may change it).
 - `messages` is a set (sorted by `id`): the temporal order is given by their occurrence specifications.
 - A synchronous message without a reply is valid (`reply` is not required).
+- `executions` is a set (sorted by `id`) of execution specifications (activations, DEC-018): the lifeline
+  `covered` is active from the occurrence `start` to the occurrence `finish`, both of the same interaction
+  and covering `covered`; `start` is not after `finish` in the temporal order, that is, the order of the
+  `fragments` flattened depth first (operands in order). `start` may equal `finish`. Executions take no part
+  in the temporal order; an occurrence they use may also be the event of a message (it is not an event of
+  the execution). Executions may nest (overlap on the same lifeline). Amendment of format 1.0 before its
+  release (2026-10-15, DEC-018): the version stays `1.0`.
 
 ### 6.6 Diagrams
 
@@ -273,7 +282,10 @@ Schema: [`layout.schema.json`](schema/1.0/layout.schema.json).
 - `style` allows `fill`, `stroke` and `text` as a lowercase `#rrggbb` color.
 - `class` diagram: `nodes` keys = packages, actors and classifiers shown; `edges` keys =
   relationships shown. `sequence` diagram: `nodes` keys = lifelines (`x` and `width` set their
-  horizontal position, `y` the header, `height` the length); `edges` keys = messages.
+  horizontal position, `y` the header top, `height` the minimum length from the header top); `edges` keys =
+  messages (only `style` is used). Vertical positions always follow the temporal order: `y` is written by the
+  layout (the margin, or the row of the create message of a created lifeline) and is not read back; rows,
+  executions and fragments are never persisted (DEC-018).
 - A key that does not correspond to an element shown is the warning `LAYOUT_ORPHAN`, not an error.
 - An element shown without a layout entry is placed by the automatic layout and is not persisted until
   a person moves it.
@@ -296,7 +308,7 @@ no differences.
    (e.g. `"name": ""` in a lifeline).
 4. **Ordered** arrays (significant order, preserved): `attributes`, `operations`, `parameters`,
    `literals`, `lifelines`, `fragments`, `operands`, `arguments`, `exceptions`, `vertices`.
-5. **Set** arrays (sorted): collections of `elements`, `diagrams`, `messages` and the reference lists
+5. **Set** arrays (sorted): collections of `elements`, `diagrams`, `messages`, `executions` and the reference lists
    `members`, `covered` and diagram `elements` by `id`/`idref` in code point order;
    `stereotypes` and `tags` by value; `code_refs` by `path` and then `symbol` (without `symbol` comes first).
    "Code point order" compares strings by UTF-16 code units, like the ECMAScript `<` operator.
@@ -339,8 +351,9 @@ Rules between phases:
 | `dependencies[].client`, `.supplier` | any element (not a model or diagram) |
 | `lifelines[].represents` | classifier or actor |
 | `messages[].send_event`, `.receive_event` | `occurrence` fragment of the same interaction |
+| `executions[].start`, `.finish` | `occurrence` fragment of the same interaction |
 | `messages[].signature` | operation |
-| `covered` (any fragment) | lifeline of the same interaction |
+| `covered` (any fragment, execution) | lifeline of the same interaction |
 | `interaction_use.interaction` | interaction other than the one containing it |
 | `diagrams[].elements` | according to `kind` (§6.6) |
 | layout `diagram` | diagram |
@@ -351,7 +364,10 @@ Rules between phases:
 - No generalization cycles and `specific ≠ general` (`GENERALIZATION_CYCLE`).
 - Message events according to `kind` (§6.5) (`MESSAGE_EVENTS`); an occurrence specification is the event of
   at most one message (`OCCURRENCE_REUSED`); one that is not the event of any message produces the warning
-  `OCCURRENCE_UNUSED`.
+  `OCCURRENCE_UNUSED` unless an execution uses it.
+- The `start` and `finish` of an execution cover its `covered` lifeline (`EXECUTION_COVERAGE`) and `start` is not
+  after `finish` in temporal order (`EXECUTION_ORDER`). Both are checked only when `start` and `finish` are
+  occurrences of the same interaction (otherwise §10.2 applies).
 - Multiplicity with `n ≤ m` (`MULTIPLICITY_INVALID`).
 
 ### 10.4 Codes
@@ -378,7 +394,9 @@ and, in phase 4, `subjects`: the IDs the finding is about (empty when it is not 
 | `GENERALIZATION_CYCLE` | error | 4 | generalization cycle |
 | `MESSAGE_EVENTS` | error | 4 | events incompatible with the message's `kind` |
 | `OCCURRENCE_REUSED` | error | 4 | occurrence specification used by two events |
-| `OCCURRENCE_UNUSED` | warning | 4 | occurrence specification without a message |
+| `OCCURRENCE_UNUSED` | warning | 4 | occurrence specification without a message or execution |
+| `EXECUTION_COVERAGE` | error | 4 | `start` or `finish` of an execution does not cover its `covered` lifeline |
+| `EXECUTION_ORDER` | error | 4 | an execution finishes before it starts in temporal order |
 | `MULTIPLICITY_INVALID` | error | 4 | lower bound greater than the upper bound |
 | `CODE_REF_INVALID` | error | 3 | `code_refs` path that is absolute or contains `..` / `\` |
 | `CODE_REF_MISSING` | warning | 4 | nonexistent `code_refs` path |
@@ -423,6 +441,7 @@ not loaded as writable, which may already hold them).
 | Association end with `name` and `role` | `role` only | they were redundant |
 | No actors | `actors` collection | actor lifelines and future use cases |
 | Fragments distinguished by their shape | explicit `type` key | precise validation and errors |
+| Execution specifications not taken from UMJ (UML: a fragment in the temporal order) | `executions` set on the interaction with `covered`, `start`, `finish` | activations explicit and validated; a position among fragments would mean nothing (DEC-018) |
 | `class_diagrams` / `sequence_diagrams` with refs by category | `diagrams` with `kind` and `elements` | extensible registry of diagram types |
 | Sequence diagram with several interactions | exactly one | unambiguous layout and rendering |
 | Diagrams with `visibility` and `description` | no `visibility`; `documentation` | consistency with the extensions |

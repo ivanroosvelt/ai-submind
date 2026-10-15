@@ -31,6 +31,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | DEC-015 | decision | MCP auto-layout, implicit init on first write and dry run | active | - | declared-doc | [DEC-015-mcp-layout-implicit-init-and-dry-run.md](../../../docs/system/decisions/DEC-015-mcp-layout-implicit-init-and-dry-run.md) |
 | DEC-016 | decision | MCP wiring: stateless handler, zod schemas, SDK proxy, camelCase arguments and cascade | active | - | declared-doc | [DEC-016-mcp-wiring-stateless-zod-proxy-and-cascade.md](../../../docs/system/decisions/DEC-016-mcp-wiring-stateless-zod-proxy-and-cascade.md) |
 | DEC-017 | decision | UI stack: plain TypeScript, Vite, SSE and a shared deterministic layout | active | - | declared-doc | [DEC-017-ui-stack-sse-and-shared-layout.md](../../../docs/system/decisions/DEC-017-ui-stack-sse-and-shared-layout.md) |
+| DEC-018 | decision | Sequence executions in format 1.0 and a shared sequence layout | active | - | declared-doc | [DEC-018-sequence-executions-and-layout.md](../../../docs/system/decisions/DEC-018-sequence-executions-and-layout.md) |
 | ENT-001 | entity | ai-submind project configuration | active | none | declared-doc | [ENT-001-ai-submind-project-configuration.md](../../../docs/system/domain/entities/ENT-001-ai-submind-project-configuration.md) |
 | ENT-002 | entity | Model | active | none | declared-doc | [ENT-002-model.md](../../../docs/system/domain/entities/ENT-002-model.md) |
 | ENT-003 | entity | Model element | active | none | declared-doc | [ENT-003-model-element.md](../../../docs/system/domain/entities/ENT-003-model-element.md) |
@@ -44,7 +45,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | FEAT-006 | feature | Knowledge administration via MCP | active | implemented | verified-code | [FEAT-006-knowledge-administration-via-mcp.md](../../../docs/system/features/FEAT-006-knowledge-administration-via-mcp.md) |
 | FEAT-007 | feature | JointJS web viewer for class diagrams | active | implemented | verified-code | [FEAT-007-jointjs-web-viewer-for-class-diagrams.md](../../../docs/system/features/FEAT-007-jointjs-web-viewer-for-class-diagrams.md) |
 | FEAT-008 | feature | Git integrity | active | verified | verified-code | [FEAT-008-git-integrity.md](../../../docs/system/features/FEAT-008-git-integrity.md) |
-| FEAT-009 | feature | Sequence diagram viewer | active | none | declared-doc | [FEAT-009-sequence-diagram-viewer.md](../../../docs/system/features/FEAT-009-sequence-diagram-viewer.md) |
+| FEAT-009 | feature | Sequence diagram viewer | active | implemented | verified-code | [FEAT-009-sequence-diagram-viewer.md](../../../docs/system/features/FEAT-009-sequence-diagram-viewer.md) |
 | NFR-001 | quality-attribute | Portability | active | - | declared-doc | [NFR-001-portability.md](../../../docs/system/quality/NFR-001-portability.md) |
 | NFR-002 | quality-attribute | Offline operation | active | - | declared-doc | [NFR-002-offline-operation.md](../../../docs/system/quality/NFR-002-offline-operation.md) |
 | NFR-003 | quality-attribute | Git-friendly diff and merge | active | - | declared-doc | [NFR-003-git-friendly-diff-and-merge.md](../../../docs/system/quality/NFR-003-git-friendly-diff-and-merge.md) |
@@ -124,6 +125,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `API-002 decisions DEC-006`
 - `API-002 decisions DEC-014`
 - `API-002 decisions DEC-017`
+- `API-002 decisions DEC-018`
 - `API-002 entities ENT-002`
 - `API-002 entities ENT-004`
 - `API-002 entities ENT-005`
@@ -269,6 +271,13 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `DEC-017 affects REQ-028`
 - `DEC-017 affects REQ-029`
 - `DEC-017 affects REQ-030`
+- `DEC-018 affects FEAT-009`
+- `DEC-018 affects REQ-040`
+- `DEC-018 affects API-001`
+- `DEC-018 affects API-002`
+- `DEC-018 affects ENT-004`
+- `DEC-018 affects ENT-005`
+- `DEC-018 affects VAL-005`
 - `ENT-001 validations VAL-001`
 - `ENT-001 validations VAL-004`
 - `ENT-001 validations VAL-006`
@@ -283,10 +292,12 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `ENT-003 validations VAL-002`
 - `ENT-003 validations VAL-003`
 - `ENT-003 validations VAL-007`
+- `ENT-004 decisions DEC-018`
 - `ENT-004 related ENT-003`
 - `ENT-004 validations VAL-001`
 - `ENT-004 validations VAL-002`
 - `ENT-004 validations VAL-003`
+- `ENT-005 decisions DEC-018`
 - `ENT-005 related ENT-004`
 - `ENT-005 validations VAL-001`
 - `ENT-005 validations VAL-005`
@@ -341,6 +352,9 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `FEAT-008 decisions DEC-016`
 - `FEAT-008 depends_on FEAT-002`
 - `FEAT-008 depends_on FEAT-003`
+- `FEAT-009 decisions DEC-006`
+- `FEAT-009 decisions DEC-017`
+- `FEAT-009 decisions DEC-018`
 - `FEAT-009 depends_on FEAT-007`
 - `FEAT-009 depends_on FEAT-008`
 - `FEAT-009 entities ENT-004`
@@ -513,7 +527,9 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `REQ-040 actors ACT-001`
 - `REQ-040 constraints VAL-005`
 - `REQ-040 constraints VAL-007`
+- `REQ-040 decisions DEC-018`
 - `REQ-040 depends_on REQ-028`
 - `REQ-040 depends_on REQ-029`
 - `REQ-040 features FEAT-009`
 - `VAL-004 decisions DEC-010`
+- `VAL-007 decisions DEC-018`

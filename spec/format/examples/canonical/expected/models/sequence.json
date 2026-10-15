@@ -81,6 +81,20 @@
             "type": "occurrence",
             "covered": {"idref": "Order.server"}
           }
+        ],
+        "executions": [
+          {
+            "id": "Order.place.receive.exec",
+            "covered": {"idref": "Order.server"},
+            "start": {"idref": "Order.place.receive"},
+            "finish": {"idref": "Order.ack.send"}
+          },
+          {
+            "id": "Order.place.send.exec",
+            "covered": {"idref": "Order.client"},
+            "start": {"idref": "Order.place.send"},
+            "finish": {"idref": "Order.place.send"}
+          }
         ]
       },
       {

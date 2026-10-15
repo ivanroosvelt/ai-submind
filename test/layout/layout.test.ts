@@ -217,4 +217,22 @@ describe("class diagram auto-layout (DEC-017)", () => {
     }
     expect(Object.keys(nodes)).toHaveLength(13);
   });
+
+  it("a class with ID __proto__ keeps its layout entry, with and without keep", () => {
+    const view = {
+      diagram: { id: "d" },
+      elements: [{ id: "__proto__", type: "class", node: { id: "__proto__", name: "P" } }],
+      names: {},
+      layout: null,
+      formatVersion: "1.0",
+    };
+    const a = autoLayout(view);
+    expect(Object.hasOwn(a.nodes ?? {}, "__proto__")).toBe(true);
+    expect(Object.getPrototypeOf(a.nodes)).toBe(Object.prototype);
+    expect(serialize("layout", a)).toContain('"__proto__"');
+    const nodes = JSON.parse('{"__proto__": {"x": 5, "y": 6}}') as Record<string, never>;
+    const layout: Layout = { format_version: "1.0", diagram: { idref: "d" }, nodes };
+    const k = autoLayout({ ...view, layout }, { keep: true });
+    expect(Object.getOwnPropertyDescriptor(k.nodes, "__proto__")?.value).toEqual({ x: 5, y: 6 });
+  });
 });

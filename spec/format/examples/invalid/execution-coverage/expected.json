@@ -1,0 +1,6 @@
+{
+  "description": "An execution whose finish occurrence covers another lifeline",
+  "codes": [
+    "EXECUTION_COVERAGE"
+  ]
+}

@@ -19,6 +19,8 @@ export const VALIDATION_CODES = {
   MESSAGE_EVENTS: "error",
   OCCURRENCE_REUSED: "error",
   OCCURRENCE_UNUSED: "warning",
+  EXECUTION_COVERAGE: "error",
+  EXECUTION_ORDER: "error",
   MULTIPLICITY_INVALID: "error",
   CODE_REF_INVALID: "error",
   CODE_REF_MISSING: "warning",

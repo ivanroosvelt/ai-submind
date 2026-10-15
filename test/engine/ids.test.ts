@@ -63,6 +63,11 @@ describe("derivation table", () => {
     [{ type: "combined_fragment", interaction: "RentCar", operator: "opt" }, "RentCar.opt"],
     [{ type: "operand", fragment: "RentCar.opt", position: 1 }, "RentCar.opt.op1"],
     [{ type: "interaction_use", interaction: "RentCar", used: "Payment" }, "RentCar.ref--Payment"],
+    [
+      { type: "execution", interaction: "RentCar", start: "RentCar.rent.receive" },
+      "RentCar.rent.receive.exec",
+    ],
+    [{ type: "execution", interaction: "RentCar", start: "" }, "RentCar.exec"],
   ];
 
   it.each(cases)("%j → %s", (input, expected) => {
@@ -78,6 +83,8 @@ describe("collisions and length", () => {
     expect(deriveId({ type: "operation", owner: "Car", name: "start" }, exists)).toBe(
       "Car.start-2()",
     );
+    const exec = { type: "execution", interaction: "I", start: "I.m.receive" } as const;
+    expect(deriveId(exec, (id) => id === "I.m.receive.exec")).toBe("I.m.receive.exec-2");
   });
 
   it("truncates the last segment of an element ID to 256 code points, keeping the owner and ()", () => {

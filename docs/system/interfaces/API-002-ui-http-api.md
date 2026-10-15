@@ -20,7 +20,7 @@ relations:
   entities: [ENT-002, ENT-004, ENT-005]
   validations: [VAL-005]
   tests: []
-  decisions: [DEC-006, DEC-014, DEC-017]
+  decisions: [DEC-006, DEC-014, DEC-017, DEC-018]
 uncertainties: []
 ---
 

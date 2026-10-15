@@ -1,0 +1,86 @@
+{
+  "format_version": "1.0",
+  "id": "m",
+  "name": "M",
+  "elements": {
+    "classes": [
+      {
+        "id": "A",
+        "name": "A",
+        "visibility": "public"
+      },
+      {
+        "id": "B",
+        "name": "B",
+        "visibility": "public"
+      }
+    ],
+    "interactions": [
+      {
+        "id": "I",
+        "name": "I",
+        "visibility": "public",
+        "lifelines": [
+          {
+            "id": "I.a",
+            "name": "a",
+            "represents": {"idref": "A"}
+          },
+          {
+            "id": "I.b",
+            "name": "b",
+            "represents": {"idref": "B"}
+          }
+        ],
+        "messages": [
+          {
+            "id": "I.m",
+            "name": "m",
+            "sort": "synch_call",
+            "kind": "complete",
+            "send_event": {"idref": "I.m.send"},
+            "receive_event": {"idref": "I.m.receive"}
+          },
+          {
+            "id": "I.r",
+            "name": "m",
+            "sort": "reply",
+            "kind": "complete",
+            "send_event": {"idref": "I.r.send"},
+            "receive_event": {"idref": "I.r.receive"}
+          }
+        ],
+        "fragments": [
+          {
+            "id": "I.m.send",
+            "type": "occurrence",
+            "covered": {"idref": "I.a"}
+          },
+          {
+            "id": "I.m.receive",
+            "type": "occurrence",
+            "covered": {"idref": "I.b"}
+          },
+          {
+            "id": "I.r.send",
+            "type": "occurrence",
+            "covered": {"idref": "I.b"}
+          },
+          {
+            "id": "I.r.receive",
+            "type": "occurrence",
+            "covered": {"idref": "I.a"}
+          }
+        ],
+        "executions": [
+          {
+            "id": "I.r.send.exec",
+            "covered": {"idref": "I.b"},
+            "start": {"idref": "I.r.send"},
+            "finish": {"idref": "I.m.receive"}
+          }
+        ]
+      }
+    ]
+  }
+}

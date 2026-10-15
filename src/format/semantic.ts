@@ -5,10 +5,12 @@ import { originalPointer, type ParsedDocument } from "./document.js";
 import type {
   AssociationEnd,
   Elements,
+  Execution,
   Fragment,
   Interaction,
   Layout,
   Model,
+  Occurrence,
   Operation,
   Ref,
   StructuredClassifier,
@@ -40,6 +42,7 @@ export const ELEMENT_TYPES = [
   "combined_fragment",
   "interaction_use",
   "operand",
+  "execution",
 ] as const;
 
 export type ElementType = (typeof ELEMENT_TYPES)[number];
@@ -66,13 +69,13 @@ export interface IndexedElement {
   file: string;
   pointer: string;
   node: unknown;
-  /** Interaction that contains the element (lifelines, messages, fragments, operands). */
+  /** Interaction that contains the element (lifelines, messages, fragments, operands, executions). */
   interaction?: string;
   /**
    * Structural container: the model owns its top-level elements and diagrams, a classifier its
    * attributes and operations, an operation its parameters, an association its ends, an interaction its
-   * lifelines, messages and top-level fragments, a combined fragment its operands and an operand its
-   * fragments. Absent for the model.
+   * lifelines, messages, top-level fragments and executions, a combined fragment its operands and an
+   * operand its fragments. Absent for the model.
    */
   parent?: string;
 }
@@ -324,6 +327,13 @@ class Indexer {
       this.ref(m.signature, `${mp}/signature`, "operation", m.id);
     });
     this.fragments(x.fragments, `${p}/fragments`, x.id, x.id);
+    (x.executions ?? []).forEach((e, i) => {
+      const ep = `${p}/executions/${String(i)}`;
+      this.add(e.id, "execution", ep, e, scope);
+      this.ref(e.covered, `${ep}/covered`, "covered", e.id, x.id);
+      this.ref(e.start, `${ep}/start`, "occurrence_event", e.id, x.id);
+      this.ref(e.finish, `${ep}/finish`, "occurrence_event", e.id, x.id);
+    });
   }
 
   private fragments(list: Fragment[] | undefined, p: string, inter: string, parent: string): void {
@@ -700,9 +710,48 @@ export function checkKnowledge(
       }
     }
   }
+  // Executions (DEC-018): start and finish cover `covered`, and start is not after finish.
+  const executionOccurrences = new Set<string>();
+  const temporal = new Map<string, Map<string, number>>();
+  for (const [, list] of byId) {
+    for (const x of list) {
+      if (x.type !== "execution") continue;
+      const e = x.node as Execution;
+      executionOccurrences.add(e.start.idref).add(e.finish.idref);
+      const s = target(e.start.idref);
+      const f = target(e.finish.idref);
+      // Other defects of the references are REF_UNRESOLVED / REF_TYPE_MISMATCH, reported above.
+      if (s?.type !== "occurrence" || f?.type !== "occurrence") continue;
+      if (s.interaction !== x.interaction || f.interaction !== x.interaction) continue;
+      const covered = (o: IndexedElement): string => (o.node as Occurrence).covered.idref;
+      if (covered(s) !== e.covered.idref || covered(f) !== e.covered.idref) {
+        out.push(
+          finding(
+            "EXECUTION_COVERAGE",
+            x.file,
+            x.pointer,
+            `start and finish of ${e.id} must cover ${e.covered.idref}`,
+            [e.id],
+          ),
+        );
+        continue;
+      }
+      const owner = x.interaction === undefined ? undefined : target(x.interaction);
+      if (owner?.type !== "interaction") continue;
+      let order = temporal.get(owner.id);
+      if (!order) temporal.set(owner.id, (order = temporalOrder(owner.node as Interaction)));
+      if ((order.get(s.id) ?? 0) > (order.get(f.id) ?? 0)) {
+        out.push(
+          finding("EXECUTION_ORDER", x.file, x.pointer, `${e.id} finishes before it starts`, [
+            e.id,
+          ]),
+        );
+      }
+    }
+  }
   for (const [id, list] of byId) {
     for (const x of list) {
-      if (x.type === "occurrence" && !usedOccurrences.has(id)) {
+      if (x.type === "occurrence" && !usedOccurrences.has(id) && !executionOccurrences.has(id)) {
         out.push(
           finding("OCCURRENCE_UNUSED", x.file, x.pointer, `${id} is not an event of any message`, [
             id,
@@ -782,6 +831,22 @@ export function checkKnowledge(
     const doc = byPath.get(f.file);
     return doc?.pointerMap ? { ...f, pointer: originalPointer(doc, f.pointer) } : f;
   });
+}
+
+/**
+ * Position of each occurrence in the temporal order of an interaction: its fragments flattened depth
+ * first, operands in order (spec §6.5).
+ */
+function temporalOrder(x: Interaction): Map<string, number> {
+  const out = new Map<string, number>();
+  const walk = (list: readonly Fragment[] | undefined): void => {
+    for (const f of list ?? []) {
+      if (f.type === "occurrence") out.set(f.id, out.size);
+      else if (f.type === "combined_fragment") for (const o of f.operands) walk(o.fragments);
+    }
+  };
+  walk(x.fragments);
+  return out;
 }
 
 /** IDs a diagram admits as keys of its layout's `nodes` and `edges` (spec §8). */

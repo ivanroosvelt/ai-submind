@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { serialize } from "../../src/format/canonical.js";
 import { Engine } from "../../src/engine/index.js";
 import { autoLayout } from "../../src/layout/class-layout.js";
+import { autoLayoutSequence } from "../../src/layout/sequence-layout.js";
 import { createMcpServer } from "../../src/mcp/tools.js";
 import { createQuery } from "../../src/query/index.js";
 
@@ -176,9 +177,23 @@ describe("auto_layout_diagram (DEC-015, DEC-017)", () => {
     expect(await layoutFile()).toBe(text);
   });
 
-  it("rejects what is not a class diagram with typed errors", async () => {
-    const seq = await call("auto_layout_diagram", { diagram: "rent-car" });
-    expect(errorOf(seq).code).toBe("INVALID_ARGUMENT");
+  it("lays out sequence diagrams with the shared sequence module (DEC-018)", async () => {
+    const path = join(dir, "knowledge", "layout", "rent-car.json");
+    const before = await readFile(path, "utf8");
+    const expected = autoLayoutSequence(createQuery(engine).diagram("rent-car").data);
+    const dry = await call("auto_layout_diagram", { diagram: "rent-car", dryRun: true });
+    expect(dry.structuredContent).toMatchObject({ dryRun: true, layout: expected });
+    expect(await readFile(path, "utf8")).toBe(before);
+    const r = await call("auto_layout_diagram", { diagram: "rent-car" });
+    expect(r.structuredContent).toMatchObject({ dryRun: false, layout: expected });
+    expect(await readFile(path, "utf8")).toBe(serialize("layout", expected));
+    // A sequence diagram without a layout gets one.
+    const fuel = await call("auto_layout_diagram", { diagram: "check-fuel" });
+    expect(fuel.isError).toBeFalsy();
+    expect(await readdir(join(dir, "knowledge", "layout"))).toContain("check-fuel.json");
+  });
+
+  it("rejects what is not a diagram with typed errors", async () => {
     expect(errorOf(await call("auto_layout_diagram", { diagram: "Car" })).code).toBe(
       "INVALID_ARGUMENT",
     );

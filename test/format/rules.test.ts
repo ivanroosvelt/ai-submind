@@ -290,6 +290,53 @@ describe("phase 4: references and semantics", () => {
     ]);
   });
 
+  it("executions (DEC-018): nested temporal order, execution-only occurrences, other interactions", () => {
+    const opt = {
+      id: "I.opt",
+      type: "combined_fragment",
+      operator: "opt",
+      covered: [{ idref: "I.b" }],
+      operands: [
+        {
+          id: "I.opt.op1",
+          fragments: [{ id: "I.x", type: "occurrence", covered: { idref: "I.b" } }],
+        },
+      ],
+    };
+    const exec = (start: string, finish: string, covered = "I.b") => ({
+      id: "I.e",
+      covered: { idref: covered },
+      start: { idref: start },
+      finish: { idref: finish },
+    });
+    const withExec = (...executions: unknown[]) => ({ ...interaction("I", [opt]), executions });
+    expect(codes(check(model("m", { interactions: [withExec()] })))).toEqual(["OCCURRENCE_UNUSED"]);
+    expect(check(model("m", { interactions: [withExec(exec("I.m.receive", "I.x"))] }))).toEqual([]);
+    const reversed = check(model("m", { interactions: [withExec(exec("I.x", "I.m.receive"))] }));
+    expect(reversed.map((x) => [x.code, x.pointer, x.subjects])).toEqual([
+      ["EXECUTION_ORDER", "/elements/interactions/0/executions/0", ["I.e"]],
+    ]);
+    const other = {
+      ...interaction("J"),
+      executions: [{ ...exec("I.m.receive", "I.x"), id: "J.e" }],
+    };
+    expect(
+      codes(check(model("m", { interactions: [withExec(exec("I.m.receive", "I.x")), other] }))),
+    ).toEqual(["REF_TYPE_MISMATCH"]);
+    // Covering a lifeline of its own interaction with events of another one: only the mismatch.
+    const foreign = {
+      ...interaction("J"),
+      executions: [{ ...exec("I.m.receive", "I.x", "J.b"), id: "J.e" }],
+    };
+    const mixed = check(
+      model("m", { interactions: [withExec(exec("I.m.receive", "I.x")), foreign] }),
+    );
+    expect(mixed.map((x) => [x.code, x.pointer])).toEqual([
+      ["REF_TYPE_MISMATCH", "/elements/interactions/1/executions/0/finish"],
+      ["REF_TYPE_MISMATCH", "/elements/interactions/1/executions/0/start"],
+    ]);
+  });
+
   it("interaction_use cannot reference its own interaction", () => {
     const use = {
       id: "I.ref--I",

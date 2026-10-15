@@ -1,9 +1,22 @@
 // Own UML shapes over @joint/core (DEC-006, DEC-017): nodes drawn from the text, rows and size computed by
 // src/layout/size.ts (never measured in the DOM) and links with UML ends. No JointJS+ code.
 import { dia, shapes } from "@joint/core";
-import type { LayoutEdge, LayoutNode } from "../format/types.js";
+import type { LayoutEdge, LayoutNode, Style } from "../format/types.js";
 import { boxSize, type GraphEdge, type GraphNode } from "../layout/class-layout.js";
-import { FIGURE_HEIGHT, FONT_FAMILY, FONT_SIZE, PAD_X, TAB_HEIGHT } from "../layout/size.js";
+import type {
+  ExecutionGeometry,
+  FragmentGeometry,
+  LifelineGeometry,
+  MessageGeometry,
+} from "../layout/sequence-layout.js";
+import {
+  CHAR_WIDTH,
+  FIGURE_HEIGHT,
+  FONT_FAMILY,
+  FONT_SIZE,
+  PAD_X,
+  TAB_HEIGHT,
+} from "../layout/size.js";
 
 const COLORS = { fill: "#ffffff", stroke: "#37474f", text: "#212121" };
 
@@ -141,6 +154,200 @@ export function linkCell(e: GraphEdge, entry: LayoutEdge | undefined): dia.Link 
         strokeDasharray: dashed ? "6 4" : "none",
         sourceMarker: { ...sourceMarker, stroke },
         targetMarker: { ...targetMarker, stroke },
+      },
+    },
+  });
+}
+
+// --- sequence diagrams (DEC-018): cells drawn from the geometry of src/layout/sequence-layout.ts --------
+
+const text = (
+  content: string,
+  x: number,
+  y: number,
+  anchor: "start" | "middle",
+  fill: string,
+  weight = "normal",
+): dia.MarkupNodeJSON => ({
+  tagName: "text",
+  textContent: content,
+  attributes: {
+    x,
+    y,
+    "text-anchor": anchor,
+    "font-family": FONT_FAMILY,
+    "font-size": FONT_SIZE,
+    "font-weight": weight,
+    fill,
+    "xml:space": "preserve",
+  },
+});
+
+/** Lifeline: header box, dashed line to its end and an X if destroyed. Moves only horizontally. */
+export function lifelineCell(l: LifelineGeometry, style: Style | undefined): dia.Element {
+  const c = { ...COLORS, ...style };
+  const m = l.width / 2;
+  const length = l.bottom - l.y;
+  const markup: dia.MarkupJSON = [
+    // Wide transparent strip so that the line can be grabbed.
+    {
+      tagName: "rect",
+      attributes: {
+        x: m - 6,
+        y: l.headerHeight,
+        width: 12,
+        height: length - l.headerHeight,
+        fill: "transparent",
+      },
+    },
+    {
+      tagName: "path",
+      attributes: {
+        d: `M ${String(m)} ${String(l.headerHeight)} V ${String(length)}`,
+        stroke: c.stroke,
+        "stroke-dasharray": "6 4",
+      },
+    },
+    {
+      tagName: "rect",
+      selector: "body",
+      attributes: { width: l.width, height: l.headerHeight, fill: c.fill, stroke: c.stroke },
+    },
+    ...l.rows.map((r, i) =>
+      text(r.text, m, r.y, "middle", c.text, i === l.rows.length - 1 ? "bold" : "normal"),
+    ),
+  ];
+  if (l.destroyed) {
+    markup.push({
+      tagName: "path",
+      attributes: {
+        d: `M ${String(m - 8)} ${String(length - 8)} l 16 16 M ${String(m + 8)} ${String(length - 8)} l -16 16`,
+        stroke: c.stroke,
+        "stroke-width": 2,
+      },
+    });
+  }
+  return new dia.Element<dia.Element.Attributes>({
+    id: l.id,
+    type: "submind.Lifeline",
+    position: { x: l.x, y: l.y },
+    size: { width: l.width, height: length + (l.destroyed ? 8 : 0) },
+    markup,
+  });
+}
+
+/** Handle at the end of a lifeline: dragging it vertically changes the lifeline's length. */
+export function lifelineEndCell(l: LifelineGeometry): dia.Element {
+  return new dia.Element<dia.Element.Attributes>({
+    id: `end:${l.id}`,
+    type: "submind.LifelineEnd",
+    position: { x: l.x + l.width / 2 - 8, y: l.bottom - 3 },
+    size: { width: 16, height: 6 },
+    markup: [
+      {
+        tagName: "rect",
+        selector: "body",
+        attributes: { width: 16, height: 6, rx: 2, fill: COLORS.stroke, cursor: "ns-resize" },
+      },
+    ],
+  });
+}
+
+/** Execution specification: a narrow box on its lifeline. */
+export function executionCell(e: ExecutionGeometry): dia.Element {
+  return new dia.Element<dia.Element.Attributes>({
+    id: e.id,
+    type: "submind.Execution",
+    position: { x: e.x, y: e.y },
+    size: { width: e.width, height: e.height },
+    markup: [
+      {
+        tagName: "rect",
+        selector: "body",
+        attributes: { width: e.width, height: e.height, fill: "#eceff1", stroke: COLORS.stroke },
+      },
+    ],
+  });
+}
+
+/** Combined fragment (operator tab, operands with guards) or interaction use (`ref` and its name). */
+export function fragmentCell(f: FragmentGeometry): dia.Element {
+  const tab = f.label.length * CHAR_WIDTH + 2 * PAD_X;
+  const h = FONT_SIZE + 8;
+  const markup: dia.MarkupJSON = [
+    {
+      tagName: "rect",
+      selector: "body",
+      attributes: {
+        width: f.width,
+        height: f.height,
+        fill: f.type === "interaction_use" ? COLORS.fill : "none",
+        stroke: COLORS.stroke,
+      },
+    },
+    {
+      tagName: "path",
+      attributes: {
+        d: `M 0 0 H ${String(tab)} V ${String(h - 6)} L ${String(tab - 6)} ${String(h)} H 0 Z`,
+        fill: "#ffffff",
+        stroke: COLORS.stroke,
+      },
+    },
+    text(f.label, PAD_X, h - 6, "start", COLORS.text, "bold"),
+  ];
+  if (f.type === "interaction_use") {
+    markup.push(text(f.text, f.width / 2, f.height / 2 + 4, "middle", COLORS.text));
+  }
+  f.operands.forEach((o, i) => {
+    const top = o.y - f.y;
+    if (i > 0) {
+      markup.push({
+        tagName: "path",
+        attributes: {
+          d: `M 0 ${String(top)} H ${String(f.width)}`,
+          stroke: COLORS.stroke,
+          "stroke-dasharray": "6 4",
+        },
+      });
+    }
+    if (o.guard !== "")
+      markup.push(text(o.guard, i === 0 ? tab + 6 : PAD_X, top + h - 6, "start", COLORS.text));
+  });
+  return new dia.Element<dia.Element.Attributes>({
+    id: f.id,
+    type: "submind.Fragment",
+    position: { x: f.x, y: f.y },
+    size: { width: f.width, height: f.height },
+    markup,
+  });
+}
+
+const FILLED_ARROW = (fill: string): Marker => ({ type: "path", d: "M 10 -5 0 0 10 5 z", fill });
+const DOT = (fill: string): Marker => ({
+  type: "path",
+  d: "M 0 0 a 5 5 0 1 0 10 0 a 5 5 0 1 0 -10 0",
+  fill,
+});
+
+/** Message: a line between fixed points with its arrowhead by sort; lost/found end in a filled circle. */
+export function messageCell(m: MessageGeometry, entry: LayoutEdge | undefined): dia.Link {
+  const stroke = entry?.style?.stroke ?? COLORS.stroke;
+  const head = m.head === "filled" ? FILLED_ARROW(stroke) : OPEN_ARROW;
+  const start = m.points[0] ?? { x: 0, y: 0 };
+  const end = m.points.at(-1) ?? start;
+  return new shapes.standard.Link({
+    id: m.id,
+    source: start,
+    target: end,
+    vertices: m.points.slice(1, -1),
+    labels: m.label === "" ? [] : [label(m.label, 0.5, m.points.length > 2 ? 0 : -10)],
+    attrs: {
+      line: {
+        stroke,
+        strokeWidth: 1.2,
+        strokeDasharray: m.line === "dashed" ? "6 4" : "none",
+        sourceMarker: { ...(m.found ? DOT(stroke) : NONE), stroke },
+        targetMarker: { ...(m.lost ? DOT(stroke) : head), stroke },
       },
     },
   });

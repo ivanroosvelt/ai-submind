@@ -147,6 +147,8 @@ const SEQUENCE_KEYS = new Set([
   "signature",
   "covered",
   "interaction",
+  "start",
+  "finish",
 ]);
 
 /** Share of documents touched by pending changes above which the lexical index is rebuilt. */

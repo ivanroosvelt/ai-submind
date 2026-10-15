@@ -9,6 +9,8 @@
   "messages": [
    {"sort": "reply", "kind": "lost", "name": "ack", "id": "Order.ack", "send_event": {"idref": "Order.ack.send"}, "receive_event": null},
    {"receive_event": {"idref": "Order.place.receive"}, "kind": "complete", "sort": "synch_call", "send_event": {"idref": "Order.place.send"}, "name": "place", "id": "Order.place", "arguments": ["qty", "sku"]}],
+  "executions": [{"finish": {"idref": "Order.place.send"}, "start": {"idref": "Order.place.send"}, "id": "Order.place.send.exec", "covered": {"idref": "Order.client"}, "tags": []},
+   {"covered": {"idref": "Order.server"}, "id": "Order.place.receive.exec", "start": {"idref": "Order.place.receive"}, "finish": {"idref": "Order.ack.send"}, "documentation": null}],
   "lifelines": [{"name": "server", "id": "Order.server"}, {"id": "Order.client", "name": ""}],
   "name": "Order", "id": "Order"},
   {"id": "Pay", "name": "Pay", "visibility": "public"}]},

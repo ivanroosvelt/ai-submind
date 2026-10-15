@@ -88,6 +88,8 @@ const MANDATORY = new Set([
   "element",
   "covered",
   "interaction",
+  "start",
+  "finish",
 ]);
 /** Message events required by its `kind` (spec §6.5); an event not required is unset instead. */
 const EVENTS: Record<string, readonly string[]> = {
@@ -114,7 +116,7 @@ function slot(type: ElementType, parent: ElementType): string[] | undefined {
   if (type === "attribute" || type === "operation")
     return FEATURE_OWNERS.includes(parent) ? [`${type}s`] : undefined;
   if (type === "parameter") return parent === "operation" ? ["parameters"] : undefined;
-  if (type === "lifeline" || type === "message")
+  if (type === "lifeline" || type === "message" || type === "execution")
     return parent === "interaction" ? [`${type}s`] : undefined;
   if (FRAGMENTS.includes(type))
     return parent === "interaction" || parent === "operand" ? ["fragments"] : undefined;
@@ -329,6 +331,8 @@ function plan(engine: Engine, ops: readonly EditOperation[]): Planned {
         return { type, fragment: ctx.parent, position: ctx.position ?? 1 };
       case "interaction_use":
         return { type, interaction: ctx.interaction ?? "", used: refOf(n.interaction) };
+      case "execution":
+        return { type, interaction: ctx.interaction ?? "", start: refOf(n.start) };
       default:
         return { type, name: str(n.name) };
     }
@@ -384,6 +388,7 @@ function plan(engine: Engine, ops: readonly EditOperation[]): Planned {
         each(n.lifelines, () => "lifeline", { interaction: id });
         each(n.messages, () => "message", { interaction: id });
         each(n.fragments, fragment, { interaction: id });
+        each(n.executions, () => "execution", { interaction: id });
         break;
       case "combined_fragment":
         each(n.operands, () => "operand");
@@ -493,7 +498,8 @@ function plan(engine: Engine, ops: readonly EditOperation[]): Planned {
       for (const x of idsIn(f.node)) gone.add(x);
       if (loc.type === "diagram") diagrams = [id];
       affected.push({ action: "deleted", file: loc.file, pointer: f.pointer, id });
-      // A message's occurrences that no other message uses go with it (no OCCURRENCE_UNUSED left).
+      // A message's occurrences that nothing else uses go with it (no OCCURRENCE_UNUSED left); one that an
+      // execution still uses stays (DEC-018).
       if (cascade && loc.type === "message") {
         for (const occ of [refOf(f.node.send_event), refOf(f.node.receive_event)]) {
           const users: Hit[] = [];

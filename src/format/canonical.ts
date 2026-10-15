@@ -29,6 +29,7 @@ const SET_KEYS = new Set([
   "interactions",
   "diagrams",
   "messages",
+  "executions",
   "members",
   "covered",
   "elements",
@@ -88,15 +89,19 @@ function canon(
     return key !== undefined && SET_KEYS.has(key) ? items.sort(compareSetItems) : items;
   }
   if (isObject(value)) {
-    const out: Record<string, Json> = {};
     if (isObject(node.additionalProperties)) {
-      // Map (layout nodes/edges): keys by code point; empty entries are omitted.
-      for (const k of Object.keys(value).sort(compareCodeUnits)) {
-        const c = canon(set, value[k], set.child(loc, "additionalProperties"), k);
-        if (!isEmpty(c)) out[k] = c as Json;
-      }
-      return out;
+      // Map (layout nodes/edges): keys by code point; empty entries are omitted. Object.fromEntries keeps
+      // an ID `__proto__` as a key (an assignment would set the prototype instead).
+      return Object.fromEntries(
+        Object.keys(value)
+          .sort(compareCodeUnits)
+          .flatMap((k) => {
+            const c = canon(set, value[k], set.child(loc, "additionalProperties"), k);
+            return isEmpty(c) ? [] : [[k, c as Json]];
+          }),
+      );
     }
+    const out: Record<string, Json> = {};
     const { props, required } = objectShape(set, node, loc, value);
     for (const p of props) {
       if (!(p.name in value)) continue;

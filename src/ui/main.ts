@@ -1,11 +1,21 @@
-// ai-submind web UI (FEAT-007, API-002, DEC-017): tree of models and diagrams, class diagrams drawn with
-// @joint/core and own shapes, zoom/pan, selection with a detail panel, findings panel, layout saved with
-// debounce (the only write, REQ-032) and live refresh through SSE. Plain TypeScript and DOM APIs.
+// ai-submind web UI (FEAT-007, FEAT-009, API-002, DEC-017, DEC-018): tree of models and diagrams, class and
+// sequence diagrams drawn with @joint/core and own shapes, zoom/pan, selection with a detail panel and
+// navigation between diagrams, findings panel, layout saved (the only write, REQ-032) and live refresh
+// through SSE. Plain TypeScript and DOM APIs.
 import { dia, highlighters, linkTools, shapes } from "@joint/core";
 import type { Finding } from "../format/findings.js";
 import type { Diagram, Layout, LayoutEdge, LayoutNode } from "../format/types.js";
 import { autoLayout, classGraph, type DiagramInput } from "../layout/class-layout.js";
-import { linkCell, nodeCell } from "./shapes.js";
+import { autoLayoutSequence, sequenceGeometry } from "../layout/sequence-layout.js";
+import {
+  executionCell,
+  fragmentCell,
+  lifelineCell,
+  lifelineEndCell,
+  linkCell,
+  messageCell,
+  nodeCell,
+} from "./shapes.js";
 
 interface ModelInfo {
   id: string;
@@ -90,7 +100,12 @@ const paper = new dia.Paper({
   async: true,
   background: { color: "#fafafa" },
   cellViewNamespace: shapes,
-  interactive: { linkMove: false, labelMove: false },
+  // Sequence diagrams: only lifelines (horizontally) and their end handles (vertically) move (DEC-018).
+  interactive: (v: dia.CellView) =>
+    current?.diagram.kind === "sequence" &&
+    !["submind.Lifeline", "submind.LifelineEnd"].includes(v.model.get("type") as string)
+      ? false
+      : { linkMove: false, labelMove: false },
 });
 
 function zoom(x: number, y: number, delta: number): void {
@@ -152,6 +167,10 @@ let saves: Promise<void> = Promise.resolve();
 let pendingSaves = 0;
 /** Set while cells are replaced, so that the changes it causes are not saved. */
 let rendering = false;
+/** Parts of the shown interaction (lifelines, messages, executions, fragments) by ID, for the detail. */
+let parts = new Map<string, { type: string; node: unknown }>();
+/** Elements to select once the diagram being opened is shown (first one on the canvas). */
+let revealing: string[] = [];
 
 /** Cell by ID; JointJS types it as always present. */
 const cellOf = (id: string): dia.Cell | undefined => graph.getCell(id);
@@ -162,15 +181,12 @@ const nameOf = (id: string): string | undefined =>
 function render(view: View, first: boolean): void {
   current = view;
   title.textContent = `${view.diagram.name} · ${view.diagram.id}`;
-  if (view.diagram.kind !== "class") {
-    graph.resetCells([]);
-    paper.el.hidden = true;
-    notice("Sequence diagrams are pending (PLAN-002 S11).");
-    showDetail(undefined);
+  notice("");
+  if (view.diagram.kind === "sequence") {
+    renderSequence(view, first);
     return;
   }
-  paper.el.hidden = false;
-  notice("");
+  parts = new Map();
   const g = classGraph(view.elements, nameOf);
   // Nodes without a position are placed by the shared auto-layout and saved only when something moves.
   const placed = autoLayout(view, { keep: true });
@@ -186,12 +202,49 @@ function render(view: View, first: boolean): void {
   showDetail(selected !== undefined && cellOf(selected) ? selected : undefined);
 }
 
+/** Sequence diagram from the shared geometry (DEC-018): rows always follow the event order. */
+function renderSequence(view: View, first: boolean): void {
+  const g = sequenceGeometry(view);
+  const nodes = view.layout?.nodes ?? {};
+  const edges = view.layout?.edges ?? {};
+  parts = new Map();
+  for (const x of [...g.lifelines, ...g.messages, ...g.executions, ...g.fragments]) {
+    const type =
+      "sort" in x
+        ? "message"
+        : "lifeline" in x
+          ? "execution"
+          : "headerHeight" in x
+            ? "lifeline"
+            : x.type;
+    parts.set(x.id, { type, node: x.node });
+  }
+  rendering = true;
+  graph.resetCells([
+    // Combined fragments behind (outline only); interaction uses opaque above lifelines (UML).
+    ...g.fragments.filter((f) => f.type === "combined_fragment").map((f) => fragmentCell(f)),
+    ...g.lifelines.map((l) =>
+      lifelineCell(l, Object.hasOwn(nodes, l.id) ? nodes[l.id]?.style : undefined),
+    ),
+    ...g.executions.map((e) => executionCell(e)),
+    ...g.fragments.filter((f) => f.type === "interaction_use").map((f) => fragmentCell(f)),
+    ...g.messages.map((m) => messageCell(m, Object.hasOwn(edges, m.id) ? edges[m.id] : undefined)),
+    ...g.lifelines.filter((l) => !l.destroyed).map((l) => lifelineEndCell(l)),
+  ]);
+  rendering = false;
+  if (first) paper.once("render:done", fit);
+  showDetail(selected !== undefined && parts.has(selected) ? selected : undefined);
+}
+
 async function open(id: string, first = true): Promise<void> {
   if (first) selected = undefined;
   try {
     const view = (await api(`/api/diagram?id=${encodeURIComponent(id)}`)) as View;
     known = Math.max(known, announced);
     render(view, first);
+    const target = revealing.find((x) => cellOf(x));
+    revealing = [];
+    if (target !== undefined) showDetail(target);
     for (const b of tree.querySelectorAll("button[data-id]")) {
       b.classList.toggle("active", (b as HTMLElement).dataset.id === id);
     }
@@ -212,15 +265,32 @@ function layoutOnScreen(view: View): Layout {
   for (const el of graph.getElements()) {
     const id = String(el.id);
     const { x, y } = el.position();
-    nodes[id] = { ...nodes[id], x: round(x), y: round(y) };
+    // defineProperty: an ID `__proto__` stays a key (an assignment would set the prototype).
+    const entry = {
+      ...(Object.hasOwn(nodes, id) ? nodes[id] : undefined),
+      x: round(x),
+      y: round(y),
+    };
+    Object.defineProperty(nodes, id, {
+      value: entry,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
   }
   for (const link of graph.getLinks()) {
     const id = String(link.id);
-    const entry: LayoutEdge = { ...edges[id] };
+    const entry: LayoutEdge = { ...(Object.hasOwn(edges, id) ? edges[id] : undefined) };
     const vertices = link.vertices().map((p) => ({ x: round(p.x), y: round(p.y) }));
     if (vertices.length > 0) entry.vertices = vertices;
     else delete entry.vertices;
-    if (Object.keys(entry).length > 0) edges[id] = entry;
+    if (Object.keys(entry).length > 0)
+      Object.defineProperty(edges, id, {
+        value: entry,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
     else Reflect.deleteProperty(edges, id);
   }
   return {
@@ -234,7 +304,7 @@ function layoutOnScreen(view: View): Layout {
 /** Saves `layout(view)` for the open diagram, if any; a conflict reloads it. */
 async function save(layout: (view: View) => Layout = layoutOnScreen): Promise<void> {
   const view = current;
-  if (view?.diagram.kind !== "class") return;
+  if (!view) return;
   const next = layout(view);
   try {
     const r = (await api(`/api/layout?diagram=${encodeURIComponent(view.diagram.id)}`, {
@@ -269,7 +339,7 @@ function enqueue(run: () => Promise<void>): void {
 }
 
 function scheduleSave(): void {
-  if (rendering) return;
+  if (rendering || current?.diagram.kind !== "class") return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     saveTimer = undefined;
@@ -284,12 +354,131 @@ $("auto-layout").addEventListener("click", () => {
   clearTimeout(saveTimer);
   saveTimer = undefined;
   enqueue(async () => {
-    await save((view) => autoLayout(view));
+    await save((view) =>
+      view.diagram.kind === "sequence" ? autoLayoutSequence(view) : autoLayout(view),
+    );
     if (current) render(current, true);
   });
 });
 
+// Sequence diagrams (DEC-018): a lifeline moves only horizontally (its x sets the order) and its end handle
+// only vertically (the length, a minimum); on drop the layout is saved and everything is redrawn.
+const fixedAxis = new Map<string, { x: number; y: number }>();
+graph.on("change:position", (cell: dia.Element) => {
+  const type = cell.get("type") as string;
+  if (rendering || (type !== "submind.Lifeline" && type !== "submind.LifelineEnd")) return;
+  const id = String(cell.id);
+  let at = fixedAxis.get(id);
+  if (!at) {
+    // ponytail: JointJS types previous() as any; the position before the first change of the drag.
+    at = { ...(cell.previous("position") as { x: number; y: number }) };
+    fixedAxis.set(id, at);
+  }
+  const p = cell.position();
+  if (type === "submind.Lifeline" && p.y !== at.y) cell.position(p.x, at.y);
+  if (type === "submind.LifelineEnd" && p.x !== at.x) cell.position(at.x, p.y);
+});
+paper.on("element:pointerup", (v: dia.ElementView) => {
+  const view = current;
+  const cell = v.model;
+  const type = cell.get("type") as string;
+  const id = String(cell.id);
+  if (view?.diagram.kind !== "sequence" || !fixedAxis.has(id)) return;
+  fixedAxis.delete(id);
+  // Existing entries are kept as they are (orphans included); only this lifeline's entry changes.
+  const next = autoLayoutSequence(view, { keep: true });
+  const lifeline = type === "submind.LifelineEnd" ? id.slice("end:".length) : id;
+  const nodes = next.nodes ?? {};
+  const before = Object.hasOwn(nodes, lifeline) ? nodes[lifeline] : undefined;
+  const header = cellOf(lifeline);
+  if (!before || !header?.isElement()) return;
+  const entry = { ...before };
+  // The length is measured from the drawn header top, not from a persisted `y` (spec §8: derived).
+  if (type === "submind.Lifeline") entry.x = round(cell.position().x);
+  else entry.height = Math.max(1, round(cell.position().y + 3 - header.position().y));
+  next.nodes = Object.fromEntries([...Object.entries(nodes), [lifeline, entry]]);
+  view.layout = next;
+  // ponytail: messages, executions and fragments follow a dragged lifeline on drop (full redraw), not while
+  // dragging; redraw on every move if live feedback matters.
+  render(view, false);
+  clearTimeout(saveTimer);
+  saveTimer = undefined;
+  enqueue(() => save(() => next));
+});
+
 // --- selection and detail (REQ-031) ---------------------------------------------------------------------
+
+/** Lifeline covered by occurrence `id` of the open sequence diagram (nested operands included). */
+function coveredBy(id: string): string | undefined {
+  interface Frag {
+    id?: unknown;
+    type?: unknown;
+    covered?: { idref?: unknown };
+    operands?: { fragments?: Frag[] }[];
+  }
+  const walk = (list: Frag[] | undefined): string | undefined => {
+    for (const f of list ?? []) {
+      if (f.id === id && f.type === "occurrence" && typeof f.covered?.idref === "string")
+        return f.covered.idref;
+      for (const o of f.operands ?? []) {
+        const hit = walk(o.fragments);
+        if (hit !== undefined) return hit;
+      }
+    }
+    return undefined;
+  };
+  if (current?.diagram.kind !== "sequence") return undefined;
+  for (const e of current.elements) {
+    const hit = walk((e.node as { fragments?: Frag[] }).fragments);
+    if (hit !== undefined) return hit;
+  }
+  return undefined;
+}
+
+/**
+ * Selects `id` or, if it has no cell, the closest element that has one: the message an occurrence is an
+ * event of, then its owners up the chain (operand → fragment, lifeline/occurrence → interaction…). On the
+ * current canvas first; otherwise it opens the first diagram that shows one of them and selects it there
+ * (navigation lifeline ↔ class, interaction use → used interaction). Uses the incoming relations.
+ */
+async function reveal(id: string): Promise<void> {
+  interface Rel {
+    items: { kind: string; from: string }[];
+  }
+  // An occurrence has no cell of its own: it sits on the lifeline it covers.
+  const lifeline = coveredBy(id);
+  if (lifeline !== undefined && cellOf(lifeline)) {
+    showDetail(lifeline);
+    return;
+  }
+  try {
+    const chain: string[] = [];
+    let diagram: string | undefined;
+    for (let x: string | undefined = id; x !== undefined && !chain.includes(x);) {
+      const { items } = (await api(`/api/relations?id=${encodeURIComponent(x)}`)) as Rel;
+      const events = items.filter((e) => e.kind === "send_event" || e.kind === "receive_event");
+      chain.push(x, ...events.map((e) => e.from));
+      const here = chain.find((y) => cellOf(y));
+      if (here !== undefined) {
+        showDetail(here);
+        return;
+      }
+      diagram = items.find((e) => e.kind === "shows")?.from;
+      if (diagram !== undefined) break;
+      x = items.find((e) => e.kind === "owns")?.from;
+    }
+    if (diagram === undefined) {
+      notice(`${id} is not shown in any diagram.`);
+      return;
+    }
+    if (diagram !== current?.diagram.id) {
+      revealing = chain;
+      location.hash = encodeURIComponent(diagram);
+    }
+  } catch (e) {
+    notice(e instanceof Error ? e.message : String(e), "error");
+  }
+}
 
 function value(v: unknown): HTMLElement {
   if (v === null) return h("em", "unknown");
@@ -303,10 +492,11 @@ function value(v: unknown): HTMLElement {
     if (typeof o.idref === "string") {
       const target = o.idref;
       const text = nameOf(target) ?? target;
-      if (!cellOf(target)) return h("span", text, "ref");
       const b = h("button", text, "ref");
+      b.title = cellOf(target) ? "Select" : "Open a diagram that shows it";
       b.addEventListener("click", () => {
-        showDetail(target);
+        if (cellOf(target)) showDetail(target);
+        else void reveal(target);
       });
       return b;
     }
@@ -323,7 +513,8 @@ function showDetail(id: string | undefined): void {
   paper.removeTools();
   highlighters.stroke.removeAll(paper, "selection");
   detail.replaceChildren();
-  const el = id === undefined ? undefined : current?.elements.find((e) => e.id === id);
+  const el =
+    id === undefined ? undefined : (current?.elements.find((e) => e.id === id) ?? parts.get(id));
   if (id === undefined || !el) {
     detail.append(h("p", "Select an element to see its properties.", "hint"));
     return;
@@ -335,7 +526,8 @@ function showDetail(id: string | undefined): void {
       padding: cell.isLink() ? 0 : 4,
       attrs: { stroke: "#1e88e5", "stroke-width": 2 },
     });
-    if (cell.isLink()) view.addTools(new dia.ToolsView({ tools: [new linkTools.Vertices()] }));
+    if (cell.isLink() && current?.diagram.kind === "class")
+      view.addTools(new dia.ToolsView({ tools: [new linkTools.Vertices()] }));
   }
   const node = el.node as Record<string, unknown>;
   const incoming = h("ul", undefined, "incoming");
@@ -355,9 +547,10 @@ function showDetail(id: string | undefined): void {
       if (items.length === 0) incoming.append(h("li", "nothing", "hint"));
       for (const e of items) {
         const text = `${e.name ?? e.from} · ${e.kind}${e.key !== undefined ? ` (${e.key})` : ""}`;
-        const item = cellOf(e.from) ? h("button", text, "ref") : h("span", text);
+        const item = h("button", text, "ref");
         item.addEventListener("click", () => {
           if (cellOf(e.from)) showDetail(e.from);
+          else void reveal(e.from);
         });
         incoming.append(h("li", undefined, undefined, item));
       }
@@ -368,7 +561,15 @@ function showDetail(id: string | undefined): void {
   );
 }
 paper.on("cell:pointerclick", (v: dia.CellView) => {
-  showDetail(String(v.model.id));
+  const id = String(v.model.id);
+  showDetail(id.startsWith("end:") ? id.slice("end:".length) : id);
+});
+// Double click on an interaction use opens the diagram of the interaction it uses.
+paper.on("cell:pointerdblclick", (v: dia.CellView) => {
+  const node = parts.get(String(v.model.id))?.node as
+    { interaction?: { idref?: unknown } } | undefined;
+  const used = node?.interaction?.idref;
+  if (typeof used === "string") void reveal(used);
 });
 paper.on("blank:pointerclick", () => {
   showDetail(undefined);
@@ -477,7 +678,10 @@ async function start(): Promise<void> {
   const diagrams = await loadTree();
   await loadFindings();
   const wanted = decodeURIComponent(location.hash.slice(1));
-  const first = diagrams.find((d) => d.id === wanted) ?? diagrams.find((d) => d.kind === "class");
+  const first =
+    diagrams.find((d) => d.id === wanted) ??
+    diagrams.find((d) => d.kind === "class") ??
+    diagrams[0];
   if (first) {
     if (first.id === wanted) await open(first.id);
     else location.hash = encodeURIComponent(first.id);

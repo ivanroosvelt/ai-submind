@@ -866,6 +866,12 @@
           "items": {
             "$ref": "#/$defs/fragment"
           }
+        },
+        "executions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/execution"
+          }
         }
       },
       "additionalProperties": false
@@ -1226,6 +1232,46 @@
               "type": "null"
             }
           ]
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/externalId"
+        }
+      },
+      "additionalProperties": false
+    },
+    "execution": {
+      "type": "object",
+      "title": "Execution specification",
+      "required": [
+        "id",
+        "covered",
+        "start",
+        "finish"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/elementId"
+        },
+        "covered": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/ref"
+        },
+        "start": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/ref"
+        },
+        "finish": {
+          "$ref": "urn:ai-submind:format:1.0:defs#/$defs/ref"
         },
         "stereotypes": {
           "$ref": "urn:ai-submind:format:1.0:defs#/$defs/stereotypes"

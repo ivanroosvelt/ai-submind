@@ -47,11 +47,11 @@ uncertainties: []
 - Tool arguments are camelCase (`dryRun`, `expectedRevision`, `cascade`).
 - `cascade: true` removes array references to the deleted subtree, unsets optional references, and deletes
   elements whose mandatory reference pointed into the subtree (generalizations, association ends and their
-  associations, realizations, occurrences on deleted lifelines…), repeating to a fixed point; everything is
+  associations, realizations, occurrences on deleted lifelines, executions whose `covered`, `start` or `finish` was deleted…), repeating to a fixed point; everything is
   listed in `affected`. Layout entries of deleted elements and the layout of deleted diagrams are removed.
   Mandatory also covers the message events its `kind` requires (spec §6.5: `complete` both, `lost`
   `send_event`, `found` `receive_event`; otherwise the event is unset). A message deleted by a cascade takes
-  with it its occurrences that no other message uses, so no `OCCURRENCE_UNUSED` warning is left. A list with `minItems: 1` left empty
+  with it its occurrences that no other message or execution uses (one an execution still uses stays, DEC-018), so no `OCCURRENCE_UNUSED` warning is left. A list with `minItems: 1` left empty
   deletes its owner: `covered` of a combined fragment or interaction use, `operands` of a combined fragment, and
   `elements` of a sequence diagram (so deleting an interaction deletes its diagram and that diagram's layout).
   Only an association end cannot be deleted alone (INVALID_ARGUMENT: delete its association); every other

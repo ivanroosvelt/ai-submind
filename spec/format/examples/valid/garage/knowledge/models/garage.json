@@ -631,6 +631,27 @@
             "type": "occurrence",
             "covered": {"idref": "RentCar.customer"}
           }
+        ],
+        "executions": [
+          {
+            "id": "RentCar.canDrive.receive.exec",
+            "covered": {"idref": "RentCar.car"},
+            "start": {"idref": "RentCar.canDrive.receive"},
+            "finish": {"idref": "RentCar.canDrive.receive"},
+            "documentation": "Nested activation of the self call."
+          },
+          {
+            "id": "RentCar.rent.receive.exec",
+            "covered": {"idref": "RentCar.garage"},
+            "start": {"idref": "RentCar.rent.receive"},
+            "finish": {"idref": "RentCar.rent-2.send"}
+          },
+          {
+            "id": "RentCar.start.receive.exec",
+            "covered": {"idref": "RentCar.car"},
+            "start": {"idref": "RentCar.start.receive"},
+            "finish": {"idref": "RentCar.canDrive.receive"}
+          }
         ]
       }
     ]

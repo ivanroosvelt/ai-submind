@@ -11,10 +11,10 @@ En construcción ([PLAN-002](docs/plans/active/PLAN-002-gestor-diagramas-base.md
 
 - Implementado: formato de conocimiento 1.0 y su validación ([spec/format/](spec/format/README.md)), motor
   embebido, consultas y búsqueda léxica, CLI con daemon por proyecto, servidor MCP, UI web (JointJS) para
-  diagramas de clases e integridad con Git (diagnóstico tras un merge, sin reparación automática:
+  diagramas de clases y de secuencia e integridad con Git (diagnóstico tras un merge, sin reparación automática:
   [FEAT-008](docs/system/features/FEAT-008-git-integrity.md)).
-- Pendiente: UI de diagramas de secuencia y publicación en npm. El paquete aún es `private`; `npx ai-submind` todavía no
-  funciona y hay que ejecutarlo desde este repositorio.
+- Pendiente: publicación en npm. El paquete aún es `private`; `npx ai-submind` todavía no funciona y hay que
+  ejecutarlo desde este repositorio.
 
 ## Requisitos
 
@@ -54,9 +54,17 @@ navegador se carga la UI: árbol de modelos y diagramas, diagramas de clases (zo
 selección con detalle, hallazgos de validación y refresco en vivo). Solo escribe el layout (posiciones de
 nodos y vértices de enlaces): al soltar un nodo o mover un vértice, y con el botón «Auto-layout», que recalcula
 el diagrama completo igual que la tool MCP `auto_layout_diagram` (útil para arreglar solapes heredados). Un
-`width`/`height` explícito en el layout es un tamaño mínimo: el contenido nunca se recorta. Los diagramas de
-secuencia aún no se dibujan. API HTTP de la UI en [API-002](docs/system/interfaces/API-002-ui-http-api.md); decisiones en
-[DEC-017](docs/system/decisions/DEC-017-ui-stack-sse-and-shared-layout.md).
+`width`/`height` explícito en el layout es un tamaño mínimo: el contenido nunca se recorta.
+
+Los diagramas de secuencia muestran lifelines, activaciones, mensajes (síncronos, asíncronos, respuesta,
+creación, destrucción, lost/found), fragmentos combinados con operandos y guardas, e interaction use («ref»).
+Las lifelines se arrastran solo en horizontal (su orden es el de x) y su longitud se cambia con el tirador del
+extremo inferior; «Auto-layout» también funciona aquí. Las referencias del detalle abren un diagrama que
+muestra el destino, y el doble clic en un interaction use abre el diagrama de la interacción usada.
+
+API HTTP de la UI en [API-002](docs/system/interfaces/API-002-ui-http-api.md); decisiones en
+[DEC-017](docs/system/decisions/DEC-017-ui-stack-sse-and-shared-layout.md) y
+[DEC-018](docs/system/decisions/DEC-018-sequence-executions-and-layout.md).
 
 ## Servidor MCP
 

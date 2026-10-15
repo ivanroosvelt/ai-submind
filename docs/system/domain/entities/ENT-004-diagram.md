@@ -13,7 +13,7 @@ test_code: []
 relations:
   related: [ENT-003]
   validations: [VAL-001, VAL-002, VAL-003]
-  decisions: []
+  decisions: [DEC-018]
 uncertainties: []
 ---
 

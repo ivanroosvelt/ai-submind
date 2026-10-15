@@ -46,7 +46,7 @@ as the MCP tool `auto_layout_diagram`) and saves it through the same `PUT` (REQ-
 writes (REQ-030). The detail panel shows every property, `null` as “unknown”, references as links to shown
 elements and the relations that reach the element (`GET /api/relations`), navigable when their source is shown
 (REQ-031). Saves run one after another; an event stream refused with 401 (daemon restarted) shows “Session
-expired” and stops retrying. Sequence diagrams show a “pending (S11)” notice (REQ-040).
+expired” and stops retrying. Sequence diagrams: FEAT-009.
 
 ## Behavior
 REQ-028..033.
