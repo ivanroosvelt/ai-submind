@@ -10,9 +10,10 @@ agentes de IA lo consultan y modifican por MCP; las personas lo exploran en una 
 En construcción ([PLAN-002](docs/plans/active/PLAN-002-gestor-diagramas-base.md)):
 
 - Implementado: formato de conocimiento 1.0 y su validación ([spec/format/](spec/format/README.md)), motor
-  embebido, consultas y búsqueda léxica, CLI con daemon por proyecto, servidor MCP y UI web (JointJS) para
-  diagramas de clases.
-- Pendiente: UI de diagramas de secuencia, integridad con Git y publicación en npm. El paquete aún es `private`; `npx ai-submind` todavía no
+  embebido, consultas y búsqueda léxica, CLI con daemon por proyecto, servidor MCP, UI web (JointJS) para
+  diagramas de clases e integridad con Git (diagnóstico tras un merge, sin reparación automática:
+  [FEAT-008](docs/system/features/FEAT-008-git-integrity.md)).
+- Pendiente: UI de diagramas de secuencia y publicación en npm. El paquete aún es `private`; `npx ai-submind` todavía no
   funciona y hay que ejecutarlo desde este repositorio.
 
 ## Requisitos
@@ -40,7 +41,7 @@ node dist/cli/main.js <comando> [opciones]   # cuando se publique: ai-submind <c
 | `status` | Muestra el estado del daemon | `--knowledge <dir>` |
 | `stop` | Detiene el daemon | `--knowledge <dir>` |
 | `init` | Crea `knowledge/` con su manifiesto `ai-submind.json` | `--knowledge <dir>` |
-| `validate` | Valida `knowledge/` (código de salida 1 si hay errores) | `--knowledge <dir>` |
+| `validate` | Valida `knowledge/`, incluidos conflictos de merge, IDs duplicados y referencias rotas (código de salida 1 si hay errores) | `--knowledge <dir>` |
 | `mcp` | Servidor MCP por stdio para agentes, conectado al daemon (lo arranca si hace falta) | `--knowledge <dir>` |
 
 `--knowledge` es relativo al directorio actual y debe quedar dentro de la raíz del proyecto; por defecto,

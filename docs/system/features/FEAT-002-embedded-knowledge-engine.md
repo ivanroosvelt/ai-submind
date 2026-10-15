@@ -41,7 +41,7 @@ In-process TypeScript engine (DEC-004): in-memory document graph and indexes, va
 REQ-005..008, REQ-022, REQ-023..027 (element edits, batch, dry run), REQ-039.
 
 ## Operation errors
-`NOT_FOUND`, `AMBIGUOUS_ID`, `INVALID_ID`, `INVALID_PATH`, `PATH_OUTSIDE_KNOWLEDGE`, `INVALID_BATCH`, `DOCUMENT_INVALID`, `REVISION_CONFLICT`, `VALIDATION_FAILED` (with the findings), `RENAME_COLLISION`, `RENAME_BLOCKED`, `REFERENCED` (with the references),
+`NOT_FOUND`, `AMBIGUOUS_ID`, `INVALID_ID`, `INVALID_PATH`, `PATH_OUTSIDE_KNOWLEDGE`, `INVALID_BATCH`, `DOCUMENT_INVALID`, `REVISION_CONFLICT`, `VALIDATION_FAILED` (with the findings), `RENAME_COLLISION`, `RENAME_BLOCKED`, `CREATE_BLOCKED`, `REFERENCED` (with the references),
 `INVALID_ARGUMENT` (`src/engine/errors.ts`).
 
 ## States and transitions

@@ -197,6 +197,19 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
     return this.state.entries.get(path)?.revision ?? null;
   }
 
+  /**
+   * Document paths not loaded as writable (`conflicted`, `invalid_parse`, read-only…) plus paths that were
+   * not even read (links outside knowledge/, unreadable entries): they may hold any ID or reference.
+   */
+  unwritable(): string[] {
+    return [
+      ...[...this.state.entries].filter(([, e]) => e.doc.status !== "writable").map(([p]) => p),
+      ...this.state.walkFindings
+        .filter((f) => classifyPath(f.file) !== undefined)
+        .map((f) => f.file),
+    ];
+  }
+
   /** Occurrences of `id` in the loaded documents (more than one = `ID_DUPLICATE`). */
   get(id: string): readonly IndexedElement[] {
     return this.state.byId.get(id) ?? [];
@@ -249,13 +262,7 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
           { id: newId },
         );
       }
-      // Documents that were not even read (links outside knowledge/, unreadable entries) also block.
-      const blocked = [
-        ...[...this.state.entries].filter(([, e]) => e.doc.status !== "writable").map(([p]) => p),
-        ...this.state.walkFindings
-          .filter((f) => classifyPath(f.file) !== undefined)
-          .map((f) => f.file),
-      ];
+      const blocked = this.unwritable();
       if (blocked.length > 0) {
         throw new EngineError(
           "RENAME_BLOCKED",

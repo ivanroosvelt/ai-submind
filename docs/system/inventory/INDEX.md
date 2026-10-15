@@ -43,7 +43,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | FEAT-005 | feature | Semantic search | proposed | none | declared-doc | [FEAT-005-semantic-search.md](../../../docs/system/features/FEAT-005-semantic-search.md) |
 | FEAT-006 | feature | Knowledge administration via MCP | active | implemented | verified-code | [FEAT-006-knowledge-administration-via-mcp.md](../../../docs/system/features/FEAT-006-knowledge-administration-via-mcp.md) |
 | FEAT-007 | feature | JointJS web viewer for class diagrams | active | implemented | verified-code | [FEAT-007-jointjs-web-viewer-for-class-diagrams.md](../../../docs/system/features/FEAT-007-jointjs-web-viewer-for-class-diagrams.md) |
-| FEAT-008 | feature | Git integrity | active | none | declared-doc | [FEAT-008-git-integrity.md](../../../docs/system/features/FEAT-008-git-integrity.md) |
+| FEAT-008 | feature | Git integrity | active | verified | verified-code | [FEAT-008-git-integrity.md](../../../docs/system/features/FEAT-008-git-integrity.md) |
 | FEAT-009 | feature | Sequence diagram viewer | active | none | declared-doc | [FEAT-009-sequence-diagram-viewer.md](../../../docs/system/features/FEAT-009-sequence-diagram-viewer.md) |
 | NFR-001 | quality-attribute | Portability | active | - | declared-doc | [NFR-001-portability.md](../../../docs/system/quality/NFR-001-portability.md) |
 | NFR-002 | quality-attribute | Offline operation | active | - | declared-doc | [NFR-002-offline-operation.md](../../../docs/system/quality/NFR-002-offline-operation.md) |
@@ -89,9 +89,9 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | REQ-031 | requirement | Element detail | active | - | declared-doc | [REQ-031-element-detail.md](../../../docs/system/requirements/REQ-031-element-detail.md) |
 | REQ-032 | requirement | UI without model editing | active | - | declared-doc | [REQ-032-ui-without-model-editing.md](../../../docs/system/requirements/REQ-032-ui-without-model-editing.md) |
 | REQ-033 | requirement | View validation status in the UI | active | - | declared-doc | [REQ-033-view-validation-status-in-ui.md](../../../docs/system/requirements/REQ-033-view-validation-status-in-ui.md) |
-| REQ-034 | requirement | Detect merge conflicts | active | - | declared-doc | [REQ-034-detect-merge-conflicts.md](../../../docs/system/requirements/REQ-034-detect-merge-conflicts.md) |
-| REQ-035 | requirement | Detect duplicate IDs after merge | active | - | declared-doc | [REQ-035-detect-duplicate-ids-after-merge.md](../../../docs/system/requirements/REQ-035-detect-duplicate-ids-after-merge.md) |
-| REQ-036 | requirement | Detect broken references after merge | active | - | declared-doc | [REQ-036-detect-broken-references-after-merge.md](../../../docs/system/requirements/REQ-036-detect-broken-references-after-merge.md) |
+| REQ-034 | requirement | Detect merge conflicts | active | - | verified-code | [REQ-034-detect-merge-conflicts.md](../../../docs/system/requirements/REQ-034-detect-merge-conflicts.md) |
+| REQ-035 | requirement | Detect duplicate IDs after merge | active | - | verified-code | [REQ-035-detect-duplicate-ids-after-merge.md](../../../docs/system/requirements/REQ-035-detect-duplicate-ids-after-merge.md) |
+| REQ-036 | requirement | Detect broken references after merge | active | - | verified-code | [REQ-036-detect-broken-references-after-merge.md](../../../docs/system/requirements/REQ-036-detect-broken-references-after-merge.md) |
 | REQ-037 | requirement | Single daemon per project | active | - | declared-doc | [REQ-037-single-daemon-per-project.md](../../../docs/system/requirements/REQ-037-single-daemon-per-project.md) |
 | REQ-038 | requirement | Lexical search | active | - | declared-doc | [REQ-038-lexical-search.md](../../../docs/system/requirements/REQ-038-lexical-search.md) |
 | REQ-039 | requirement | Rename id with reference rewriting | active | - | declared-doc | [REQ-039-rename-id-with-reference-rewriting.md](../../../docs/system/requirements/REQ-039-rename-id-with-reference-rewriting.md) |
@@ -337,6 +337,8 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `FEAT-007 entities ENT-004`
 - `FEAT-007 entities ENT-005`
 - `FEAT-007 interfaces API-002`
+- `FEAT-008 decisions DEC-014`
+- `FEAT-008 decisions DEC-016`
 - `FEAT-008 depends_on FEAT-002`
 - `FEAT-008 depends_on FEAT-003`
 - `FEAT-009 depends_on FEAT-007`

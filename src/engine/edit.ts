@@ -280,6 +280,11 @@ function plan(engine: Engine, ops: readonly EditOperation[]): Planned {
       });
     }
   };
+  /** Occurrences of a loaded `id` once this batch is applied (a duplicate may survive or be resolved). */
+  const remaining = (id: string): number => {
+    const files = new Set([...engine.get(id).map((x) => x.file), ...docs.keys()]);
+    return [...files].reduce((n, f) => n + idsIn(data(f)).filter((x) => x === id).length, 0);
+  };
   const nameOfRef = (id: string): string => {
     try {
       return str(findNode(data(where(id).file), id)?.node.name);
@@ -518,6 +523,9 @@ function plan(engine: Engine, ops: readonly EditOperation[]): Planned {
     // ponytail: every pass scans every loaded document (O(knowledge) per pass); index references by
     // target if deletes on large knowledge bases get slow.
     for (;;) {
+      // A duplicated ID whose other copy survives is not dangling: its references stay (REQ-035). Checked
+      // on every pass, since the cascade can delete more copies.
+      for (const id of gone) if (engine.get(id).length > 1 && remaining(id) > 0) gone.delete(id);
       const scanned: Hit[] = [];
       const paths = new Set([...engine.status().documents.map((d) => d.path), ...docs.keys()]);
       for (const path of paths) refsTo(data(path), gone, path, scanned);
@@ -590,6 +598,47 @@ function plan(engine: Engine, ops: readonly EditOperation[]): Planned {
         break;
       default:
         throw bad("op", `unknown operation ${String((op as { op: unknown }).op)}`);
+    }
+  }
+  // An unreadable document (e.g. `conflicted` after a merge) may already hold any new ID (REQ-034).
+  const blocked = engine.unwritable();
+  if (blocked.length > 0) {
+    for (const d of docs.values()) {
+      if (d !== null && idsIn(d).some((id) => engine.get(id).length === 0)) {
+        throw new EngineError(
+          "CREATE_BLOCKED",
+          `documents not loaded as writable may already hold the new IDs: ${blocked.join(", ")}`,
+          { paths: blocked },
+        );
+      }
+    }
+  }
+  // A reference added to an ID that stays duplicated would resolve to either copy (REQ-035); the
+  // references that already existed do not block other edits of their document. A site is the holding
+  // element, the field and the target, so moving a reference to another holder counts as a new one.
+  const dup = new Set(
+    [...engine.ids()].filter((id) => engine.get(id).length > 1 && remaining(id) > 1),
+  );
+  const sites = (doc: unknown, path: string): Map<string, number> => {
+    const hits: Hit[] = [];
+    refsTo(doc, dup, path, hits);
+    const out = new Map<string, number>();
+    for (const h of hits) {
+      const field = Array.isArray(h.holder) ? h.pointer.split("/").at(-2) : String(h.key);
+      const key = `${h.source ?? ""}\0${field ?? ""}\0${h.idref}`;
+      out.set(key, (out.get(key) ?? 0) + 1);
+    }
+    return out;
+  };
+  for (const [path, d] of docs) {
+    if (dup.size === 0 || d === null) continue;
+    const before = sites(engine.document(path)?.data, path);
+    for (const [key, n] of sites(d, path)) {
+      if (n <= (before.get(key) ?? 0)) continue;
+      const id = key.split("\0")[2] ?? "";
+      throw new EngineError("AMBIGUOUS_ID", `${id} exists ${String(engine.get(id).length)} times`, {
+        id,
+      });
     }
   }
   const batch: BatchOperation[] = [];

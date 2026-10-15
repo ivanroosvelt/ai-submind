@@ -56,6 +56,12 @@ uncertainties: []
   `elements` of a sequence diagram (so deleting an interaction deletes its diagram and that diagram's layout).
   Only an association end cannot be deleted alone (INVALID_ARGUMENT: delete its association); every other
   element of the garage corpus cascade-deletes to valid knowledge with no new warning (`test/engine/edit.test.ts`).
+- Integrity after a merge (PLAN-002 S10, user's choice on 2026-10-15): while any document is not loaded as writable
+  (`conflicted`, `invalid_parse`, read-only…), every write that adds an ID fails with `CREATE_BLOCKED` (listing
+  those paths), as `rename` does with `RENAME_BLOCKED`: the unreadable file may already hold that ID. Writes that
+  add no ID go on. A write that adds a reference to an ID that stays duplicated fails with `AMBIGUOUS_ID`;
+  references that already existed do not block other edits. Deleting one copy of a duplicated ID is not a
+  dangling reference for the cascade: references stay, pointing to the copy that remains (REQ-034, REQ-035).
 
 ## Consequences
 - Positive: one auth path for MCP, UI and API; no per-session state, so DEC-014 inactivity works while a proxy is

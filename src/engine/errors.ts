@@ -24,6 +24,8 @@ export type EngineErrorCode =
   | "RENAME_COLLISION"
   /** spec §3.2 */
   | "RENAME_BLOCKED"
+  /** A write adds IDs while some document is not loaded as writable and may already hold them (REQ-034). */
+  | "CREATE_BLOCKED"
   /** Deleting the element would leave references to it; `references` lists them (REQ-024). */
   | "REFERENCED"
   /** Malformed edit operation, e.g. a parent of the wrong type or `id` in an update patch. */

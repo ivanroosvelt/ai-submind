@@ -3,10 +3,15 @@ id: REQ-035
 type: requirement
 name: "Detect duplicate IDs after merge"
 status: active
-evidence: declared-doc
+evidence: verified-code
 summary: "ai-submind must report each duplicate id with its locations"
 aliases: []
 tags: [integrity]
+test_code:
+  - test/engine/edit.test.ts
+  - test/integrity/merge.test.ts
+  - test/format/rules.test.ts
+  - test/query/query.test.ts
 relations:
   actors: [ACT-003]
   features: [FEAT-008]
@@ -28,7 +33,9 @@ User [U]; DEC-003. Proposed in REP-003 Annex A.
 
 ## Acceptance criteria
 
-1. Queries for that id return `AMBIGUOUS_ID`; writes that affect it are blocked.
+1. Queries for that id return `AMBIGUOUS_ID`; writes that affect it are blocked: update, delete and rename of
+   it, and any new reference to it, fail with `AMBIGUOUS_ID`; deleting the model that holds one copy keeps the
+   references, which resolve to the copy that remains (DEC-016).
 
 ## Business rules
 

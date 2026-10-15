@@ -384,8 +384,10 @@ and, in phase 4, `subjects`: the IDs the finding is about (empty when it is not 
 | `CODE_REF_MISSING` | warning | 4 | nonexistent `code_refs` path |
 | `LAYOUT_ORPHAN` | warning | 4 | layout entry for an element not shown |
 
-Operation codes (API, not validation): `AMBIGUOUS_ID` (query on a duplicated `id`),
-`RENAME_COLLISION` and `RENAME_BLOCKED` (§3.2).
+Operation codes (API, not validation): `AMBIGUOUS_ID` (query or write on a duplicated `id`, or a
+write that adds a reference to it),
+`RENAME_COLLISION` and `RENAME_BLOCKED` (§3.2), `CREATE_BLOCKED` (a write that adds IDs while a document is
+not loaded as writable, which may already hold them).
 
 ## 11. Versioning
 

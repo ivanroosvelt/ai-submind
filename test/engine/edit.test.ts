@@ -1,11 +1,12 @@
 // Element-level edits (PLAN-002 S8; REQ-021, REQ-023..REQ-027, DEC-015, DEC-016): creation with derived IDs,
 // merge-patch updates, delete with cascade, diagram membership, batches, implicit init and dry run.
-import { cp, mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Layout, Model } from "../../src/format/index.js";
 import { edit, Engine, EngineError, type EngineErrorCode } from "../../src/engine/index.js";
+import { serialize } from "../../src/format/canonical.js";
 
 const GARAGE = new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url)
   .pathname;
@@ -379,5 +380,126 @@ describe("batches (REQ-026)", () => {
     expect((await json<Model>("models/shop.json")).diagrams?.[0]?.elements).toEqual([
       { idref: "Order" },
     ]);
+  });
+});
+
+describe("duplicated IDs (REQ-035, DEC-016)", () => {
+  const money = { id: "Money", name: "Money", visibility: "public", kind: "real" } as const;
+
+  /** Money in types.json and in a new billing.json (as after a merge); Car.price already uses it. */
+  async function openDuplicated(): Promise<Engine> {
+    const put = async (rel: string, change: (m: Model) => void): Promise<void> => {
+      const m = await json<Model>(rel);
+      change(m);
+      await writeFile(join(root, rel), serialize("model", m));
+    };
+    await put("models/types.json", (m) => m.elements?.primitive_types?.push(money));
+    await put("models/garage.json", (m) =>
+      m.elements?.classes
+        ?.find((c) => c.id === "Car")
+        ?.attributes?.push({
+          id: "Car.price",
+          name: "price",
+          visibility: "private",
+          type: { idref: "Money" },
+        }),
+    );
+    await writeFile(
+      join(root, "models", "billing.json"),
+      serialize("model", {
+        format_version: "1.0",
+        id: "billing",
+        name: "Billing",
+        elements: { primitive_types: [money] },
+      }),
+    );
+    return open();
+  }
+
+  it("a write that adds a reference to a duplicated ID fails with AMBIGUOUS_ID", async () => {
+    const e = await openDuplicated();
+    const before = await snapshot();
+    const attr = { name: "cost", visibility: "private", type: { idref: "Money" } };
+    const price = node(e, "Car").attributes as unknown[];
+    await rejects(
+      edit(e, [{ op: "update", id: "Car", patch: { attributes: [...price, attr] } }]),
+      "AMBIGUOUS_ID",
+    );
+    await rejects(
+      edit(e, [{ op: "create", type: "attribute", parent: "Car", data: attr }]),
+      "AMBIGUOUS_ID",
+    );
+    await rejects(
+      edit(e, [{ op: "edit_diagram", id: "overview", add: ["Money"] }]),
+      "AMBIGUOUS_ID",
+    );
+    expect(await snapshot()).toEqual(before);
+    // References that already existed do not block other edits of the same document.
+    await edit(e, [{ op: "update", id: "Car", patch: { documentation: "A car." } }]);
+    expect(node(e, "Car").documentation).toBe("A car.");
+  });
+
+  it("a reference moved to another holder in the same document is a new one (R1)", async () => {
+    const e = await openDuplicated();
+    const attrs = (node(e, "Car").attributes as { id?: string }[]).filter(
+      (a) => a.id !== "Car.price",
+    );
+    const cost = { name: "cost", visibility: "private", type: { idref: "Money" } };
+    await rejects(
+      edit(e, [{ op: "update", id: "Car", patch: { attributes: [...attrs, cost] } }]),
+      "AMBIGUOUS_ID",
+    );
+  });
+
+  it("a reference to an ID whose other copy the same batch deletes is allowed", async () => {
+    const e = await openDuplicated();
+    const cost = { name: "cost", visibility: "private", type: { idref: "Money" } };
+    await edit(e, [
+      { op: "delete", id: "billing", cascade: true },
+      { op: "create", type: "attribute", parent: "Car", data: cost },
+    ]);
+    expect(node(e, "Car.cost").type).toEqual({ idref: "Money" });
+  });
+
+  it("deleting one copy keeps the references to the copy that remains", async () => {
+    const e = await openDuplicated();
+    const r = await edit(e, [{ op: "delete", id: "billing", cascade: true }]);
+    expect(r.affected).toEqual([
+      { action: "deleted", file: "models/billing.json", pointer: "", id: "billing" },
+    ]);
+    expect(node(e, "Car.price").type).toEqual({ idref: "Money" });
+    expect(e.get("Money")).toHaveLength(1);
+  });
+});
+
+describe("documents not loaded as writable (REQ-034)", () => {
+  it("block every write that adds IDs, while other edits go on", async () => {
+    const types = join(root, "models", "types.json");
+    await writeFile(
+      types,
+      `<<<<<<< ours\n${await readFile(types, "utf8")}=======\n>>>>>>> theirs\n`,
+    );
+    const e = await open();
+    const before = await snapshot();
+    const string = { id: "String", name: "String", visibility: "public", kind: "string" };
+    const err = await rejects(
+      edit(e, [{ op: "create", type: "primitive_type", parent: "garage", data: string }]),
+      "CREATE_BLOCKED",
+    );
+    expect(err.details.paths).toEqual(["models/types.json"]);
+    await rejects(
+      edit(e, [
+        {
+          op: "create",
+          type: "attribute",
+          parent: "Car",
+          data: { name: "x", visibility: "private" },
+        },
+      ]),
+      "CREATE_BLOCKED",
+    );
+    expect(await snapshot()).toEqual(before);
+    await edit(e, [{ op: "update", id: "Car", patch: { documentation: "A car." } }]);
+    expect(node(e, "Car").documentation).toBe("A car.");
   });
 });

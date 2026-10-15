@@ -52,7 +52,7 @@ is the stdio proxy (DEC-005, DEC-016). Arguments are camelCase. Every result is 
 | `impact` | `id`, `direction?`, `maxDepth?`, `kinds?`, `limit?` | dependents/dependencies with depth and files | NOT_FOUND, INVALID_ARGUMENT |
 | `paths` | `from`, `to`, `directed?`, `mode?`, `maxLength?`, `maxPaths?`, `kinds?`, `throughHubs?` | simple paths | NOT_FOUND, INVALID_ARGUMENT |
 | `validate` | - | reload from disk, then `{state, errors, warnings, findings}` | |
-| `create_element` | `type`, `parent?` (required unless `model`), `data`, `index?`, `expectedRevision?`, `dryRun?` | write result | INVALID_ARGUMENT, NOT_FOUND, REVISION_CONFLICT, INVALID_ID, DOCUMENT_INVALID, VALIDATION_FAILED |
+| `create_element` | `type`, `parent?` (required unless `model`), `data`, `index?`, `expectedRevision?`, `dryRun?` | write result | INVALID_ARGUMENT, NOT_FOUND, REVISION_CONFLICT, INVALID_ID, DOCUMENT_INVALID, CREATE_BLOCKED, AMBIGUOUS_ID, VALIDATION_FAILED |
 | `update_element` | `id`, `patch` (RFC 7396 merge patch; `null` removes = unknown; `id` rejected, use `rename`), `expectedRevision?`, `dryRun?` | write result | same |
 | `delete_element` | `id`, `cascade?`, `expectedRevision?`, `dryRun?` | write result | REFERENCED (with `references`), same |
 | `edit_diagram` | `id`, `add?`, `remove?`, `expectedRevision?`, `dryRun?` | write result | VALIDATION_FAILED (`DIAGRAM_ELEMENT_NOT_ALLOWED`), same |
