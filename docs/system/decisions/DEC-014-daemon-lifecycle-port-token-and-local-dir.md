@@ -8,7 +8,7 @@ summary: "The daemon stops on `ai-submind stop` or after 30 min idle; listens on
 aliases: [daemon, idle, port, 7777, token, cookie, runtime.json, lockfile, gitignore]
 tags: [architecture, security, process]
 relations:
-  affects: [REQ-001, REQ-002, REQ-004, REQ-037, NFR-004, FEAT-001, API-002, API-003]
+  affects: [REQ-001, REQ-002, REQ-004, REQ-037, NFR-004, FEAT-001, API-001, API-002, API-003]
   supersedes: []
 uncertainties: []
 ---
@@ -60,9 +60,12 @@ uncertainties: []
   lock look alive until that process ends (the client then waits and fails with an explicit message).
   Browsers send cookies by host, not by port: any other HTTP service on `127.0.0.1` that the browser visits
   receives the cookie; the per-port name only avoids collisions between daemons.
+- MCP (DEC-016): `/mcp` is stateless, so a connected stdio proxy holds no daemon state and does not block the
+  idle shutdown; when the daemon is gone or restarted, the proxy starts or finds it again with `ensureDaemon` and
+  retries the request once.
 
 ## Affected elements
-REQ-001, REQ-002 (criterion 2: the `.gitignore` lives in `.ai-submind/`), REQ-004, REQ-037, NFR-004, FEAT-001,
+REQ-001, REQ-002 (criterion 2: the `.gitignore` lives in `.ai-submind/`), REQ-004, REQ-037, NFR-004, FEAT-001, API-001,
 API-002, API-003; `src/daemon/`, `src/cli/`.
 
 ## Verification

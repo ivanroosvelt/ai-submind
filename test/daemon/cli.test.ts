@@ -1,6 +1,6 @@
-// CLI and ensureDaemon as real processes (PLAN-002 S7; API-003, REQ-001, REQ-002, REQ-037). Builds dist/
-// once, then runs `node dist/cli/main.js` in temporary projects.
-import { execFile, execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
+// CLI and ensureDaemon as real processes (PLAN-002 S7; API-003, REQ-001, REQ-002, REQ-037). dist/ is built
+// once by test/build-dist.ts, then this runs `node dist/cli/main.js` in temporary projects.
+import { execFile, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import {
   cp,
@@ -17,7 +17,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const MAIN = join(REPO, "dist", "cli", "main.js");
@@ -26,10 +26,6 @@ const EXAMPLES = join(REPO, "spec", "format", "examples");
 let dir: string;
 /** Every process started by a test; killed afterwards so that a failure cannot leak a daemon. */
 const children: ChildProcess[] = [];
-
-beforeAll(() => {
-  execFileSync("npm", ["run", "--silent", "build"], { cwd: REPO, stdio: "ignore" });
-}, 120_000);
 
 beforeEach(async () => {
   dir = await realpath(await mkdtemp(join(tmpdir(), "ai-submind-cli-")));

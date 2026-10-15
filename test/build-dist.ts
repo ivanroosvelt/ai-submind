@@ -1,0 +1,19 @@
+// Vitest global setup: builds dist/ once for the suites that run the CLI as a real process
+// (test/daemon/cli.test.ts, test/mcp/proxy.test.ts). A build per suite could rewrite dist/ while the
+// processes of another suite are loading it.
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+export default function setup(): void {
+  try {
+    execFileSync("npm", ["run", "--silent", "build"], {
+      cwd: fileURLToPath(new URL("../", import.meta.url)),
+      encoding: "utf8",
+      stdio: "pipe",
+    });
+  } catch (e) {
+    // tsc reports on stdout: show both streams instead of an opaque "Command failed".
+    const { stdout = "", stderr = "" } = e as { stdout?: string; stderr?: string };
+    throw new Error(`npm run build failed:\n${stdout}${stderr}`, { cause: e });
+  }
+}

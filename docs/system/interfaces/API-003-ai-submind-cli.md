@@ -9,7 +9,7 @@ aliases: ["cli", "npx", "command"]
 tags: [contracts]
 implementation: partial
 code: [src/cli/, src/daemon/]
-test_code: [test/daemon/]
+test_code: [test/daemon/, test/mcp/proxy.test.ts]
 relations:
   providers: []
   consumers: [ACT-001, ACT-002]
@@ -30,7 +30,7 @@ uncertainties: []
 | Operation | Input | Output | Errors |
 |-----------|-------|--------|--------|
 | `ai-submind` / `serve` | `--knowledge`, `--port` (default 7777, fallback to a free port), `--idle` minutes (default 30, 0 = never) | daemon running in the foreground, UI URL with one-time token on stderr; reuses a live daemon | Node < 22, `--knowledge` outside the root, explicit port busy |
-| `mcp` | - | stdio proxy to the daemon (starts it if missing); PLAN-002 S8 |  |
+| `mcp` | `--knowledge` | stdio MCP server (API-001) proxied to the daemon's `/mcp`; starts the daemon if missing and retries once through `ensureDaemon` on connection refused or 401; stdout carries only the protocol, logs go to stderr (DEC-016) | daemon that does not start within 10 s |
 | `init` | `--knowledge` | `ai-submind.json` and self-ignored `.ai-submind/` (DEC-014) | does not overwrite |
 | `status`, `stop` | - | daemon status/stop |  |
 | `validate` | `--knowledge` | one finding per line on stdout; exit 1 if there are errors (REQ-012); default `knowledge/` missing → notice, exit 0 | explicit `--knowledge` missing → exit 2 |

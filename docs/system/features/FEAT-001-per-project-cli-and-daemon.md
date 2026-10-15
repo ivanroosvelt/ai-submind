@@ -9,14 +9,14 @@ aliases: ["cli", "daemon", "serve"]
 tags: [cli, process]
 implementation: partial
 code: [src/cli/, src/daemon/]
-test_code: [test/daemon/]
+test_code: [test/daemon/, test/mcp/http.test.ts, test/mcp/proxy.test.ts]
 relations:
   entities: [ENT-001]
   functions: []
   interfaces: [API-003]
   integrations: []
   depends_on: [FEAT-002]
-  decisions: []
+  decisions: [DEC-005, DEC-014, DEC-016]
 uncertainties: []
 ---
 
@@ -24,6 +24,9 @@ uncertainties: []
 
 ## Description
 `ai-submind` CLI (API-003) and daemon lifecycle: root resolution, lockfile, `runtime.json`, HTTP on loopback (DEC-001, DEC-005). PLAN-002 S7.
+The daemon serves the stateless MCP route `/mcp` behind its token, Host and Origin checks, and `ai-submind mcp` is
+the stdio proxy that starts the daemon if needed and retries once through `ensureDaemon` when it is gone or
+restarted (PLAN-002 S8; API-001, DEC-016).
 
 ## Behavior
 REQ-001..004, REQ-012 (CLI), REQ-037.

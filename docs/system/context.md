@@ -30,26 +30,29 @@
 - Own embedded knowledge engine instead of TerminusDB (DEC-004, FEAT-002) in `src/engine/`: loading and indexes,
   document-level batch transactions validated before writing with revision control, per-file atomic writes,
   rename with reference rewriting, ID derivation and reload with `fs.watch` (DEC-011) **[verified]**.
-  Element-level create/update/delete (REQ-023, REQ-024) arrives with MCP (PLAN-002 S8) **[declared]**.
+  Element-level create/update/delete with `cascade`, diagram editing, atomic batches, `dryRun` and implicit init
+  in `src/engine/edit.ts` (REQ-023..027, DEC-015, DEC-016) **[verified]**.
 - Process: single daemon per project in `src/daemon/` (HTTP on 127.0.0.1:7777 with fallback, token by Bearer or
   cookie, Host/Origin, lockfile, idle shutdown) and CLI `serve`/`status`/`stop`/`init`/`validate` in `src/cli/`
-  (DEC-005, DEC-014, FEAT-001, REQ-037) **[verified]**; stdio MCP proxy `ai-submind mcp` in PLAN-002 S8 **[declared]**.
+  (DEC-005, DEC-014, FEAT-001, REQ-037) **[verified]**; stdio MCP proxy `ai-submind mcp` in `src/cli/proxy.ts`
+  (DEC-016) **[verified]**.
+- MCP: stateless Streamable HTTP endpoint `/mcp` on the daemon behind its auth, query and administration tools and
+  resources in `src/mcp/` (API-001, FEAT-006, DEC-016) **[verified]**; auto-layout tool in PLAN-002 S9 (DEC-015) **[declared]**.
 - UI: `@joint/core` with own shapes; explore and adjust layout; model changes only via MCP
   (DEC-006, FEAT-007; sequence in FEAT-009, PLAN-002 S11) **[declared]**.
 - Search: structured queries (list, get, find, relations, impact, paths) and own BM25F lexical search in
   `src/query/` over the engine (FEAT-004, DEC-012, DEC-013) **[verified]**; semantic with embeddings later and
   outside PLAN-002 (DEC-007, FEAT-005) **[declared]**.
-- Interfaces: API-001 MCP server, API-002 UI HTTP API, API-003 CLI **[declared]**.
+- Interfaces: API-001 MCP server and API-003 CLI **[verified]**; API-002 UI HTTP API **[declared]**.
 - Single npm package at the root: `src/` (code, `code_roots`), `test/` (Vitest), ESLint + typescript-eslint + Prettier;
   `scripts/check` runs `npm run check` (DEC-008, EDR-006) **[verified]**.
-- Implemented: format core (FEAT-003, VAL-001..007), engine (FEAT-002, partial) and queries (FEAT-004); CLI and daemon (FEAT-001, API-003)
-  partial, without the `mcp` proxy (S8); MCP and UI remain at `implementation: none` **[verified]**.
+- Implemented: format core (FEAT-003, VAL-001..007), engine (FEAT-002), queries (FEAT-004), MCP (API-001, FEAT-006);
+  CLI and daemon (FEAT-001, API-003) partial; UI remains at `implementation: none` **[verified]**.
 - Cycles and boundaries between modules checked by dependency-cruiser in `npm run check` (NFR-008, DEC-009) **[verified]**.
 - Target scale ~10,000 elements per project (NFR-007, thresholds unconfirmed) **[inferred]**.
 
 ## What is not known (pending)
 
-- Whether the MCP agent can modify layout (P9), implicit init (P10) **[unknown]**.
 - ai-submind license **[unknown]**.
 
 ## Next step

@@ -34,9 +34,17 @@ module.exports = {
       name: "daemon-on-format-engine-query",
       severity: "error",
       comment:
-        "src/daemon depends only on src/format, src/engine and src/query (DEC-005, DEC-014).",
+        "src/daemon depends only on src/format, src/engine, src/query and src/mcp (DEC-005, DEC-014, DEC-016).",
       from: { path: "^src/daemon/" },
-      to: { path: "^src/(?!format/|engine/|query/|daemon/)" },
+      to: { path: "^src/(?!format/|engine/|query/|mcp/|daemon/)" },
+    },
+    {
+      name: "mcp-on-format-engine-query",
+      severity: "error",
+      comment:
+        "src/mcp depends only on src/format, src/engine and src/query; the daemon passes it what it needs (DEC-016).",
+      from: { path: "^src/mcp/" },
+      to: { path: "^src/(?!format/|engine/|query/|mcp/)" },
     },
     {
       name: "not-to-unresolvable",

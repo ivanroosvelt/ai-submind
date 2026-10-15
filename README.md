@@ -1,7 +1,73 @@
 # submind
 
-Proyecto en fase inicial: el producto aún no está definido (ver
-[docs/system/context.md](docs/system/context.md)).
+`ai-submind` es un gestor local de diagramas de conocimiento (diagramas de clases y de secuencia en el primer
+alcance) que vive en `knowledge/` del proyecto anfitrión, versionado con Git como única fuente de verdad. Los
+agentes de IA lo consultan y modifican por MCP; las personas lo explorarán en una UI web. Contexto completo en
+[docs/system/context.md](docs/system/context.md).
+
+## Estado
+
+En construcción ([PLAN-002](docs/plans/active/PLAN-002-gestor-diagramas-base.md)):
+
+- Implementado: formato de conocimiento 1.0 y su validación ([spec/format/](spec/format/README.md)), motor
+  embebido, consultas y búsqueda léxica, CLI con daemon por proyecto y servidor MCP.
+- Pendiente: UI web (JointJS) y publicación en npm. El paquete aún es `private`; `npx ai-submind` todavía no
+  funciona y hay que ejecutarlo desde este repositorio.
+
+## Requisitos
+
+- Node.js `^22.13.0 || ^24.0.0 || >=26.0.0` y npm.
+- Git (la raíz del proyecto es la raíz Git del directorio actual).
+- Python ≥ 3.10 solo para los scripts del entorno de desarrollo (`scripts/`).
+
+## Instalación desde el repositorio
+
+```sh
+npm ci
+npm run build    # genera dist/; el binario es dist/cli/main.js
+```
+
+## Uso de la CLI
+
+```sh
+node dist/cli/main.js <comando> [opciones]   # cuando se publique: ai-submind <comando>
+```
+
+| Comando | Qué hace | Opciones |
+|---------|----------|----------|
+| `serve` (por defecto) | Arranca el daemon del proyecto (HTTP en 127.0.0.1:7777 o un puerto libre, con token) | `--knowledge <dir>`, `--port <n>`, `--idle <minutos>` |
+| `status` | Muestra el estado del daemon | `--knowledge <dir>` |
+| `stop` | Detiene el daemon | `--knowledge <dir>` |
+| `init` | Crea `knowledge/` con su manifiesto `ai-submind.json` | `--knowledge <dir>` |
+| `validate` | Valida `knowledge/` (código de salida 1 si hay errores) | `--knowledge <dir>` |
+| `mcp` | Servidor MCP por stdio para agentes, conectado al daemon (lo arranca si hace falta) | `--knowledge <dir>` |
+
+`--knowledge` es relativo al directorio actual y debe quedar dentro de la raíz del proyecto; por defecto,
+`<raíz>/knowledge`. Ayuda: `node dist/cli/main.js --help`. Contrato: [API-003](docs/system/interfaces/API-003-ai-submind-cli.md).
+
+## Servidor MCP
+
+Configuración para un cliente MCP por stdio, ejecutando desde el repositorio (ruta absoluta a `dist/`; el
+cliente debe lanzarlo con el directorio de trabajo dentro del proyecto anfitrión):
+
+```json
+{
+  "mcpServers": {
+    "ai-submind": {
+      "command": "node",
+      "args": ["/ruta/a/submind/dist/cli/main.js", "mcp"]
+    }
+  }
+}
+```
+
+Tools: `list_models`, `list_diagrams`, `get_element`, `find_elements`, `search`, `relations`, `impact`,
+`paths`, `validate` (lectura); `create_element`, `update_element`, `delete_element`, `edit_diagram`,
+`apply_batch`, `rename` (escritura, todas con `dryRun`; la primera escritura inicializa `knowledge/` si no
+existe). Recursos `ai-submind://schema/{name}`, `ai-submind://model/{id}` y `ai-submind://diagram/{id}`.
+Entradas, salidas y errores en [API-001](docs/system/interfaces/API-001-ai-submind-mcp-server.md).
+
+## Desarrollo
 
 El repositorio incluye un entorno de desarrollo asistido por IA:
 
@@ -10,9 +76,9 @@ El repositorio incluye un entorno de desarrollo asistido por IA:
 - [.ai/](.ai/README.md) — registro de agentes y skills, políticas y decisiones del entorno.
 
 ```sh
-scripts/check                 # todas las verificaciones (también en CI)
+npm ci
+npm run check                 # tipos, lint, formato, dependencias y pruebas (Vitest)
+scripts/check                 # todas las verificaciones, incluido npm run check (también en CI)
 scripts/sysq find <término>   # buscar en el modelo
 scripts/regen                 # regenerar índices y adaptadores
 ```
-
-Requisitos: Python ≥ 3.10 y Git.

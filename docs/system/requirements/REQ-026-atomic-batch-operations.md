@@ -12,7 +12,7 @@ relations:
   features: [FEAT-006, FEAT-002]
   constraints: [NFR-005]
   depends_on: [REQ-011]
-  decisions: [DEC-011]
+  decisions: [DEC-011, DEC-016]
 uncertainties:
   - "All or nothing holds for validation (nothing is written if anything fails); after a crash during the writes, atomicity is per file (DEC-011)."
 ---

@@ -81,6 +81,25 @@ function nextChange(
   });
 }
 
+/**
+ * Repeats `write` until a matching `change` arrives (at most `nextChange`'s 5 s). On macOS the recursive
+ * watcher (FSEvents) starts asynchronously with no ready signal, so writes right after `open` can be missed.
+ */
+async function writeUntilChange(
+  e: Engine,
+  write: () => Promise<void>,
+  pred?: (c: ChangeEvent) => boolean,
+): Promise<ChangeEvent> {
+  const change = nextChange(e, pred);
+  const settled = change.then(
+    () => true,
+    () => true,
+  );
+  do await write();
+  while (!(await Promise.race([settled, new Promise<boolean>((r) => setTimeout(r, 500, false))])));
+  return change;
+}
+
 describe("loading (REQ-006, REQ-022)", () => {
   it("loads the garage corpus with indexes and inverse references", async () => {
     const e = await open();
@@ -417,27 +436,27 @@ describe("reload (REQ-007)", () => {
 
   it("watches knowledge/ and batches a burst of changes into one reload", async () => {
     const e = await open({ watch: true, debounceMs: 150 });
-    const change = nextChange(e, (c) => c.source === "external");
-    for (const id of ["a", "b", "c"]) {
-      await writeFile(
-        join(root, `models/${id}.json`),
-        serialize("model", { format_version: "1.0", id, name: id }),
-      );
-    }
-    const c = await change;
+    const c = await writeUntilChange(
+      e,
+      async () => {
+        for (const id of ["a", "b", "c"]) {
+          await writeFile(
+            join(root, `models/${id}.json`),
+            serialize("model", { format_version: "1.0", id, name: id }),
+          );
+        }
+      },
+      (x) => x.source === "external",
+    );
     expect(c.diff.added).toEqual(["a", "b", "c"]);
   });
 
   it("reports a file that becomes invalid and recovers when it is fixed", async () => {
     const e = await open({ watch: true, debounceMs: 50 });
     const original = await text("models/types.json");
-    let change = nextChange(e);
-    await writeFile(join(root, "models/types.json"), "<<<<<<< ours\n");
-    await change;
+    await writeUntilChange(e, () => writeFile(join(root, "models/types.json"), "<<<<<<< ours\n"));
     expect(e.status().state).toBe("degraded");
-    change = nextChange(e);
-    await writeFile(join(root, "models/types.json"), original);
-    await change;
+    await writeUntilChange(e, () => writeFile(join(root, "models/types.json"), original));
     expect(e.status().state).toBe("ok");
   });
 });
@@ -469,9 +488,15 @@ describe("review S5 (H1-H10)", () => {
 
   it("H2: an automatic reload error without listener is reported in status, not thrown", async () => {
     const e = await open({ watch: true, debounceMs: 20 });
+    // Wait until the watcher is live (see writeUntilChange) before removing the root.
+    await writeUntilChange(e, () =>
+      writeFile(
+        join(root, "models/live.json"),
+        serialize("model", { format_version: "1.0", id: "live", name: "live" }),
+      ),
+    );
     await rm(root, { recursive: true, force: true });
-    await new Promise((r) => setTimeout(r, 300));
-    expect(e.status().watchError).toBeDefined();
+    await expect.poll(() => e.status().watchError, { timeout: 4000 }).toBeDefined();
   });
 
   it("H3: pre-existing errors are compared by subject, not by words of the message", async () => {
@@ -552,5 +577,60 @@ describe("review S5 (H1-H10)", () => {
     await change;
     ctl.stop = true;
     expect(Date.now() - start).toBeLessThan(1500);
+  });
+});
+
+describe("dry run and builders (PLAN-002 S8; REQ-027, DEC-015)", () => {
+  it("a dry run validates and returns the real write's diff, but writes nothing", async () => {
+    const e = await open();
+    const before = await snapshot();
+    const m = await json<Model>("models/types.json");
+    const ops = [{ op: "put" as const, path: "models/types.json", data: { ...m, name: "T" } }];
+    const events: ChangeEvent[] = [];
+    e.on("change", (c) => events.push(c));
+    const gen = e.generation;
+    const dry = await e.transact(ops, { dryRun: true });
+    expect(await snapshot()).toEqual(before);
+    expect(e.generation).toBe(gen);
+    expect(events).toEqual([]);
+    const real = await e.transact(ops);
+    expect(dry).toEqual(real);
+  });
+
+  it("a dry run still fails validation like the real write", async () => {
+    const e = await open();
+    await rejects(
+      e.transact([{ op: "delete", path: "models/types.json" }], { dryRun: true }),
+      "VALIDATION_FAILED",
+    );
+  });
+
+  it("a dry rename plans the same revisions without touching disk", async () => {
+    const e = await open();
+    const before = await snapshot();
+    const dry = await e.rename("Car", "Vehicle", { dryRun: true });
+    expect(await snapshot()).toEqual(before);
+    expect(e.get("Car")).toHaveLength(1);
+    expect(dry).toEqual(await e.rename("Car", "Vehicle"));
+  });
+
+  it("a builder runs after pending external changes are loaded", async () => {
+    const e = await open();
+    const m = await json<Model>("models/types.json");
+    await writeFile(join(root, "models/types.json"), serialize("model", { ...m, name: "Ext" }));
+    const r = await e.transact(() => {
+      const cur = e.document("models/types.json")?.data as Model;
+      expect(cur.name).toBe("Ext");
+      return [
+        {
+          op: "put",
+          path: "models/types.json",
+          data: { ...cur, name: "Mine" },
+          expectedRevision: e.revision("models/types.json"),
+        },
+      ];
+    });
+    expect(Object.keys(r.revisions)).toEqual(["models/types.json"]);
+    expect((await json<Model>("models/types.json")).name).toBe("Mine");
   });
 });

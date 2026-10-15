@@ -56,7 +56,7 @@ Alternative 1 (proposed; it becomes active with the plan that implements it, at 
 - **Explicit operation**: `migrate` (CLI and MCP) lists the documents that need it, returns the chain of
   guides, and accepts the migrated document only if it validates against the target version; it then writes
   it in canonical form with the new `format_version`. It is the only write allowed on a document whose version
-  is not writable; the read-only rule of spec §11 stays as is. `dry_run` reports without writing (REQ-027).
+  is not writable; the read-only rule of spec §11 stays as is. `dryRun` reports without writing (REQ-027).
 - **Definition of done of a format change**: new schema + spec update + migration guide + corpus test.
 
 ## Consequences

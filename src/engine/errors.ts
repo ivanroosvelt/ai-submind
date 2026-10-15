@@ -23,7 +23,11 @@ export type EngineErrorCode =
   /** spec §3.2 */
   | "RENAME_COLLISION"
   /** spec §3.2 */
-  | "RENAME_BLOCKED";
+  | "RENAME_BLOCKED"
+  /** Deleting the element would leave references to it; `references` lists them (REQ-024). */
+  | "REFERENCED"
+  /** Malformed edit operation, e.g. a parent of the wrong type or `id` in an update patch. */
+  | "INVALID_ARGUMENT";
 
 export interface EngineErrorDetails {
   path?: string;
@@ -34,6 +38,10 @@ export interface EngineErrorDetails {
   findings?: Finding[];
   ids?: string[];
   paths?: string[];
+  /** References that block a delete without cascade. */
+  references?: { idref: string; file: string; pointer: string; source?: string }[];
+  /** Name of the rejected argument. */
+  argument?: string;
 }
 
 export class EngineError extends Error {

@@ -1,10 +1,13 @@
 // HTTP daemon of a project (REQ-001, REQ-037, NFR-004, DEC-005, DEC-014): loopback only, Host/Origin
-// checks, per-start token (Bearer or cookie), single instance through the lockfile, idle shutdown.
+// checks, per-start token (Bearer or cookie), single instance through the lockfile, idle shutdown, and the
+// stateless MCP route `/mcp` (API-001, DEC-016).
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { existsSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { join } from "node:path";
 import { Engine } from "../engine/engine.js";
+import { mcpRoutes } from "../mcp/http.js";
+import { createQuery } from "../query/query.js";
 import { ensureLocalDir, type Project } from "./project.js";
 import {
   acquireLock,
@@ -114,6 +117,8 @@ export async function startDaemon(
     throw e;
   }
   const opened = engine;
+  const query = createQuery(opened);
+  const mcp = mcpRoutes(opened, query, VERSION);
 
   const address = server.address();
   if (address === null || typeof address === "string") throw new Error("unexpected server address");
@@ -152,6 +157,8 @@ export async function startDaemon(
       });
       server.closeAllConnections();
       await done;
+      await mcp.close();
+      query.dispose();
       opened.close();
       await releaseLock(project);
       settle();
@@ -196,6 +203,7 @@ export async function startDaemon(
         send(res, 202, "stopping\n");
       },
     ],
+    ...mcp.routes,
   ]);
 
   const fail = (res: ServerResponse, e: unknown): void => {

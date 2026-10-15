@@ -5,11 +5,13 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { parseArgs } from "node:util";
+import { MANIFEST } from "../engine/edit.js";
 import { Engine } from "../engine/engine.js";
 import { validateKnowledgeDir } from "../format/knowledge.js";
 import { ensureLocalDir, resolveProject, type Project } from "../daemon/project.js";
 import { isAlive, liveRuntime, readRuntime, releaseLock, request } from "../daemon/runtime.js";
 import { startDaemon } from "../daemon/server.js";
+import { proxy } from "./proxy.js";
 
 const USAGE = `usage: ai-submind [command] [options]
 
@@ -19,6 +21,7 @@ commands:
   stop       stop the daemon                       [--knowledge <dir>]
   init       create knowledge/ with its manifest   [--knowledge <dir>]
   validate   validate knowledge/ (exit 1 on error) [--knowledge <dir>]
+  mcp        stdio MCP server for agents, proxied to the daemon (started if needed) [--knowledge <dir>]
 `;
 
 const log = (line: string): void => {
@@ -116,7 +119,7 @@ async function init(project: Project): Promise<number> {
   // through the daemon if that ever matters.
   const engine = await Engine.open(project.knowledge);
   await engine.transact([
-    { op: "put", path: "ai-submind.json", data: { format_version: "1.0" }, expectedRevision: null },
+    { op: "put", path: "ai-submind.json", data: MANIFEST, expectedRevision: null },
   ]);
   out(`initialized ${project.knowledge}`);
   return 0;
@@ -157,7 +160,7 @@ export async function run(argv: string[]): Promise<number> {
     return 0;
   }
   try {
-    if (!["serve", "status", "stop", "init", "validate"].includes(command)) {
+    if (!["serve", "status", "stop", "init", "validate", "mcp"].includes(command)) {
       throw new UsageError(`unknown command: ${command}`);
     }
     const { values } = parseArgs({
@@ -180,6 +183,8 @@ export async function run(argv: string[]): Promise<number> {
         return await stop(project);
       case "init":
         return await init(project);
+      case "mcp":
+        return await proxy(project);
       default:
         return await validate(project, values.knowledge !== undefined);
     }

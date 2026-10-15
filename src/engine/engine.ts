@@ -75,6 +75,11 @@ export interface ChangeEvent {
   diff: SemanticDiff;
 }
 
+export interface TransactOptions {
+  /** Validate and compute revisions and diff, but write nothing, change no state and emit no event (REQ-027). */
+  dryRun?: boolean;
+}
+
 export interface TransactionResult {
   /** New revision of each path touched (`null` = deleted). */
   revisions: Record<string, string | null>;
@@ -207,13 +212,24 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
     return this.state.refsTo.get(id) ?? [];
   }
 
-  /** Applies a batch atomically per file: everything is validated before the first write (REQ-026). */
-  transact(ops: readonly BatchOperation[]): Promise<TransactionResult> {
-    return this.exclusive(() => this.commit(ops));
+  /**
+   * Applies a batch atomically per file: everything is validated before the first write (REQ-026). A
+   * builder function is called inside the transaction after pending external changes are loaded, so it
+   * can derive the batch from the current state without racing other writers.
+   */
+  transact(
+    ops: readonly BatchOperation[] | (() => readonly BatchOperation[]),
+    options: TransactOptions = {},
+  ): Promise<TransactionResult> {
+    return this.exclusive(async () => {
+      if (typeof ops !== "function") return this.commit(ops, undefined, options.dryRun);
+      await this.load();
+      return this.commit(ops(), undefined, options.dryRun);
+    });
   }
 
   /** Renames an ID and rewrites all its references in one transaction (REQ-039, spec §3.2). */
-  rename(oldId: string, newId: string): Promise<RenameResult> {
+  rename(oldId: string, newId: string, options: TransactOptions = {}): Promise<RenameResult> {
     return this.exclusive(async () => {
       // Rename works on what is on disk now: other parties' changes are loaded first, never overwritten.
       await this.load();
@@ -289,7 +305,7 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
         if (f.subjects) t.subjects = f.subjects.map(map);
         return t;
       };
-      const result = await this.commit([...ops, ...moves], translate);
+      const result = await this.commit([...ops, ...moves], translate, options.dryRun);
       return { ...result, renamed: renamed.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)) };
     });
   }
@@ -364,6 +380,7 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
   private async commit(
     ops: readonly BatchOperation[],
     translate?: (f: Finding) => Finding,
+    dryRun = false,
   ): Promise<TransactionResult> {
     if (ops.length === 0) return { revisions: {}, diff: semanticDiff(new Map(), new Map(), []) };
     // Validation runs against what is on disk now (REQ-011): pending external changes are loaded first,
@@ -473,6 +490,11 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
       });
     }
 
+    const paths = writes.map((w) => w.path);
+    const revisions: Record<string, string | null> = {};
+    for (const w of writes) revisions[w.path] = next.entries.get(w.path)?.revision ?? null;
+    if (dryRun) return { revisions, diff: semanticDiff(current.byId, next.byId, paths) };
+
     // Creations and replacements before deletions: an interrupted move leaves a duplicate, not a loss.
     try {
       for (const w of writes) if (w.bytes) await writeDocument(this.root, w.path, w.bytes);
@@ -486,13 +508,7 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
 
     this.state = next;
     this.gen++;
-    const diff = semanticDiff(
-      current.byId,
-      next.byId,
-      writes.map((w) => w.path),
-    );
-    const revisions: Record<string, string | null> = {};
-    for (const w of writes) revisions[w.path] = next.entries.get(w.path)?.revision ?? null;
+    const diff = semanticDiff(current.byId, next.byId, paths);
     this.emit("change", { source: "engine", diff });
     return { revisions, diff };
   }

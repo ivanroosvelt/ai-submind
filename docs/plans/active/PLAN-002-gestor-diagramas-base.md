@@ -7,7 +7,7 @@ updated: 2026-10-14
 class: T2
 related: [DEC-001, DEC-002, DEC-003, DEC-004, DEC-005, DEC-006, DEC-007, DEC-008, EDR-006, REP-003]
 blockers: []
-next_action: "Commit de S7 (y aparte DEC-012/DEC-013) cuando el usuario lo pida; luego S8 (servidor MCP y subcomando mcp sobre ensureDaemon)."
+next_action: "Commit de S8 (y aparte el agente documenter, EDR-008) cuando el usuario lo pida; luego S9 (UI JointJS + tool MCP de auto-layout, DEC-015)."
 stages:
   - id: S1
     name: "Decisiones aceptadas y modelo estructural registrado"
@@ -39,8 +39,8 @@ stages:
     evidence: "2026-10-14 src/daemon (project, runtime, server) y src/cli (main, commands, node-version) según DEC-005/DEC-014; regla depcruise daemon-on-format-engine-query. test/daemon 39 pruebas (project 10+, server, cli con dist/ construido en beforeAll): arranque concurrente, carrera multiproceso de lock huérfano (8 rondas × 6 procesos; el código previo falla 3/3), guardia de recuperación, runtime.json 0600, .ai-submind 0700, daemon.log 0600, Host/Origin ajenos/ausentes/mayúsculas/null → 403, sin token → 401, Bearer y ?token= → 303 + cookie HttpOnly SameSite=Strict, solo 127.0.0.1, 7777 con respaldo, puerto explícito ocupado → error, inactividad y petición en curso, /api/stop, petición malformada → 400 sin caída, handler que lanza → 500, serve sin knowledge/ (REQ-002 CA1), init sin sobrescribir, validate 0/1/2, symlinks fuera de la raíz y raíz rechazados, ensureDaemon reutiliza pid, guarda de Node. Mutaciones: sin Origin o sin token fallan sus pruebas. scripts/check: entorno 0/0; modelo 94 elementos 0/0; 42 pruebas herramientas; producto typecheck+lint+formato+deps+236 Vitest OK; test/daemon 3/3 estables; sin daemons residuales. change-verifier: rechazado (H1-H10) → corregido → re-revisión aprobada con observaciones R1-R5, corregidas (R4 zombi en stop: informativo para S8)."
   - id: S8
     name: "Servidor MCP (Streamable HTTP + proxy stdio) con tools de consulta y administración"
-    status: proposed
-    evidence: ""
+    status: verified
+    evidence: "2026-10-15 src/engine/edit.ts (create/update/delete con cascade, edit_diagram, lotes, dryRun, init implícito), dryRun y builder en engine.ts, src/mcp (tools, http), src/cli/proxy.ts y subcomando mcp, /mcp en el daemon; deps exactas @modelcontextprotocol/server 2.3.1, client 2.3.1, zod 4.6.7 (Apache-2.0/MIT/ISC); DEC-015, DEC-016. Pruebas: test/engine/edit.test.ts (cascade de cada elemento de garage sin errores ni avisos nuevos, interacción, lifeline, mensaje, __proto__), test/mcp tools/http/proxy (cliente MCP real por InMemory, HTTP y stdio: crear→consultar→validar, errores tipados, dryRun sin escritura, init implícito, 401/403 en /mcp, confinamiento de rutas, proxy arranca daemon, reintento por ECONNREFUSED y 401, stop con proxy conectado). Mutaciones: cada corrección revertida rompe su prueba. Watcher de S5: pruebas esperan a que FSEvents esté activo (writeUntilChange); 80/80 bajo 8 procesos paralelos (antes 7/64 fallos); DEC-011 lo registra. scripts/check ×3: entorno 0/0; modelo 96 elementos 0/0; 42 pruebas herramientas; producto typecheck+lint+formato+deps+272 Vitest OK; sin daemons residuales. change-verifier: aprobado con observaciones H1-H7 (corregidas); re-revisión aprobada con observaciones R1-R4 (R1, R2 corregidas; R3 informativa; R4 = cambio del entorno revisado aparte). README actualizado por documenter (AGT-005)."
   - id: S9
     name: "UI web JointJS: explorar y ajustar layout"
     status: proposed
@@ -146,12 +146,15 @@ S11 tras S9/S10; S12 tras S7..S11.
 
 ### S8 · Servidor MCP
 - Acciones: subcomando `mcp` (proxy stdio sobre `ensureDaemon` de S7); `@modelcontextprotocol/server` v2; tools de consulta (S6) y administración (crear/modificar/
-  eliminar elementos y diagramas, lotes, rename, validar); proxy stdio; recursos (modelos, diagramas, schema).
-- Pruebas: cliente MCP real (stdio y HTTP) ejecuta flujo crear→consultar→validar; errores tipados.
+  eliminar elementos y diagramas, lotes, rename, validar); proxy stdio; recursos (modelos, diagramas, schema);
+  init implícito en la primera escritura y `dry_run` en toda escritura (DEC-015); el layout solo se limpia en cascada.
+- Pruebas: cliente MCP real (stdio y HTTP) ejecuta flujo crear→consultar→validar; errores tipados; dry_run no escribe;
+  primera escritura sin knowledge/ lo inicializa.
 
 ### S9 · UI JointJS
 - Acciones: shapes UML propias (clase, interfaz, enum, data type, relaciones); auto-layout dagre;
-  zoom/pan, selección, navegación entre diagramas; mover persiste layout; refresco en vivo (SSE/WS).
+  zoom/pan, selección, navegación entre diagramas; mover persiste layout; refresco en vivo (SSE/WS);
+  tool MCP de auto-layout de un diagrama con los tamaños de las shapes (DEC-015).
   Secuencia: S11.
 - Pruebas: render de ejemplos; mover nodo escribe `layout/<id>.json` canónico; verificación en navegador.
 
@@ -186,7 +189,7 @@ S11 tras S9/S10; S12 tras S7..S11.
 - Un archivo por modelo aumenta conflictos de merge → mitigado en S10, merge driver en plan posterior.
 - Licencia de ai-submind sin definir (afecta publicación, no desarrollo).
 - Daemon: procesos huérfanos y puertos → pruebas en S7.
-- Dudas abiertas por etapa (de fichas `uncertainties`): S7 apagado del daemon, puerto, entrega del token al navegador; S8 si MCP puede modificar layout, init implícito en primera escritura; REQ-027 dry_run y NFR-007 umbrales sin confirmar.
+- Dudas abiertas por etapa (de fichas `uncertainties`): S7 apagado del daemon, puerto, entrega del token al navegador; NFR-007 umbrales sin confirmar (las de S8 se resolvieron en DEC-015).
 
 ## Bitácora
 - 2026-10-14 · creado tras task-intake, REP-003 y respuestas del usuario (archivos, IDs, proceso, stack).
@@ -218,5 +221,10 @@ S11 tras S9/S10; S12 tras S7..S11.
 - 2026-10-14 · usuario confirma los defaults de DEC-012 y DEC-013 → active.
 - 2026-10-14 · usuario autoriza borrar restos de la rama anterior: `packages/`, `.superpowers/`, `.worktrees/` (ignorados por git). `scripts/check` pasa completo en local.
 - 2026-10-14 · S7 revisada por change-verifier: rechazado (H1 petición malformada tumbaba el daemon, H2 token en daemon.log 0644, H3 carrera de recuperación del lock con dos daemons, H4 FEAT-001/API-003 → partial, H5 symlinks colgantes, H6 raíz como knowledge, H7 cookie no aislada por puerto → DEC-014, H8 validate con --knowledge inexistente → exit 2, H9 limpieza de procesos y pruebas negativas, H10 → test_code en NFR-004/NFR-006). Corregido; re-revisión aprobada con observaciones R1-R5, corregidas. R4 (stop ve zombis como vivos si el padre no recoge al hijo) queda como nota para el proxy de S8. S7 verified.
+- 2026-10-14 · reanudado en S8 (S7 en 36201b2, DEC-012/013 en c957abe; árbol limpio salvo `.gitignore`/`.ignore` de graft, ajenos). Usuario decide auto-layout desde MCP (tool en S9, necesita shapes), init implícito en la primera escritura y `dry_run` en S8: DEC-015 (active); REQ-027 active. S8 in_progress.
+- 2026-10-14 · S8 executed (subagente implementador, diseño aprobado + DEC-015/DEC-016): deps exactas `@modelcontextprotocol/server`/`client` 2.3.1 (Apache-2.0) y `zod` 4.6.7 (MIT; transitivas MIT/ISC); engine `transact` con `dryRun` y builder dentro de la transacción, `rename` con `dryRun`; `src/engine/edit.ts` (create con IDs derivados también en hijos inline, merge patch, delete con `REFERENCED`/cascade, `edit_diagram`, lotes, init implícito, limpieza de layout; `MANIFEST` común con `init`); `src/mcp/` (15 tools, 3 recursos, errores tipados; ruta `/mcp` stateless tras token/Host/Origin); `ai-submind mcp` (proxy stdio con reintento único vía `ensureDaemon` ante ECONNREFUSED/401); regla depcruise `mcp-on-format-engine-query`. Pruebas nuevas: 29 (engine +4, edit 13, mcp tools 6, http 4, proxy 2); `scripts/check` verde (entorno 0/0, modelo 96 elementos 0/0, 42 pruebas herramientas, producto 265 Vitest); test/mcp 3/3 estable; sin daemons residuales. Desviaciones: `fail()` interno; errores no tipados → error genérico de tool del SDK; `affected.id` = elemento que contenía la referencia; borrar un `association_end` → INVALID_ARGUMENT; ocurrencias sin id → `<interacción>.occ`; REQ-023 CA3 redactado como «null en patch = ausente = desconocido»; unidades 2–4 con pruebas escritas juntas antes de implementar; reintento por 401 sin prueba propia; `dist/` se construye una vez en `test/build-dist.ts` (globalSetup de Vitest) en vez de un `beforeAll` por suite (cli y proxy): con dos builds concurrentes una ejecución de `scripts/check` falló por timeout en la prueba de watcher de engine; tras el cambio `scripts/check` 3/3 verde. Pendiente change-verifier.
+- 2026-10-15 · S8 revisada por change-verifier: aprobado con observaciones H1-H7; corregidas con pruebas de regresión (TDD): H1 cascade borra mensajes cuyo evento exige su `kind` y el dueño de una lista `minItems: 1` vaciada (`covered`, `operands`, `elements` de diagrama sequence → borra diagrama y layout); borrado en cascada de cada elemento del garaje en dry run sin errores (salvo `association_end` → INVALID_ARGUMENT, documentado en DEC-016); H2 claves `__proto__`/`constructor`/`prototype` → INVALID_ARGUMENT en `data` y `patch`, `merge` con `Object.hasOwn`; H3 `destructiveHint: true` en todas las escrituras salvo `create_element`; H4 `initialized` aclarado en DEC-015/API-001; H5 pruebas de confinamiento por tools MCP y de reintento del proxy por 401 (daemon reiniciado por otro proceso en el mismo puerto); H6 orden y punteros de `affected` documentados en API-001; H7 `test/build-dist.ts` muestra stdout/stderr del build. Mutaciones: cada corrección revertida rompe su prueba. `scripts/check` verde (entorno 0/0, modelo 96 elementos 0/0, 42 pruebas herramientas, producto 271 Vitest); test/mcp + test/engine 3/3 estables; sin daemons residuales. S8 sigue executed; pendiente re-revisión.
+- 2026-10-15 · re-revisión change-verifier: aprobado con observaciones R1-R4; R1 y R2 corregidas; R3 informativa; R4 es el cambio del entorno documenter, revisado aparte. R1: un mensaje borrado por cascade borra sus ocurrencias que ningún otro mensaje usa (sin `OCCURRENCE_UNUSED` nuevos; prueba del garaje con escritura real por elemento comparando advertencias antes/después, y prueba explícita de borrar `RentCar.rent`; DEC-016 y REQ-024 actualizadas; mutación → fallan ambas). R2: la prueba de 401 arranca el primer daemon con `--port 0` y, si el `serve` reiniciado termina, falla con su stderr; además espera a que el nuevo daemon publique runtime.json y responda `/api/status` con su token antes de llamar. Causa del fallo `unauthorized` visto por otro revisor: su `scripts/check` (inicio 07:06:46) reconstruyó `dist/` compartido mientras estaba aplicada la mutación M7 (reintento 401 eliminado en `src/cli/proxy.ts`, 07:06:47); la mutación reproduce exactamente ese error y el reintento del proxy no puede leer un runtime obsoleto (sin runtime vivo, `ensureDaemon` espera a `waitForRuntime`). proxy.test.ts 10/10; `scripts/check` 4/6 verde: los 2 fallos son timeouts preexistentes de las pruebas de watcher de engine (S5), que también fallan 1/8 con la prueba del garaje desactivada. S8 sigue executed.
+- 2026-10-15 · flake del watcher de S5 (2/6 en scripts/check): instrumentado, FSEvents de macOS arranca asíncrono y pierde escrituras inmediatas bajo carga; pruebas con writeUntilChange y expect.poll, limitación en DEC-011. documenter actualiza README (primera ejecución) y context.md se pone al día. S8 verified.
 
 ## Resultado (al cerrar)
