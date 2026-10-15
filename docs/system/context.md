@@ -49,7 +49,7 @@
 - Single npm package at the root: `src/` (code, `code_roots`), `test/` (Vitest), ESLint + typescript-eslint + Prettier;
   `scripts/check` runs `npm run check` (DEC-008, EDR-006) **[verified]**.
 - Implemented: format core (FEAT-003, VAL-001..007), engine (FEAT-002), queries (FEAT-004), MCP (API-001, FEAT-006);
-  CLI and daemon (FEAT-001, API-003) partial; UI (FEAT-007, API-002) implemented, browser verification pending **[verified]**.
+  CLI and daemon (FEAT-001, API-003) partial; UI (FEAT-007, API-002) implemented and verified (tests and browser check) **[verified]**.
 - Cycles and boundaries between modules checked by dependency-cruiser in `npm run check` (NFR-008, DEC-009) **[verified]**.
 - Target scale ~10,000 elements per project (NFR-007, thresholds unconfirmed) **[inferred]**.
 
