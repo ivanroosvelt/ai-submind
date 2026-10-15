@@ -37,7 +37,7 @@ perspectives:
     capabilities: [CAP-012, CAP-015, CAP-007]
   - key: traceability
     name: Documentación y trazabilidad
-    capabilities: [CAP-005, CAP-016]
+    capabilities: [CAP-005, CAP-016, CAP-017]
   - key: migrations
     name: Migraciones y compatibilidad
     capabilities: [CAP-014, CAP-009]

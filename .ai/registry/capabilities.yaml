@@ -80,3 +80,7 @@ capabilities:
     name: Detección de documentación obsoleta e inconsistencias
     providers: [SKL-007, AGT-003]
     status: covered
+  - id: CAP-017
+    name: Documentación de uso (README)
+    providers: [AGT-005]
+    status: covered

@@ -102,6 +102,7 @@ Toda tarea empieza con el skill `task-intake` (SKL-001). Resultado mínimo:
 | Crear/actualizar/retirar fichas del modelo | skill `model-update`; agente `system-modeler` para lotes grandes |
 | Decisión con alternativas | skill `decision-record` |
 | Cerrar cualquier cambio T1/T2 | skill `verify-change`; agente `change-verifier` para revisión independiente |
+| Mantener el `README.md` al día con lo que el ciclo cambió | agente `documenter` |
 | Cambiar agentes, skills, políticas o este archivo | skill `environment-audit`; agente `environment-steward` |
 
 La implementación de código la realiza el agente principal siguiendo este archivo
@@ -118,7 +119,8 @@ Fases obligatorias para T1/T2 (T0 solo 4 y 5). Detalle de evidencias en `.ai/pol
 3. **Planificación** — unidades pequeñas con resultado y prueba cada una; en T2, plan con etapas
    y puntos de reanudación.
 4. **Implementación** — cambios acotados, sin refactorizaciones ajenas; **modelo estructural
-   actualizado en la misma unidad lógica** (mismo commit o mismo PR); decisiones nuevas registradas.
+   actualizado en la misma unidad lógica** (mismo commit o mismo PR); decisiones nuevas registradas;
+   al final, agente `documenter` (actualiza `README.md` si el ciclo cambió algo visible).
 5. **Verificación** — pruebas pertinentes, validadores (`scripts/check`), contratos, referencias,
    contradicciones código/documentación, criterios de aceptación. Editar archivos no es éxito.
 6. **Cierre** — `scripts/regen`, evidencias registradas, estado real de cada etapa, plan

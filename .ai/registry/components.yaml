@@ -20,6 +20,10 @@ agents:
     name: environment-steward
     path: .claude/agents/environment-steward.md
     status: active
+  - id: AGT-005
+    name: documenter
+    path: .claude/agents/documenter.md
+    status: active
 
 skills:
   - id: SKL-001

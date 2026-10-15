@@ -20,8 +20,10 @@ Descripción del cambio, criterios de aceptación, rango de Git o lista de archi
    Si el cambio tocó código del producto: `scripts/validate-system-model --since <base>`.
 5. **Coherencia**: para cada ID tocado, `scripts/sysq show <ID>`; confirmar que la ficha describe
    lo que hace el código ahora. Buscar elementos afectados no actualizados (`scripts/sysq impact <ID>`).
-6. **Criterios de aceptación**: uno por uno, con la evidencia que lo cubre o "no cubierto".
-7. **Registrar**: comando + resultado (resumen fiel, incluidas fallas) en plan/commit/respuesta.
+6. **README**: si el cambio altera algo visible para quien usa o clona el repositorio, confirmar que se
+   invocó el agente `documenter` (`AGENTS.md` §6, fase 4) y que `README.md` es coherente con el código.
+7. **Criterios de aceptación**: uno por uno, con la evidencia que lo cubre o "no cubierto".
+8. **Registrar**: comando + resultado (resumen fiel, incluidas fallas) en plan/commit/respuesta.
 
 ## Salida
 ```
