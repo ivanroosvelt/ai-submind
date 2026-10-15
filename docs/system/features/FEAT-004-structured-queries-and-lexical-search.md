@@ -3,22 +3,33 @@ id: FEAT-004
 type: feature
 name: "Structured queries and lexical search"
 status: active
-evidence: declared-doc
+evidence: verified-code
 summary: "Deterministic queries over the graph (list, get, search, relationships, impact) and lexical search."
 aliases: ["queries", "query", "search"]
 tags: [queries]
-implementation: none
-code: []
-test_code: []
+implementation: verified
+code:
+  - src/query/index.ts
+  - src/query/query.ts#createQuery
+  - src/query/graph.ts
+  - src/query/traverse.ts#impact
+  - src/query/traverse.ts#paths
+  - src/query/filters.ts#compileFilter
+  - src/query/meta.ts#metaOf
+  - src/query/lexical.ts#LexicalIndex
+  - src/query/text.ts#tokenize
+test_code:
+  - test/query/query.test.ts
+  - test/query/lexical.test.ts
+  - test/query/text.test.ts
 relations:
   entities: []
   functions: []
   interfaces: [API-001]
   integrations: []
   depends_on: [FEAT-002]
-  decisions: []
-uncertainties:
-  - "Lexical engine: own BM25 or minisearch (DEC-007)."
+  decisions: [DEC-012, DEC-013]
+uncertainties: []
 ---
 
 # FEAT-004 · Structured queries and lexical search
@@ -27,7 +38,7 @@ uncertainties:
 Read-only queries over the engine (DEC-004) and free-text lexical search (DEC-007), exposed via MCP. PLAN-002 S6.
 
 ## Behavior
-REQ-014..018, REQ-038 (REQ-019 proposed).
+REQ-014..019, REQ-038; every result carries the engine generation, the degraded state and the excluded documents (REQ-022). Graph semantics, limits and errors (`NOT_FOUND`, `AMBIGUOUS_ID`, `INVALID_ARGUMENT`): DEC-012. Lexical engine: DEC-013.
 
 ## States and transitions
 No states of its own; results in stable order, no effects on disk.

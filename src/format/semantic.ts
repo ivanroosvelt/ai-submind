@@ -14,31 +14,35 @@ import type {
   StructuredClassifier,
 } from "./types.js";
 
-export type ElementType =
-  | "model"
-  | "diagram"
-  | "package"
-  | "actor"
-  | "class"
-  | "interface"
-  | "data_type"
-  | "enumeration"
-  | "primitive_type"
-  | "association"
-  | "association_end"
-  | "generalization"
-  | "dependency"
-  | "realization"
-  | "interaction"
-  | "attribute"
-  | "operation"
-  | "parameter"
-  | "lifeline"
-  | "message"
-  | "occurrence"
-  | "combined_fragment"
-  | "interaction_use"
-  | "operand";
+/** Element types of format 1.0, in the order of the spec. */
+export const ELEMENT_TYPES = [
+  "model",
+  "diagram",
+  "package",
+  "actor",
+  "class",
+  "interface",
+  "data_type",
+  "enumeration",
+  "primitive_type",
+  "association",
+  "association_end",
+  "generalization",
+  "dependency",
+  "realization",
+  "interaction",
+  "attribute",
+  "operation",
+  "parameter",
+  "lifeline",
+  "message",
+  "occurrence",
+  "combined_fragment",
+  "interaction_use",
+  "operand",
+] as const;
+
+export type ElementType = (typeof ELEMENT_TYPES)[number];
 
 /** Collections of `elements` and the type of their items (spec §6.3). */
 export const COLLECTIONS = {
@@ -64,9 +68,17 @@ export interface IndexedElement {
   node: unknown;
   /** Interaction that contains the element (lifelines, messages, fragments, operands). */
   interaction?: string;
+  /**
+   * Structural container: the model owns its top-level elements and diagrams, a classifier its
+   * attributes and operations, an operation its parameters, an association its ends, an interaction its
+   * lifelines, messages and top-level fragments, a combined fragment its operands and an operand its
+   * fragments. Absent for the model.
+   */
+  parent?: string;
 }
 
-type Rule =
+/** Rule of a key that holds references: decides the types it admits (spec §10.2). */
+export type RefRule =
   | "member"
   | "classifier"
   | "classifier_or_actor"
@@ -86,7 +98,9 @@ export interface RefSite {
   idref: string;
   file: string;
   pointer: string;
-  rule: Rule;
+  rule: RefRule;
+  /** Innermost element that contains the reference; absent for the references of a layout. */
+  source?: string;
   /** Interaction that contains the reference, for the "same interaction" rules. */
   interaction?: string;
   /** Element that contains the reference (only `members`: the package). */
@@ -109,7 +123,7 @@ const RELATIONS: readonly ElementType[] = [
 const NODE_TYPES: readonly ElementType[] = ["package", "actor", ...CLASSIFIERS];
 
 /** Types allowed by each key that holds references (spec §10.2). */
-const ALLOWED: Record<Rule, readonly ElementType[] | ((t: ElementType) => boolean)> = {
+const ALLOWED: Record<RefRule, readonly ElementType[] | ((t: ElementType) => boolean)> = {
   member: [...NODE_TYPES, ...RELATIONS, "interaction"],
   classifier: CLASSIFIERS,
   classifier_or_actor: [...CLASSIFIERS, "actor"],
@@ -126,7 +140,7 @@ const ALLOWED: Record<Rule, readonly ElementType[] | ((t: ElementType) => boolea
   diagram: ["diagram"],
 };
 
-const admits = (rule: Rule, t: ElementType): boolean => {
+const admits = (rule: RefRule, t: ElementType): boolean => {
   const a = ALLOWED[rule];
   return typeof a === "function" ? a(t) : a.includes(t);
 };
@@ -143,6 +157,12 @@ interface Multiplicity {
   pointer: string;
 }
 
+/** Context of the element being indexed: its container and the interaction it belongs to. */
+interface Scope {
+  parent?: string;
+  interaction?: string;
+}
+
 class Indexer {
   readonly byId = new Map<string, IndexedElement[]>();
   readonly refs: RefSite[] = [];
@@ -150,30 +170,40 @@ class Indexer {
 
   constructor(private readonly file: string) {}
 
-  add(id: string, type: ElementType, ptr: string, node: unknown, interaction?: string): void {
+  add(id: string, type: ElementType, ptr: string, node: unknown, scope: Scope = {}): void {
     const entry: IndexedElement = { id, type, file: this.file, pointer: ptr, node };
-    if (interaction !== undefined) entry.interaction = interaction;
+    if (scope.interaction !== undefined) entry.interaction = scope.interaction;
+    if (scope.parent !== undefined) entry.parent = scope.parent;
     const list = this.byId.get(id);
     if (list) list.push(entry);
     else this.byId.set(id, [entry]);
   }
 
+  /** Reference at `ptr`, contained in element `source` (absent only in layouts). */
   ref(
     r: Ref | null | undefined,
     ptr: string,
-    rule: Rule,
+    rule: RefRule,
+    source?: string,
     interaction?: string,
   ): RefSite | undefined {
     if (!r) return undefined;
     const site: RefSite = { idref: r.idref, file: this.file, pointer: ptr, rule };
+    if (source !== undefined) site.source = source;
     if (interaction !== undefined) site.interaction = interaction;
     this.refs.push(site);
     return site;
   }
 
-  refList(list: Ref[] | undefined, ptr: string, rule: Rule, interaction?: string): RefSite[] {
+  refList(
+    list: Ref[] | undefined,
+    ptr: string,
+    rule: RefRule,
+    source: string,
+    interaction?: string,
+  ): RefSite[] {
     return (list ?? []).flatMap(
-      (r, i) => this.ref(r, `${ptr}/${String(i)}`, rule, interaction) ?? [],
+      (r, i) => this.ref(r, `${ptr}/${String(i)}`, rule, source, interaction) ?? [],
     );
   }
 
@@ -188,17 +218,18 @@ class Indexer {
     for (const [coll, type] of Object.entries(COLLECTIONS) as [keyof Elements, ElementType][]) {
       (elements[coll] ?? []).forEach((e, i) => {
         const p = pointer("elements", coll, i);
-        this.add(e.id, type, p, e);
+        this.add(e.id, type, p, e, { parent: m.id });
         this.element(type, e, p);
       });
     }
     (m.diagrams ?? []).forEach((d, i) => {
       const p = pointer("diagrams", i);
-      this.add(d.id, "diagram", p, d);
+      this.add(d.id, "diagram", p, d, { parent: m.id });
       this.refList(
         d.elements,
         `${p}/elements`,
         d.kind === "class" ? "class_diagram_element" : "sequence_diagram_element",
+        d.id,
       );
     });
   }
@@ -211,7 +242,8 @@ class Indexer {
     switch (type) {
       case "package": {
         const pkg = e as { id: string; members?: Ref[] };
-        for (const site of this.refList(pkg.members, `${p}/members`, "member")) site.owner = pkg.id;
+        for (const site of this.refList(pkg.members, `${p}/members`, "member", pkg.id))
+          site.owner = pkg.id;
         break;
       }
       case "class":
@@ -219,31 +251,33 @@ class Indexer {
       case "data_type":
         this.features(e as StructuredClassifier, p);
         break;
-      case "association":
+      case "association": {
+        const a = e as { id: string } & Record<"end1" | "end2", AssociationEnd>;
         for (const key of ["end1", "end2"] as const) {
-          const end = (e as Record<typeof key, AssociationEnd>)[key];
+          const end = a[key];
           const ep = `${p}/${key}`;
-          this.add(end.id, "association_end", ep, end);
-          this.ref(end.element, `${ep}/element`, "classifier_or_actor");
+          this.add(end.id, "association_end", ep, end, { parent: a.id });
+          this.ref(end.element, `${ep}/element`, "classifier_or_actor", end.id);
           this.multiplicity(end.multiplicity, ep);
         }
         break;
+      }
       case "generalization": {
-        const g = e as { specific: Ref; general: Ref };
-        this.ref(g.specific, `${p}/specific`, "generalization_end");
-        this.ref(g.general, `${p}/general`, "generalization_end");
+        const g = e as { id: string; specific: Ref; general: Ref };
+        this.ref(g.specific, `${p}/specific`, "generalization_end", g.id);
+        this.ref(g.general, `${p}/general`, "generalization_end", g.id);
         break;
       }
       case "dependency": {
-        const d = e as { client: Ref; supplier: Ref };
-        this.ref(d.client, `${p}/client`, "any_element");
-        this.ref(d.supplier, `${p}/supplier`, "any_element");
+        const d = e as { id: string; client: Ref; supplier: Ref };
+        this.ref(d.client, `${p}/client`, "any_element", d.id);
+        this.ref(d.supplier, `${p}/supplier`, "any_element", d.id);
         break;
       }
       case "realization": {
-        const r = e as { client: Ref; supplier: Ref };
-        this.ref(r.client, `${p}/client`, "realization_client");
-        this.ref(r.supplier, `${p}/supplier`, "realization_supplier");
+        const r = e as { id: string; client: Ref; supplier: Ref };
+        this.ref(r.client, `${p}/client`, "realization_client", r.id);
+        this.ref(r.supplier, `${p}/supplier`, "realization_supplier", r.id);
         break;
       }
       case "interaction":
@@ -257,59 +291,60 @@ class Indexer {
   private features(c: StructuredClassifier, p: string): void {
     (c.attributes ?? []).forEach((a, i) => {
       const ap = `${p}/attributes/${String(i)}`;
-      this.add(a.id, "attribute", ap, a);
-      this.ref(a.type, `${ap}/type`, "classifier");
+      this.add(a.id, "attribute", ap, a, { parent: c.id });
+      this.ref(a.type, `${ap}/type`, "classifier", a.id);
       this.multiplicity(a.multiplicity, ap);
     });
     (c.operations ?? []).forEach((o: Operation, i) => {
       const op = `${p}/operations/${String(i)}`;
-      this.add(o.id, "operation", op, o);
-      this.ref(o.return_type, `${op}/return_type`, "classifier");
-      this.refList(o.exceptions, `${op}/exceptions`, "classifier");
+      this.add(o.id, "operation", op, o, { parent: c.id });
+      this.ref(o.return_type, `${op}/return_type`, "classifier", o.id);
+      this.refList(o.exceptions, `${op}/exceptions`, "classifier", o.id);
       (o.parameters ?? []).forEach((q, k) => {
         const qp = `${op}/parameters/${String(k)}`;
-        this.add(q.id, "parameter", qp, q);
-        this.ref(q.type, `${qp}/type`, "classifier");
+        this.add(q.id, "parameter", qp, q, { parent: o.id });
+        this.ref(q.type, `${qp}/type`, "classifier", q.id);
         this.multiplicity(q.multiplicity, qp);
       });
     });
   }
 
   private interaction(x: Interaction, p: string): void {
+    const scope = { parent: x.id, interaction: x.id };
     (x.lifelines ?? []).forEach((l, i) => {
       const lp = `${p}/lifelines/${String(i)}`;
-      this.add(l.id, "lifeline", lp, l, x.id);
-      this.ref(l.represents, `${lp}/represents`, "classifier_or_actor");
+      this.add(l.id, "lifeline", lp, l, scope);
+      this.ref(l.represents, `${lp}/represents`, "classifier_or_actor", l.id);
     });
     (x.messages ?? []).forEach((m, i) => {
       const mp = `${p}/messages/${String(i)}`;
-      this.add(m.id, "message", mp, m, x.id);
-      this.ref(m.send_event, `${mp}/send_event`, "occurrence_event", x.id);
-      this.ref(m.receive_event, `${mp}/receive_event`, "occurrence_event", x.id);
-      this.ref(m.signature, `${mp}/signature`, "operation");
+      this.add(m.id, "message", mp, m, scope);
+      this.ref(m.send_event, `${mp}/send_event`, "occurrence_event", m.id, x.id);
+      this.ref(m.receive_event, `${mp}/receive_event`, "occurrence_event", m.id, x.id);
+      this.ref(m.signature, `${mp}/signature`, "operation", m.id);
     });
-    this.fragments(x.fragments, `${p}/fragments`, x.id);
+    this.fragments(x.fragments, `${p}/fragments`, x.id, x.id);
   }
 
-  private fragments(list: Fragment[] | undefined, p: string, inter: string): void {
+  private fragments(list: Fragment[] | undefined, p: string, inter: string, parent: string): void {
     (list ?? []).forEach((f, i) => {
       const fp = `${p}/${String(i)}`;
-      this.add(f.id, f.type, fp, f, inter);
+      this.add(f.id, f.type, fp, f, { parent, interaction: inter });
       switch (f.type) {
         case "occurrence":
-          this.ref(f.covered, `${fp}/covered`, "covered", inter);
+          this.ref(f.covered, `${fp}/covered`, "covered", f.id, inter);
           break;
         case "combined_fragment":
-          this.refList(f.covered, `${fp}/covered`, "covered", inter);
+          this.refList(f.covered, `${fp}/covered`, "covered", f.id, inter);
           f.operands.forEach((o, j) => {
             const op = `${fp}/operands/${String(j)}`;
-            this.add(o.id, "operand", op, o, inter);
-            this.fragments(o.fragments, `${op}/fragments`, inter);
+            this.add(o.id, "operand", op, o, { parent: f.id, interaction: inter });
+            this.fragments(o.fragments, `${op}/fragments`, inter, o.id);
           });
           break;
         case "interaction_use":
-          this.refList(f.covered, `${fp}/covered`, "covered", inter);
-          this.ref(f.interaction, `${fp}/interaction`, "used_interaction", inter);
+          this.refList(f.covered, `${fp}/covered`, "covered", f.id, inter);
+          this.ref(f.interaction, `${fp}/interaction`, "used_interaction", f.id, inter);
           break;
       }
     });

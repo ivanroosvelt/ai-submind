@@ -12,10 +12,12 @@ code:
   - src/format/semantic.ts#checkKnowledge
   - spec/format/schema/1.0/defs.schema.json
   - src/engine/ids.ts#deriveId
+  - src/query/filters.ts#resolveId
 test_code:
   - test/format/corpus.test.ts
   - test/format/rules.test.ts
   - test/engine/ids.test.ts
+  - test/query/query.test.ts
 relations:
   tests: []
   decisions: []

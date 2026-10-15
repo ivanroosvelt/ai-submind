@@ -30,10 +30,12 @@ export { SUPPORTED_VERSION } from "./schema.js";
 export {
   checkKnowledge,
   COLLECTIONS,
+  ELEMENT_TYPES,
   indexDocuments,
   type ElementType,
   type IndexedElement,
   type KnowledgeIndex,
+  type RefRule,
   type RefSite,
   type SemanticOptions,
 } from "./semantic.js";

@@ -9,7 +9,7 @@ aliases: ["degraded"]
 tags: [engine]
 relations:
   actors: [ACT-002]
-  features: [FEAT-002]
+  features: [FEAT-002, FEAT-004]
   constraints: [VAL-006]
   depends_on: []
   decisions: []

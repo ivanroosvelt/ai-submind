@@ -12,8 +12,9 @@ relations:
   features: [FEAT-004]
   constraints: []
   depends_on: []
-  decisions: []
-uncertainties: []
+  decisions: [DEC-012]
+uncertainties:
+  - "Implemented filters go beyond the statement: tags, stereotypes, code_refs, documentation, visibility, owner and interaction (spec §7.1, DEC-012)."
 ---
 
 # REQ-016 · Search elements by attributes

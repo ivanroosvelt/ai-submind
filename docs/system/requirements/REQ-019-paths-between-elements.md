@@ -12,7 +12,7 @@ relations:
   features: [FEAT-004]
   constraints: []
   depends_on: [REQ-017]
-  decisions: []
+  decisions: [DEC-012]
 uncertainties:
   - "Resolved 2026-10-14: DEC-004 (approved) includes simple paths; they enter PLAN-002 S6. An advanced path language remains for later."
 ---

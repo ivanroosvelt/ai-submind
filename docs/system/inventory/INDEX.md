@@ -25,6 +25,8 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | DEC-009 | decision | Ajv 8 as the JSON Schema validator of the format and dependency-cruiser for module boundaries | active | - | declared-doc | [DEC-009-ajv-and-dependency-cruiser.md](../../../docs/system/decisions/DEC-009-ajv-and-dependency-cruiser.md) |
 | DEC-010 | decision | Format migrations as versioned from→to guides for LLM agents | proposed | - | declared-doc | [DEC-010-versioned-llm-migration-guides.md](../../../docs/system/decisions/DEC-010-versioned-llm-migration-guides.md) |
 | DEC-011 | decision | Engine persistence: per-file atomic writes, SHA-256 revisions, no-new-errors acceptance and native recursive fs.watch | active | - | declared-doc | [DEC-011-engine-persistence-and-reload.md](../../../docs/system/decisions/DEC-011-engine-persistence-and-reload.md) |
+| DEC-012 | decision | Query graph semantics: edge kinds, dependency direction, hubs and strict arguments | proposed | - | declared-doc | [DEC-012-query-graph-semantics.md](../../../docs/system/decisions/DEC-012-query-graph-semantics.md) |
+| DEC-013 | decision | Own lexical engine: BM25F with Unicode folding and camelCase splitting, in memory | proposed | - | declared-doc | [DEC-013-own-lexical-engine-bm25f.md](../../../docs/system/decisions/DEC-013-own-lexical-engine-bm25f.md) |
 | ENT-001 | entity | ai-submind project configuration | active | none | declared-doc | [ENT-001-ai-submind-project-configuration.md](../../../docs/system/domain/entities/ENT-001-ai-submind-project-configuration.md) |
 | ENT-002 | entity | Model | active | none | declared-doc | [ENT-002-model.md](../../../docs/system/domain/entities/ENT-002-model.md) |
 | ENT-003 | entity | Model element | active | none | declared-doc | [ENT-003-model-element.md](../../../docs/system/domain/entities/ENT-003-model-element.md) |
@@ -33,7 +35,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | FEAT-001 | feature | Per-project CLI and daemon | active | none | declared-doc | [FEAT-001-per-project-cli-and-daemon.md](../../../docs/system/features/FEAT-001-per-project-cli-and-daemon.md) |
 | FEAT-002 | feature | Embedded knowledge engine | active | partial | verified-code | [FEAT-002-embedded-knowledge-engine.md](../../../docs/system/features/FEAT-002-embedded-knowledge-engine.md) |
 | FEAT-003 | feature | Knowledge format, layout and validation | active | partial | verified-code | [FEAT-003-knowledge-format-layout-and-validation.md](../../../docs/system/features/FEAT-003-knowledge-format-layout-and-validation.md) |
-| FEAT-004 | feature | Structured queries and lexical search | active | none | declared-doc | [FEAT-004-structured-queries-and-lexical-search.md](../../../docs/system/features/FEAT-004-structured-queries-and-lexical-search.md) |
+| FEAT-004 | feature | Structured queries and lexical search | active | verified | verified-code | [FEAT-004-structured-queries-and-lexical-search.md](../../../docs/system/features/FEAT-004-structured-queries-and-lexical-search.md) |
 | FEAT-005 | feature | Semantic search | proposed | none | declared-doc | [FEAT-005-semantic-search.md](../../../docs/system/features/FEAT-005-semantic-search.md) |
 | FEAT-006 | feature | Knowledge administration via MCP | active | none | declared-doc | [FEAT-006-knowledge-administration-via-mcp.md](../../../docs/system/features/FEAT-006-knowledge-administration-via-mcp.md) |
 | FEAT-007 | feature | JointJS web viewer for class diagrams | active | none | declared-doc | [FEAT-007-jointjs-web-viewer-for-class-diagrams.md](../../../docs/system/features/FEAT-007-jointjs-web-viewer-for-class-diagrams.md) |
@@ -222,6 +224,13 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `DEC-011 affects REQ-022`
 - `DEC-011 affects REQ-026`
 - `DEC-011 affects NFR-005`
+- `DEC-012 affects FEAT-004`
+- `DEC-012 affects REQ-016`
+- `DEC-012 affects REQ-017`
+- `DEC-012 affects REQ-018`
+- `DEC-012 affects REQ-019`
+- `DEC-013 affects FEAT-004`
+- `DEC-013 affects REQ-038`
 - `ENT-001 validations VAL-001`
 - `ENT-001 validations VAL-004`
 - `ENT-001 validations VAL-006`
@@ -264,6 +273,8 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `FEAT-003 entities ENT-004`
 - `FEAT-003 entities ENT-005`
 - `FEAT-003 interfaces API-004`
+- `FEAT-004 decisions DEC-012`
+- `FEAT-004 decisions DEC-013`
 - `FEAT-004 depends_on FEAT-002`
 - `FEAT-004 interfaces API-001`
 - `FEAT-005 depends_on FEAT-004`
@@ -345,18 +356,24 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `REQ-013 constraints NFR-011`
 - `REQ-013 features FEAT-003`
 - `REQ-014 actors ACT-002`
+- `REQ-014 decisions DEC-012`
 - `REQ-014 features FEAT-004`
 - `REQ-015 actors ACT-002`
 - `REQ-015 constraints VAL-002`
+- `REQ-015 decisions DEC-012`
 - `REQ-015 features FEAT-004`
 - `REQ-016 actors ACT-002`
+- `REQ-016 decisions DEC-012`
 - `REQ-016 features FEAT-004`
 - `REQ-017 actors ACT-002`
+- `REQ-017 decisions DEC-012`
 - `REQ-017 features FEAT-004`
 - `REQ-018 actors ACT-002`
+- `REQ-018 decisions DEC-012`
 - `REQ-018 depends_on REQ-017`
 - `REQ-018 features FEAT-004`
 - `REQ-019 actors ACT-002`
+- `REQ-019 decisions DEC-012`
 - `REQ-019 depends_on REQ-017`
 - `REQ-019 features FEAT-004`
 - `REQ-020 actors ACT-002`
@@ -370,6 +387,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `REQ-022 actors ACT-002`
 - `REQ-022 constraints VAL-006`
 - `REQ-022 features FEAT-002`
+- `REQ-022 features FEAT-004`
 - `REQ-023 actors ACT-002`
 - `REQ-023 constraints VAL-001`
 - `REQ-023 constraints VAL-002`
@@ -427,6 +445,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `REQ-037 features FEAT-001`
 - `REQ-038 actors ACT-002`
 - `REQ-038 constraints NFR-002`
+- `REQ-038 decisions DEC-013`
 - `REQ-038 features FEAT-004`
 - `REQ-039 actors ACT-002`
 - `REQ-039 constraints VAL-002`

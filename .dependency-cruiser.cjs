@@ -24,6 +24,13 @@ module.exports = {
       to: { path: "^src/(?!format/|engine/)" },
     },
     {
+      name: "query-on-format-engine",
+      severity: "error",
+      comment: "src/query depends only on src/format and src/engine (DEC-012).",
+      from: { path: "^src/query/" },
+      to: { path: "^src/(?!format/|engine/|query/)" },
+    },
+    {
       name: "not-to-unresolvable",
       severity: "error",
       from: {},

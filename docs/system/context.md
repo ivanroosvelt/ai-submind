@@ -35,12 +35,13 @@
   `ai-submind mcp` (DEC-005, FEAT-001, REQ-037) **[declared]**.
 - UI: `@joint/core` with own shapes; explore and adjust layout; model changes only via MCP
   (DEC-006, FEAT-007; sequence in FEAT-009, PLAN-002 S11) **[declared]**.
-- Search: structured + lexical in the core (FEAT-004); semantic with embeddings later and outside
-  PLAN-002 (DEC-007, FEAT-005) **[declared]**.
+- Search: structured queries (list, get, find, relations, impact, paths) and own BM25F lexical search in
+  `src/query/` over the engine (FEAT-004, DEC-012, DEC-013) **[verified]**; semantic with embeddings later and
+  outside PLAN-002 (DEC-007, FEAT-005) **[declared]**.
 - Interfaces: API-001 MCP server, API-002 UI HTTP API, API-003 CLI **[declared]**.
 - Single npm package at the root: `src/` (code, `code_roots`), `test/` (Vitest), ESLint + typescript-eslint + Prettier;
   `scripts/check` runs `npm run check` (DEC-008, EDR-006) **[verified]**.
-- Implemented: format core (FEAT-003, VAL-001..007) and engine (FEAT-002, partial); queries, CLI, MCP and UI remain at
+- Implemented: format core (FEAT-003, VAL-001..007), engine (FEAT-002, partial) and queries (FEAT-004); CLI, MCP and UI remain at
   `implementation: none` **[verified]**.
 - Cycles and boundaries between modules checked by dependency-cruiser in `npm run check` (NFR-008, DEC-009) **[verified]**.
 - Target scale ~10,000 elements per project (NFR-007, thresholds unconfirmed) **[inferred]**.
@@ -53,4 +54,4 @@
 
 ## Next step
 
-PLAN-002 S6 (structured queries and lexical search) over the engine.
+PLAN-002 S7 (CLI and per-project daemon with local security).

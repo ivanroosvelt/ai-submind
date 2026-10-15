@@ -26,7 +26,7 @@ uncertainties:
 3. External embeddings API — lightweight; requires network, a key and sends content outside.
 
 ## Decision
-- Core: structured queries over the graph (DEC-004) + lexical search (own BM25 or minisearch).
+- Core: structured queries over the graph (DEC-004, DEC-012) + lexical search (own BM25F, DEC-013).
 - Optional local embeddings module (optional dependency, model downloaded to the user's cache);
   own brute-force vector store (cosine) in `knowledge/.ai-submind/` (ignored by git),
   invalidated by content hash. Provider interface to add others later.

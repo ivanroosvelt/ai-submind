@@ -12,7 +12,7 @@ relations:
   features: [FEAT-004]
   constraints: []
   depends_on: [REQ-017]
-  decisions: []
+  decisions: [DEC-012]
 uncertainties: []
 ---
 

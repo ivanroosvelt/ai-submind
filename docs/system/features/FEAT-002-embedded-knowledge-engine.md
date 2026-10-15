@@ -27,7 +27,7 @@ relations:
   decisions: [DEC-004, DEC-011]
 uncertainties:
   - "3-way semantic merge and path language: later (DEC-004)."
-  - "Implemented (PLAN-002 S5): loading and indexes (by ID, inverse references), document-level batch transactions, rename, ID derivation functions, reload with watcher and semantic diff. Pending: element-level create/update/delete with derived IDs and cascade (REQ-023, REQ-024; S8, on top of transactions) and queries beyond get/inverse references (FEAT-004, S6)."
+  - "Implemented (PLAN-002 S5): loading and indexes (by ID, inverse references), document-level batch transactions, rename, ID derivation functions, reload with watcher and semantic diff. Pending: element-level create/update/delete with derived IDs and cascade (REQ-023, REQ-024; S8, on top of transactions); queries are FEAT-004; the engine exposes `generation` for their caches."
 ---
 
 # FEAT-002 · Embedded knowledge engine

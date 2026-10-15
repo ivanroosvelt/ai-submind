@@ -128,6 +128,7 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
   private burstStart: number | undefined;
   private watchError: string | undefined;
   private localError: string | undefined;
+  private gen = 0;
 
   private constructor(
     /** Real path of knowledge/. */
@@ -156,6 +157,11 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
     this.timer = undefined;
     this.watcher?.close();
     this.watcher = undefined;
+  }
+
+  /** Counter of state changes: incremented by every reload that changes something and every commit. */
+  get generation(): number {
+    return this.gen;
   }
 
   status(): EngineStatus {
@@ -325,6 +331,7 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
     if (touched.length === 0 && sameWalk) return undefined;
     const before = this.state;
     this.state = this.build(entries, walkFindings);
+    this.gen++;
     const diff = semanticDiff(before.byId, this.state.byId, touched);
     if (!isEmptyDiff(diff) || !sameWalk) this.emit("change", { source: "external", diff });
     return diff;
@@ -478,6 +485,7 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
     }
 
     this.state = next;
+    this.gen++;
     const diff = semanticDiff(
       current.byId,
       next.byId,
