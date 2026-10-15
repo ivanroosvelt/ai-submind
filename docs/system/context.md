@@ -37,17 +37,19 @@
   (DEC-005, DEC-014, FEAT-001, REQ-037) **[verified]**; stdio MCP proxy `ai-submind mcp` in `src/cli/proxy.ts`
   (DEC-016) **[verified]**.
 - MCP: stateless Streamable HTTP endpoint `/mcp` on the daemon behind its auth, query and administration tools and
-  resources in `src/mcp/` (API-001, FEAT-006, DEC-016) **[verified]**; auto-layout tool in PLAN-002 S9 (DEC-015) **[declared]**.
-- UI: `@joint/core` with own shapes; explore and adjust layout; model changes only via MCP
-  (DEC-006, FEAT-007; sequence in FEAT-009, PLAN-002 S11) **[declared]**.
+  resources in `src/mcp/` (API-001, FEAT-006, DEC-016) **[verified]**; `auto_layout_diagram` over the shared layout module (DEC-015, DEC-017) **[verified]**.
+- UI: plain TypeScript over `@joint/core` with own shapes in `src/ui/`, bundled by Vite into `dist/ui/`; shapes sized by
+  the pure module `src/layout/` (dagre via `@dagrejs/dagre`, shared with MCP); explore and adjust layout, SSE refresh;
+  model changes only via MCP (DEC-006, DEC-017, FEAT-007): implemented; API/layout **[verified]** by tests; browser
+  check pending; sequence in FEAT-009, PLAN-002 S11 **[declared]**.
 - Search: structured queries (list, get, find, relations, impact, paths) and own BM25F lexical search in
   `src/query/` over the engine (FEAT-004, DEC-012, DEC-013) **[verified]**; semantic with embeddings later and
   outside PLAN-002 (DEC-007, FEAT-005) **[declared]**.
-- Interfaces: API-001 MCP server and API-003 CLI **[verified]**; API-002 UI HTTP API **[declared]**.
+- Interfaces: API-001 MCP server and API-003 CLI **[verified]**; API-002 UI HTTP API in `src/daemon/ui-api.ts` **[verified]**.
 - Single npm package at the root: `src/` (code, `code_roots`), `test/` (Vitest), ESLint + typescript-eslint + Prettier;
   `scripts/check` runs `npm run check` (DEC-008, EDR-006) **[verified]**.
 - Implemented: format core (FEAT-003, VAL-001..007), engine (FEAT-002), queries (FEAT-004), MCP (API-001, FEAT-006);
-  CLI and daemon (FEAT-001, API-003) partial; UI remains at `implementation: none` **[verified]**.
+  CLI and daemon (FEAT-001, API-003) partial; UI (FEAT-007, API-002) implemented, browser verification pending **[verified]**.
 - Cycles and boundaries between modules checked by dependency-cruiser in `npm run check` (NFR-008, DEC-009) **[verified]**.
 - Target scale ~10,000 elements per project (NFR-007, thresholds unconfirmed) **[inferred]**.
 

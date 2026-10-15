@@ -27,7 +27,7 @@ Format-specific extension (UMJ does not define layout). In sequence diagrams: ho
 | Property | Type | Required | Constraints |
 |----------|------|----------|-------------|
 | diagram | idref | yes | VAL-005 |
-| nodes | map id→position/size | no | finite integers |
+| nodes | map id→position (top-left) and minimum size | no | finite integers; the drawn size is never smaller than the content (spec §8) |
 | links | map id→vertices | no |  |
 | style | object | no | optional |
 

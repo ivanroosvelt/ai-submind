@@ -39,12 +39,49 @@ module.exports = {
       to: { path: "^src/(?!format/|engine/|query/|mcp/|daemon/)" },
     },
     {
-      name: "mcp-on-format-engine-query",
+      name: "mcp-on-format-engine-query-layout",
       severity: "error",
       comment:
-        "src/mcp depends only on src/format, src/engine and src/query; the daemon passes it what it needs (DEC-016).",
+        "src/mcp depends only on src/format, src/engine, src/query and src/layout; the daemon passes it what it needs (DEC-016, DEC-017).",
       from: { path: "^src/mcp/" },
-      to: { path: "^src/(?!format/|engine/|query/|mcp/)" },
+      to: { path: "^src/(?!format/|engine/|query/|layout/|mcp/)" },
+    },
+    {
+      name: "layout-on-format-types",
+      severity: "error",
+      comment:
+        "src/layout is pure and runs in Node and in the browser: only types of src/format, no Node built-ins (DEC-017).",
+      from: { path: "^src/layout/" },
+      to: { path: "^src/(?!layout/|format/types[.]ts$)" },
+    },
+    {
+      name: "ui-on-layout-and-format-types",
+      severity: "error",
+      comment: "src/ui (browser) depends only on src/layout and on types of src/format (DEC-017).",
+      from: { path: "^src/ui/" },
+      to: { path: "^src/(?!ui/|layout/|format/)" },
+    },
+    {
+      name: "ui-format-types-only",
+      severity: "error",
+      comment: "src/ui imports only types from src/format: its runtime code needs Node (DEC-017).",
+      from: { path: "^src/ui/" },
+      to: { path: "^src/format/", dependencyTypesNot: ["type-only"] },
+    },
+    {
+      name: "browser-without-node",
+      severity: "error",
+      comment: "src/layout and src/ui run in the browser: no Node built-ins (DEC-017).",
+      from: { path: "^src/(layout|ui)/" },
+      to: { dependencyTypes: ["core"] },
+    },
+    {
+      name: "nothing-imports-ui",
+      severity: "error",
+      comment:
+        "src/ui is bundled by Vite into dist/ui and served as files; no module imports it (DEC-017).",
+      from: { path: "^src/(?!ui/)" },
+      to: { path: "^src/ui/" },
     },
     {
       name: "not-to-unresolvable",

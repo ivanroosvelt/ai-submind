@@ -268,6 +268,8 @@ Schema: [`layout.schema.json`](schema/1.0/layout.schema.json).
 | `edges` | map `id → {vertices?, style?}`; `vertices` is the ordered list of intermediate points |
 
 - Coordinates and sizes are integers in diagram pixels, |value| ≤ 10 000 000; sizes ≥ 1.
+- `x`, `y` are the top-left corner of the node. `width` and `height` are a **minimum** size: a node is drawn
+  (and laid out) with the larger of that size and the size its content needs; content is never clipped.
 - `style` allows `fill`, `stroke` and `text` as a lowercase `#rrggbb` color.
 - `class` diagram: `nodes` keys = packages, actors and classifiers shown; `edges` keys =
   relationships shown. `sequence` diagram: `nodes` keys = lifelines (`x` and `width` set their

@@ -13,6 +13,7 @@ code:
   - src/mcp/http.ts#mcpRoutes
   - src/cli/proxy.ts#proxy
   - src/engine/edit.ts#edit
+  - src/layout/class-layout.ts#autoLayout
 test_code:
   - test/mcp/tools.test.ts
   - test/mcp/http.test.ts
@@ -23,10 +24,9 @@ relations:
   entities: [ENT-002, ENT-003, ENT-004]
   validations: [VAL-001, VAL-002, VAL-003, VAL-006, VAL-007]
   tests: []
-  decisions: [DEC-005, DEC-014, DEC-015, DEC-016]
+  decisions: [DEC-005, DEC-014, DEC-015, DEC-016, DEC-017]
 uncertainties:
   - "Versioning of the MCP contract."
-  - "Auto-layout tool for a diagram: PLAN-002 S9, with the UI shapes (DEC-015)."
   - "No output schemas yet: results are JSON text plus `structuredContent`."
 ---
 
@@ -58,12 +58,16 @@ is the stdio proxy (DEC-005, DEC-016). Arguments are camelCase. Every result is 
 | `edit_diagram` | `id`, `add?`, `remove?`, `expectedRevision?`, `dryRun?` | write result | VALIDATION_FAILED (`DIAGRAM_ELEMENT_NOT_ALLOWED`), same |
 | `apply_batch` | `operations` (`op`: create, update, delete, edit_diagram), `dryRun?` | one write result, all or nothing | any of the above |
 | `rename` | `id`, `newId`, `dryRun?` | revisions, diff, `renamed` pairs | NOT_FOUND, AMBIGUOUS_ID, INVALID_ID, RENAME_COLLISION, RENAME_BLOCKED, VALIDATION_FAILED |
+| `auto_layout_diagram` | `diagram`, `dryRun?` | `{dryRun, initialized, layout, revisions, diff, generation}` | NOT_FOUND, AMBIGUOUS_ID, INVALID_ARGUMENT (not a class diagram), REVISION_CONFLICT, DOCUMENT_INVALID, VALIDATION_FAILED |
 
 Write result: `{dryRun, initialized, created, affected, revisions, diff, generation}`; `affected` lists every
 cascade step as `{action: "removed_ref" | "unset" | "deleted", file, pointer, id}`, in execution order; each
 `pointer` is relative to `file` as left by the preceding entries, so a pointer may repeat (e.g. `/…/fragments/0`
 twice when two consecutive items are removed). `__proto__`, `constructor` and `prototype` keys in `data` or
-`patch` are rejected with INVALID_ARGUMENT. Every write tool except `create_element` is annotated
+`patch` are rejected with INVALID_ARGUMENT. `auto_layout_diagram` recomputes every node position of a class diagram with the module shared with the UI
+(`src/layout/`, DEC-017): node sizes from the shape text, dagre top-to-bottom with parents and interfaces above;
+explicit sizes (a minimum, spec §8) and styles are kept, link vertices dropped, entries of elements no longer shown removed; an
+unchanged layout is not rewritten. Agents never set coordinates (DEC-015). Every write tool except `create_element` is annotated
 `destructiveHint: true`. Creating a model is
 `create_element` with `type: "model"` (REQ-021); a diagram is created under its model, renamed with
 `update_element` and deleted (with its layout) with `delete_element`. The first write on a `knowledge/` without

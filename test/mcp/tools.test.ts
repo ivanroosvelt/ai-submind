@@ -1,11 +1,13 @@
 // MCP tools and resources in process (PLAN-002 S8; API-001, DEC-016): tool list and schemas, results as
 // structured content, typed errors, and resources, through the SDK client over an in-memory transport.
-import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
+import { cp, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { serialize } from "../../src/format/canonical.js";
 import { Engine } from "../../src/engine/index.js";
+import { autoLayout } from "../../src/layout/class-layout.js";
 import { createMcpServer } from "../../src/mcp/tools.js";
 import { createQuery } from "../../src/query/index.js";
 
@@ -45,6 +47,7 @@ describe("tools", () => {
     expect(tools.map((t) => t.name).sort()).toEqual(
       [
         "apply_batch",
+        "auto_layout_diagram",
         "create_element",
         "delete_element",
         "edit_diagram",
@@ -70,7 +73,14 @@ describe("tools", () => {
     // Every write but create can remove or overwrite data (H3 of the S8 review).
     const destructive = tools.filter((t) => t.annotations?.destructiveHint).map((t) => t.name);
     expect(destructive.sort()).toEqual(
-      ["apply_batch", "delete_element", "edit_diagram", "rename", "update_element"].sort(),
+      [
+        "apply_batch",
+        "auto_layout_diagram",
+        "delete_element",
+        "edit_diagram",
+        "rename",
+        "update_element",
+      ].sort(),
     );
     expect(tools.find((t) => t.name === "create_element")?.annotations).toMatchObject({
       readOnlyHint: false,
@@ -134,6 +144,45 @@ describe("tools", () => {
     expect(batch.structuredContent).toMatchObject({ created: ["Bus"] });
     const ren = await call("rename", { id: "Bus", newId: "Coach" });
     expect(ren.structuredContent).toMatchObject({ renamed: [["Bus", "Coach"]] });
+  });
+});
+
+describe("auto_layout_diagram (DEC-015, DEC-017)", () => {
+  const layoutFile = (): Promise<string> =>
+    readFile(join(dir, "knowledge", "layout", "overview.json"), "utf8");
+
+  it("dry run returns the shared module's layout and writes nothing", async () => {
+    const before = await layoutFile();
+    const expected = autoLayout(createQuery(engine).diagram("overview").data);
+    const r = await call("auto_layout_diagram", { diagram: "overview", dryRun: true });
+    expect(r.isError).toBeFalsy();
+    expect(r.structuredContent).toMatchObject({
+      dryRun: true,
+      initialized: false,
+      layout: expected,
+      revisions: { "layout/overview.json": expect.any(String) as unknown },
+    });
+    expect(await layoutFile()).toBe(before);
+  });
+
+  it("persists the same layout canonically, idempotently", async () => {
+    const expected = autoLayout(createQuery(engine).diagram("overview").data);
+    const r = await call("auto_layout_diagram", { diagram: "overview" });
+    expect(r.structuredContent).toMatchObject({ dryRun: false, layout: expected });
+    const text = await layoutFile();
+    expect(text).toBe(serialize("layout", expected));
+    const again = await call("auto_layout_diagram", { diagram: "overview" });
+    expect(again.structuredContent).toMatchObject({ diff: { documents: [] } });
+    expect(await layoutFile()).toBe(text);
+  });
+
+  it("rejects what is not a class diagram with typed errors", async () => {
+    const seq = await call("auto_layout_diagram", { diagram: "rent-car" });
+    expect(errorOf(seq).code).toBe("INVALID_ARGUMENT");
+    expect(errorOf(await call("auto_layout_diagram", { diagram: "Car" })).code).toBe(
+      "INVALID_ARGUMENT",
+    );
+    expect(errorOf(await call("auto_layout_diagram", { diagram: "nope" })).code).toBe("NOT_FOUND");
   });
 });
 

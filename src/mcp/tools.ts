@@ -9,13 +9,15 @@ import {
   type ToolCallback,
 } from "@modelcontextprotocol/server";
 import * as z from "zod";
+import { serialize } from "../format/canonical.js";
 import { SUPPORTED_VERSION } from "../format/schema.js";
 import { ELEMENT_TYPES } from "../format/semantic.js";
-import { edit, type EditOperation } from "../engine/edit.js";
-import type { Engine } from "../engine/engine.js";
+import { edit, MANIFEST, type EditOperation } from "../engine/edit.js";
+import type { BatchOperation, Engine } from "../engine/engine.js";
 import { EngineError } from "../engine/errors.js";
 import { QueryError } from "../query/errors.js";
 import type { FindFilter } from "../query/filters.js";
+import { autoLayout } from "../layout/class-layout.js";
 import { EDGE_KINDS } from "../query/graph.js";
 import type { PageArgs } from "../query/limits.js";
 import { RELATION_GROUPS, type Query } from "../query/query.js";
@@ -297,6 +299,52 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
       ...(await engine.rename(from, newId, { dryRun: dry === true })),
       generation: engine.generation,
     }),
+  );
+
+  tool(
+    "auto_layout_diagram",
+    "Recomputes the whole layout of a class diagram (dagre over the UI's shape sizes) and saves it; " +
+      "styles and explicit sizes are kept, link vertices dropped. The first write initializes knowledge/.",
+    z.strictObject({ diagram: id, dryRun }),
+    "write",
+    async ({ diagram, dryRun: dry }) => {
+      let layout: unknown;
+      let initialized = false;
+      const r = await engine.transact(
+        () => {
+          const view = query.diagram(diagram).data;
+          if (view.diagram.kind !== "class") {
+            throw new EngineError(
+              "INVALID_ARGUMENT",
+              `diagram: ${diagram} is a ${view.diagram.kind} diagram; only class diagrams (sequence: PLAN-002 S11)`,
+              { argument: "diagram" },
+            );
+          }
+          const path = `layout/${view.diagram.id}.json`;
+          layout = autoLayout(view);
+          const ops: BatchOperation[] = [];
+          initialized = engine.revision("ai-submind.json") === null;
+          if (initialized) {
+            ops.push({
+              op: "put",
+              path: "ai-submind.json",
+              data: { ...MANIFEST },
+              expectedRevision: null,
+            });
+          }
+          // An unchanged layout is not rewritten (no write, no change event).
+          if (
+            view.layout === null ||
+            serialize("layout", layout) !== serialize("layout", view.layout)
+          ) {
+            ops.push({ op: "put", path, data: layout, expectedRevision: engine.revision(path) });
+          }
+          return ops;
+        },
+        { dryRun: dry === true },
+      );
+      return { dryRun: dry === true, initialized, layout, ...r, generation: engine.generation };
+    },
   );
 
   const json = (

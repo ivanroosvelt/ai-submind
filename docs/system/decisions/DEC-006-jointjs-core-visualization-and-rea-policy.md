@@ -10,8 +10,7 @@ tags: [ui, licenses, security]
 relations:
   affects: [REQ-028, REQ-029, REQ-032, REQ-040, NFR-009, FEAT-007, FEAT-009, API-002]
   supersedes: []
-uncertainties:
-  - "The UI framework (vanilla TS vs a lightweight library) is fixed in the UI stage."
+uncertainties: []
 ---
 
 # DEC-006 · Visualization with JointJS core and REA policy
@@ -29,7 +28,8 @@ uncertainties:
 - UI: `@joint/core` as a dependency; UML shapes (class, interface, enum, relationships; sequence lifelines and
   messages) and tools (zoom/pan, selection, auto-layout, SVG export, minimap)
   implemented in own modules.
-- Initial auto-layout with `@joint/layout-directed-graph` (dagre); own sequence layout.
+- Initial auto-layout with dagre; own sequence layout. (DEC-017: plain TypeScript UI, dagre through
+  `@dagrejs/dagre` in a module shared with the MCP auto-layout tool.)
 - Reverse engineering policy:
   - Open source software: study the source code respecting its license; REA does not apply.
   - Commercial/proprietary software (e.g. JointJS+): clean-room only, from public documentation

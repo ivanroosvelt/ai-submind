@@ -1,10 +1,12 @@
 // Query facade (FEAT-004, PLAN-002 S6): structural and lexical queries over an engine, with results
 // computed once per engine generation and a lexical index kept up to date from change events.
 import { compareCodeUnits } from "../format/canonical.js";
-import type { DocumentStatus } from "../format/document.js";
+import { isLoaded, type DocumentStatus } from "../format/document.js";
 import type { Finding } from "../format/findings.js";
 import type { IndexedElement } from "../format/semantic.js";
-import type { Diagram, Model } from "../format/types.js";
+import { SUPPORTED_VERSION } from "../format/schema.js";
+import type { ElementType } from "../format/semantic.js";
+import type { Diagram, Layout, Model } from "../format/types.js";
 import type { ChangeEvent, Engine } from "../engine/engine.js";
 import { invalid } from "./errors.js";
 import {
@@ -79,6 +81,21 @@ export interface ElementDetail extends ElementSummary {
   node: unknown;
   /** Its document is loaded read-only. */
   readOnly: boolean;
+}
+
+/** A diagram with what is needed to draw it (API-002 `GET /api/diagram`, MCP `auto_layout_diagram`). */
+export interface DiagramView {
+  diagram: Diagram;
+  model: string;
+  file: string;
+  /** Shown elements that exist, in the diagram's order (the first occurrence of a duplicated ID). */
+  elements: { id: string; type: ElementType; node: unknown }[];
+  /** Names of the shown elements and of every element they reference, by ID. */
+  names: Record<string, string>;
+  /** The diagram's layout as loaded, or `null` if it has none (or it is not loaded). */
+  layout: Layout | null;
+  /** Format version a new layout is written with. */
+  formatVersion: string;
 }
 
 export type RelationGroup =
@@ -299,6 +316,49 @@ export class Query {
     const pkg = g.incoming(el.id).find((e) => e.kind === "member");
     if (pkg) detail.package = pkg.from;
     return { data: detail, meta };
+  }
+
+  /** Diagram by ID with its shown elements resolved: `NOT_FOUND`, `AMBIGUOUS_ID`, `INVALID_ARGUMENT`. */
+  diagram(id: string): QueryResult<DiagramView> {
+    const { graph: g, meta } = this.current();
+    const el = resolveId(g, id);
+    if (el.type !== "diagram") throw invalid("id", `${el.id} is a ${el.type}`);
+    const diagram = el.node as Diagram;
+    const elements: DiagramView["elements"] = [];
+    const names = new Map<string, string>();
+    const name = (target: string): void => {
+      const node = g.byId.get(target)?.[0]?.node as { name?: unknown } | undefined;
+      if (typeof node?.name === "string") names.set(target, node.name);
+    };
+    const refs = (v: unknown): void => {
+      if (Array.isArray(v)) v.forEach(refs);
+      else if (typeof v === "object" && v !== null) {
+        const idref = (v as { idref?: unknown }).idref;
+        if (typeof idref === "string") name(idref);
+        else Object.values(v).forEach(refs);
+      }
+    };
+    for (const r of diagram.elements ?? []) {
+      const x = g.byId.get(r.idref)?.[0];
+      if (!x) continue;
+      elements.push({ id: x.id, type: x.type, node: x.node });
+      name(x.id);
+      refs(x.node);
+    }
+    const doc = this.engine.document(`layout/${diagram.id}.json`);
+    const layout = doc && isLoaded(doc) ? (doc.data as Layout) : null;
+    return {
+      data: {
+        diagram,
+        model: g.modelOfFile.get(el.file) ?? "",
+        file: el.file,
+        elements,
+        names: Object.fromEntries([...names].sort(([a], [b]) => compareCodeUnits(a, b))),
+        layout,
+        formatVersion: SUPPORTED_VERSION,
+      },
+      meta,
+    };
   }
 
   /** Elements that satisfy every condition, by ID. */

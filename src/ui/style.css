@@ -1,0 +1,151 @@
+:root {
+  --line: #d0d7de;
+  --muted: #57606a;
+  --accent: #1e88e5;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  height: 100vh;
+  display: grid;
+  grid-template:
+    "head head head" auto
+    "tree main detail" 1fr
+    "tree findings detail" auto / 240px 1fr 320px;
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+  color: #1f2328;
+}
+header {
+  grid-area: head;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--line);
+}
+header .tools {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+#title {
+  color: var(--muted);
+}
+nav {
+  grid-area: tree;
+  overflow: auto;
+  border-right: 1px solid var(--line);
+  padding: 8px;
+}
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 12px;
+}
+nav > ul {
+  padding-left: 0;
+}
+nav .model {
+  font-weight: 600;
+}
+nav .invalid {
+  color: #cf222e;
+}
+nav button {
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+nav button.active {
+  background: #ddf4ff;
+  border-radius: 4px;
+}
+main {
+  grid-area: main;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#canvas {
+  flex: 1;
+  min-height: 0;
+}
+#banner {
+  margin: 0;
+  padding: 6px 12px;
+  background: #ddf4ff;
+}
+#banner.error {
+  background: #ffebe9;
+}
+aside {
+  grid-area: detail;
+  overflow: auto;
+  border-left: 1px solid var(--line);
+  padding: 8px 12px;
+}
+aside h3 {
+  font-size: 13px;
+  margin: 12px 0 4px;
+}
+aside ul.incoming {
+  margin: 0;
+  padding-left: 18px;
+}
+aside h2 {
+  font-size: 15px;
+  margin: 4px 0;
+}
+aside dl {
+  margin: 0;
+}
+aside dt {
+  font-weight: 600;
+  color: var(--muted);
+}
+aside dd {
+  margin: 0 0 4px 12px;
+}
+aside ol {
+  margin: 0;
+  padding-left: 18px;
+}
+.hint {
+  color: var(--muted);
+}
+.ref {
+  color: var(--accent);
+}
+button.ref {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+#findings {
+  grid-area: findings;
+  border-top: 1px solid var(--line);
+  padding: 4px 12px;
+  max-height: 30vh;
+  overflow: auto;
+}
+#findings ul {
+  margin: 4px 0;
+  padding-left: 16px;
+}
+#findings li.error b {
+  color: #cf222e;
+}
+#findings li.warning b {
+  color: #9a6700;
+}

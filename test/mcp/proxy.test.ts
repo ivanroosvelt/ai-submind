@@ -81,7 +81,7 @@ describe("ai-submind mcp", () => {
   it("starts the daemon if absent; stdout carries only the protocol, logs go to stderr", async () => {
     expect(existsSync(join(dir, "knowledge"))).toBe(false);
     const p = await connect();
-    expect((await p.client.listTools()).tools).toHaveLength(15);
+    expect((await p.client.listTools()).tools).toHaveLength(16);
     expect(
       await call(p, "create_element", { type: "model", data: { name: "Shop" } }),
     ).toMatchObject({ initialized: true, created: ["shop"] });

@@ -1,6 +1,6 @@
 // HTTP daemon of a project (REQ-001, REQ-037, NFR-004, DEC-005, DEC-014): loopback only, Host/Origin
 // checks, per-start token (Bearer or cookie), single instance through the lockfile, idle shutdown, and the
-// stateless MCP route `/mcp` (API-001, DEC-016).
+// stateless MCP route `/mcp` (API-001, DEC-016) and the UI and its API (API-002, DEC-017).
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { existsSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -9,6 +9,7 @@ import { Engine } from "../engine/engine.js";
 import { mcpRoutes } from "../mcp/http.js";
 import { createQuery } from "../query/query.js";
 import { ensureLocalDir, type Project } from "./project.js";
+import { uiRoutes } from "./ui-api.js";
 import {
   acquireLock,
   releaseLock,
@@ -37,7 +38,7 @@ export interface DaemonHandle {
   /** Base URL without the token. */
   url: string;
   engine: Engine;
-  /** Routes by `"METHOD /path"`; later stages (MCP, UI API) add theirs here. */
+  /** Routes by `"METHOD /path"`; `"GET /assets/*"` serves every path under `/assets/`. */
   routes: Map<string, Handler>;
   /** Graceful shutdown; idempotent. */
   close(): Promise<void>;
@@ -165,17 +166,7 @@ export async function startDaemon(
     })());
 
   const routes = new Map<string, Handler>([
-    [
-      "GET /",
-      (_req, res) => {
-        send(
-          res,
-          200,
-          "<!doctype html><title>ai-submind</title><p>ai-submind is running.</p>",
-          "text/html",
-        );
-      },
-    ],
+    ...uiRoutes(opened, query),
     [
       "GET /api/status",
       (_req, res) => {
@@ -252,9 +243,16 @@ export async function startDaemon(
       inflight--;
       lastActivity = Date.now();
     });
-    const handler = routes.get(`${req.method ?? ""} ${target.pathname}`);
+    const path = target.pathname.startsWith("/assets/") ? "/assets/*" : target.pathname;
+    const handler = routes.get(`${req.method ?? ""} ${path}`);
     if (handler === undefined) {
-      send(res, 404, "not found\n");
+      // The only writes are layout, MCP and stop (REQ-032): any other method is not allowed.
+      if (req.method === "GET") send(res, 404, "not found\n");
+      else {
+        // Its body is not read: close instead of leaving it for the next request on the connection.
+        res.setHeader("connection", "close");
+        send(res, 405, "method not allowed\n");
+      }
       return;
     }
     Promise.resolve()

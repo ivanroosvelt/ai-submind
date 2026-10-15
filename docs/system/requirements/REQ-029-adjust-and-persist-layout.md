@@ -12,9 +12,8 @@ relations:
   features: [FEAT-007]
   constraints: [VAL-005, NFR-005]
   depends_on: [REQ-010, REQ-028]
-  decisions: []
-uncertainties:
-  - "P9: whether the MCP agent can also modify layout."
+  decisions: [DEC-015]
+uncertainties: []
 ---
 
 # REQ-029 · Adjust and persist layout

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ai-submind</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <strong>ai-submind</strong>
+      <span id="title"></span>
+      <span class="tools">
+        <button id="zoom-out" type="button" title="Zoom out">−</button>
+        <button id="zoom-in" type="button" title="Zoom in">+</button>
+        <button id="fit" type="button" title="Fit to screen">Fit</button>
+        <button id="auto-layout" type="button" title="Recompute and save the whole layout">
+          Auto-layout
+        </button>
+      </span>
+    </header>
+    <nav id="tree" aria-label="Models and diagrams"></nav>
+    <main>
+      <p id="banner" hidden></p>
+      <div id="canvas"></div>
+    </main>
+    <aside id="detail" aria-label="Selected element"></aside>
+    <section id="findings" aria-label="Validation findings"></section>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
