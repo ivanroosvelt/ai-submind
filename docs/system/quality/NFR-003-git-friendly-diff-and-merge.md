@@ -12,6 +12,7 @@ relations:
   decisions: []
 uncertainties:
   - "Semantic git merge driver: later plan."
+  - "A host repository on Windows with `core.autocrlf=true` checks `knowledge/` out with CRLF while the engine writes LF; Git normalizes on commit, but the working copy is not byte-canonical. Not handled yet (this repository pins LF with `.gitattributes`)."
 ---
 
 # NFR-003 · Git-friendly diff and merge

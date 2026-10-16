@@ -7,7 +7,7 @@ updated: 2026-10-16
 class: T2
 related: [DEC-019, DEC-001, NFR-001, NFR-009, API-003, FEAT-001]
 blockers: []
-next_action: "S2: revisión de change-verifier (incluye EDR-009) y commit; después S3 (CI en Linux, macOS y Windows; cambio de CI con aprobación del usuario) y decidir si el repositorio pasa a público y qué hacer con los tags v* de tejo (duda 1)."
+next_action: "S6: el usuario publica 0.1.0 en local con OTP (npm publish --provenance=false --ignore-scripts tras build + check en el mismo commit); luego configura trusted publishing en npmjs.com (repo ivanroosvelt/ai-submind, workflow release.yml, environment npm); S7 y change-verifier de S3/S4."
 stages:
   - id: S1
     name: "Licencia Apache-2.0 (DEC-019)"
@@ -19,16 +19,16 @@ stages:
     evidence: "2026-10-16 (sin commit) repositorio renombrado en GitHub tejo → ivanroosvelt/ai-submind (gh repo rename), master = v2 (push --force-with-lease tras guardar la historia de tejo en archive/tejo-master), remoto local actualizado. package.json: sin private, version 0.1.0, keywords, author, homepage, repository, bugs, publishConfig {access public, provenance true}, prepublishOnly npm run check; dependencias de producción ya exactas. README.md raíz en inglés (EDR-009); entorno y modelo nombran el repositorio ai-submind. npm publish --dry-run --ignore-scripts: ai-submind@0.1.0, 95 archivos, 276,3 kB, sin avisos."
   - id: S3
     name: "CI multiplataforma: Linux, macOS y Windows (NFR-001)"
-    status: proposed
-    evidence: ""
+    status: executed
+    evidence: "2026-10-16 job portability (ubuntu, macos, windows × Node 22, 24; npm test con el e2e) en validate.yml, acciones fijadas por SHA. Windows falló primero y se corrigió en las pruebas, sin cambios en src/: npm por shell en el build global, fileURLToPath en vez de URL.pathname, .gitattributes eol=lf, modos POSIX solo fuera de Windows, comando sin comillas en el e2e (%~dp0 de cmd.exe), depcruise por node, rutas nativas, rm con reintentos (EBUSY), pid muerto nuevo por ronda (reutilización de pids, DEC-014). Run 38953008314: 3 de 3 intentos con los 8 jobs en verde. Pendiente: change-verifier."
   - id: S4
     name: "Flujo de release: tag → npm publish con provenance (trusted publishing)"
-    status: proposed
-    evidence: ""
+    status: executed
+    evidence: "2026-10-16 .github/workflows/release.yml: tag v* → environment npm (revisor obligatorio: el mantenedor; solo tags v*), comprueba tag = versión y que el commit está en master, Node 24, npm ci, npm publish (prepublishOnly = build + check; publishConfig con provenance), id-token: write solo en ese job. Ruleset release-tags: los tags v* no se borran ni se mueven (bypass: admin). Repositorio público. Tags de tejo renombrados a tejo-v0.1.1, tejo-v0.2.0 y tejo-v0.3.0. Sin ejecutar todavía: el primer uso será 0.1.1, tras configurar trusted publishing en npm. Pendiente: change-verifier."
   - id: S5
     name: "Ensayo: npm publish --dry-run y prueba del tarball final"
-    status: proposed
-    evidence: ""
+    status: verified
+    evidence: "2026-10-16 npm publish --dry-run sin avisos (S2); e2e desde el tarball en los tres SO (S3). La provenance no se ensaya: 0.1.0 se publica en local (trusted publishing exige que el paquete exista)."
   - id: S6
     name: "Publicación de 0.1.0 (requiere autorización explícita del usuario)"
     status: proposed
@@ -139,6 +139,7 @@ Dudas (bloquean S2 y S4; la 4 bloquea S4):
 ## Bitácora
 - 2026-10-16 · creado. Usuario: «elige la licencia que me respalde más» → Apache-2.0 (DEC-019), titular Iván López, proyecto personal. S1 executed.
 - 2026-10-16 · change-verifier sobre S1 + modelo al día + plan: aprobado con observaciones H1-H7. Corregidas: H1 prueba de la licencia propia (campo, sha256 de LICENSE, NOTICE) en test/package/licenses.test.ts; H2 DEC-019 sin DEC-001 en «Affected elements» (citado en Context); H3 plan in_progress; H4 criterios de entrada de S4 sobre trusted publishing (sin verificar en la red); H5 controles de seguridad del release en S4 y duda 4 (rama); H6 motivo de `prepublishOnly` en S2. H7 ya cubierta (S2, duda 2, riesgos).
-- 2026-10-16 · S1 commit 95c34a3 → verified. Usuario: renombrar el repositorio, master = v2, npm y git como ai-submind, README en inglés. Hecho: rename en GitHub, archive/tejo-master, master forzado a v2 (autorizado por el usuario en esta conversación). S2 executed (EDR-009). change-verifier sobre S2: aprobado con observaciones H1-H7; corregidas H1 (API-003 ya no dice private), H2/H3 (textos del plan), H4 (AGENTS.md §0 y §14, context.md: rama master), H5 (`prepublishOnly` con build explícito; nota de `--ignore-scripts`), H6 (README: Node ≥ 22 tal como se aplica, sin enlace al plan activo) y H7 (`affects` de EDR-009). Pendiente: commit.
+- 2026-10-16 · S1 commit 95c34a3 → verified. Usuario: renombrar el repositorio, master = v2, npm y git como ai-submind, README en inglés. Hecho: rename en GitHub, archive/tejo-master, master forzado a v2 (autorizado por el usuario en esta conversación). S2 executed (EDR-009). change-verifier sobre S2: aprobado con observaciones H1-H7; corregidas H1 (API-003 ya no dice private), H2/H3 (textos del plan), H4 (AGENTS.md §0 y §14, context.md: rama master), H5 (`prepublishOnly` con build explícito; nota de `--ignore-scripts`), H6 (README: Node ≥ 22 tal como se aplica, sin enlace al plan activo) y H7 (`affects` de EDR-009). Commits 89eb13f.
 
 ## Resultado (al cerrar)
+- 2026-10-16 · Usuario: repositorio público, completar el CD, renombrar los tags y publicar en npm; tejo se puede borrar o renombrar. Hecho: público (sin secretos en la historia: búsqueda de patrones de tokens y de archivos sensibles), tags de tejo → tejo-v*, environment npm y ruleset de tags, S3 y S4 executed. tejo: npm no renombra y el unpublish no se permite (844 descargas la última semana, más de 300) → deprecated con aviso hacia ai-submind (ejecutado por el usuario con OTP; comprobado con npm view). S5 verified.

@@ -47,7 +47,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | FEAT-007 | feature | JointJS web viewer for class diagrams | active | implemented | verified-code | [FEAT-007-jointjs-web-viewer-for-class-diagrams.md](../../../docs/system/features/FEAT-007-jointjs-web-viewer-for-class-diagrams.md) |
 | FEAT-008 | feature | Git integrity | active | verified | verified-code | [FEAT-008-git-integrity.md](../../../docs/system/features/FEAT-008-git-integrity.md) |
 | FEAT-009 | feature | Sequence diagram viewer | active | implemented | verified-code | [FEAT-009-sequence-diagram-viewer.md](../../../docs/system/features/FEAT-009-sequence-diagram-viewer.md) |
-| NFR-001 | quality-attribute | Portability | active | - | declared-doc | [NFR-001-portability.md](../../../docs/system/quality/NFR-001-portability.md) |
+| NFR-001 | quality-attribute | Portability | active | - | verified-code | [NFR-001-portability.md](../../../docs/system/quality/NFR-001-portability.md) |
 | NFR-002 | quality-attribute | Offline operation | active | - | declared-doc | [NFR-002-offline-operation.md](../../../docs/system/quality/NFR-002-offline-operation.md) |
 | NFR-003 | quality-attribute | Git-friendly diff and merge | active | - | declared-doc | [NFR-003-git-friendly-diff-and-merge.md](../../../docs/system/quality/NFR-003-git-friendly-diff-and-merge.md) |
 | NFR-004 | quality-attribute | Local network security | active | - | declared-doc | [NFR-004-local-network-security.md](../../../docs/system/quality/NFR-004-local-network-security.md) |
