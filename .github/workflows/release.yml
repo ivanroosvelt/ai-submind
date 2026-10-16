@@ -1,0 +1,36 @@
+name: release
+
+# Publica en npm al empujar un tag vX.Y.Z (PLAN-004 S4). Sin token: trusted publishing (OIDC) con provenance.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # El environment exige la aprobación del mantenedor y solo admite tags v*.
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24 # npm >= 11.5.1, necesario para trusted publishing
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - name: El tag coincide con la versión del paquete
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - name: El tag está en master
+        run: |
+          git fetch --no-tags origin master
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/master
+      - run: npm ci
+      # prepublishOnly ejecuta build + check; publishConfig activa access public y provenance.
+      - run: npm publish
