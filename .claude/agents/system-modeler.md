@@ -1,6 +1,6 @@
 ---
 name: system-modeler
-description: Mantiene el modelo estructural de submind (docs/system) - crea, actualiza y retira fichas atómicas con IDs estables, relaciones explícitas, rutas de código y pruebas, decisiones DEC y trazabilidad; regenera inventario y matriz. Usar para actualizaciones de modelo grandes o tras cambios de código que afectan a varios elementos.
+description: Mantiene el modelo estructural de ai-submind (docs/system) - crea, actualiza y retira fichas atómicas con IDs estables, relaciones explícitas, rutas de código y pruebas, decisiones DEC y trazabilidad; regenera inventario y matriz. Usar para actualizaciones de modelo grandes o tras cambios de código que afectan a varios elementos.
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

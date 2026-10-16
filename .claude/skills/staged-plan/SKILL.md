@@ -1,6 +1,6 @@
 ---
 name: staged-plan
-description: Crea, ejecuta, reanuda, cierra y archiva planes por etapas verificables (docs/plans) para tareas complejas T2 e integraciones en submind. Usar al iniciar una tarea T2, al retomar trabajo interrumpido o al terminar/cancelar un plan.
+description: Crea, ejecuta, reanuda, cierra y archiva planes por etapas verificables (docs/plans) para tareas complejas T2 e integraciones en ai-submind. Usar al iniciar una tarea T2, al retomar trabajo interrumpido o al terminar/cancelar un plan.
 ---
 
 # staged-plan

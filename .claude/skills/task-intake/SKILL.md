@@ -1,6 +1,6 @@
 ---
 name: task-intake
-description: Primer paso obligatorio de cualquier tarea de desarrollo en submind. Clasifica la tarea (T0/T1/T2), recorre las perspectivas de análisis, comprueba qué agentes y skills la cubren, detecta capacidades ausentes y separa hechos, inferencias y dudas. Usar al recibir una petición nueva o al retomar trabajo.
+description: Primer paso obligatorio de cualquier tarea de desarrollo en ai-submind. Clasifica la tarea (T0/T1/T2), recorre las perspectivas de análisis, comprueba qué agentes y skills la cubren, detecta capacidades ausentes y separa hechos, inferencias y dudas. Usar al recibir una petición nueva o al retomar trabajo.
 ---
 
 # task-intake

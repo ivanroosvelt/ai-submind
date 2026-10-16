@@ -34,7 +34,7 @@ Alternativa 2.
   (`.dependency-cruiser.cjs`).
 - **Español**: documentación del proceso y del entorno — `AGENTS.md`, adaptadores, `.ai/` (políticas,
   registro, EDR), `.claude/` (agentes, skills), planes, informes, plantillas de planes/informes/agentes/
-  skills, `docs/templates/README.md`, bloque EDR de `docs/templates/decision.md`, `README.md` del repositorio.
+  skills, `docs/templates/README.md`, bloque EDR de `docs/templates/decision.md`. El `README.md` raíz pasó a inglés (EDR-009).
 - Commits: siguen en español (no son código, spec ni modelo).
 - Búsqueda: `aliases` en inglés; para localizar fichas, `scripts/sysq find` con el término en inglés
   (task-intake, model-update). Las citas de personas en DEC se traducen; `docs/system/decisions/README.md` lo

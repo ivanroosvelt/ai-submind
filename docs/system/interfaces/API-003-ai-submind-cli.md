@@ -39,7 +39,7 @@ uncertainties: []
 Local user; no authentication of its own.
 
 ## Distribution
-npm package `ai-submind` with `dist/` (including `dist/ui/` and its `THIRD-PARTY-LICENSES.md`), `spec/format/README.md` and `spec/format/schema/`; `npm run build` empties `dist/` first so no stale file is packed. `test/e2e/npx.test.ts` drives the packed tarball through `npx ai-submind`. Not published: `private: true` until the own license is decided (NFR-009).
+npm package `ai-submind` with `dist/` (including `dist/ui/` and its `THIRD-PARTY-LICENSES.md`), `spec/format/README.md` and `spec/format/schema/`; `npm run build` empties `dist/` first so no stale file is packed. `test/e2e/npx.test.ts` drives the packed tarball through `npx ai-submind`. Version 0.1.0, Apache-2.0 (DEC-019), with `LICENSE` and `NOTICE`; not published yet (PLAN-004).
 
 ## Versioning and compatibility
 Subcommands and options stable from the first release.

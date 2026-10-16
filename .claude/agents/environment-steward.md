@@ -1,6 +1,6 @@
 ---
 name: environment-steward
-description: Audita y evoluciona el entorno de IA de submind - agentes, skills, registro de capacidades y cobertura, políticas, adaptadores y validadores. Detecta capacidades ausentes, duplicadas u obsoletas y propone o aplica cambios con su EDR. Usar en el bootstrap, ante capacidades en gap/partial/deferred, fallos repetidos por limitaciones del entorno o cambios de formato de las herramientas.
+description: Audita y evoluciona el entorno de IA de ai-submind - agentes, skills, registro de capacidades y cobertura, políticas, adaptadores y validadores. Detecta capacidades ausentes, duplicadas u obsoletas y propone o aplica cambios con su EDR. Usar en el bootstrap, ante capacidades en gap/partial/deferred, fallos repetidos por limitaciones del entorno o cambios de formato de las herramientas.
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

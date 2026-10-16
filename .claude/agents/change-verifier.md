@@ -1,6 +1,6 @@
 ---
 name: change-verifier
-description: Verificador independiente de cambios en submind. Revisa con contexto limpio un cambio ya hecho (código, modelo, agentes, skills o políticas), ejecuta validadores y pruebas, contrasta código con documentación, revisa seguridad básica y emite veredicto con evidencias. Usar al cerrar cambios T1/T2 y obligatoriamente para cambios del propio entorno de IA.
+description: Verificador independiente de cambios en ai-submind. Revisa con contexto limpio un cambio ya hecho (código, modelo, agentes, skills o políticas), ejecuta validadores y pruebas, contrasta código con documentación, revisa seguridad básica y emite veredicto con evidencias. Usar al cerrar cambios T1/T2 y obligatoriamente para cambios del propio entorno de IA.
 tools: Read, Grep, Glob, Bash
 ---
 

@@ -31,7 +31,7 @@ uncertainties: []
 
 ## Decision
 - One `package.json` at the root (`ai-submind`, ESM, `engines.node >=22`, bin `dist/cli/main.js`,
-  `files: [dist, spec]`). `"private": true` until PLAN-004 S2 to prevent accidental publication.
+  `files: [dist, spec]`). `"private": true` until PLAN-004 S2; since then `prepublishOnly` runs `npm run check` and `publishConfig.provenance` makes a publish outside CI fail.
 - Code in `src/<module>/` (format, engine, query, cli, daemon, mcp, ui) decoupled through interfaces
   (DEC-001); tests in `test/**/*.test.ts`. `code_roots: [src/]` in `schema.yaml`.
 - Strict TypeScript (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,

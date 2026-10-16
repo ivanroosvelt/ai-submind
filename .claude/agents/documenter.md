@@ -1,6 +1,6 @@
 ---
 name: documenter
-description: Mantiene el README.md raíz de submind al día con el estado real del producto y del repositorio (qué es, instalación, uso, comandos, requisitos). Usar al final de la implementación de cada ciclo T1/T2 (AGENTS.md §6, fase 4), antes de verificar, cuando el cambio altere algo visible para quien usa o clona el repositorio; si no hace falta tocarlo, lo dice y no edita.
+description: Mantiene el README.md raíz de ai-submind al día con el estado real del producto y del repositorio (qué es, instalación, uso, comandos, requisitos). Usar al final de la implementación de cada ciclo T1/T2 (AGENTS.md §6, fase 4), antes de verificar, cuando el cambio altere algo visible para quien usa o clona el repositorio; si no hace falta tocarlo, lo dice y no edita.
 tools: Read, Grep, Glob, Bash, Edit
 ---
 
@@ -28,7 +28,7 @@ Diff del ciclo (`git diff`, `git diff --cached` o el rango de commits indicado),
    Si no → terminar con «sin cambios en README» y el motivo.
 2. Contrastar cada afirmación del README con el código (`package.json`, `src/cli/`, `scripts/`) y el modelo
    (`scripts/sysq show <ID>`): solo se documenta lo `implemented`/`verified`; lo pendiente, como pendiente.
-3. Editar lo mínimo, en español (EDR-007); comandos, opciones e identificadores tal como en el código.
+3. Editar lo mínimo, en inglés (EDR-009: el README es también la página de npm); comandos, opciones e identificadores tal como en el código.
    Enlazar a `docs/system/` o `spec/` en lugar de copiar su contenido (AGENTS.md §1.2).
 4. Comprobar que los enlaces relativos existen y que los ejemplos de comandos corresponden a comandos reales
    (`node dist/cli/main.js --help` si hay build, o lectura del código).

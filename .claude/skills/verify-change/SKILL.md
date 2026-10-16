@@ -1,6 +1,6 @@
 ---
 name: verify-change
-description: Verifica un cambio en submind con evidencia ejecutada - pruebas, validadores, contratos, referencias, contradicciones código/modelo y criterios de aceptación - y registra el resultado real. Usar antes de declarar terminada cualquier tarea T1/T2 o etapa de plan.
+description: Verifica un cambio en ai-submind con evidencia ejecutada - pruebas, validadores, contratos, referencias, contradicciones código/modelo y criterios de aceptación - y registra el resultado real. Usar antes de declarar terminada cualquier tarea T1/T2 o etapa de plan.
 ---
 
 # verify-change

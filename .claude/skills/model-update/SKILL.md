@@ -1,6 +1,6 @@
 ---
 name: model-update
-description: Crea, actualiza o retira fichas atómicas del modelo estructural de submind (docs/system) con IDs estables, relaciones explícitas, evidencia y rutas de código y pruebas; regenera inventario y trazabilidad y valida. Usar siempre que un cambio afecte a actores, requerimientos, características, entidades, funciones, validaciones, interfaces, integraciones, decisiones o pruebas.
+description: Crea, actualiza o retira fichas atómicas del modelo estructural de ai-submind (docs/system) con IDs estables, relaciones explícitas, evidencia y rutas de código y pruebas; regenera inventario y trazabilidad y valida. Usar siempre que un cambio afecte a actores, requerimientos, características, entidades, funciones, validaciones, interfaces, integraciones, decisiones o pruebas.
 ---
 
 # model-update

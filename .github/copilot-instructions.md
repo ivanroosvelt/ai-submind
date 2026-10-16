@@ -15,8 +15,8 @@ incrustado: editar `AGENTS.md` y ejecutar `scripts/regen`.**
   distinta; Copilot no aprueba sus propios cambios del entorno.
 - Para comandos, usar los de `scripts/` (AGENTS.md §12).
 
-<!-- BEGIN AGENTS.md · generado por scripts/regen · sha256:698b93ca7e046d3a · no editar -->
-# AGENTS.md — submind
+<!-- BEGIN AGENTS.md · generado por scripts/regen · sha256:01a5cfb87728adbc · no editar -->
+# AGENTS.md — ai-submind
 
 Fuente canónica de instrucciones para todo agente de IA que trabaje en este repositorio
 (Claude Code, GitHub Copilot u otros). Los archivos específicos de cada herramienta
@@ -25,7 +25,7 @@ contradice a este archivo, prevalece este archivo.
 
 ## 0. Estado actual
 
-- Proyecto **greenfield**: rama `v2` iniciada sin historia previa (EDR-002).
+- Proyecto **greenfield**: rama `v2` iniciada sin historia previa (EDR-002); desde 2026-10-16 es `master` (EDR-009).
 - Producto `ai-submind` en construcción (PLAN-002): paquete npm TypeScript en `src/`, pruebas en `test/`
   (DEC-001, DEC-008). Ver `docs/system/context.md` antes de suponer cualquier comportamiento.
 - Entorno de orquestación: estado y verificación en el último informe de `docs/reports/current/`.
@@ -228,7 +228,7 @@ riesgos y limitaciones.
 
 - Idioma (EDR-007): **inglés** para código y pruebas (`src/`, `test/`, `scripts/`), especificación (`spec/`)
   y modelo estructural (`docs/system/`, plantillas de fichas); **español** para el resto de la documentación
-  (este archivo, adaptadores, `.ai/`, `.claude/`, planes, informes). Identificadores, nombres de archivos de
+  (este archivo, adaptadores, `.ai/`, `.claude/`, planes, informes), salvo el `README.md` raíz, en inglés (EDR-009). Identificadores, nombres de archivos de
   agentes/skills y claves de esquema en inglés (`kebab-case` / `snake_case`).
 - Commits: Conventional Commits en español (`feat(core): ...`), referenciando IDs afectados
   en el cuerpo (`Refs: REQ-001, FEAT-002`).

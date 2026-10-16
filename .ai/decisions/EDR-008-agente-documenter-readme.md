@@ -30,7 +30,7 @@ Alternativa 2. AGT-005 `documenter`, capacidad CAP-017 «Documentación de uso (
 `traceability`. `AGENTS.md` §5 añade la fila y §6 lo invoca al final de la fase 4 de cada ciclo T1/T2, antes
 de verificar, para que su cambio entre en la revisión de `change-verifier`; decide él si hace falta cambiar
 algo. `verify-change` comprueba que se invocó. Herramientas sin `Write`: solo edita el README existente.
-El README sigue en español (EDR-007).
+El README sigue en español (EDR-007); desde EDR-009, en inglés.
 
 ## Consecuencias
 - Positivas: README alineado con el estado real en cada ciclo; responsable explícito.

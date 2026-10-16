@@ -4,7 +4,7 @@ type: decision
 name: "Node.js ≥22 + TypeScript ESM stack distributed as the npm package ai-submind (npx)"
 status: active
 evidence: declared-doc
-summary: "submind is distributed as the npm package `ai-submind` (TypeScript ESM, Node ≥22) runnable with npx; host project root = git root of the cwd."
+summary: "ai-submind is distributed as the npm package `ai-submind` (TypeScript ESM, Node ≥22) runnable with npx; host project root = git root of the cwd."
 aliases: [stack, npx, cli, node, typescript, ai-submind, package]
 tags: [architecture, stack]
 relations:
@@ -19,6 +19,7 @@ uncertainties: []
 - User: "it will be an npx command or similar that runs the server from the project where it is launched" [declared].
 - User chose "Node ≥22 TS, root = git root" (2026-10-14) [declared].
 - User (2026-10-14): package name `ai-submind` [declared]. `submind` is taken on npm (v1.2.80); `ai-submind` is free [verified: `npm view`, 2026-10-14].
+- User (2026-10-16): rename the Git repository to `ai-submind` and make `master` the `v2` line [declared].
 - The official MCP SDK, JointJS and Ajv belong to the JS/TS ecosystem [verified: npm, tech-research 2026-10-14].
 
 ## Alternatives considered
@@ -29,7 +30,7 @@ uncertainties: []
 ## Decision
 - npm package `ai-submind` with bin `ai-submind` (`npx ai-submind`), strict TypeScript, ESM, `engines.node >=22`.
   Name of the product, package, command, MCP server and artifacts in the host project: `ai-submind`
-  (`knowledge/ai-submind.json`, `knowledge/.ai-submind/`). `submind` remains only as the name of this repository.
+  (`knowledge/ai-submind.json`, `knowledge/.ai-submind/`). The GitHub repository is `ivanroosvelt/ai-submind` too (renamed from `tejo`, 2026-10-16); `submind` survives only as the local working-directory name.
 - Host project root: `git rev-parse --show-toplevel` from the cwd; if there is no git, the cwd.
 - Knowledge directory: `<root>/knowledge` by default, configurable with `--knowledge <dir>`;
   always confined within the root.

@@ -1,6 +1,6 @@
 ---
 name: impact-analysis
-description: Determina qué elementos del producto y del entorno afecta un cambio en submind, qué se rompería, qué integraciones previas o posteriores requiere y qué fichas hay que actualizar. Incluye análisis de diffs de Git. Usar antes de implementar cambios T1/T2 y al revisar un diff existente.
+description: Determina qué elementos del producto y del entorno afecta un cambio en ai-submind, qué se rompería, qué integraciones previas o posteriores requiere y qué fichas hay que actualizar. Incluye análisis de diffs de Git. Usar antes de implementar cambios T1/T2 y al revisar un diff existente.
 ---
 
 # impact-analysis

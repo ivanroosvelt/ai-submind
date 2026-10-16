@@ -1,6 +1,6 @@
 ---
 name: environment-audit
-description: Audita el entorno de IA de submind - agentes, skills, capacidades, cobertura, políticas, adaptadores, validadores y documentación obsoleta - y decide crear, actualizar o retirar componentes con trazabilidad. Usar en el bootstrap, ante capacidades en gap/partial/deferred, duplicidades, fallos repetidos del entorno, cambios de formato de las herramientas o al cerrar un plan T2.
+description: Audita el entorno de IA de ai-submind - agentes, skills, capacidades, cobertura, políticas, adaptadores, validadores y documentación obsoleta - y decide crear, actualizar o retirar componentes con trazabilidad. Usar en el bootstrap, ante capacidades en gap/partial/deferred, duplicidades, fallos repetidos del entorno, cambios de formato de las herramientas o al cerrar un plan T2.
 ---
 
 # environment-audit

@@ -5,9 +5,9 @@
 
 ## What is known
 
-- Repository name: `submind` **[verified]** (Git remote). Name of the product, npm package,
+- Repository: `github.com/ivanroosvelt/ai-submind` (renamed from `tejo` on 2026-10-16; `master` = the `v2` line, the old tejo history kept in the `archive/tejo-master` branch) **[verified]** (Git remote). Name of the product, npm package,
   command and MCP server: `ai-submind` (DEC-001) **[declared]**.
-- Working branch `v2` started without history (EDR-002) **[declared]**.
+- Branch `v2` started without history (EDR-002); since 2026-10-16 it is `master` **[verified]**.
 - Purpose: diagram manager (class and sequence diagrams in the first scope) that lives in `knowledge/` of the
   host project, versioned with Git as the single source of truth; agents query and manage it via
   MCP and people explore it in a web UI (REQ-001..040, REP-003) **[declared]**.
@@ -54,7 +54,7 @@
   MCP (API-001, FEAT-006), CLI and daemon (FEAT-001, API-003, including `npx` of the packed tarball in `test/e2e/npx.test.ts`),
   Git integrity (FEAT-008), UI HTTP API (API-002); UI rendering (FEAT-007, FEAT-009) implemented, checked in the browser by hand
   (no automated browser test) **[verified]**.
-- License: Apache-2.0, copyright Iván López; `LICENSE` and `NOTICE` ship in the tarball (DEC-019) **[verified]**. The package stays `private: true` until PLAN-004 S2 **[verified]**.
+- License: Apache-2.0, copyright Iván López; `LICENSE` and `NOTICE` ship in the tarball (DEC-019) **[verified]**. Version 0.1.0 with npm publish metadata (`publishConfig` with provenance, `prepublishOnly`); not published yet (PLAN-004) **[verified]**.
 - Cycles and boundaries between modules checked by dependency-cruiser in `npm run check` (NFR-008, DEC-009) **[verified]**.
 - Target scale ~10,000 elements per project (NFR-007, thresholds unconfirmed) **[inferred]**.
 

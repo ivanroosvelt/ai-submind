@@ -1,9 +1,26 @@
 {
   "name": "ai-submind",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "description": "Local manager for knowledge diagrams versioned in knowledge/, with an MCP server and a web UI",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "uml",
+    "diagrams",
+    "knowledge",
+    "ai-agents",
+    "git"
+  ],
+  "author": "Iván López",
+  "homepage": "https://github.com/ivanroosvelt/ai-submind#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ivanroosvelt/ai-submind.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ivanroosvelt/ai-submind/issues"
+  },
   "type": "module",
   "bin": {
     "ai-submind": "dist/cli/main.js"
@@ -21,6 +38,10 @@
   "engines": {
     "node": ">=22"
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "devEngines": {
     "runtime": {
       "name": "node",
@@ -36,7 +57,8 @@
     "format:check": "prettier --check .",
     "deps": "depcruise src --config .dependency-cruiser.cjs",
     "test": "vitest run",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run deps && npm test"
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run deps && npm test",
+    "prepublishOnly": "npm run build && npm run check"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -1,6 +1,6 @@
 # Product structural model
 
-Textual, atomic and verifiable representation of **what submind is**: actors, requirements,
+Textual, atomic and verifiable representation of **what ai-submind is**: actors, requirements,
 features, domain, interfaces, integrations, decisions and tests.
 
 - **Current state** here; **history** in Git (`git log -- docs/system/`).

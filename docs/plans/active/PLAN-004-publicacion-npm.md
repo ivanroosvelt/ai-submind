@@ -7,16 +7,16 @@ updated: 2026-10-16
 class: T2
 related: [DEC-019, DEC-001, NFR-001, NFR-009, API-003, FEAT-001]
 blockers: []
-next_action: "S1: revisión independiente de la licencia (change-verifier) y commit; después el usuario responde las dudas de S2 (URL del repositorio, idioma del README de npm)."
+next_action: "S2: revisión de change-verifier (incluye EDR-009) y commit; después S3 (CI en Linux, macOS y Windows; cambio de CI con aprobación del usuario) y decidir si el repositorio pasa a público y qué hacer con los tags v* de tejo (duda 1)."
 stages:
   - id: S1
     name: "Licencia Apache-2.0 (DEC-019)"
-    status: executed
-    evidence: "2026-10-16 LICENSE (texto oficial apache.org, sha256 cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30), NOTICE (Copyright 2026 Iván López), package.json/package-lock.json license Apache-2.0 y NOTICE en files; npm pack --dry-run incluye LICENSE y NOTICE; test/e2e/npx.test.ts lo comprueba. scripts/check verde (entorno 0/0, modelo 99 elementos 0/0, 332 Vitest); change-verifier aprobado con observaciones H1-H7, corregidas (bitácora). Pendiente: commit."
+    status: verified
+    evidence: "2026-10-16 commit 95c34a3. LICENSE (texto oficial apache.org, sha256 cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30), NOTICE (Copyright 2026 Iván López), package.json/package-lock.json license Apache-2.0 y NOTICE en files; npm pack --dry-run incluye LICENSE y NOTICE; test/e2e/npx.test.ts lo comprueba. scripts/check verde (entorno 0/0, modelo 99 elementos 0/0, 332 Vitest); change-verifier aprobado con observaciones H1-H7, corregidas (bitácora)."
   - id: S2
     name: "Metadatos del paquete y README para npm"
-    status: proposed
-    evidence: ""
+    status: executed
+    evidence: "2026-10-16 (sin commit) repositorio renombrado en GitHub tejo → ivanroosvelt/ai-submind (gh repo rename), master = v2 (push --force-with-lease tras guardar la historia de tejo en archive/tejo-master), remoto local actualizado. package.json: sin private, version 0.1.0, keywords, author, homepage, repository, bugs, publishConfig {access public, provenance true}, prepublishOnly npm run check; dependencias de producción ya exactas. README.md raíz en inglés (EDR-009); entorno y modelo nombran el repositorio ai-submind. npm publish --dry-run --ignore-scripts: ai-submind@0.1.0, 95 archivos, 276,3 kB, sin avisos."
   - id: S3
     name: "CI multiplataforma: Linux, macOS y Windows (NFR-001)"
     status: proposed
@@ -68,19 +68,19 @@ Cobertura: CAP de seguridad parcial → el workflow de publicación se revisa co
 
 Hechos:
 - `ai-submind` está libre en npm (`npm view ai-submind` → 404, 2026-10-16).
-- El remoto git es `https://github.com/ivanroosvelt/tejo.git`, no `submind`.
+- Repositorio renombrado a `github.com/ivanroosvelt/ai-submind` (antes `tejo`, privado); `master` = `v2` desde 2026-10-16, historia de tejo en la rama `archive/tejo-master`. Los tags `v0.1.1`, `v0.2.0` y `v0.3.0` son de tejo y siguen en el remoto.
 - Hay un único workflow (`.github/workflows/validate.yml`, solo ubuntu); el e2e ya pasó en Linux (NFR-001).
-- El `README.md` raíz está en español y describe el repositorio (EDR-007), no el uso del paquete.
+- El `README.md` raíz está en inglés desde S2 (EDR-009) y sirve de página del paquete.
 
 Inferencias:
 - Para que la provenance y el enlace del repositorio de npm sean útiles, el repositorio de GitHub tiene que ser público.
 - En Windows, `scripts/check` (bash + Python) no corre tal cual; basta con `npm ci && npm run build && npx vitest run` en ese runner.
 
 Dudas (bloquean S2 y S4; la 4 bloquea S4):
-1. URL pública del repositorio: ¿renombrar `tejo` a `submind`, otro repositorio, o mantener `tejo`? ¿Se hará público?
-2. README de npm: ¿en inglés (lo habitual en npm) con el README del repositorio aparte, o el mismo README en español?
+1. ~~URL del repositorio~~: resuelta (`ivanroosvelt/ai-submind`). Pendiente: hacerlo público (necesario para que la provenance y los enlaces de npm sirvan) y qué hacer con los tags `v*` de tejo (chocarán con `v0.2.0`/`v0.3.0` de ai-submind y el workflow de release previsto en S4 se dispararía por `v*`).
+2. ~~README de npm~~: resuelta, el `README.md` raíz pasa a inglés (EDR-009).
 3. Publicación: ¿trusted publishing (OIDC, sin token; recomendado) o token `NPM_TOKEN` en los secretos del repo? Cualquiera de las dos requiere que el usuario configure su cuenta de npm; ver criterios de entrada de S4 (la primera publicación probablemente no admite OIDC).
-4. Rama de release: ¿se publica desde `v2` o se integra antes en `master`?
+4. ~~Rama de release~~: resuelta, `master` (= `v2`).
 
 ## Etapas
 
@@ -98,6 +98,7 @@ Dudas (bloquean S2 y S4; la 4 bloquea S4):
   revisar si las dependencias de producción van con rango o exactas; README de npm (instalación, `npx ai-submind init/serve/mcp`, configuración MCP de un cliente, licencia).
 - Pruebas: e2e (el README entra en el tarball); `npm pack --dry-run` sin archivos inesperados.
 - Criterios de salida: `npm publish --dry-run` sin avisos de metadatos.
+- Nota: `publishConfig.provenance` hace fallar un `npm publish` fuera de CI; la primera publicación manual (si trusted publishing lo exige, S4) necesita `--provenance=false` explícito, nunca con `--ignore-scripts` (`prepublishOnly` = build + check garantiza un `dist/` al día).
 
 ### S3 · CI multiplataforma (NFR-001)
 - Depende de: S1.
@@ -109,7 +110,7 @@ Dudas (bloquean S2 y S4; la 4 bloquea S4):
 ### S4 · Flujo de release
 - Depende de: S2, S3, duda 3.
 - Criterios de entrada: comprobar en docs.npmjs.com (no verificado): trusted publishing se configura sobre un paquete ya existente (la primera publicación de 0.1.0 iría con token granular de un solo uso o manual con 2FA) y exige npm CLI ≥ 11.5.1 (Node 22 trae npm 10: actualizar npm en el job o usar Node 24).
-- Seguridad: environment de GitHub `npm` con revisor obligatorio para el job de publicación; protección de tags `v*`; acciones fijadas por SHA; 2FA obligatorio en la cuenta de npm; rama de release definida (`v2` no comparte historia con `master`, rama por defecto; EDR-002).
+- Seguridad: environment de GitHub `npm` con revisor obligatorio para el job de publicación; protección de tags `v*`; acciones fijadas por SHA; 2FA obligatorio en la cuenta de npm; publicar solo desde `master` (= `v2` desde 2026-10-16).
 - Acciones: un workflow nuevo de release en push de tag `v*`: comprobación de que el tag coincide con `version`, `npm ci`, `npm run check`, `npm publish --provenance --access public`, con `permissions: { contents: read, id-token: write }`; `CHANGELOG.md`; documentar el proceso de release en el README del repositorio.
 - Pruebas: ejecución del workflow con `npm publish --dry-run` (sin publicar) desde una rama.
 - Criterios de salida: workflow revisado por change-verifier y aprobado por el usuario.
@@ -138,5 +139,6 @@ Dudas (bloquean S2 y S4; la 4 bloquea S4):
 ## Bitácora
 - 2026-10-16 · creado. Usuario: «elige la licencia que me respalde más» → Apache-2.0 (DEC-019), titular Iván López, proyecto personal. S1 executed.
 - 2026-10-16 · change-verifier sobre S1 + modelo al día + plan: aprobado con observaciones H1-H7. Corregidas: H1 prueba de la licencia propia (campo, sha256 de LICENSE, NOTICE) en test/package/licenses.test.ts; H2 DEC-019 sin DEC-001 en «Affected elements» (citado en Context); H3 plan in_progress; H4 criterios de entrada de S4 sobre trusted publishing (sin verificar en la red); H5 controles de seguridad del release en S4 y duda 4 (rama); H6 motivo de `prepublishOnly` en S2. H7 ya cubierta (S2, duda 2, riesgos).
+- 2026-10-16 · S1 commit 95c34a3 → verified. Usuario: renombrar el repositorio, master = v2, npm y git como ai-submind, README en inglés. Hecho: rename en GitHub, archive/tejo-master, master forzado a v2 (autorizado por el usuario en esta conversación). S2 executed (EDR-009). change-verifier sobre S2: aprobado con observaciones H1-H7; corregidas H1 (API-003 ya no dice private), H2/H3 (textos del plan), H4 (AGENTS.md §0 y §14, context.md: rama master), H5 (`prepublishOnly` con build explícito; nota de `--ignore-scripts`), H6 (README: Node ≥ 22 tal como se aplica, sin enlace al plan activo) y H7 (`affects` de EDR-009). Pendiente: commit.
 
 ## Resultado (al cerrar)

@@ -1,6 +1,6 @@
 ---
 name: requirements-analyst
-description: Analiza requerimientos de submind de forma amplia y aislada - actores, permisos, casos de uso, reglas de negocio, validaciones, estados, errores y requisitos no funcionales - y propone fichas REQ/ACT/NFR/VAL con evidencia y dudas separadas. Usar cuando un requerimiento nuevo o ambiguo necesita análisis funcional antes de diseñar o implementar.
+description: Analiza requerimientos de ai-submind de forma amplia y aislada - actores, permisos, casos de uso, reglas de negocio, validaciones, estados, errores y requisitos no funcionales - y propone fichas REQ/ACT/NFR/VAL con evidencia y dudas separadas. Usar cuando un requerimiento nuevo o ambiguo necesita análisis funcional antes de diseñar o implementar.
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 

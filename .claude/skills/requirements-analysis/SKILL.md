@@ -1,6 +1,6 @@
 ---
 name: requirements-analysis
-description: Descompone una petición de producto de submind en requerimientos atómicos y verificables - actores, permisos, casos de uso, reglas de negocio, entradas/salidas, validaciones, estados, errores y requisitos no funcionales - separando hechos de supuestos. Usar ante cualquier funcionalidad nueva, cambio de comportamiento o petición ambigua.
+description: Descompone una petición de producto de ai-submind en requerimientos atómicos y verificables - actores, permisos, casos de uso, reglas de negocio, entradas/salidas, validaciones, estados, errores y requisitos no funcionales - separando hechos de supuestos. Usar ante cualquier funcionalidad nueva, cambio de comportamiento o petición ambigua.
 ---
 
 # requirements-analysis

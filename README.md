@@ -1,92 +1,91 @@
-# submind
+# ai-submind
 
-`ai-submind` es un gestor local de diagramas de conocimiento (diagramas de clases y de secuencia en el primer
-alcance) que vive en `knowledge/` del proyecto anfitrión, versionado con Git como única fuente de verdad. Los
-agentes de IA lo consultan y modifican por MCP; las personas lo exploran en una UI web. Contexto completo en
+`ai-submind` is a local manager for knowledge diagrams (class and sequence diagrams in the first scope). The
+knowledge lives in `knowledge/` inside your project and is versioned with Git as the single source of truth. AI
+agents query and change it through MCP; people explore it in a web UI. Full context in
 [docs/system/context.md](docs/system/context.md).
 
-## Estado
+## Status
 
-Estructura base terminada ([PLAN-002](docs/plans/archive/PLAN-002-gestor-diagramas-base.md), cerrado el 2026-10-16):
+Base product complete ([PLAN-002](docs/plans/archive/PLAN-002-gestor-diagramas-base.md), closed 2026-10-16):
 
-- Implementado: formato de conocimiento 1.0 y su validación ([spec/format/](spec/format/README.md)), motor
-  embebido, consultas y búsqueda léxica, CLI con daemon por proyecto, servidor MCP, UI web (JointJS) para
-  diagramas de clases y de secuencia e integridad con Git (diagnóstico tras un merge, sin reparación automática:
+- Implemented: knowledge format 1.0 and its validation ([spec/format/](spec/format/README.md)), embedded
+  engine, structured queries and lexical search, CLI with a per-project daemon, MCP server, web UI (JointJS) for
+  class and sequence diagrams, and Git integrity (diagnosis after a merge, no automatic repair:
   [FEAT-008](docs/system/features/FEAT-008-git-integrity.md)).
-- Pendiente: publicación en npm ([PLAN-004](docs/plans/active/PLAN-004-publicacion-npm.md), propuesto). El
-  paquete aún es `private`.
-  `npx ai-submind` solo funciona con el paquete instalado localmente desde un tarball.
+- Pending: first publication on npm (in progress). Until then `npx ai-submind` only works with the package installed from a local tarball.
 
-## Requisitos
+## Requirements
 
-- Node.js `^22.13.0 || ^24.0.0 || >=26.0.0` y npm.
-- Git (la raíz del proyecto es la raíz Git del directorio actual).
-- Python ≥ 3.10 solo para los scripts del entorno de desarrollo (`scripts/`).
+- Node.js ≥ 22 and npm (development uses `^22.13.0 || ^24.0.0 || >=26.0.0`, see `devEngines`).
+- Git (the project root is the Git root of the current directory).
+- Python ≥ 3.10 only for the development scripts (`scripts/`).
 
-## Instalación desde el repositorio
+## Install from the repository
 
 ```sh
 npm ci
-npm run build    # vacía dist/ y ejecuta tsc + vite build: binario dist/cli/main.js y la UI en dist/ui/
+npm run build    # empties dist/ and runs tsc + vite build: binary dist/cli/main.js and the UI in dist/ui/
 ```
 
-## Instalación en un proyecto (tarball local)
+## Install in a project (local tarball)
 
 ```sh
-npm pack                                   # en este repositorio, tras npm run build: ai-submind-0.0.0.tgz
-npm install /ruta/a/ai-submind-0.0.0.tgz   # en el proyecto anfitrión
+npm pack                                 # in this repository, after npm run build: ai-submind-<version>.tgz
+npm install /path/to/ai-submind-<version>.tgz   # in the host project
 npx ai-submind init
-npx ai-submind                             # equivale a serve
+npx ai-submind                           # same as serve
 ```
 
-El tarball incluye `dist/` (sin los mapas de fuente `*.map`), `spec/format/README.md` y `spec/format/schema/`.
+The tarball contains `dist/` (without `*.map` source maps), `spec/format/README.md`, `spec/format/schema/`,
+`LICENSE` and `NOTICE`.
 
-## Uso de la CLI
+## CLI
 
 ```sh
-npx ai-submind <comando> [opciones]   # o, desde este repositorio: node dist/cli/main.js <comando>
+npx ai-submind <command> [options]   # or, from this repository: node dist/cli/main.js <command>
 ```
 
-| Comando | Qué hace | Opciones |
-|---------|----------|----------|
-| `serve` (por defecto) | Arranca el daemon del proyecto (HTTP en 127.0.0.1:7777 o un puerto libre, con token) | `--knowledge <dir>`, `--port <n>`, `--idle <minutos>` |
-| `status` | Muestra el estado del daemon | `--knowledge <dir>` |
-| `stop` | Detiene el daemon | `--knowledge <dir>` |
-| `init` | Crea `knowledge/` con su manifiesto `ai-submind.json` | `--knowledge <dir>` |
-| `validate` | Valida `knowledge/`, incluidos conflictos de merge, IDs duplicados y referencias rotas (código de salida 1 si hay errores) | `--knowledge <dir>` |
-| `mcp` | Servidor MCP por stdio para agentes, conectado al daemon (lo arranca si hace falta) | `--knowledge <dir>` |
+| Command | What it does | Options |
+|---------|--------------|---------|
+| `serve` (default) | Starts the project daemon (HTTP on 127.0.0.1:7777 or a free port, with a token) | `--knowledge <dir>`, `--port <n>`, `--idle <minutes>` |
+| `status` | Shows the daemon status | `--knowledge <dir>` |
+| `stop` | Stops the daemon | `--knowledge <dir>` |
+| `init` | Creates `knowledge/` with its `ai-submind.json` manifest | `--knowledge <dir>` |
+| `validate` | Validates `knowledge/`, including merge conflicts, duplicate IDs and broken references (exit code 1 on errors) | `--knowledge <dir>` |
+| `mcp` | Stdio MCP server for agents, connected to the daemon (starts it if needed) | `--knowledge <dir>` |
 
-`--knowledge` es relativo al directorio actual y debe quedar dentro de la raíz del proyecto; por defecto,
-`<raíz>/knowledge`. Ayuda: `npx ai-submind --help`. Contrato: [API-003](docs/system/interfaces/API-003-ai-submind-cli.md).
+`--knowledge` is relative to the current directory and must stay inside the project root; it defaults to
+`<root>/knowledge`. Help: `npx ai-submind --help`. Contract: [API-003](docs/system/interfaces/API-003-ai-submind-cli.md).
 
-## UI web
+## Web UI
 
-`serve` imprime la URL del daemon con su token (`http://127.0.0.1:<puerto>/?token=…`); al abrirla en el
-navegador se carga la UI: árbol de modelos y diagramas, diagramas de clases (zoom, ajuste a pantalla,
-selección con detalle, hallazgos de validación y refresco en vivo). Solo escribe el layout (posiciones de
-nodos y vértices de enlaces): al soltar un nodo o mover un vértice, y con el botón «Auto-layout», que recalcula
-el diagrama completo igual que la tool MCP `auto_layout_diagram` (útil para arreglar solapes heredados). Un
-`width`/`height` explícito en el layout es un tamaño mínimo: el contenido nunca se recorta.
+`serve` prints the daemon URL with its token (`http://127.0.0.1:<port>/?token=…`); open it in a browser to load
+the UI: tree of models and diagrams, class diagrams (zoom, fit to screen, selection with details, validation
+findings and live refresh). The UI only writes the layout (node positions and link vertices): when you drop a
+node or move a vertex, and with the «Auto-layout» button, which recomputes the whole diagram like the MCP tool
+`auto_layout_diagram` (useful to fix inherited overlaps). An explicit `width`/`height` in the layout is a
+minimum size: content is never clipped.
 
-Los diagramas de secuencia muestran lifelines, activaciones, mensajes (síncronos, asíncronos, respuesta,
-creación, destrucción, lost/found), fragmentos combinados con operandos y guardas, e interaction use («ref»).
-Las lifelines se arrastran solo en horizontal (su orden es el de x) y su longitud se cambia con el tirador del
-extremo inferior; «Auto-layout» también funciona aquí. Las referencias del detalle abren un diagrama que
-muestra el destino, y el doble clic en un interaction use abre el diagrama de la interacción usada.
+Sequence diagrams show lifelines, executions, messages (synchronous, asynchronous, reply, create, delete,
+lost/found), combined fragments with operands and guards, and interaction uses («ref»). Lifelines are dragged
+horizontally only (their order is their x) and their length changes with the handle at the bottom;
+«Auto-layout» works here too. References in the details panel open a diagram that shows the target, and
+double-clicking an interaction use opens the diagram of the used interaction.
 
-El build de la UI genera `dist/ui/THIRD-PARTY-LICENSES.md` con las licencias del código de terceros
-empaquetado (`@joint/core`, MPL-2.0; `@dagrejs/dagre`, MIT); `dist/ui/index.html` indica dónde obtener la forma
-fuente de `@joint/core` (https://github.com/clientIO/joint y el paquete npm `@joint/core`).
+The UI build writes `dist/ui/THIRD-PARTY-LICENSES.md` with the licenses of the bundled third-party code
+(`@joint/core`, MPL-2.0; `@dagrejs/dagre`, MIT); `dist/ui/index.html` says where to get the source form of
+`@joint/core` (https://github.com/clientIO/joint and the npm package `@joint/core`).
 
-API HTTP de la UI en [API-002](docs/system/interfaces/API-002-ui-http-api.md); decisiones en
-[DEC-017](docs/system/decisions/DEC-017-ui-stack-sse-and-shared-layout.md) y
+UI HTTP API in [API-002](docs/system/interfaces/API-002-ui-http-api.md); decisions in
+[DEC-017](docs/system/decisions/DEC-017-ui-stack-sse-and-shared-layout.md) and
 [DEC-018](docs/system/decisions/DEC-018-sequence-executions-and-layout.md).
 
-## Servidor MCP
+## MCP server
 
-Configuración para un cliente MCP por stdio (`.mcp.json` del proyecto anfitrión, con el paquete instalado; el
-cliente debe lanzarlo con el directorio de trabajo dentro del proyecto). El servidor se conecta al daemon y lo
-arranca si falta:
+Configuration for a stdio MCP client (`.mcp.json` in the host project, with the package installed; the client
+must start it with a working directory inside the project). The server connects to the daemon and starts it if
+it is not running:
 
 ```json
 {
@@ -99,32 +98,33 @@ arranca si falta:
 }
 ```
 
-Sin instalar el paquete, usar `"command": "node"` con `"args": ["/ruta/a/submind/dist/cli/main.js", "mcp"]`.
+Without installing the package, use `"command": "node"` with `"args": ["/path/to/ai-submind/dist/cli/main.js", "mcp"]`.
 
 Tools: `list_models`, `list_diagrams`, `get_element`, `find_elements`, `search`, `relations`, `impact`,
-`paths`, `validate` (lectura); `create_element`, `update_element`, `delete_element`, `edit_diagram`,
-`apply_batch`, `rename`, `auto_layout_diagram` (escritura, todas con `dryRun`; la primera escritura inicializa `knowledge/` si no
-existe). Recursos `ai-submind://schema/{name}`, `ai-submind://model/{id}` y `ai-submind://diagram/{id}`.
-Entradas, salidas y errores en [API-001](docs/system/interfaces/API-001-ai-submind-mcp-server.md).
+`paths`, `validate` (read); `create_element`, `update_element`, `delete_element`, `edit_diagram`,
+`apply_batch`, `rename`, `auto_layout_diagram` (write, all with `dryRun`; the first write initializes
+`knowledge/` if it does not exist). Resources `ai-submind://schema/{name}`, `ai-submind://model/{id}` and
+`ai-submind://diagram/{id}`. Inputs, outputs and errors in
+[API-001](docs/system/interfaces/API-001-ai-submind-mcp-server.md).
 
-## Desarrollo
+## Development
 
-El repositorio incluye un entorno de desarrollo asistido por IA:
+The repository includes an AI-assisted development environment (its process documentation is in Spanish):
 
-- [AGENTS.md](AGENTS.md) — instrucciones canónicas para cualquier agente (Claude Code, Copilot, …).
-- [docs/system/](docs/system/README.md) — modelo estructural del producto (IDs, relaciones, trazabilidad).
-- [.ai/](.ai/README.md) — registro de agentes y skills, políticas y decisiones del entorno.
+- [AGENTS.md](AGENTS.md) — canonical instructions for any agent (Claude Code, Copilot, …).
+- [docs/system/](docs/system/README.md) — structural model of the product (IDs, relations, traceability).
+- [.ai/](.ai/README.md) — registry of agents and skills, policies and environment decisions.
 
 ```sh
 npm ci
-npm run check                 # tipos, lint, formato, dependencias y pruebas (Vitest), incluidas la
-                              # auditoría de licencias y el e2e desde el tarball (test/package/, test/e2e/)
-scripts/check                 # todas las verificaciones, incluido npm run check (también en CI)
-scripts/sysq find <término>   # buscar en el modelo
-scripts/regen                 # regenerar índices y adaptadores
+npm run check                 # types, lint, format, dependencies and tests (Vitest), including the
+                              # license audit and the e2e from the tarball (test/package/, test/e2e/)
+scripts/check                 # every check, including npm run check (also in CI)
+scripts/sysq find <term>      # search the model
+scripts/regen                 # regenerate indexes and adapters
 ```
 
-## Licencia
+## License
 
-Apache-2.0 ([LICENSE](LICENSE), [NOTICE](NOTICE)); decisión en
+Apache-2.0 ([LICENSE](LICENSE), [NOTICE](NOTICE)); decision in
 [DEC-019](docs/system/decisions/DEC-019-apache-2-license.md).
