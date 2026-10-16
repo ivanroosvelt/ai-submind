@@ -1,6 +1,7 @@
 // UI HTTP API of the daemon (PLAN-002 S9; API-002, REQ-028..REQ-033, NFR-004, DEC-017): static UI behind the
 // token, read routes, layout writes with revision control and validation, rejection of every other write,
 // and the SSE change stream. In-process daemon on port 0 over a copy of the garage corpus.
+import { fileURLToPath } from "node:url";
 import { cp, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { request as httpRequest, type IncomingHttpHeaders } from "node:http";
 import { tmpdir } from "node:os";
@@ -13,8 +14,9 @@ import { serialize } from "../../src/format/canonical.js";
 import { autoLayout, type DiagramInput } from "../../src/layout/class-layout.js";
 import { autoLayoutSequence, sequenceGeometry } from "../../src/layout/sequence-layout.js";
 
-const GARAGE = new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url)
-  .pathname;
+const GARAGE = fileURLToPath(
+  new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url),
+);
 
 let dir: string;
 let d: DaemonHandle;

@@ -1,5 +1,6 @@
 // Lexical index (PLAN-002 S6): BM25F ranking on the garage corpus, prefix expansion, modes and
 // incremental update equivalent to a rebuild.
+import { fileURLToPath } from "node:url";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,8 +9,9 @@ import { Engine, type SemanticDiff } from "../../src/engine/index.js";
 import { serialize, type Model } from "../../src/format/index.js";
 import { LexicalIndex, type LexicalOptions } from "../../src/query/lexical.js";
 
-const GARAGE = new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url)
-  .pathname;
+const GARAGE = fileURLToPath(
+  new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url),
+);
 
 const entries = (e: Engine): [string, ReturnType<Engine["get"]>][] =>
   [...e.ids()].map((id) => [id, e.get(id)]);

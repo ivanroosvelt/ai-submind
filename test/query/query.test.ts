@@ -1,5 +1,6 @@
 // Structural queries (PLAN-002 S6): models, diagrams, get, find, relations, impact, paths and the
 // facade's lexical search with incremental updates.
+import { fileURLToPath } from "node:url";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -15,8 +16,9 @@ import {
   type QueryErrorCode,
 } from "../../src/query/index.js";
 
-const GARAGE = new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url)
-  .pathname;
+const GARAGE = fileURLToPath(
+  new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url),
+);
 
 const dirs: string[] = [];
 const engines: Engine[] = [];

@@ -1,11 +1,12 @@
 // Normative corpus of spec/format/examples (PLAN-002 S2/S4): valid documents with no findings and in
 // canonical form, invalid ones with exactly the expected set of codes, byte-exact canonicalization.
+import { fileURLToPath } from "node:url";
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { classifyPath, serialize, validateKnowledgeDir } from "../../src/format/index.js";
 
 const EXAMPLES = new URL("../../spec/format/examples/", import.meta.url);
-const dir = (rel: string): string => new URL(rel, EXAMPLES).pathname;
+const dir = (rel: string): string => fileURLToPath(new URL(rel, EXAMPLES));
 
 function jsonFiles(root: URL, prefix = ""): string[] {
   return readdirSync(new URL(prefix, root), { withFileTypes: true }).flatMap((e) =>
@@ -23,7 +24,7 @@ describe("valid corpus: garage", () => {
   const root = new URL("valid/garage/knowledge/", EXAMPLES);
 
   it("produces no errors or warnings", async () => {
-    const report = await validateKnowledgeDir(root.pathname);
+    const report = await validateKnowledgeDir(fileURLToPath(root));
     expect(report.findings).toEqual([]);
     expect(report.documents.map((d) => d.status)).toEqual(report.documents.map(() => "writable"));
   });
@@ -71,7 +72,7 @@ describe("canonicalization", () => {
 
   it("canonical/input and canonical/expected are valid", async () => {
     for (const root of [input, expectedDir]) {
-      const report = await validateKnowledgeDir(root.pathname);
+      const report = await validateKnowledgeDir(fileURLToPath(root));
       expect(report.findings).toEqual([]);
     }
   });

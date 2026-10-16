@@ -1,5 +1,6 @@
 // MCP tools and resources in process (PLAN-002 S8; API-001, DEC-016): tool list and schemas, results as
 // structured content, typed errors, and resources, through the SDK client over an in-memory transport.
+import { fileURLToPath } from "node:url";
 import { cp, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -12,8 +13,9 @@ import { autoLayoutSequence } from "../../src/layout/sequence-layout.js";
 import { createMcpServer } from "../../src/mcp/tools.js";
 import { createQuery } from "../../src/query/index.js";
 
-const GARAGE = new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url)
-  .pathname;
+const GARAGE = fileURLToPath(
+  new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url),
+);
 
 let dir: string;
 let engine: Engine;

@@ -1,5 +1,6 @@
 // Shared deterministic layout (PLAN-002 S9; DEC-017, REQ-028, ENT-005): shape sizes from the displayed text
 // with fixed font metrics, and dagre auto-layout of class diagrams with the shape of layout/<id>.json.
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { serialize } from "../../src/format/canonical.js";
 import { parseDocument } from "../../src/format/document.js";
@@ -9,8 +10,9 @@ import { autoLayout, boxSize, classGraph } from "../../src/layout/class-layout.j
 import { CHAR_WIDTH, LINE_HEIGHT, MIN_WIDTH, nodeBox, PAD_X } from "../../src/layout/size.js";
 import { createQuery } from "../../src/query/index.js";
 
-const GARAGE = new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url)
-  .pathname;
+const GARAGE = fileURLToPath(
+  new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url),
+);
 
 async function overview(): Promise<ReturnType<ReturnType<typeof createQuery>["diagram"]>["data"]> {
   const engine = await Engine.open(GARAGE);

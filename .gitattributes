@@ -1,0 +1,2 @@
+# Byte-for-byte canonical JSON (DEC-002) and the corpus need LF on every OS, also on Windows checkouts.
+* text=auto eol=lf

@@ -1,5 +1,6 @@
 // Element-level edits (PLAN-002 S8; REQ-021, REQ-023..REQ-027, DEC-015, DEC-016): creation with derived IDs,
 // merge-patch updates, delete with cascade, diagram membership, batches, implicit init and dry run.
+import { fileURLToPath } from "node:url";
 import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,8 +9,9 @@ import type { Layout, Model } from "../../src/format/index.js";
 import { edit, Engine, EngineError, type EngineErrorCode } from "../../src/engine/index.js";
 import { serialize } from "../../src/format/canonical.js";
 
-const GARAGE = new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url)
-  .pathname;
+const GARAGE = fileURLToPath(
+  new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url),
+);
 
 let dir: string;
 let root: string;

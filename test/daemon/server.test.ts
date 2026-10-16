@@ -147,9 +147,11 @@ describe("single instance", () => {
     >;
     expect(runtime).toMatchObject({ pid: process.pid, port: d.port, token: d.token, url: d.url });
     expect(typeof runtime.version).toBe("string");
-    expect((await stat(local("runtime.json"))).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes (stat reports 0o666): there the token relies on the profile ACLs (NFR-004).
+    if (process.platform !== "win32")
+      expect((await stat(local("runtime.json"))).mode & 0o777).toBe(0o600);
     expect(await readFile(local(".gitignore"), "utf8")).toBe("*\n");
-    expect((await stat(project.local)).mode & 0o777).toBe(0o700);
+    if (process.platform !== "win32") expect((await stat(project.local)).mode & 0o777).toBe(0o700);
     await d.close();
     expect(existsSync(local("runtime.json"))).toBe(false);
     expect(existsSync(local("daemon.lock"))).toBe(false);

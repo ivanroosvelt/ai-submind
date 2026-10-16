@@ -1,6 +1,7 @@
 // Shared sequence-diagram geometry and auto-layout (PLAN-002 S11; DEC-018, REQ-040, ENT-005): rows in
 // temporal order, message shapes by sort and kind, executions, fragments and interaction uses, and the
 // layout document with lifeline x, width and height only.
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { serialize } from "../../src/format/canonical.js";
 import { parseDocument } from "../../src/format/document.js";
@@ -15,8 +16,8 @@ import {
 import { createQuery } from "../../src/query/index.js";
 
 const EXAMPLES = new URL("../../spec/format/examples/", import.meta.url);
-const GARAGE = new URL("valid/garage/knowledge/", EXAMPLES).pathname;
-const CANONICAL = new URL("canonical/expected/", EXAMPLES).pathname;
+const GARAGE = fileURLToPath(new URL("valid/garage/knowledge/", EXAMPLES));
+const CANONICAL = fileURLToPath(new URL("canonical/expected/", EXAMPLES));
 
 async function view(root: string, id: string): Promise<DiagramInput> {
   const engine = await Engine.open(root);

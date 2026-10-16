@@ -1,4 +1,5 @@
 // Engine (PLAN-002 S5): loading, transactions, optimistic control, confinement, rename and reload.
+import { fileURLToPath } from "node:url";
 import { cp, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -12,8 +13,9 @@ import {
   type EngineErrorCode,
 } from "../../src/engine/index.js";
 
-const GARAGE = new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url)
-  .pathname;
+const GARAGE = fileURLToPath(
+  new URL("../../spec/format/examples/valid/garage/knowledge/", import.meta.url),
+);
 
 let dir: string;
 let root: string;
