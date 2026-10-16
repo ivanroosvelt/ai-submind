@@ -11,7 +11,8 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    # El environment exige la aprobación del mantenedor y solo admite tags v*.
+    # El environment solo admite tags v* y es el que exige el trusted publisher de npm. Sin revisor: crear
+    # el tag (solo admin, ruleset release-tags) es la aprobación.
     environment: npm
     permissions:
       contents: read

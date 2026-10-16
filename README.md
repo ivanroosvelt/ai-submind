@@ -130,8 +130,8 @@ scripts/regen                 # regenerate indexes and adapters
 
 1. Update `version` in `package.json` (`npm version <x.y.z> --no-git-tag-version`) and `CHANGELOG.md`; commit to `master`.
 2. Push a tag `v<x.y.z>` from `master` (only maintainers can create `v*` tags).
-3. The `release` workflow waits for approval in the `npm` environment, checks that the tag matches the version
-   and is on `master`, runs build + checks, and publishes with provenance through npm trusted publishing. A
+3. The `release` workflow runs in the `npm` environment (no manual approval: pushing the tag is the approval),
+   checks that the tag matches the version and is on `master`, runs build + checks, and publishes with provenance through npm trusted publishing. A
    prerelease (`v1.0.0-rc.1`) is published under the `next` dist-tag.
 
 ## License
