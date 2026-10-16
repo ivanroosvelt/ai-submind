@@ -260,7 +260,6 @@ describe("orphan lock under concurrent starts", () => {
   `;
 
   it("six processes recovering the same dead lock start exactly one daemon (8 rounds)", async () => {
-    const dead = spawnSync(process.execPath, ["-e", ""]).pid;
     const script = join(dir, "starter.mjs");
     await writeFile(script, STARTER);
     const dist = pathToFileURL(join(REPO, "dist", "index.js")).href;
@@ -269,6 +268,10 @@ describe("orphan lock under concurrent starts", () => {
       const lock = join(root, "knowledge", ".ai-submind", "daemon.lock");
       try {
         await mkdir(join(root, "knowledge", ".ai-submind"), { recursive: true });
+        // A fresh dead pid per round: Windows reuses pids quickly, and a reused one looks alive (DEC-014).
+        let dead = 0;
+        do dead = spawnSync(process.execPath, ["-e", ""]).pid;
+        while (alive(dead));
         await writeFile(lock, String(dead));
         const at = String(Date.now() + 1500);
         const lines = await Promise.all(
@@ -285,7 +288,11 @@ describe("orphan lock under concurrent starts", () => {
                   ok(JSON.parse(out) as { started?: number; running?: number });
               });
               child.on("exit", (code) => {
-                fail(new Error(`starter exited with ${String(code)} before reporting: ${err}`));
+                fail(
+                  new Error(
+                    `starter exited with ${String(code)} before reporting (dead pid ${String(dead)}): ${err}`,
+                  ),
+                );
               });
             });
           }),
