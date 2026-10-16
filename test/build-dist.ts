@@ -6,11 +6,15 @@ import { fileURLToPath } from "node:url";
 
 export default function setup(): void {
   try {
-    execFileSync("npm", ["run", "--silent", "build"], {
+    const options = {
       cwd: fileURLToPath(new URL("../", import.meta.url)),
       encoding: "utf8",
       stdio: "pipe",
-    });
+    } as const;
+    // npm is a .cmd shim on Windows, which Node only starts through a shell (NFR-001).
+    if (process.platform === "win32")
+      execFileSync("npm run --silent build", { ...options, shell: true });
+    else execFileSync("npm", ["run", "--silent", "build"], options);
   } catch (e) {
     // tsc reports on stdout: show both streams instead of an opaque "Command failed".
     const { stdout = "", stderr = "" } = e as { stdout?: string; stderr?: string };
