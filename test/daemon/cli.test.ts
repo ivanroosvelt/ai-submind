@@ -277,13 +277,15 @@ describe("orphan lock under concurrent starts", () => {
             children.push(child);
             return new Promise<{ started?: number; running?: number }>((ok, fail) => {
               let out = "";
+              let err = "";
+              child.stderr.on("data", (c: Buffer) => (err += c.toString()));
               child.stdout.on("data", (c: Buffer) => {
                 out += c.toString();
                 if (out.includes("\n"))
                   ok(JSON.parse(out) as { started?: number; running?: number });
               });
               child.on("exit", (code) => {
-                fail(new Error(`starter exited with ${String(code)} before reporting`));
+                fail(new Error(`starter exited with ${String(code)} before reporting: ${err}`));
               });
             });
           }),
