@@ -1,13 +1,13 @@
 ---
 id: PLAN-004
 title: "Publicar ai-submind 0.1.0 en npm (Apache-2.0)"
-status: in_progress
+status: completed
 created: 2026-10-16
 updated: 2026-10-16
 class: T2
 related: [DEC-019, DEC-001, NFR-001, NFR-009, API-003, FEAT-001]
 blockers: []
-next_action: "Usuario: configurar trusted publisher en npmjs.com (ivanroosvelt/ai-submind, release.yml, environment npm, no permitir tokens) y retirar 0.0.0-stage (npm unpublish ai-submind@0.0.0-stage --otp, antes de 72 h). Después: release 0.1.1 por tag para verificar S4 y la provenance; cerrar y archivar el plan."
+next_action: "Ninguna: plan completado."
 stages:
   - id: S1
     name: "Licencia Apache-2.0 (DEC-019)"
@@ -15,16 +15,16 @@ stages:
     evidence: "2026-10-16 commit 95c34a3. LICENSE (texto oficial apache.org, sha256 cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30), NOTICE (Copyright 2026 Iván López), package.json/package-lock.json license Apache-2.0 y NOTICE en files; npm pack --dry-run incluye LICENSE y NOTICE; test/e2e/npx.test.ts lo comprueba. scripts/check verde (entorno 0/0, modelo 99 elementos 0/0, 332 Vitest); change-verifier aprobado con observaciones H1-H7, corregidas (bitácora)."
   - id: S2
     name: "Metadatos del paquete y README para npm"
-    status: executed
-    evidence: "2026-10-16 (sin commit) repositorio renombrado en GitHub tejo → ivanroosvelt/ai-submind (gh repo rename), master = v2 (push --force-with-lease tras guardar la historia de tejo en archive/tejo-master), remoto local actualizado. package.json: sin private, version 0.1.0, keywords, author, homepage, repository, bugs, publishConfig {access public, provenance true}, prepublishOnly npm run check; dependencias de producción ya exactas. README.md raíz en inglés (EDR-009); entorno y modelo nombran el repositorio ai-submind. npm publish --dry-run --ignore-scripts: ai-submind@0.1.0, 95 archivos, 276,3 kB, sin avisos."
+    status: verified
+    evidence: "2026-10-16 (sin commit) repositorio renombrado en GitHub tejo → ivanroosvelt/ai-submind (gh repo rename), master = v2 (push --force-with-lease tras guardar la historia de tejo en archive/tejo-master), remoto local actualizado. package.json: sin private, version 0.1.0, keywords, author, homepage, repository, bugs, publishConfig {access public, provenance true}, prepublishOnly npm run check; dependencias de producción ya exactas. README.md raíz en inglés (EDR-009); entorno y modelo nombran el repositorio ai-submind. npm publish --dry-run --ignore-scripts: ai-submind@0.1.0, 95 archivos, 276,3 kB, sin avisos. change-verifier: aprobado con observaciones H1-H7, corregidas; commit 89eb13f."
   - id: S3
     name: "CI multiplataforma: Linux, macOS y Windows (NFR-001)"
-    status: executed
-    evidence: "2026-10-16 job portability (ubuntu, macos, windows × Node 22, 24; npm test con el e2e) en validate.yml, acciones fijadas por SHA. Windows falló primero y se corrigió en las pruebas, sin cambios en src/: npm por shell en el build global, fileURLToPath en vez de URL.pathname, .gitattributes eol=lf, modos POSIX solo fuera de Windows, comando sin comillas en el e2e (%~dp0 de cmd.exe), depcruise por node, rutas nativas, rm con reintentos (EBUSY), pid muerto nuevo por ronda (reutilización de pids, DEC-014). Run 38953008314: 3 de 3 intentos con los 8 jobs en verde. Pendiente: change-verifier."
+    status: verified
+    evidence: "2026-10-16 job portability (ubuntu, macos, windows × Node 22, 24; npm test con el e2e) en validate.yml, acciones fijadas por SHA. Windows falló primero y se corrigió en las pruebas, sin cambios en src/: npm por shell en el build global, fileURLToPath en vez de URL.pathname, .gitattributes eol=lf, modos POSIX solo fuera de Windows, comando sin comillas en el e2e (%~dp0 de cmd.exe), depcruise por node, rutas nativas, rm con reintentos (EBUSY), pid muerto nuevo por ronda (reutilización de pids, DEC-014). Run 38953008314: 3 de 3 intentos con los 8 jobs en verde. change-verifier: aprobado con observaciones H1-H14 (bitácora)."
   - id: S4
     name: "Flujo de release: tag → npm publish con provenance (trusted publishing)"
-    status: executed
-    evidence: "2026-10-16 .github/workflows/release.yml: tag v* → environment npm (revisor obligatorio: el mantenedor; solo tags v*), comprueba tag = versión y que el commit está en master, Node 24, npm ci, npm publish (prepublishOnly = build + check; publishConfig con provenance), id-token: write solo en ese job. Ruleset release-tags: los tags v* no se borran ni se mueven (bypass: admin). Repositorio público. Tags de tejo renombrados a tejo-v0.1.1, tejo-v0.2.0 y tejo-v0.3.0. Sin ejecutar todavía: el primer uso será 0.1.1, tras configurar trusted publishing en npm. Pendiente: change-verifier."
+    status: verified
+    evidence: "2026-10-16 .github/workflows/release.yml: tag v* → environment npm (revisor obligatorio: el mantenedor; solo tags v*), comprueba tag = versión y que el commit está en master, Node 24, npm ci, npm publish (prepublishOnly = build + check; publishConfig con provenance), id-token: write solo en ese job. Ruleset release-tags: los tags v* no se borran ni se mueven (bypass: admin). Repositorio público. Tags de tejo renombrados a tejo-v0.1.1, tejo-v0.2.0 y tejo-v0.3.0. change-verifier: aprobado con observaciones (H1, H2, H4 corregidas). Verificado con 0.1.1: tag v0.1.1 → environment npm aprobado por el usuario → run 38961970182 success; prepublishOnly corrió build + check (333 pruebas) en CI; npm publish por trusted publishing con provenance (sigstore logIndex 3284414193). Aviso inocuo: npm avisa «No bin file found at dist/cli/main.js» al cargar el manifiesto antes de prepublishOnly; el bin publicado está intacto."
   - id: S5
     name: "Ensayo: npm publish --dry-run y prueba del tarball final"
     status: verified
@@ -35,8 +35,8 @@ stages:
     evidence: "2026-10-16 publicado por el usuario en local con OTP (npm publish --provenance=false --ignore-scripts tras npm run build + npm run check en 44f2862: 333 pruebas OK). npm view ai-submind@0.1.0: license Apache-2.0, 96 archivos, 949 427 bytes, gitHead 44f2862, repository git+https://github.com/ivanroosvelt/ai-submind.git; dist-tags latest = 0.1.0. Sin provenance (primera versión, trusted publishing exige que el paquete exista). También existe 0.0.0-stage (2 archivos, 332 bytes, publicado un minuto antes)."
   - id: S7
     name: "Verificación desde el registro y cierre"
-    status: in_progress
-    evidence: "2026-10-16 repo git limpio en el scratchpad: npm install --prefer-online ai-submind@0.1.0 → npx --no ai-submind init (knowledge/ai-submind.json) → serve --port 0 (documents 1, errors 0) → status (running) → MCP por stdio: initialize (serverInfo ai-submind 0.1.0), tools/list 16, create_element model shop → models/shop.json, list_models → stop (stopped). README, context.md y API-003 dicen publicado. Pendiente: trusted publisher en npmjs.com, retirar 0.0.0-stage y la primera release por CI (0.1.1) que verifica S4 y la provenance."
+    status: verified
+    evidence: "2026-10-16 repo git limpio en el scratchpad: npm install --prefer-online ai-submind@0.1.0 → npx --no ai-submind init (knowledge/ai-submind.json) → serve --port 0 (documents 1, errors 0) → status (running) → MCP por stdio: initialize (serverInfo ai-submind 0.1.0), tools/list 16, create_element model shop → models/shop.json, list_models → stop (stopped). README, context.md y API-003 dicen publicado. El usuario configuró el trusted publisher y retiró 0.0.0-stage (npm view ai-submind versions = [0.1.0, 0.1.1]). 0.1.1 desde el registro: bin ai-submind → dist/cli/main.js, gitHead 5b2ee51, dist.attestations.provenance predicateType https://slsa.dev/provenance/v1, dist-tags latest 0.1.1, npm audit signatures: 22 firmas y 8 attestations verificadas; init + validate 0 errores."
 ---
 
 # PLAN-004 · Publicar ai-submind 0.1.0 en npm (Apache-2.0)
@@ -146,4 +146,7 @@ Dudas (bloquean S2 y S4; la 4 bloquea S4):
 
 - 2026-10-16 · Usuario publicó 0.1.0 (S6 verified). S7: comprobado desde el registro en un repo limpio (init, serve, status, mcp, stop).
 
+- 2026-10-16 · Usuario: trusted publisher configurado, 0.0.0-stage retirado, tag v0.1.1 subido y despliegue aprobado. Release por CI con provenance verificada. Plan completado y archivado.
+
 ## Resultado (al cerrar)
+Completado el 2026-10-16. `ai-submind` publicado en npm: 0.1.0 (local, sin provenance) y 0.1.1 (CI, trusted publishing con provenance SLSA v1). Criterios de aceptación: 1 (licencia y archivos) cumplido; 2 (e2e en ubuntu, macos y windows) cumplido, run 38953008314; 3 (provenance) cumplido en 0.1.1; 4 (npx desde el registro) cumplido con 0.1.0 y 0.1.1. Commits: 95c34a3 (S1), 89eb13f (S2), CI y portabilidad hasta 866e82b/44f2862, d381cf9 (S6/S7), 5b2ee51 (0.1.1). Fuera del repositorio: repositorio renombrado y público, tags de tejo → tejo-v*, environment npm, ruleset release-tags, @ivanroosveltlt/tejo deprecated. Limitaciones: Windows sin modos POSIX (NFR-004), CRLF en repositorios anfitriones con autocrlf (NFR-003), pid reutilizado en Windows (DEC-014), job de publicación con build y check bajo id-token (H2 de S3/S4).

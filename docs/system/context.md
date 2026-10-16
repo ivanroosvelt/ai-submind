@@ -54,7 +54,7 @@
   MCP (API-001, FEAT-006), CLI and daemon (FEAT-001, API-003, including `npx` of the packed tarball in `test/e2e/npx.test.ts`),
   Git integrity (FEAT-008), UI HTTP API (API-002); UI rendering (FEAT-007, FEAT-009) implemented, checked in the browser by hand
   (no automated browser test) **[verified]**.
-- License: Apache-2.0, copyright Iván López; `LICENSE` and `NOTICE` ship in the tarball (DEC-019) **[verified]**. Published on npm as `ai-submind@0.1.0` (2026-10-16, from commit 44f2862, without provenance); later versions through the `release` workflow with trusted publishing and provenance (PLAN-004) **[verified]**.
+- License: Apache-2.0, copyright Iván López; `LICENSE` and `NOTICE` ship in the tarball (DEC-019) **[verified]**. Published on npm: 0.1.0 (local, without provenance) and 0.1.1 through the `release` workflow with trusted publishing and SLSA provenance (2026-10-16, PLAN-004) **[verified]**.
 - Cycles and boundaries between modules checked by dependency-cruiser in `npm run check` (NFR-008, DEC-009) **[verified]**.
 - Target scale ~10,000 elements per project (NFR-007, thresholds unconfirmed) **[inferred]**.
 
@@ -63,5 +63,4 @@
 
 ## Next step
 
-PLAN-002 is completed (archived). Next: publishing on npm (PLAN-004, in preparation); then semantic search
-(FEAT-005, DEC-007).
+PLAN-002 and PLAN-004 (npm publication) are completed (archived). Next: semantic search (FEAT-005, DEC-007).
