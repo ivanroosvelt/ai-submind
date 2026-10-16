@@ -3,6 +3,11 @@
 All notable changes to `ai-submind` are recorded here. Versions follow semver; while in 0.x the knowledge
 format may change only as described in [spec/format/README.md](spec/format/README.md) §11.
 
+## 0.1.1 — 2026-10-16
+
+- README: quick start with `npx ai-submind` and the release process.
+- First release through the `release` workflow: npm trusted publishing with provenance.
+
 ## 0.1.0 — 2026-10-16
 
 First public release.
