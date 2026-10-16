@@ -33,6 +33,7 @@
     "spec/format/README.md",
     "spec/format/schema",
     "NOTICE",
+    "CHANGELOG.md",
     "!dist/**/*.map"
   ],
   "engines": {
