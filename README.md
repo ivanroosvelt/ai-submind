@@ -13,7 +13,7 @@ Base product complete ([PLAN-002](docs/plans/archive/PLAN-002-gestor-diagramas-b
   engine, structured queries and lexical search, CLI with a per-project daemon, MCP server, web UI (JointJS) for
   class and sequence diagrams, and Git integrity (diagnosis after a merge, no automatic repair:
   [FEAT-008](docs/system/features/FEAT-008-git-integrity.md)).
-- Pending: first publication on npm (in progress). Until then `npx ai-submind` only works with the package installed from a local tarball.
+- Published on npm: [`ai-submind`](https://www.npmjs.com/package/ai-submind) (0.1.0, 2026-10-16).
 
 ## Requirements
 
@@ -28,17 +28,19 @@ npm ci
 npm run build    # empties dist/ and runs tsc + vite build: binary dist/cli/main.js and the UI in dist/ui/
 ```
 
-## Install in a project (local tarball)
+## Quick start
 
 ```sh
-npm pack                                 # in this repository, after npm run build: ai-submind-<version>.tgz
-npm install /path/to/ai-submind-<version>.tgz   # in the host project
-npx ai-submind init
-npx ai-submind                           # same as serve
+cd your-project                          # a Git repository
+npx ai-submind init                      # creates knowledge/ai-submind.json
+npx ai-submind                           # same as serve: prints the UI URL with its token
 ```
 
-The tarball contains `dist/` (without `*.map` source maps), `spec/format/README.md`, `spec/format/schema/`,
-`LICENSE` and `NOTICE`.
+Or install it as a dev dependency (`npm install -D ai-submind`) so that `npx ai-submind` uses a pinned version.
+
+To try a local build instead: `npm pack` in this repository and `npm install /path/to/ai-submind-<version>.tgz`
+in the host project. The package contains `dist/` (without `*.map` source maps), `spec/format/README.md`, `spec/format/schema/`,
+`LICENSE`, `NOTICE` and `CHANGELOG.md`.
 
 ## CLI
 

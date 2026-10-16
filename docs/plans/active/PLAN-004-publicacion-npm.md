@@ -7,7 +7,7 @@ updated: 2026-10-16
 class: T2
 related: [DEC-019, DEC-001, NFR-001, NFR-009, API-003, FEAT-001]
 blockers: []
-next_action: "S6: el usuario publica 0.1.0 en local con OTP (npm publish --provenance=false --ignore-scripts tras build + check en el mismo commit); luego configura trusted publishing en npmjs.com (repo ivanroosvelt/ai-submind, workflow release.yml, environment npm); S7 y change-verifier de S3/S4."
+next_action: "Usuario: configurar trusted publisher en npmjs.com (ivanroosvelt/ai-submind, release.yml, environment npm, no permitir tokens) y retirar 0.0.0-stage (npm unpublish ai-submind@0.0.0-stage --otp, antes de 72 h). Después: release 0.1.1 por tag para verificar S4 y la provenance; cerrar y archivar el plan."
 stages:
   - id: S1
     name: "Licencia Apache-2.0 (DEC-019)"
@@ -31,12 +31,12 @@ stages:
     evidence: "2026-10-16 npm publish --dry-run sin avisos (S2); e2e desde el tarball en los tres SO (S3). La provenance no se ensaya: 0.1.0 se publica en local (trusted publishing exige que el paquete exista)."
   - id: S6
     name: "Publicación de 0.1.0 (requiere autorización explícita del usuario)"
-    status: proposed
-    evidence: ""
+    status: verified
+    evidence: "2026-10-16 publicado por el usuario en local con OTP (npm publish --provenance=false --ignore-scripts tras npm run build + npm run check en 44f2862: 333 pruebas OK). npm view ai-submind@0.1.0: license Apache-2.0, 96 archivos, 949 427 bytes, gitHead 44f2862, repository git+https://github.com/ivanroosvelt/ai-submind.git; dist-tags latest = 0.1.0. Sin provenance (primera versión, trusted publishing exige que el paquete exista). También existe 0.0.0-stage (2 archivos, 332 bytes, publicado un minuto antes)."
   - id: S7
     name: "Verificación desde el registro y cierre"
-    status: proposed
-    evidence: ""
+    status: in_progress
+    evidence: "2026-10-16 repo git limpio en el scratchpad: npm install --prefer-online ai-submind@0.1.0 → npx --no ai-submind init (knowledge/ai-submind.json) → serve --port 0 (documents 1, errors 0) → status (running) → MCP por stdio: initialize (serverInfo ai-submind 0.1.0), tools/list 16, create_element model shop → models/shop.json, list_models → stop (stopped). README, context.md y API-003 dicen publicado. Pendiente: trusted publisher en npmjs.com, retirar 0.0.0-stage y la primera release por CI (0.1.1) que verifica S4 y la provenance."
 ---
 
 # PLAN-004 · Publicar ai-submind 0.1.0 en npm (Apache-2.0)
@@ -143,5 +143,7 @@ Dudas (bloquean S2 y S4; la 4 bloquea S4):
 
 - 2026-10-16 · Usuario: repositorio público, completar el CD, renombrar los tags y publicar en npm; tejo se puede borrar o renombrar. Hecho: público (sin secretos en la historia: búsqueda de patrones de tokens y de archivos sensibles), tags de tejo → tejo-v*, environment npm y ruleset de tags, S3 y S4 executed. tejo: npm no renombra y el unpublish no se permite (844 descargas la última semana, más de 300) → deprecated con aviso hacia ai-submind (ejecutado por el usuario con OTP; comprobado con npm view). S5 verified.
 - 2026-10-16 · change-verifier sobre S3/S4: aprobado con observaciones H1-H14. Corregidas: H1 ruleset con `creation` (solo admin crea `v*`); la barrera definitiva es que el trusted publisher de npm exija el environment `npm` y desactivar tokens (S6); H2 checkout sin credenciales persistidas y `npm ci --ignore-scripts` en el release (separar build/check en un job sin id-token queda como mejora); H4 prerelease → dist-tag `next`; H5 nota de `--ignore-scripts` unificada; H6 CHANGELOG.md y sección Releasing del README; H7 bitácora y duda 1; H12 NFR-004 (ACL heredadas del directorio del proyecto). H8-H11, H13 y H14 informativas. Sin ensayo del workflow de release: el environment solo admite tags v*; el primer uso real será 0.1.1.
+
+- 2026-10-16 · Usuario publicó 0.1.0 (S6 verified). S7: comprobado desde el registro en un repo limpio (init, serve, status, mcp, stop).
 
 ## Resultado (al cerrar)
