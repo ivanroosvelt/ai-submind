@@ -7,7 +7,7 @@ evidence: verified-code
 summary: "Typed MCP tools for querying and administering knowledge, over stdio (proxy) or stateless Streamable HTTP on the daemon."
 aliases: ["mcp", "mcp tools", "streamable http"]
 tags: [contracts]
-implementation: implemented
+implementation: verified
 code:
   - src/mcp/tools.ts#createMcpServer
   - src/mcp/http.ts#mcpRoutes

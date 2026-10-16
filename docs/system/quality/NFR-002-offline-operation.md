@@ -10,7 +10,8 @@ tags: [quality]
 relations:
   tests: []
   decisions: []
-uncertainties: []
+uncertainties:
+  - "No automated test checks offline operation yet."
 ---
 
 # NFR-002 · Offline operation
@@ -22,7 +23,7 @@ CLI, engine, queries, lexical search, MCP and UI work without network access. Se
 
 | Metric | Threshold | How it is measured |
 |---------|--------|--------------|
-| Network calls from the core | 0 | test with network disabled (S12) |
+| Network calls from the core | 0 | not measured yet: no test runs the core with the network disabled |
 
 ## Scope
 Entire core; excludes the download of the embeddings model.

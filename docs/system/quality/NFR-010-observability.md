@@ -23,7 +23,7 @@ Logs to stderr (mandatory in stdio, REQ-003) with configurable level; by default
 
 | Metric | Threshold | How it is measured |
 |---------|--------|--------------|
-| Writes to stdout in mcp mode | 0 outside the protocol | S8 test |
+| Writes to stdout in mcp mode | 0 outside the protocol | `test/mcp/proxy.test.ts` |
 
 ## Scope
 CLI, daemon, MCP proxy.

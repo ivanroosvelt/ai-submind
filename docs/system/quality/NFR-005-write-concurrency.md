@@ -22,8 +22,8 @@ One daemon per project (lockfile, DEC-005) is the only writer; writes serialized
 
 | Metric | Threshold | How it is measured |
 |---------|--------|--------------|
-| Concurrent startups | a single daemon | S7 test |
-| Write with stale revision | REVISION_CONFLICT | S5 test |
+| Concurrent startups | a single daemon | `test/daemon/server.test.ts`, `test/daemon/cli.test.ts` |
+| Write with stale revision | REVISION_CONFLICT | `test/engine/engine.test.ts`, `test/daemon/ui-api.test.ts` |
 
 ## Scope
 Engine (FEAT-002), MCP and UI.

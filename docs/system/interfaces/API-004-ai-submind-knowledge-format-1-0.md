@@ -7,14 +7,16 @@ evidence: verified-code
 summary: "Contract for knowledge/ files: spec spec/format/README.md and JSON Schema 2020-12 in spec/format/schema/1.0/."
 aliases: ["format 1.0", "json schema", "format spec", "format_version", "umj"]
 tags: [format, contracts, data]
-implementation: partial
+implementation: verified
 code:
   - src/format/index.ts
   - src/format/knowledge.ts#validateKnowledgeDir
   - src/format/canonical.ts#serialize
+  - src/engine/engine.ts#Engine
 test_code:
   - test/format/corpus.test.ts
   - test/format/rules.test.ts
+  - test/engine/engine.test.ts
 relations:
   providers: []
   consumers: [ACT-001, ACT-002, FEAT-002, FEAT-007]
@@ -23,7 +25,6 @@ relations:
   tests: []
   decisions: [DEC-002, DEC-003]
 uncertainties:
-  - "Operation «read / validate» implemented (PLAN-002 S4); «write document» and the rejection of writes on non-writable documents arrive with the engine (PLAN-002 S5)."
   - "Extensions outside v1.0 (association qualifiers, OCL constraints, new diagram types) will be added as minor or major versions."
 ---
 

@@ -50,15 +50,18 @@
 - Interfaces: API-001 MCP server and API-003 CLI **[verified]**; API-002 UI HTTP API in `src/daemon/ui-api.ts` **[verified]**.
 - Single npm package at the root: `src/` (code, `code_roots`), `test/` (Vitest), ESLint + typescript-eslint + Prettier;
   `scripts/check` runs `npm run check` (DEC-008, EDR-006) **[verified]**.
-- Implemented: format core (FEAT-003, VAL-001..007), engine (FEAT-002), queries (FEAT-004), MCP (API-001, FEAT-006);
-  CLI and daemon (FEAT-001, API-003) partial; UI (FEAT-007, API-002) implemented and verified (tests and browser check) **[verified]**.
+- Implemented and covered by tests: format core (FEAT-003, API-004, VAL-001..007, ENT-001..005), engine (FEAT-002), queries (FEAT-004),
+  MCP (API-001, FEAT-006), CLI and daemon (FEAT-001, API-003, including `npx` of the packed tarball in `test/e2e/npx.test.ts`),
+  Git integrity (FEAT-008), UI HTTP API (API-002); UI rendering (FEAT-007, FEAT-009) implemented, checked in the browser by hand
+  (no automated browser test) **[verified]**.
+- License: Apache-2.0, copyright Iván López; `LICENSE` and `NOTICE` ship in the tarball (DEC-019) **[verified]**. The package stays `private: true` until PLAN-004 S2 **[verified]**.
 - Cycles and boundaries between modules checked by dependency-cruiser in `npm run check` (NFR-008, DEC-009) **[verified]**.
 - Target scale ~10,000 elements per project (NFR-007, thresholds unconfirmed) **[inferred]**.
 
 ## What is not known (pending)
 
-- ai-submind's own license: undecided; `package.json` declares `UNLICENSED` and keeps `private: true`, which blocks publishing (NFR-009) **[declared]**.
 
 ## Next step
 
-PLAN-002 S7 (CLI and per-project daemon with local security).
+PLAN-002 is completed (archived). Next: publishing on npm (PLAN-004, in preparation); then semantic search
+(FEAT-005, DEC-007).

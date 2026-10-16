@@ -3,13 +3,17 @@ id: ENT-001
 type: entity
 name: "ai-submind project configuration"
 status: active
-evidence: declared-doc
+evidence: verified-code
 summary: "Manifest knowledge/ai-submind.json with format version and project configuration."
 aliases: ["ai-submind.json", "manifest"]
 tags: [format, data]
-implementation: none
-code: []
-test_code: []
+implementation: verified
+code:
+  - src/format/types.ts#Manifest
+  - spec/format/schema/1.0/ai-submind.schema.json
+test_code:
+  - test/format/corpus.test.ts
+  - test/format/rules.test.ts
 relations:
   related: []
   validations: [VAL-001, VAL-004, VAL-006]

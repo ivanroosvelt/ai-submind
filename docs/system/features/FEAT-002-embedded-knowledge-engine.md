@@ -7,7 +7,7 @@ evidence: verified-code
 summary: "Own portable equivalent of TerminusDB over knowledge/: loading, graph, transactions, revision, rename, reload."
 aliases: ["engine", "store", "terminusdb"]
 tags: [data, engine]
-implementation: implemented
+implementation: verified
 code:
   - src/engine/index.ts
   - src/engine/engine.ts#Engine
@@ -29,13 +29,12 @@ relations:
   decisions: [DEC-004, DEC-011, DEC-015, DEC-016]
 uncertainties:
   - "3-way semantic merge and path language: later (DEC-004)."
-  - "Implemented: loading and indexes, document-level batch transactions (with dry run and batch builders evaluated inside the transaction), rename (with dry run), ID derivation, reload with watcher and semantic diff (PLAN-002 S5); element-level edits with derived IDs, cascade and implicit init (S8, `edit.ts`). Queries are FEAT-004; the engine exposes `generation` for their caches."
 ---
 
 # FEAT-002 · Embedded knowledge engine
 
 ## Description
-In-process TypeScript engine (DEC-004): in-memory document graph and indexes, validated transactional writes, optimistic concurrency control, atomic writes, rename with reference rewriting, watcher and semantic diff. Git is the history. PLAN-002 S5.
+In-process TypeScript engine (DEC-004): in-memory document graph and indexes, validated transactional writes, optimistic concurrency control, atomic writes, rename with reference rewriting, watcher and semantic diff. Git is the history. Includes document-level batch transactions with dry run, rename with dry run, ID derivation, reload with watcher and semantic diff, and element-level edits with derived IDs, cascade and implicit init (`edit.ts`). Queries are FEAT-004; the engine exposes `generation` for their caches.
 
 ## Behavior
 REQ-005..008, REQ-022, REQ-023..027 (element edits, batch, dry run), REQ-039.

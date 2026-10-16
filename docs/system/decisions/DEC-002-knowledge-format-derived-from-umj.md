@@ -45,7 +45,7 @@ uncertainties: []
 - Extensibility: declared diagram type (`kind`), registry of element types per diagram;
   first scope: classes and sequence.
 - Each file declares `format_version` (`MAJOR.MINOR`; first version `1.0`).
-- The own spec (citing UMJ) lives in `spec/format/` (API-004) and is distributed with the package; `UMJ.pdf` is removed when PLAN-002 finishes.
+- The own spec (citing UMJ) lives in `spec/format/` (API-004) and is distributed with the package; `UMJ.pdf` is not kept in the repository.
 
 ## Consequences
 - Positive: readable diffs, layout does not pollute the model, git remains the source of truth.
@@ -56,4 +56,4 @@ uncertainties: []
 Format, validator, engine (DEC-004), UI (DEC-006).
 
 ## Verification
-Pending: the paper's canonical examples, re-expressed, validate; read→write round trip without diff.
+`test/format/corpus.test.ts`: the `garage` corpus (re-expressing the paper's *Car* example) validates and the canonical inputs are rewritten byte for byte, idempotently.

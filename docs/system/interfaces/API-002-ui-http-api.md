@@ -7,7 +7,7 @@ evidence: verified-code
 summary: "Local HTTP API serving the UI: reading models and diagrams, writing layout only, live events."
 aliases: ["http", "ui api", "sse"]
 tags: [contracts]
-implementation: implemented
+implementation: verified
 code:
   - src/daemon/ui-api.ts#uiRoutes
   - src/daemon/server.ts#startDaemon

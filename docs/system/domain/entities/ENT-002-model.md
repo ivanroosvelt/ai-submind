@@ -3,13 +3,17 @@ id: ENT-002
 type: entity
 name: "Model"
 status: active
-evidence: declared-doc
+evidence: verified-code
 summary: "A UML model with its elements, relationships and diagrams, stored in a single file."
 aliases: ["models"]
 tags: [format, data]
-implementation: none
-code: []
-test_code: []
+implementation: verified
+code:
+  - src/format/types.ts#Model
+  - spec/format/schema/1.0/model.schema.json
+test_code:
+  - test/format/corpus.test.ts
+  - test/format/rules.test.ts
 relations:
   related: [ENT-003, ENT-004]
   validations: [VAL-001, VAL-002, VAL-003, VAL-006, VAL-007]

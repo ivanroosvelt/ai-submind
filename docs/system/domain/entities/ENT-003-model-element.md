@@ -3,13 +3,17 @@ id: ENT-003
 type: entity
 name: "Model element"
 status: active
-evidence: declared-doc
+evidence: verified-code
 summary: "UML element of a model (class, interface, attribute, operation, relationship, interaction, lifeline, message, etc.)."
 aliases: ["element"]
 tags: [format, data]
-implementation: none
-code: []
-test_code: []
+implementation: verified
+code:
+  - src/format/types.ts#Elements
+  - spec/format/schema/1.0/model.schema.json
+test_code:
+  - test/format/corpus.test.ts
+  - test/format/rules.test.ts
 relations:
   related: []
   validations: [VAL-001, VAL-002, VAL-003, VAL-007]

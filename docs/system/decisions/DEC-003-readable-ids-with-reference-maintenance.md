@@ -43,4 +43,4 @@ uncertainties: []
 Format (DEC-002), engine (DEC-004), MCP administration tools.
 
 ## Verification
-Pending: rename tests with references in model, diagrams and layout; duplicate detection after merge.
+`test/engine/engine.test.ts` (rename of an element, its prefixed IDs and every reference in models, diagrams and layout) and `test/integrity/merge.test.ts` (duplicate IDs after a real git merge, REQ-035).

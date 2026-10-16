@@ -43,4 +43,4 @@ See criteria.
 
 ## Out of scope
 
-Deleting `UMJ.pdf` is a closing task of PLAN-002 (S13), not product behavior.
+Distributing the UMJ paper: the spec cites it; `UMJ.pdf` is not kept in the repository.

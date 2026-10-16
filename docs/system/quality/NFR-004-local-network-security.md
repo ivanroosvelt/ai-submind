@@ -24,9 +24,9 @@ The daemon listens only on 127.0.0.1 (DEC-005); every HTTP/MCP request requires 
 
 | Metric | Threshold | How it is measured |
 |---------|--------|--------------|
-| Request with foreign Origin/Host | rejected (403) | S7 test |
-| Request without a valid token | rejected | S7 test |
-| Listening interfaces | loopback only | S7 test |
+| Request with foreign Origin/Host | rejected (403) | `test/daemon/server.test.ts` |
+| Request without a valid token | rejected | `test/daemon/server.test.ts` |
+| Listening interfaces | loopback only | `test/daemon/server.test.ts` |
 
 ## Scope
 Daemon, API-001 (Streamable HTTP), API-002.

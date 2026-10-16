@@ -43,4 +43,4 @@ uncertainties: []
 CLI, MCP, UI, security (CAP-013).
 
 ## Verification
-Pending: tests for concurrent startup, orphaned lock, rejection of foreign Origin, real MCP client.
+`test/daemon/server.test.ts` (concurrent starts, foreign Host/Origin), `test/daemon/cli.test.ts` (orphan lock under concurrent starts), `test/mcp/proxy.test.ts` and `test/e2e/npx.test.ts` (real MCP client through `ai-submind mcp`).

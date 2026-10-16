@@ -93,6 +93,8 @@ describe("npx ai-submind from the packed tarball", () => {
         "dist/cli/main.js",
         "dist/ui/index.html",
         "dist/ui/THIRD-PARTY-LICENSES.md",
+        "LICENSE",
+        "NOTICE",
         "spec/format/schema/1.0/model.schema.json",
       ]),
     );

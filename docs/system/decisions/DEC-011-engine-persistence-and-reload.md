@@ -12,7 +12,7 @@ relations:
   supersedes: []
 uncertainties:
   - "A crash in the middle of a multi-file batch leaves some files new and others old; the validator reports the result (e.g. ID_DUPLICATE after an interrupted move) and git recovers it. A recovery journal can be added later without changing the API."
-  - "node:fs.watch recursive does not see changes on some network file systems; reload() remains available as a fallback (CLI/MCP in S7/S8)."
+  - "node:fs.watch recursive does not see changes on some network file systems; reload() remains available as a fallback (MCP `validate` tool)."
   - "On macOS node:fs.watch recursive (FSEvents) starts asynchronously with no ready signal: changes made in the first moments after open (or between the initial load and the watcher start) are seen only with the next change or an explicit reload (MCP `validate`). Observed under parallel test load, PLAN-002 S8."
   - "Local threat model: between the symbolic-link checks of the parent directories and the final rename, a local process could swap a directory for a link (TOCTOU). The daemon runs as the user over the user's own repository; this is accepted as a residual risk."
 ---

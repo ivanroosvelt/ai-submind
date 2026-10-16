@@ -10,10 +10,10 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | ACT-002 | actor | AI agent (MCP client) | active | - | declared-doc | [ACT-002-ai-agent-mcp-client.md](../../../docs/system/actors/ACT-002-ai-agent-mcp-client.md) |
 | ACT-003 | actor | Host Git repository | active | - | declared-doc | [ACT-003-host-git-repository.md](../../../docs/system/actors/ACT-003-host-git-repository.md) |
 | ACT-004 | actor | Embeddings provider | proposed | - | declared-doc | [ACT-004-embeddings-provider.md](../../../docs/system/actors/ACT-004-embeddings-provider.md) |
-| API-001 | interface | ai-submind MCP server | active | implemented | verified-code | [API-001-ai-submind-mcp-server.md](../../../docs/system/interfaces/API-001-ai-submind-mcp-server.md) |
-| API-002 | interface | UI HTTP API | active | implemented | verified-code | [API-002-ui-http-api.md](../../../docs/system/interfaces/API-002-ui-http-api.md) |
-| API-003 | interface | ai-submind CLI | active | partial | declared-doc | [API-003-ai-submind-cli.md](../../../docs/system/interfaces/API-003-ai-submind-cli.md) |
-| API-004 | interface | ai-submind knowledge format 1.0 | active | partial | verified-code | [API-004-ai-submind-knowledge-format-1-0.md](../../../docs/system/interfaces/API-004-ai-submind-knowledge-format-1-0.md) |
+| API-001 | interface | ai-submind MCP server | active | verified | verified-code | [API-001-ai-submind-mcp-server.md](../../../docs/system/interfaces/API-001-ai-submind-mcp-server.md) |
+| API-002 | interface | UI HTTP API | active | verified | verified-code | [API-002-ui-http-api.md](../../../docs/system/interfaces/API-002-ui-http-api.md) |
+| API-003 | interface | ai-submind CLI | active | verified | verified-code | [API-003-ai-submind-cli.md](../../../docs/system/interfaces/API-003-ai-submind-cli.md) |
+| API-004 | interface | ai-submind knowledge format 1.0 | active | verified | verified-code | [API-004-ai-submind-knowledge-format-1-0.md](../../../docs/system/interfaces/API-004-ai-submind-knowledge-format-1-0.md) |
 | DEC-001 | decision | Node.js ≥22 + TypeScript ESM stack distributed as the npm package ai-submind (npx) | active | - | declared-doc | [DEC-001-node-typescript-npx-stack.md](../../../docs/system/decisions/DEC-001-node-typescript-npx-stack.md) |
 | DEC-002 | decision | Own knowledge format derived from UMJ: one file per model + separate layout | active | - | declared-doc | [DEC-002-knowledge-format-derived-from-umj.md](../../../docs/system/decisions/DEC-002-knowledge-format-derived-from-umj.md) |
 | DEC-003 | decision | Human-readable IDs with reference guarantee and maintenance | active | - | declared-doc | [DEC-003-readable-ids-with-reference-maintenance.md](../../../docs/system/decisions/DEC-003-readable-ids-with-reference-maintenance.md) |
@@ -32,17 +32,18 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | DEC-016 | decision | MCP wiring: stateless handler, zod schemas, SDK proxy, camelCase arguments and cascade | active | - | declared-doc | [DEC-016-mcp-wiring-stateless-zod-proxy-and-cascade.md](../../../docs/system/decisions/DEC-016-mcp-wiring-stateless-zod-proxy-and-cascade.md) |
 | DEC-017 | decision | UI stack: plain TypeScript, Vite, SSE and a shared deterministic layout | active | - | declared-doc | [DEC-017-ui-stack-sse-and-shared-layout.md](../../../docs/system/decisions/DEC-017-ui-stack-sse-and-shared-layout.md) |
 | DEC-018 | decision | Sequence executions in format 1.0 and a shared sequence layout | active | - | declared-doc | [DEC-018-sequence-executions-and-layout.md](../../../docs/system/decisions/DEC-018-sequence-executions-and-layout.md) |
-| ENT-001 | entity | ai-submind project configuration | active | none | declared-doc | [ENT-001-ai-submind-project-configuration.md](../../../docs/system/domain/entities/ENT-001-ai-submind-project-configuration.md) |
-| ENT-002 | entity | Model | active | none | declared-doc | [ENT-002-model.md](../../../docs/system/domain/entities/ENT-002-model.md) |
-| ENT-003 | entity | Model element | active | none | declared-doc | [ENT-003-model-element.md](../../../docs/system/domain/entities/ENT-003-model-element.md) |
-| ENT-004 | entity | Diagram | active | none | declared-doc | [ENT-004-diagram.md](../../../docs/system/domain/entities/ENT-004-diagram.md) |
-| ENT-005 | entity | Diagram layout | active | none | declared-doc | [ENT-005-diagram-layout.md](../../../docs/system/domain/entities/ENT-005-diagram-layout.md) |
-| FEAT-001 | feature | Per-project CLI and daemon | active | partial | declared-doc | [FEAT-001-per-project-cli-and-daemon.md](../../../docs/system/features/FEAT-001-per-project-cli-and-daemon.md) |
-| FEAT-002 | feature | Embedded knowledge engine | active | implemented | verified-code | [FEAT-002-embedded-knowledge-engine.md](../../../docs/system/features/FEAT-002-embedded-knowledge-engine.md) |
-| FEAT-003 | feature | Knowledge format, layout and validation | active | partial | verified-code | [FEAT-003-knowledge-format-layout-and-validation.md](../../../docs/system/features/FEAT-003-knowledge-format-layout-and-validation.md) |
+| DEC-019 | decision | ai-submind is licensed under Apache-2.0 | active | - | verified-code | [DEC-019-apache-2-license.md](../../../docs/system/decisions/DEC-019-apache-2-license.md) |
+| ENT-001 | entity | ai-submind project configuration | active | verified | verified-code | [ENT-001-ai-submind-project-configuration.md](../../../docs/system/domain/entities/ENT-001-ai-submind-project-configuration.md) |
+| ENT-002 | entity | Model | active | verified | verified-code | [ENT-002-model.md](../../../docs/system/domain/entities/ENT-002-model.md) |
+| ENT-003 | entity | Model element | active | verified | verified-code | [ENT-003-model-element.md](../../../docs/system/domain/entities/ENT-003-model-element.md) |
+| ENT-004 | entity | Diagram | active | verified | verified-code | [ENT-004-diagram.md](../../../docs/system/domain/entities/ENT-004-diagram.md) |
+| ENT-005 | entity | Diagram layout | active | verified | verified-code | [ENT-005-diagram-layout.md](../../../docs/system/domain/entities/ENT-005-diagram-layout.md) |
+| FEAT-001 | feature | Per-project CLI and daemon | active | verified | verified-code | [FEAT-001-per-project-cli-and-daemon.md](../../../docs/system/features/FEAT-001-per-project-cli-and-daemon.md) |
+| FEAT-002 | feature | Embedded knowledge engine | active | verified | verified-code | [FEAT-002-embedded-knowledge-engine.md](../../../docs/system/features/FEAT-002-embedded-knowledge-engine.md) |
+| FEAT-003 | feature | Knowledge format, layout and validation | active | verified | verified-code | [FEAT-003-knowledge-format-layout-and-validation.md](../../../docs/system/features/FEAT-003-knowledge-format-layout-and-validation.md) |
 | FEAT-004 | feature | Structured queries and lexical search | active | verified | verified-code | [FEAT-004-structured-queries-and-lexical-search.md](../../../docs/system/features/FEAT-004-structured-queries-and-lexical-search.md) |
 | FEAT-005 | feature | Semantic search | proposed | none | declared-doc | [FEAT-005-semantic-search.md](../../../docs/system/features/FEAT-005-semantic-search.md) |
-| FEAT-006 | feature | Knowledge administration via MCP | active | implemented | verified-code | [FEAT-006-knowledge-administration-via-mcp.md](../../../docs/system/features/FEAT-006-knowledge-administration-via-mcp.md) |
+| FEAT-006 | feature | Knowledge administration via MCP | active | verified | verified-code | [FEAT-006-knowledge-administration-via-mcp.md](../../../docs/system/features/FEAT-006-knowledge-administration-via-mcp.md) |
 | FEAT-007 | feature | JointJS web viewer for class diagrams | active | implemented | verified-code | [FEAT-007-jointjs-web-viewer-for-class-diagrams.md](../../../docs/system/features/FEAT-007-jointjs-web-viewer-for-class-diagrams.md) |
 | FEAT-008 | feature | Git integrity | active | verified | verified-code | [FEAT-008-git-integrity.md](../../../docs/system/features/FEAT-008-git-integrity.md) |
 | FEAT-009 | feature | Sequence diagram viewer | active | implemented | verified-code | [FEAT-009-sequence-diagram-viewer.md](../../../docs/system/features/FEAT-009-sequence-diagram-viewer.md) |
@@ -100,7 +101,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | VAL-001 | validation | Conformance with the format JSON Schema | active | verified | verified-code | [VAL-001-conformance-with-format-json-schema.md](../../../docs/system/domain/validations/VAL-001-conformance-with-format-json-schema.md) |
 | VAL-002 | validation | Element ID uniqueness and format | active | verified | verified-code | [VAL-002-element-id-uniqueness-and-format.md](../../../docs/system/domain/validations/VAL-002-element-id-uniqueness-and-format.md) |
 | VAL-003 | validation | idref referential integrity | active | verified | verified-code | [VAL-003-idref-referential-integrity.md](../../../docs/system/domain/validations/VAL-003-idref-referential-integrity.md) |
-| VAL-004 | validation | Supported format version | active | partial | verified-code | [VAL-004-supported-format-version.md](../../../docs/system/domain/validations/VAL-004-supported-format-version.md) |
+| VAL-004 | validation | Supported format version | active | verified | verified-code | [VAL-004-supported-format-version.md](../../../docs/system/domain/validations/VAL-004-supported-format-version.md) |
 | VAL-005 | validation | Layout consistency | active | verified | verified-code | [VAL-005-layout-consistency.md](../../../docs/system/domain/validations/VAL-005-layout-consistency.md) |
 | VAL-006 | validation | File integrity | active | verified | verified-code | [VAL-006-file-integrity.md](../../../docs/system/domain/validations/VAL-006-file-integrity.md) |
 | VAL-007 | validation | UMJ-derived model semantic rules | active | verified | verified-code | [VAL-007-umj-derived-model-semantic-rules.md](../../../docs/system/domain/validations/VAL-007-umj-derived-model-semantic-rules.md) |
@@ -278,6 +279,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `DEC-018 affects ENT-004`
 - `DEC-018 affects ENT-005`
 - `DEC-018 affects VAL-005`
+- `DEC-019 affects NFR-009`
 - `ENT-001 validations VAL-001`
 - `ENT-001 validations VAL-004`
 - `ENT-001 validations VAL-006`

@@ -3,13 +3,17 @@ id: ENT-004
 type: entity
 name: "Diagram"
 status: active
-evidence: declared-doc
+evidence: verified-code
 summary: "View of a model with a declared type (class or sequence) made of references to elements."
 aliases: ["class diagram", "sequence diagram"]
 tags: [format, data]
-implementation: none
-code: []
-test_code: []
+implementation: verified
+code:
+  - src/format/types.ts#Diagram
+  - spec/format/schema/1.0/model.schema.json
+test_code:
+  - test/format/corpus.test.ts
+  - test/format/rules.test.ts
 relations:
   related: [ENT-003]
   validations: [VAL-001, VAL-002, VAL-003]

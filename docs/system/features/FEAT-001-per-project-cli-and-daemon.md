@@ -3,13 +3,13 @@ id: FEAT-001
 type: feature
 name: "Per-project CLI and daemon"
 status: active
-evidence: declared-doc
+evidence: verified-code
 summary: "npx ai-submind command that starts a single daemon per project and the stdio MCP proxy."
 aliases: ["cli", "daemon", "serve"]
 tags: [cli, process]
-implementation: partial
+implementation: verified
 code: [src/cli/, src/daemon/]
-test_code: [test/daemon/, test/mcp/http.test.ts, test/mcp/proxy.test.ts]
+test_code: [test/daemon/, test/mcp/http.test.ts, test/mcp/proxy.test.ts, test/e2e/npx.test.ts]
 relations:
   entities: [ENT-001]
   functions: []
@@ -32,7 +32,7 @@ restarted (PLAN-002 S8; API-001, DEC-016).
 REQ-001..004, REQ-012 (CLI), REQ-037.
 
 ## States and transitions
-Server: `starting` → `indexing` → `ready` | `degraded` → `stopping` → `stopped`; `ready ↔ degraded` depending on revalidations.
+Daemon: running (live `runtime.json` and lock) or not running; `stop` (`POST /api/stop`) or idle shutdown closes it and releases the lock. While running, the engine state reported by `GET /api/status` is `ok` or `degraded` (some error finding, REQ-022), recomputed on every reload.
 
 ## Dependencies
 FEAT-002 (engine).

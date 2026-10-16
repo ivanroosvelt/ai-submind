@@ -13,8 +13,8 @@ Estructura base terminada ([PLAN-002](docs/plans/archive/PLAN-002-gestor-diagram
   embebido, consultas y búsqueda léxica, CLI con daemon por proyecto, servidor MCP, UI web (JointJS) para
   diagramas de clases y de secuencia e integridad con Git (diagnóstico tras un merge, sin reparación automática:
   [FEAT-008](docs/system/features/FEAT-008-git-integrity.md)).
-- Pendiente: publicación en npm y licencia propia. El paquete aún es `private` y declara
-  `"license": "UNLICENSED"` (no hay archivo `LICENSE`; la licencia está por decidir y bloquea la publicación).
+- Pendiente: publicación en npm ([PLAN-004](docs/plans/active/PLAN-004-publicacion-npm.md), propuesto). El
+  paquete aún es `private`.
   `npx ai-submind` solo funciona con el paquete instalado localmente desde un tarball.
 
 ## Requisitos
@@ -123,3 +123,8 @@ scripts/check                 # todas las verificaciones, incluido npm run check
 scripts/sysq find <término>   # buscar en el modelo
 scripts/regen                 # regenerar índices y adaptadores
 ```
+
+## Licencia
+
+Apache-2.0 ([LICENSE](LICENSE), [NOTICE](NOTICE)); decisión en
+[DEC-019](docs/system/decisions/DEC-019-apache-2-license.md).

@@ -1,6 +1,7 @@
 // Licence and native-code audit of the production dependency tree (PLAN-002 S12; NFR-009, NFR-001):
 // every installed runtime dependency has an allowed licence and nothing compiles or runs install scripts.
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -67,5 +68,19 @@ describe("production dependencies (NFR-009, NFR-001)", () => {
       )
       .map(({ pkg }) => pkg.name);
     expect(bad).toEqual([]);
+  });
+});
+
+describe("own licence (DEC-019, NFR-009)", () => {
+  it("is the official Apache-2.0 text, declared in package.json, with a NOTICE", () => {
+    const pkg = JSON.parse(readFileSync(join(REPO, "package.json"), "utf8")) as Manifest;
+    expect(pkg.license).toBe("Apache-2.0");
+    // sha256 of https://www.apache.org/licenses/LICENSE-2.0.txt
+    expect(
+      createHash("sha256")
+        .update(readFileSync(join(REPO, "LICENSE")))
+        .digest("hex"),
+    ).toBe("cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30");
+    expect(readFileSync(join(REPO, "NOTICE"), "utf8")).toContain("Copyright 2026 Iván López");
   });
 });

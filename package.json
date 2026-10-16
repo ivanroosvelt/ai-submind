@@ -2,7 +2,7 @@
   "name": "ai-submind",
   "version": "0.0.0",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "description": "Local manager for knowledge diagrams versioned in knowledge/, with an MCP server and a web UI",
   "type": "module",
   "bin": {
@@ -15,6 +15,7 @@
     "dist",
     "spec/format/README.md",
     "spec/format/schema",
+    "NOTICE",
     "!dist/**/*.map"
   ],
   "engines": {

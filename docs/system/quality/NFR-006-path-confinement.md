@@ -23,7 +23,7 @@ Path normalization, rejection of `..`, absolute paths and symlinks that leave `k
 
 | Metric | Threshold | How it is measured |
 |---------|--------|--------------|
-| Path traversal attempts | 100 % rejected | S7 test |
+| Path traversal attempts | 100 % rejected | `test/daemon/project.test.ts`, `test/format/rules.test.ts`, `test/mcp/tools.test.ts`, `test/daemon/ui-api.test.ts` |
 
 ## Scope
 Engine, MCP, HTTP API, CLI (`--knowledge` confined to the root, DEC-001).

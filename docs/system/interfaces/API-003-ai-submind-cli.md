@@ -3,11 +3,11 @@ id: API-003
 type: interface
 name: "ai-submind CLI"
 status: active
-evidence: declared-doc
+evidence: verified-code
 summary: "ai-submind command (npx) with subcommands serve, mcp, init, status, stop and validation."
 aliases: ["cli", "npx", "command"]
 tags: [contracts]
-implementation: partial
+implementation: verified
 code: [src/cli/, src/daemon/]
 test_code: [test/daemon/, test/mcp/proxy.test.ts, test/e2e/npx.test.ts]
 relations:

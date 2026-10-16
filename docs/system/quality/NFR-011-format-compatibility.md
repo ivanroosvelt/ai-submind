@@ -22,7 +22,7 @@ The format is versioned (DEC-002). Proposal: semantic versioning; earlier suppor
 
 | Metric | Threshold | How it is measured |
 |---------|--------|--------------|
-| Silent version rewrites | 0 | S4 tests |
+| Silent version rewrites | 0 | `test/format/rules.test.ts` (version phase), `test/engine/engine.test.ts` (writes of other versions rejected) |
 
 ## Scope
 Files in `knowledge/`.

@@ -23,8 +23,8 @@ Every write uses the canonical serialization (REQ-005); the layout lives in file
 
 | Metric | Threshold | How it is measured |
 |---------|--------|--------------|
-| Read→write round trip | no diff | S4 tests |
-| Lines changed when editing an element | only those of the element and its references | S4/S5 tests |
+| Read→write round trip | no diff | `test/format/corpus.test.ts` (canonicalization) |
+| Lines changed when editing an element | only those of the element and its references | inferred from canonical serialization; no line-level diff test |
 
 ## Scope
 Files in `knowledge/` written by ai-submind.

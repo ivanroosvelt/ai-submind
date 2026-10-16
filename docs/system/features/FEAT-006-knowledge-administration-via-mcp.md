@@ -7,7 +7,7 @@ evidence: verified-code
 summary: "MCP tools to create, modify, delete and rename models, elements and diagrams, in atomic batches."
 aliases: ["administration", "crud", "mcp"]
 tags: [mcp]
-implementation: implemented
+implementation: verified
 code:
   - src/engine/edit.ts#edit
   - src/mcp/tools.ts#createMcpServer
@@ -23,7 +23,6 @@ relations:
   depends_on: [FEAT-001, FEAT-002]
   decisions: [DEC-015, DEC-016]
 uncertainties:
-  - "Auto-layout tool for agents: PLAN-002 S9 (DEC-015)."
   - "IDs of message occurrences are not derived from their message (`<message>.send`): an occurrence created without `id` gets `<interaction>.occ`; agents pass explicit IDs for them."
 ---
 

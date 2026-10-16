@@ -10,8 +10,7 @@ tags: [architecture, stack]
 relations:
   affects: [REQ-001, REQ-002, NFR-001, NFR-008, FEAT-001, ENT-001, API-003]
   supersedes: []
-uncertainties:
-  - "License of ai-submind not yet defined."
+uncertainties: []
 ---
 
 # DEC-001 · Node.js ≥22 + TypeScript ESM stack distributed as the npm package ai-submind (npx)
@@ -45,4 +44,4 @@ uncertainties:
 `schema.yaml` (`code_roots`), CAP-011 (no longer deferred).
 
 ## Verification
-Pending: local `npx` of a packed tarball in a test repo (PLAN-002).
+`test/e2e/npx.test.ts`: the packed tarball is installed in a fresh git repo and driven through `npx ai-submind` (init, serve, mcp, stop); run on macOS (locally) and Linux (CI); Windows not yet (NFR-001).

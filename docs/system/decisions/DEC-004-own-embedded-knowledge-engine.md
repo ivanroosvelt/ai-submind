@@ -48,4 +48,4 @@ by TerminusDB (studied from its open source code, does not require REA):
 Persistence (CAP-014 no longer deferred), MCP queries, UI.
 
 ## Verification
-Pending: tests for loading, transactions, revision conflict and external reload.
+`test/engine/engine.test.ts` (loading, transactions, revision conflict, reload with watcher) and `test/engine/edit.test.ts`.

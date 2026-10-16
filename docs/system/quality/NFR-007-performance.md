@@ -27,7 +27,7 @@ Inferred target scale: ~10,000 elements per project and ~300 per diagram (DEC-00
 | Startup and indexing (10k elements) | ≤3 s | benchmark |
 | Structured query p95 | ≤200 ms | benchmark |
 | Rendering a 300-element diagram | ≤2 s | browser |
-| Reindexing on external change | ≤2 s | S5 test |
+| Reindexing on external change | ≤2 s | benchmark (`test/engine/engine.test.ts` checks reload, not its time) |
 
 ## Scope
 Engine, queries, UI.

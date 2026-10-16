@@ -10,8 +10,7 @@ tags: [architecture, stack, testing]
 relations:
   affects: [NFR-008]
   supersedes: []
-uncertainties:
-  - "The UI build (Vite) is configured in PLAN-002 S9, when UI code exists."
+uncertainties: []
 ---
 
 # DEC-008 · Single npm package with Vitest, ESLint (typescript-eslint) and Prettier
@@ -32,7 +31,7 @@ uncertainties:
 
 ## Decision
 - One `package.json` at the root (`ai-submind`, ESM, `engines.node >=22`, bin `dist/cli/main.js`,
-  `files: [dist, spec]`). `"private": true` until PLAN-002 S12 to prevent accidental publication.
+  `files: [dist, spec]`). `"private": true` until PLAN-004 S2 to prevent accidental publication.
 - Code in `src/<module>/` (format, engine, query, cli, daemon, mcp, ui) decoupled through interfaces
   (DEC-001); tests in `test/**/*.test.ts`. `code_roots: [src/]` in `schema.yaml`.
 - Strict TypeScript (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,

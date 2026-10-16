@@ -3,13 +3,17 @@ id: ENT-005
 type: entity
 name: "Diagram layout"
 status: active
-evidence: declared-doc
+evidence: verified-code
 summary: "Positions, sizes, link vertices and style of a diagram, separate from the model."
 aliases: ["layout", "positions"]
 tags: [format, data]
-implementation: none
-code: []
-test_code: []
+implementation: verified
+code:
+  - src/format/types.ts#Layout
+  - spec/format/schema/1.0/layout.schema.json
+test_code:
+  - test/format/corpus.test.ts
+  - test/format/rules.test.ts
 relations:
   related: [ENT-004]
   validations: [VAL-001, VAL-005, VAL-006]
@@ -27,9 +31,9 @@ Format-specific extension (UMJ does not define layout). In sequence diagrams: ho
 | Property | Type | Required | Constraints |
 |----------|------|----------|-------------|
 | diagram | idref | yes | VAL-005 |
-| nodes | map id→position (top-left) and minimum size | no | finite integers; the drawn size is never smaller than the content (spec §8) |
-| links | map id→vertices | no |  |
-| style | object | no | optional |
+| format_version | text `MAJOR.MINOR` | yes | VAL-004 |
+| nodes | map id→position (top-left), minimum size and `style` | no | integers; the drawn size is never smaller than the content (spec §8) |
+| edges | map id→`vertices` and `style` | no |  |
 
 ## Invariants
 See VAL-005.
@@ -38,6 +42,6 @@ See VAL-005.
 `knowledge/layout/<diagram-id>.json`.
 
 ## Lifecycle
-Created when something is moved in the UI (not before, REQ-010); renaming ids updates it (REQ-039).
+Created when something is moved and saved in the UI or when an agent calls `auto_layout_diagram` (DEC-015); never just by opening a diagram (REQ-010); renaming ids updates it (REQ-039).
 
 Source: REP-003 Annex A, adjusted to DEC-001..DEC-007. Indicative properties; the exact definition is the spec and the JSON Schema (API-004).
