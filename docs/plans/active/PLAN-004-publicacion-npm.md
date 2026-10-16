@@ -77,7 +77,7 @@ Inferencias:
 - En Windows, `scripts/check` (bash + Python) no corre tal cual; basta con `npm ci && npm run build && npx vitest run` en ese runner.
 
 Dudas (bloquean S2 y S4; la 4 bloquea S4):
-1. ~~URL del repositorio~~: resuelta (`ivanroosvelt/ai-submind`). Pendiente: hacerlo público (necesario para que la provenance y los enlaces de npm sirvan) y qué hacer con los tags `v*` de tejo (chocarán con `v0.2.0`/`v0.3.0` de ai-submind y el workflow de release previsto en S4 se dispararía por `v*`).
+1. ~~URL del repositorio~~: resuelta (`ivanroosvelt/ai-submind`, público desde 2026-10-16; tags de tejo renombrados a `tejo-v*`). Antes: hacerlo público (necesario para que la provenance y los enlaces de npm sirvan) y qué hacer con los tags `v*` de tejo (chocarán con `v0.2.0`/`v0.3.0` de ai-submind y el workflow de release previsto en S4 se dispararía por `v*`).
 2. ~~README de npm~~: resuelta, el `README.md` raíz pasa a inglés (EDR-009).
 3. Publicación: ¿trusted publishing (OIDC, sin token; recomendado) o token `NPM_TOKEN` en los secretos del repo? Cualquiera de las dos requiere que el usuario configure su cuenta de npm; ver criterios de entrada de S4 (la primera publicación probablemente no admite OIDC).
 4. ~~Rama de release~~: resuelta, `master` (= `v2`).
@@ -98,7 +98,7 @@ Dudas (bloquean S2 y S4; la 4 bloquea S4):
   revisar si las dependencias de producción van con rango o exactas; README de npm (instalación, `npx ai-submind init/serve/mcp`, configuración MCP de un cliente, licencia).
 - Pruebas: e2e (el README entra en el tarball); `npm pack --dry-run` sin archivos inesperados.
 - Criterios de salida: `npm publish --dry-run` sin avisos de metadatos.
-- Nota: `publishConfig.provenance` hace fallar un `npm publish` fuera de CI; la primera publicación manual (si trusted publishing lo exige, S4) necesita `--provenance=false` explícito, nunca con `--ignore-scripts` (`prepublishOnly` = build + check garantiza un `dist/` al día).
+- Nota: `publishConfig.provenance` hace fallar un `npm publish` fuera de CI; la primera publicación manual (si trusted publishing lo exige, S4) necesita `--provenance=false` explícito, con `--ignore-scripts` solo si `npm run build && npm run check` acaban de pasar en el mismo commit (el OTP caduca antes de que terminen).
 
 ### S3 · CI multiplataforma (NFR-001)
 - Depende de: S1.
@@ -141,5 +141,7 @@ Dudas (bloquean S2 y S4; la 4 bloquea S4):
 - 2026-10-16 · change-verifier sobre S1 + modelo al día + plan: aprobado con observaciones H1-H7. Corregidas: H1 prueba de la licencia propia (campo, sha256 de LICENSE, NOTICE) en test/package/licenses.test.ts; H2 DEC-019 sin DEC-001 en «Affected elements» (citado en Context); H3 plan in_progress; H4 criterios de entrada de S4 sobre trusted publishing (sin verificar en la red); H5 controles de seguridad del release en S4 y duda 4 (rama); H6 motivo de `prepublishOnly` en S2. H7 ya cubierta (S2, duda 2, riesgos).
 - 2026-10-16 · S1 commit 95c34a3 → verified. Usuario: renombrar el repositorio, master = v2, npm y git como ai-submind, README en inglés. Hecho: rename en GitHub, archive/tejo-master, master forzado a v2 (autorizado por el usuario en esta conversación). S2 executed (EDR-009). change-verifier sobre S2: aprobado con observaciones H1-H7; corregidas H1 (API-003 ya no dice private), H2/H3 (textos del plan), H4 (AGENTS.md §0 y §14, context.md: rama master), H5 (`prepublishOnly` con build explícito; nota de `--ignore-scripts`), H6 (README: Node ≥ 22 tal como se aplica, sin enlace al plan activo) y H7 (`affects` de EDR-009). Commits 89eb13f.
 
-## Resultado (al cerrar)
 - 2026-10-16 · Usuario: repositorio público, completar el CD, renombrar los tags y publicar en npm; tejo se puede borrar o renombrar. Hecho: público (sin secretos en la historia: búsqueda de patrones de tokens y de archivos sensibles), tags de tejo → tejo-v*, environment npm y ruleset de tags, S3 y S4 executed. tejo: npm no renombra y el unpublish no se permite (844 descargas la última semana, más de 300) → deprecated con aviso hacia ai-submind (ejecutado por el usuario con OTP; comprobado con npm view). S5 verified.
+- 2026-10-16 · change-verifier sobre S3/S4: aprobado con observaciones H1-H14. Corregidas: H1 ruleset con `creation` (solo admin crea `v*`); la barrera definitiva es que el trusted publisher de npm exija el environment `npm` y desactivar tokens (S6); H2 checkout sin credenciales persistidas y `npm ci --ignore-scripts` en el release (separar build/check en un job sin id-token queda como mejora); H4 prerelease → dist-tag `next`; H5 nota de `--ignore-scripts` unificada; H6 CHANGELOG.md y sección Releasing del README; H7 bitácora y duda 1; H12 NFR-004 (ACL heredadas del directorio del proyecto). H8-H11, H13 y H14 informativas. Sin ensayo del workflow de release: el environment solo admite tags v*; el primer uso real será 0.1.1.
+
+## Resultado (al cerrar)

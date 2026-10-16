@@ -13,7 +13,7 @@ relations:
   decisions: []
 uncertainties:
   - "Whether exposing on another interface with an explicit flag is allowed."
-  - "Windows has no POSIX modes: `runtime.json` (token) and `daemon.log` rely on the user profile ACLs there, not on 0600/0700; the tests check the modes only outside Windows."
+  - "Windows has no POSIX modes: `runtime.json` (token) and `daemon.log` inherit the ACLs of the project directory there (other local users may read them, e.g. under `C:\\`), not 0600/0700; the tests check the modes only outside Windows."
 ---
 
 # NFR-004 · Local network security

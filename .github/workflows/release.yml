@@ -20,6 +20,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24 # npm >= 11.5.1, necesario para trusted publishing
@@ -31,6 +32,8 @@ jobs:
         run: |
           git fetch --no-tags origin master
           git merge-base --is-ancestor "$GITHUB_SHA" origin/master
-      - run: npm ci
+      # Sin scripts de instalación de dependencias mientras el job tiene id-token.
+      - run: npm ci --ignore-scripts
       # prepublishOnly ejecuta build + check; publishConfig activa access public y provenance.
-      - run: npm publish
+      # Una prerelease (v1.0.0-rc.1) va a la etiqueta next, no a latest.
+      - run: npm publish --tag "$(case "$GITHUB_REF_NAME" in *-*) echo next ;; *) echo latest ;; esac)"
