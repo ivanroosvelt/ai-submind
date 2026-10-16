@@ -7,11 +7,12 @@ evidence: declared-doc
 summary: "Works on Linux, macOS and Windows with Node ≥22 using only npx, without Docker or native compilation."
 aliases: ["portable", "npx", "cross-platform"]
 tags: [quality]
+test_code: [test/e2e/npx.test.ts, test/package/licenses.test.ts]
 relations:
   tests: []
   decisions: []
 uncertainties:
-  - "CI matrix per operating system not yet defined."
+  - "CI matrix per operating system not yet defined: the e2e has run on macOS locally; Linux (CI) and Windows pending."
 ---
 
 # NFR-001 · Portability
@@ -23,8 +24,8 @@ ai-submind is installed and run with `npx ai-submind` on Node ≥22 (DEC-001) wi
 
 | Metric | Threshold | How it is measured |
 |---------|--------|--------------|
-| Supported OSes | Linux, macOS, Windows | e2e in S12 (at least Linux; the rest to be decided) |
-| Native dependencies of the core | 0 | dependency audit in S12 |
+| Supported OSes | Linux, macOS, Windows | `test/e2e/npx.test.ts`: packed tarball installed in a fresh git repo and driven through `npx ai-submind` (init, serve, mcp, stop); run on macOS |
+| Native dependencies of the core | 0 | `test/package/licenses.test.ts`: no production package with `binding.gyp`, `gypfile` or preinstall/install/postinstall scripts |
 
 ## Scope
 The whole product except the optional embeddings module (DEC-007).

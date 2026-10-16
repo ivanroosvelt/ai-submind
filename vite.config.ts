@@ -8,5 +8,7 @@ export default defineConfig({
   build: {
     outDir: fileURLToPath(new URL("dist/ui/", import.meta.url)),
     emptyOutDir: true,
+    // Third-party notices of the bundled dependencies (@joint/core is MPL-2.0; NFR-009).
+    license: { fileName: "THIRD-PARTY-LICENSES.md" },
   },
 });

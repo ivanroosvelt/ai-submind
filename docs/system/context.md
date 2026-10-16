@@ -57,7 +57,7 @@
 
 ## What is not known (pending)
 
-- ai-submind license **[unknown]**.
+- ai-submind's own license: undecided; `package.json` declares `UNLICENSED` and keeps `private: true`, which blocks publishing (NFR-009) **[declared]**.
 
 ## Next step
 

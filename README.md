@@ -13,8 +13,9 @@ En construcción ([PLAN-002](docs/plans/active/PLAN-002-gestor-diagramas-base.md
   embebido, consultas y búsqueda léxica, CLI con daemon por proyecto, servidor MCP, UI web (JointJS) para
   diagramas de clases y de secuencia e integridad con Git (diagnóstico tras un merge, sin reparación automática:
   [FEAT-008](docs/system/features/FEAT-008-git-integrity.md)).
-- Pendiente: publicación en npm. El paquete aún es `private`; `npx ai-submind` todavía no funciona y hay que
-  ejecutarlo desde este repositorio.
+- Pendiente: publicación en npm y licencia propia. El paquete aún es `private` y declara
+  `"license": "UNLICENSED"` (no hay archivo `LICENSE`; la licencia está por decidir y bloquea la publicación).
+  `npx ai-submind` solo funciona con el paquete instalado localmente desde un tarball.
 
 ## Requisitos
 
@@ -26,13 +27,24 @@ En construcción ([PLAN-002](docs/plans/active/PLAN-002-gestor-diagramas-base.md
 
 ```sh
 npm ci
-npm run build    # tsc + vite build: genera dist/ (binario dist/cli/main.js) y la UI en dist/ui/
+npm run build    # vacía dist/ y ejecuta tsc + vite build: binario dist/cli/main.js y la UI en dist/ui/
 ```
+
+## Instalación en un proyecto (tarball local)
+
+```sh
+npm pack                                   # en este repositorio, tras npm run build: ai-submind-0.0.0.tgz
+npm install /ruta/a/ai-submind-0.0.0.tgz   # en el proyecto anfitrión
+npx ai-submind init
+npx ai-submind                             # equivale a serve
+```
+
+El tarball incluye `dist/`, `spec/format/README.md` y `spec/format/schema/`.
 
 ## Uso de la CLI
 
 ```sh
-node dist/cli/main.js <comando> [opciones]   # cuando se publique: ai-submind <comando>
+npx ai-submind <comando> [opciones]   # o, desde este repositorio: node dist/cli/main.js <comando>
 ```
 
 | Comando | Qué hace | Opciones |
@@ -45,7 +57,7 @@ node dist/cli/main.js <comando> [opciones]   # cuando se publique: ai-submind <c
 | `mcp` | Servidor MCP por stdio para agentes, conectado al daemon (lo arranca si hace falta) | `--knowledge <dir>` |
 
 `--knowledge` es relativo al directorio actual y debe quedar dentro de la raíz del proyecto; por defecto,
-`<raíz>/knowledge`. Ayuda: `node dist/cli/main.js --help`. Contrato: [API-003](docs/system/interfaces/API-003-ai-submind-cli.md).
+`<raíz>/knowledge`. Ayuda: `npx ai-submind --help`. Contrato: [API-003](docs/system/interfaces/API-003-ai-submind-cli.md).
 
 ## UI web
 
@@ -62,25 +74,32 @@ Las lifelines se arrastran solo en horizontal (su orden es el de x) y su longitu
 extremo inferior; «Auto-layout» también funciona aquí. Las referencias del detalle abren un diagrama que
 muestra el destino, y el doble clic en un interaction use abre el diagrama de la interacción usada.
 
+El build de la UI genera `dist/ui/THIRD-PARTY-LICENSES.md` con las licencias del código de terceros
+empaquetado (`@joint/core`, MPL-2.0; `@dagrejs/dagre`, MIT); `dist/ui/index.html` indica dónde obtener la forma
+fuente de `@joint/core` (https://github.com/clientIO/joint y el paquete npm `@joint/core`).
+
 API HTTP de la UI en [API-002](docs/system/interfaces/API-002-ui-http-api.md); decisiones en
 [DEC-017](docs/system/decisions/DEC-017-ui-stack-sse-and-shared-layout.md) y
 [DEC-018](docs/system/decisions/DEC-018-sequence-executions-and-layout.md).
 
 ## Servidor MCP
 
-Configuración para un cliente MCP por stdio, ejecutando desde el repositorio (ruta absoluta a `dist/`; el
-cliente debe lanzarlo con el directorio de trabajo dentro del proyecto anfitrión):
+Configuración para un cliente MCP por stdio (`.mcp.json` del proyecto anfitrión, con el paquete instalado; el
+cliente debe lanzarlo con el directorio de trabajo dentro del proyecto). El servidor se conecta al daemon y lo
+arranca si falta:
 
 ```json
 {
   "mcpServers": {
     "ai-submind": {
-      "command": "node",
-      "args": ["/ruta/a/submind/dist/cli/main.js", "mcp"]
+      "command": "npx",
+      "args": ["ai-submind", "mcp"]
     }
   }
 }
 ```
+
+Sin instalar el paquete, usar `"command": "node"` con `"args": ["/ruta/a/submind/dist/cli/main.js", "mcp"]`.
 
 Tools: `list_models`, `list_diagrams`, `get_element`, `find_elements`, `search`, `relations`, `impact`,
 `paths`, `validate` (lectura); `create_element`, `update_element`, `delete_element`, `edit_diagram`,
@@ -98,7 +117,8 @@ El repositorio incluye un entorno de desarrollo asistido por IA:
 
 ```sh
 npm ci
-npm run check                 # tipos, lint, formato, dependencias y pruebas (Vitest)
+npm run check                 # tipos, lint, formato, dependencias y pruebas (Vitest), incluidas la
+                              # auditoría de licencias y el e2e desde el tarball (test/package/, test/e2e/)
 scripts/check                 # todas las verificaciones, incluido npm run check (también en CI)
 scripts/sysq find <término>   # buscar en el modelo
 scripts/regen                 # regenerar índices y adaptadores

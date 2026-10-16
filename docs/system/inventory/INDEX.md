@@ -54,7 +54,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | NFR-006 | quality-attribute | Path confinement | active | - | declared-doc | [NFR-006-path-confinement.md](../../../docs/system/quality/NFR-006-path-confinement.md) |
 | NFR-007 | quality-attribute | Performance | proposed | - | inferred | [NFR-007-performance.md](../../../docs/system/quality/NFR-007-performance.md) |
 | NFR-008 | quality-attribute | Modularity | active | - | declared-doc | [NFR-008-modularity.md](../../../docs/system/quality/NFR-008-modularity.md) |
-| NFR-009 | quality-attribute | License compliance | active | - | declared-doc | [NFR-009-license-compliance.md](../../../docs/system/quality/NFR-009-license-compliance.md) |
+| NFR-009 | quality-attribute | License compliance | active | - | verified-code | [NFR-009-license-compliance.md](../../../docs/system/quality/NFR-009-license-compliance.md) |
 | NFR-010 | quality-attribute | Observability | proposed | - | inferred | [NFR-010-observability.md](../../../docs/system/quality/NFR-010-observability.md) |
 | NFR-011 | quality-attribute | Format compatibility | active | - | inferred | [NFR-011-format-compatibility.md](../../../docs/system/quality/NFR-011-format-compatibility.md) |
 | REQ-001 | requirement | Launch ai-submind in the host project | active | - | declared-doc | [REQ-001-launch-ai-submind-in-host-project.md](../../../docs/system/requirements/REQ-001-launch-ai-submind-in-host-project.md) |

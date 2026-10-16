@@ -9,7 +9,7 @@ aliases: ["cli", "npx", "command"]
 tags: [contracts]
 implementation: partial
 code: [src/cli/, src/daemon/]
-test_code: [test/daemon/, test/mcp/proxy.test.ts]
+test_code: [test/daemon/, test/mcp/proxy.test.ts, test/e2e/npx.test.ts]
 relations:
   providers: []
   consumers: [ACT-001, ACT-002]
@@ -37,6 +37,9 @@ uncertainties: []
 
 ## Authentication and permissions
 Local user; no authentication of its own.
+
+## Distribution
+npm package `ai-submind` with `dist/` (including `dist/ui/` and its `THIRD-PARTY-LICENSES.md`), `spec/format/README.md` and `spec/format/schema/`; `npm run build` empties `dist/` first so no stale file is packed. `test/e2e/npx.test.ts` drives the packed tarball through `npx ai-submind`. Not published: `private: true` until the own license is decided (NFR-009).
 
 ## Versioning and compatibility
 Subcommands and options stable from the first release.
