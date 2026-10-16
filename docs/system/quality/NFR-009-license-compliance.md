@@ -24,7 +24,7 @@ Dependencies with compatible licenses; strong copyleft requires review; JointJS+
 
 | Metric | Threshold | How it is measured |
 |---------|--------|--------------|
-| Production dependencies outside the allowlist | 0 | `test/package/licenses.test.ts`: every package of `npm ls --omit=dev --all` has MIT, ISC, Apache-2.0 or BSD-3-Clause; MPL-2.0 only for `@joint/core` |
+| Production dependencies outside the allowlist | 0 | `test/package/licenses.test.ts`: every package of `npm ls --omit=dev --all` has MIT, ISC, Apache-2.0 or BSD-3-Clause (`@joint/core`, MPL-2.0, is a development dependency bundled into `dist/ui`) |
 | Bundled third-party code without its notice | 0 | Vite `build.license` writes `dist/ui/THIRD-PARTY-LICENSES.md`; `dist/ui/index.html` points to the source form of `@joint/core` (MPL-2.0 §3.2); `test/e2e/npx.test.ts` checks the notice file ships in the tarball (the `index.html` comment is checked by hand) |
 
 ## Scope

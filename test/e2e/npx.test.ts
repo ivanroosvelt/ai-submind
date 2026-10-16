@@ -21,15 +21,26 @@ let root = "";
 let serving: ChildProcess | undefined;
 let transport: StdioClientTransport | undefined;
 
+// npm and npx are .cmd shims on Windows, which Node only starts through a shell (NFR-001).
+// ponytail: plain double quotes; no argument here contains a quote.
+const WIN = process.platform === "win32";
+const command = (cmd: string, args: string[]): [string, string[], { shell: boolean }] =>
+  WIN
+    ? [[cmd, ...args].map((a) => `"${a}"`).join(" "), [], { shell: true }]
+    : [cmd, args, { shell: false }];
+
 // Sync calls block the event loop, so Vitest's timeout cannot stop a hung npm: each call carries its own.
-const run = (cwd: string, cmd: string, ...args: string[]): string =>
-  execFileSync(cmd, args, {
+const run = (cwd: string, cmd: string, ...args: string[]): string => {
+  const [file, argv, opts] = command(cmd, args);
+  return execFileSync(file, argv, {
+    ...opts,
     cwd,
     env,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
     timeout: 120_000,
   });
+};
 // `--no`: never fetch `ai-submind` from the registry; only the locally installed tarball may answer.
 const npx = (cwd: string, ...args: string[]): string =>
   run(cwd, "npx", "--no", "ai-submind", ...args);
@@ -44,12 +55,22 @@ async function until(check: () => boolean, what: () => string, ms: number): Prom
 afterAll(async () => {
   // Never leave a daemon or a proxy behind, whatever failed.
   await transport?.close().catch(() => undefined);
-  if (root !== "")
-    spawnSync("npx", ["--no", "ai-submind", "stop"], {
-      cwd: join(root, "repo"),
-      env,
-      timeout: 15_000,
-    });
+  if (root !== "") {
+    const repo = join(root, "repo");
+    const [file, argv, opts] = command("npx", ["--no", "ai-submind", "stop"]);
+    spawnSync(file, argv, { ...opts, cwd: repo, env, timeout: 15_000 });
+    // If stop failed, the daemon (a child of the npx wrapper below) would outlive the suite.
+    const daemon = await readFile(join(repo, "knowledge", ".ai-submind", "runtime.json"), "utf8")
+      .then((t) => (JSON.parse(t) as { pid: number }).pid)
+      .catch(() => 0);
+    if (daemon > 0) {
+      try {
+        process.kill(daemon, "SIGKILL");
+      } catch {
+        // already gone
+      }
+    }
+  }
   if (serving?.exitCode === null) serving.kill("SIGKILL");
   if (root !== "") await rm(root, { recursive: true, force: true });
 });
@@ -75,7 +96,8 @@ describe("npx ai-submind from the packed tarball", () => {
         "spec/format/schema/1.0/model.schema.json",
       ]),
     );
-    expect(files.filter((f) => f.startsWith("test/") || f.startsWith("src/"))).toEqual([]);
+    // No sources, so no source maps pointing at them.
+    expect(files.filter((f) => /^(test|src)\//.test(f) || f.endsWith(".map"))).toEqual([]);
 
     run(repo, "git", "init", "-q");
     run(repo, "git", "config", "user.email", "e2e@example.invalid");
@@ -101,7 +123,8 @@ describe("npx ai-submind from the packed tarball", () => {
     run(repo, "git", "add", "-A");
     run(repo, "git", "commit", "-q", "-m", "init");
 
-    serving = spawn("npx", ["--no", "ai-submind", "serve", "--port", "0"], { cwd: repo, env });
+    const [file, argv, opts] = command("npx", ["--no", "ai-submind", "serve", "--port", "0"]);
+    serving = spawn(file, argv, { ...opts, cwd: repo, env });
     let log = "";
     serving.stderr?.on("data", (c: Buffer) => (log += c.toString()));
     await until(

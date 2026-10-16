@@ -436,7 +436,7 @@ not loaded as writable, which may already hold them).
 | The class lists its `generalizations` and `interfaces` in addition to the model | only in the model's `generalizations`/`realizations`; the engine computes the inverses | a single source; no inconsistencies |
 | Package with `elements` by category | package with `members` (refs of any top-level type) | simpler; the type is resolved by ID |
 | `visibility` on every named element | required on packages, classifiers, interactions, attributes and operations; optional on model, actor, association and association end; absent on generalization, dependency, realization, parameter, lifeline, message, fragments and diagrams | relevant in UML; less noise |
-| Attribute flags also on operations | operation: `is_static`, `is_abstract`, `is_query` | only the meaningful ones |
+| Attribute flags also on operations; `is_query` also on attributes | operation: `is_static`, `is_abstract`, `is_query`; attribute: no `is_query` | only the meaningful ones |
 | `exceptions` as texts | references to classifiers | referential integrity |
 | Association end with `name` and `role` | `role` only | they were redundant |
 | No actors | `actors` collection | actor lifelines and future use cases |
@@ -451,5 +451,5 @@ not loaded as writable, which may already hold them).
 
 ## 13. Examples
 
-[`examples/`](examples/README.md): a complete valid `knowledge/` (garage: every construct) and
+[`examples/`](examples/README.md) (source repository only; not shipped in the npm package): a complete valid `knowledge/` (garage: every construct) and
 invalid cases with the expected code.

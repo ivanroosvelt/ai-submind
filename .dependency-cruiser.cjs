@@ -93,8 +93,16 @@ module.exports = {
       name: "not-to-dev-dep",
       severity: "error",
       comment: "Published code does not import development dependencies.",
-      from: { path: "^src/" },
+      from: { path: "^src/", pathNot: "^src/ui/" },
       to: { dependencyTypes: ["npm-dev"] },
+    },
+    {
+      name: "ui-only-bundled-dev-deps",
+      severity: "error",
+      comment:
+        "src/ui is bundled by Vite into dist/ui (notices in dist/ui/THIRD-PARTY-LICENSES.md); of the dev dependencies it may only import @joint/core.",
+      from: { path: "^src/ui/" },
+      to: { dependencyTypes: ["npm-dev"], pathNot: "node_modules/@joint/core/" },
     },
   ],
   options: {

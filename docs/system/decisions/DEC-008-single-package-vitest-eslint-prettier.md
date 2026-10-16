@@ -12,7 +12,6 @@ relations:
   supersedes: []
 uncertainties:
   - "The UI build (Vite) is configured in PLAN-002 S9, when UI code exists."
-  - "dist/ source maps point to src/, which is not published: decide in PLAN-002 S12 (include src or drop maps)."
 ---
 
 # DEC-008 · Single npm package with Vitest, ESLint (typescript-eslint) and Prettier
@@ -50,6 +49,8 @@ uncertainties:
 - Positive: trivial publication and `npx`; a single toolchain for core and UI.
 - Negative / costs: boundaries between modules only by convention (no workspaces); more development
   dependencies than `node:test` (license audit in S12).
+- Source maps: `tsc` emits them for development, but the package excludes `dist/**/*.map` (`files` in `package.json`)
+  because `src/` is not published and the maps would point to missing files (PLAN-002 S13).
 
 ## Affected elements
 DEC-001 (resolves its structure open question), NFR-008, `docs/system/schema.yaml` (`code_roots`), `scripts/check`.

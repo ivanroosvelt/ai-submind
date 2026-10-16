@@ -12,7 +12,7 @@ relations:
   tests: []
   decisions: []
 uncertainties:
-  - "CI matrix per operating system not yet defined: the e2e has run on macOS locally; Linux (CI) and Windows pending."
+  - "CI matrix per operating system not yet defined: the e2e has run on macOS locally; Linux (CI) and Windows pending. On Windows the tests start npm/npx through a shell (.cmd shims); not yet executed there."
 ---
 
 # NFR-001 · Portability

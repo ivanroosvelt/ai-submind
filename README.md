@@ -7,7 +7,7 @@ agentes de IA lo consultan y modifican por MCP; las personas lo exploran en una 
 
 ## Estado
 
-En construcción ([PLAN-002](docs/plans/active/PLAN-002-gestor-diagramas-base.md)):
+Estructura base terminada ([PLAN-002](docs/plans/archive/PLAN-002-gestor-diagramas-base.md), cerrado el 2026-10-16):
 
 - Implementado: formato de conocimiento 1.0 y su validación ([spec/format/](spec/format/README.md)), motor
   embebido, consultas y búsqueda léxica, CLI con daemon por proyecto, servidor MCP, UI web (JointJS) para
@@ -39,7 +39,7 @@ npx ai-submind init
 npx ai-submind                             # equivale a serve
 ```
 
-El tarball incluye `dist/`, `spec/format/README.md` y `spec/format/schema/`.
+El tarball incluye `dist/` (sin los mapas de fuente `*.map`), `spec/format/README.md` y `spec/format/schema/`.
 
 ## Uso de la CLI
 
