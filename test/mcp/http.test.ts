@@ -43,9 +43,9 @@ const call = async (name: string, args: Record<string, unknown> = {}): Promise<u
 };
 
 const files = async (): Promise<string[]> =>
-  (await readdir(join(dir, "knowledge"), { recursive: true })).filter(
-    (f) => !f.startsWith(".ai-submind"),
-  );
+  (await readdir(join(dir, "knowledge"), { recursive: true }))
+    .map((f) => f.replaceAll("\\", "/")) // Windows separators
+    .filter((f) => !f.startsWith(".ai-submind"));
 
 function post(headers: Record<string, string>): Promise<number> {
   return new Promise((ok, fail) => {
@@ -138,9 +138,15 @@ describe("module rules", () => {
       await cp(join(REPO, "tsconfig.json"), join(probe, "tsconfig.json"));
       await cp(join(REPO, ".dependency-cruiser.cjs"), join(probe, ".dependency-cruiser.cjs"));
       const out = await new Promise<{ code: number; text: string }>((ok) => {
+        // Through node: .bin/depcruise is a .cmd shim on Windows, which execFile cannot start.
         execFile(
-          join(REPO, "node_modules", ".bin", "depcruise"),
-          ["src", "--config", ".dependency-cruiser.cjs"],
+          process.execPath,
+          [
+            join(REPO, "node_modules", "dependency-cruiser", "bin", "dependency-cruiser.mjs"),
+            "src",
+            "--config",
+            ".dependency-cruiser.cjs",
+          ],
           { cwd: probe },
           (error, stdout, stderr) => {
             ok({ code: error ? Number(error.code ?? 1) : 0, text: stdout + stderr });

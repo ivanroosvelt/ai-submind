@@ -2,7 +2,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   resolveKnowledgePath,
@@ -116,8 +116,9 @@ describe("phase 1: file", () => {
       const r = resolveKnowledgePath("/repo/knowledge", rel);
       expect(typeof r === "string" ? r : r.code, rel).toBe("PATH_OUTSIDE_KNOWLEDGE");
     }
+    // A native path: backslashes on Windows.
     expect(resolveKnowledgePath("/repo/knowledge", "models/m.json")).toBe(
-      "/repo/knowledge/models/m.json",
+      resolve("/repo/knowledge", "models", "m.json"),
     );
   });
 

@@ -22,11 +22,12 @@ let serving: ChildProcess | undefined;
 let transport: StdioClientTransport | undefined;
 
 // npm and npx are .cmd shims on Windows, which Node only starts through a shell (NFR-001).
-// ponytail: plain double quotes; no argument here contains a quote.
+// ponytail: plain double quotes; no argument here contains a quote. The command itself stays unquoted:
+// cmd.exe resolves %~dp0 of a quoted "npm" to the current directory, so npm.cmd cannot find npm-cli.js.
 const WIN = process.platform === "win32";
 const command = (cmd: string, args: string[]): [string, string[], { shell: boolean }] =>
   WIN
-    ? [[cmd, ...args].map((a) => `"${a}"`).join(" "), [], { shell: true }]
+    ? [[cmd, ...args.map((a) => `"${a}"`)].join(" "), [], { shell: true }]
     : [cmd, args, { shell: false }];
 
 // Sync calls block the event loop, so Vitest's timeout cannot stop a hung npm: each call carries its own.

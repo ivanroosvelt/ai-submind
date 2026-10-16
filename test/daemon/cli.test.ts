@@ -168,8 +168,11 @@ describe("serve, status and stop", () => {
     expect(first.pid).not.toBe(process.pid);
     const second = await api.ensureDaemon(project);
     expect(second).toEqual(first);
-    expect((await stat(local("daemon.log"))).mode & 0o777).toBe(0o600);
-    expect((await stat(local())).mode & 0o777).toBe(0o700);
+    // Windows has no POSIX modes (NFR-004).
+    if (process.platform !== "win32") {
+      expect((await stat(local("daemon.log"))).mode & 0o777).toBe(0o600);
+      expect((await stat(local())).mode & 0o777).toBe(0o700);
+    }
     expect((await cli("stop")).code).toBe(0);
   }, 30_000);
 });
@@ -295,7 +298,8 @@ describe("orphan lock under concurrent starts", () => {
       } finally {
         for (const c of children)
           if (c.exitCode === null && c.signalCode === null) c.kill("SIGKILL");
-        await rm(root, { recursive: true, force: true });
+        // Windows keeps a just-exited daemon's files busy for a moment (EBUSY).
+        await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
       }
     }
   }, 120_000);
