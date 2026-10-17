@@ -10,6 +10,7 @@ tags: [contracts]
 implementation: verified
 code:
   - src/mcp/tools.ts#createMcpServer
+  - src/mcp/guide.ts#GUIDE
   - src/mcp/http.ts#mcpRoutes
   - src/cli/proxy.ts#proxy
   - src/engine/edit.ts#edit
@@ -82,6 +83,11 @@ diagram or model go in `data`/`patch` of the write tools, whose descriptions exp
 
 Resources: `ai-submind://schema/{name}` (`ai-submind`, `defs`, `layout`, `model`: JSON Schemas of the current format, 1.1),
 `ai-submind://model/{id}` (model document as loaded), `ai-submind://diagram/{id}` (`{diagram, layout | null}`).
+
+Prompts: `guide` (no arguments): one user message teaching an agent the whole server, the hand-written workflow of
+`src/mcp/guide.ts` followed by a reference generated at registration from every tool (name, kind, description) and
+resource template, so descriptions never drift. `test/mcp/tools.test.ts` fails when a tool or resource is not named
+in the hand-written part, so adding one to the server forces updating the guide.
 
 ## Errors
 Engine and query errors become tool results with `isError: true`, text `"CODE: message"` and

@@ -6,6 +6,8 @@ import {
   McpServer,
   ResourceTemplate,
   type CallToolResult,
+  type ReadResourceTemplateCallback,
+  type ResourceMetadata,
   type ToolCallback,
 } from "@modelcontextprotocol/server";
 import * as z from "zod";
@@ -23,6 +25,7 @@ import { EDGE_KINDS } from "../query/graph.js";
 import type { PageArgs } from "../query/limits.js";
 import { RELATION_GROUPS, type Query } from "../query/query.js";
 import type { ImpactArgs, PathArgs } from "../query/traverse.js";
+import { GUIDE } from "./guide.js";
 
 const SCHEMA_DIR = new URL(`../../spec/format/schema/${SUPPORTED_VERSION}/`, import.meta.url);
 const SCHEMAS = ["ai-submind", "defs", "layout", "model"] as const;
@@ -112,6 +115,8 @@ const OPS = {
 /** MCP server over `engine` and `query`; `version` is the package version. */
 export function createMcpServer(engine: Engine, query: Query, version: string): McpServer {
   const server = new McpServer({ name: "ai-submind", version });
+  /** Reference section of the `guide` prompt, filled as tools and resources are registered. */
+  const catalog: string[] = [];
 
   const tool = <S extends z.ZodObject>(
     name: string,
@@ -121,6 +126,7 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
     kind: "read" | "create" | "write",
     run: (args: z.infer<S>) => unknown,
   ): void => {
+    catalog.push(`- \`${name}\` (${kind}): ${description}`);
     server.registerTool(
       name,
       {
@@ -381,7 +387,16 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
       throw new QueryError("NOT_FOUND", `${target} is not a ${type}`, { id: target });
     return data.node;
   };
-  server.registerResource(
+  const resource = (
+    name: string,
+    template: ResourceTemplate,
+    meta: ResourceMetadata,
+    read: ReadResourceTemplateCallback,
+  ): void => {
+    catalog.push(`- \`${template.uriTemplate.toString()}\` (resource): ${meta.description ?? ""}`);
+    server.registerResource(name, template, meta, read);
+  };
+  resource(
     "schema",
     new ResourceTemplate("ai-submind://schema/{name}", {
       list: () => ({
@@ -404,7 +419,7 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
       return { contents: [{ uri: uri.href, mimeType: "application/json", text }] };
     },
   );
-  server.registerResource(
+  resource(
     "model",
     new ResourceTemplate("ai-submind://model/{id}", {
       list: () => ({
@@ -418,7 +433,7 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
     { description: "A model document as loaded", mimeType: "application/json" },
     (uri, { id: target }) => json(uri, element(String(target), "model")),
   );
-  server.registerResource(
+  resource(
     "diagram",
     new ResourceTemplate("ai-submind://diagram/{id}", {
       list: () => ({
@@ -435,6 +450,21 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
       const layout = engine.document(`layout/${String(target)}.json`)?.data ?? null;
       return json(uri, { diagram, layout });
     },
+  );
+  server.registerPrompt(
+    "guide",
+    {
+      title: "How to use ai-submind",
+      description: "Workflow and reference for every tool and resource of this server.",
+    },
+    () => ({
+      messages: [
+        {
+          role: "user",
+          content: { type: "text", text: `${GUIDE}\n## Reference\n\n${catalog.join("\n")}\n` },
+        },
+      ],
+    }),
   );
   return server;
 }

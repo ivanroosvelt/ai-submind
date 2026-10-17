@@ -10,6 +10,7 @@ import { serialize } from "../../src/format/canonical.js";
 import { Engine } from "../../src/engine/index.js";
 import { autoLayout } from "../../src/layout/class-layout.js";
 import { autoLayoutSequence } from "../../src/layout/sequence-layout.js";
+import { GUIDE } from "../../src/mcp/guide.js";
 import { createMcpServer } from "../../src/mcp/tools.js";
 import { createQuery } from "../../src/query/index.js";
 
@@ -299,5 +300,28 @@ describe("resources", () => {
       "$id",
       "urn:ai-submind:format:1.1:defs",
     );
+  });
+});
+
+describe("guide prompt", () => {
+  it("covers every tool and resource: the workflow names each one, the reference carries its live description", async () => {
+    const { prompts } = await client.listPrompts();
+    expect(prompts.map((p) => p.name)).toEqual(["guide"]);
+    const { messages } = await client.getPrompt({ name: "guide" });
+    const text = (messages[0]?.content as { text: string }).text;
+    expect(text.startsWith(GUIDE)).toBe(true);
+    const { tools } = await client.listTools();
+    const { resourceTemplates } = await client.listResourceTemplates();
+    // A new tool or resource fails here until the hand-written guide explains it.
+    for (const t of tools) {
+      expect(GUIDE, t.name).toContain(`\`${t.name}\``);
+      expect(text).toContain(`\`${t.name}\` (`);
+      expect(text).toContain(t.description ?? "");
+    }
+    for (const r of resourceTemplates) {
+      const prefix = r.uriTemplate.slice(0, r.uriTemplate.indexOf("{"));
+      expect(GUIDE, r.uriTemplate).toContain(prefix);
+      expect(text).toContain(`\`${r.uriTemplate}\` (resource)`);
+    }
   });
 });

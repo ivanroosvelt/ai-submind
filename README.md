@@ -117,7 +117,8 @@ Tools: `list_models`, `list_diagrams`, `get_element`, `find_elements`, `search`,
 `paths`, `validate` (read; `relations` has a `links` group); `create_element`, `update_element`, `delete_element`, `edit_diagram`,
 `apply_batch`, `rename`, `auto_layout_diagram`, `migrate` (write, all with `dryRun`; the first write initializes
 `knowledge/` if it does not exist). Resources `ai-submind://schema/{name}`, `ai-submind://model/{id}` and
-`ai-submind://diagram/{id}`. Inputs, outputs and errors in
+`ai-submind://diagram/{id}`. Prompt `guide`: teaches an agent the workflow and every tool and resource (in
+Claude Code, `/mcp__ai-submind__guide`). Inputs, outputs and errors in
 [API-001](docs/system/interfaces/API-001-ai-submind-mcp-server.md).
 
 ## Development
