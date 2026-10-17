@@ -3,7 +3,7 @@
 All notable changes to `ai-submind` are recorded here. Versions follow semver; while in 0.x the knowledge
 format may change only as described in [spec/format/README.md](spec/format/README.md) §11.
 
-## Unreleased
+## 0.2.0 — 2026-10-17
 
 - Knowledge format 1.1 (minor): operation `behavior` (reference to the interaction that implements it) and a
   `links` extension on every element with an id, the model and diagrams (references to any element, model or
@@ -13,6 +13,8 @@ format may change only as described in [spec/format/README.md](spec/format/READM
   running.
 - Queries: new relation group `links`; `behavior` belongs to the `sequence` group.
 - Web UI: drill-down between diagrams; elements with a target show ↗ and open it by double click.
+- MCP prompt `guide`: a hand-written workflow plus a reference generated from every registered tool and
+  resource template.
 
 ## 0.1.1 — 2026-10-16
 
