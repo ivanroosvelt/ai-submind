@@ -9,6 +9,7 @@ import { serialize } from "../format/canonical.js";
 import { classifyPath, isLoaded, parseDocument, type ParsedDocument } from "../format/document.js";
 import { finding, type Finding } from "../format/findings.js";
 import { compareFindings, LOCAL_DIR, readKnowledgeDir } from "../format/knowledge.js";
+import { isObject, SUPPORTED_VERSION } from "../format/schema.js";
 import {
   checkKnowledge,
   indexDocuments,
@@ -84,6 +85,29 @@ export interface TransactionResult {
   /** New revision of each path touched (`null` = deleted). */
   revisions: Record<string, string | null>;
   diff: SemanticDiff;
+}
+
+export interface MigrateResult extends TransactionResult {
+  /** Paths of the documents migrated (or that a dry run would migrate), sorted. */
+  migrated: string[];
+}
+
+/** Only version `migrate` upgrades from (spec §11.1). */
+const MIGRATES_FROM = "1.0";
+
+/** `format_version` declared by a document, even one that did not load; `undefined` if unreadable. */
+function declaredVersion(e: Entry): string | undefined {
+  let data = e.doc.data;
+  if (data === undefined) {
+    try {
+      data = JSON.parse(new TextDecoder().decode(e.bytes));
+    } catch {
+      return undefined;
+    }
+  }
+  return isObject(data) && typeof data.format_version === "string"
+    ? data.format_version
+    : undefined;
 }
 
 export interface RenameResult extends TransactionResult {
@@ -318,6 +342,37 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
   }
 
   /**
+   * Explicit migration 1.0 → 1.1 (REQ-043, spec §11.1): rewrites `format_version` of every 1.0 document in
+   * one transaction, in canonical form, and nothing else. Other versions are left untouched.
+   */
+  migrate(options: TransactOptions = {}): Promise<MigrateResult> {
+    return this.exclusive(async () => {
+      await this.load();
+      const ops: BatchOperation[] = [];
+      const blocked: string[] = [];
+      for (const [path, e] of [...this.state.entries].sort(([a], [b]) => (a < b ? -1 : 1))) {
+        const version = declaredVersion(e);
+        if (version !== undefined && version !== MIGRATES_FROM) continue;
+        // A document that did not load may be 1.0 even when its version cannot be read.
+        if (!isLoaded(e.doc)) blocked.push(path);
+        else {
+          const data = { ...(e.doc.data as object), format_version: SUPPORTED_VERSION };
+          ops.push({ op: "put", path, data, expectedRevision: e.revision });
+        }
+      }
+      if (blocked.length > 0) {
+        throw new EngineError(
+          "MIGRATE_BLOCKED",
+          `fix or restore these documents before migrating: ${blocked.join(", ")}`,
+          { paths: blocked },
+        );
+      }
+      const result = await this.commit(ops, undefined, options.dryRun, true);
+      return { ...result, migrated: ops.map((o) => o.path) };
+    });
+  }
+
+  /**
    * Re-reads knowledge/ and revalidates what changed on disk (REQ-007). Emits `change` only if something
    * changed, so the engine's own writes do not produce an event.
    */
@@ -388,6 +443,7 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
     ops: readonly BatchOperation[],
     translate?: (f: Finding) => Finding,
     dryRun = false,
+    migrating = false,
   ): Promise<TransactionResult> {
     if (ops.length === 0) return { revisions: {}, diff: semanticDiff(new Map(), new Map(), []) };
     // Validation runs against what is on disk now (REQ-011): pending external changes are loaded first,
@@ -466,6 +522,31 @@ export class Engine extends EventEmitter<{ change: [ChangeEvent]; error: [Error]
         });
       }
       const given = parseDocument(o.path, kind, enc.encode(json));
+      const version = isObject(o.data) ? o.data.format_version : undefined;
+      const from = existing && declaredVersion(existing);
+      // A version changes only through migrate, and 1.1 keys need it first (spec §11).
+      const later =
+        given.status === "invalid_schema" &&
+        version === MIGRATES_FROM &&
+        parseDocument(
+          o.path,
+          kind,
+          enc.encode(JSON.stringify({ ...(o.data as object), format_version: SUPPORTED_VERSION })),
+        ).status === "writable";
+      if (later) {
+        throw new EngineError(
+          "MIGRATION_REQUIRED",
+          `${o.path} is format ${MIGRATES_FROM}: run migrate to upgrade it to ${SUPPORTED_VERSION} before using later keys`,
+          { path: o.path },
+        );
+      }
+      if (given.status === "writable" && from !== undefined && version !== from && !migrating) {
+        throw new EngineError(
+          "MIGRATION_REQUIRED",
+          `${o.path} is format ${from}: format_version changes only through migrate`,
+          { path: o.path },
+        );
+      }
       if (given.status !== "writable") {
         throw new EngineError("VALIDATION_FAILED", `${o.path} does not conform to the format`, {
           path: o.path,

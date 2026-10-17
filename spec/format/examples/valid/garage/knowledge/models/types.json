@@ -1,5 +1,5 @@
 {
-  "format_version": "1.0",
+  "format_version": "1.1",
   "id": "types",
   "name": "Types",
   "documentation": "Shared primitive types; other models reference them by global ID.",

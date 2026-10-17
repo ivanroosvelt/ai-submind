@@ -191,7 +191,7 @@ describe("incremental update", () => {
 
     expect(stepwise.search("bicycle")).toEqual([]);
     const bikes = {
-      format_version: "1.0",
+      format_version: "1.1",
       id: "bikes",
       name: "Bikes",
       elements: {
@@ -230,7 +230,7 @@ describe("incremental update", () => {
     expect(stepwise.search("decimal").map((h) => h.id)).toEqual(["Decimal", "types"]);
 
     // A duplicated ID is one document with the fields of every occurrence.
-    const dup = { format_version: "1.0", id: "dup", name: "Dup" } as Model;
+    const dup = { format_version: "1.1", id: "dup", name: "Dup" } as Model;
     dup.elements = {
       classes: [{ id: "Auto", name: "Automobile", visibility: "public", is_abstract: false }],
     };

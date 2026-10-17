@@ -31,8 +31,11 @@ const OPEN_ARROW: Marker = {
 const TRIANGLE: Marker = { type: "path", d: "M 14 -8 0 0 14 8 z", fill: "#ffffff" };
 const diamond = (fill: string): Marker => ({ type: "path", d: "M 0 0 9 -5 18 0 9 5 z", fill });
 
-/** Node of a class diagram at `entry`; an explicit size in the layout is a minimum (spec §8). */
-export function nodeCell(n: GraphNode, entry: LayoutNode): dia.Element {
+/**
+ * Node of a class diagram at `entry`; an explicit size in the layout is a minimum (spec §8). `linked`: it
+ * has a drill-down target (REQ-042), marked with ↗.
+ */
+export function nodeCell(n: GraphNode, entry: LayoutNode, linked = false): dia.Element {
   const { width, height } = boxSize(n, entry);
   const c = { ...COLORS, ...entry.style };
   const shape = { fill: c.fill, stroke: c.stroke, "stroke-width": 1 };
@@ -91,6 +94,7 @@ export function nodeCell(n: GraphNode, entry: LayoutNode): dia.Element {
       },
     });
   });
+  if (linked) markup.push(navMark(width, n.type === "package" ? TAB_HEIGHT : 0));
   return new dia.Element<dia.Element.Attributes>({
     id: n.id,
     type: "submind.Node",
@@ -114,20 +118,24 @@ function endText(end: unknown): string {
   return [e.role, e.multiplicity].filter((s) => typeof s === "string" && s !== "").join(" ");
 }
 
-/** Link of a class diagram with its UML ends, labels and the vertices of `entry`. */
-export function linkCell(e: GraphEdge, entry: LayoutEdge | undefined): dia.Link {
+/**
+ * Link of a class diagram with its UML ends, labels and the vertices of `entry`. `linked`: ↗ after its
+ * name at the midpoint (REQ-042).
+ */
+export function linkCell(e: GraphEdge, entry: LayoutEdge | undefined, linked = false): dia.Link {
   const n = e.node as Record<string, unknown>;
   const stroke = entry?.style?.stroke ?? COLORS.stroke;
   let sourceMarker = NONE;
   let targetMarker = NONE;
   const labels: dia.Link.Label[] = [];
   const name = typeof n.name === "string" ? n.name : "";
+  let mid = "";
   switch (e.type) {
     case "association":
       if (n.type === "aggregation") sourceMarker = diamond("#ffffff");
       if (n.type === "composition") sourceMarker = diamond(stroke);
       if (n.direction === "directed") targetMarker = OPEN_ARROW;
-      if (name) labels.push(label(name, 0.5));
+      mid = name;
       if (endText(n.end1)) labels.push(label(endText(n.end1), 30, -12));
       if (endText(n.end2)) labels.push(label(endText(n.end2), -30, -12));
       break;
@@ -137,9 +145,11 @@ export function linkCell(e: GraphEdge, entry: LayoutEdge | undefined): dia.Link 
       break;
     case "dependency":
       targetMarker = OPEN_ARROW;
-      if (name) labels.push(label(name, 0.5));
+      mid = name;
       break;
   }
+  if (linked) mid = `${mid} ↗`.trim();
+  if (mid) labels.unshift(label(mid, 0.5));
   const dashed = e.type === "dependency" || e.type === "realization";
   return new shapes.standard.Link({
     id: e.id,
@@ -165,7 +175,7 @@ const text = (
   content: string,
   x: number,
   y: number,
-  anchor: "start" | "middle",
+  anchor: "start" | "middle" | "end",
   fill: string,
   weight = "normal",
 ): dia.MarkupNodeJSON => ({
@@ -183,8 +193,24 @@ const text = (
   },
 });
 
+/**
+ * Drill-down mark (REQ-042): ↗ just above the top-right corner of a box `width` wide whose top edge is `top`
+ * below the origin; outside the box, so it never covers its text.
+ */
+const navMark = (width: number, top = 0): dia.MarkupNodeJSON => ({
+  tagName: "g",
+  children: [
+    { tagName: "title", textContent: "Double-click to open what it links to" },
+    text("↗", width, top - 3, "end", "#1e88e5", "bold"),
+  ],
+});
+
 /** Lifeline: header box, dashed line to its end and an X if destroyed. Moves only horizontally. */
-export function lifelineCell(l: LifelineGeometry, style: Style | undefined): dia.Element {
+export function lifelineCell(
+  l: LifelineGeometry,
+  style: Style | undefined,
+  linked = false,
+): dia.Element {
   const c = { ...COLORS, ...style };
   const m = l.width / 2;
   const length = l.bottom - l.y;
@@ -217,6 +243,7 @@ export function lifelineCell(l: LifelineGeometry, style: Style | undefined): dia
       text(r.text, m, r.y, "middle", c.text, i === l.rows.length - 1 ? "bold" : "normal"),
     ),
   ];
+  if (linked) markup.push(navMark(l.width));
   if (l.destroyed) {
     markup.push({
       tagName: "path",
@@ -253,25 +280,27 @@ export function lifelineEndCell(l: LifelineGeometry): dia.Element {
   });
 }
 
-/** Execution specification: a narrow box on its lifeline. */
-export function executionCell(e: ExecutionGeometry): dia.Element {
+/** Execution specification: a narrow box on its lifeline; `linked`: ↗ above it (REQ-042). */
+export function executionCell(e: ExecutionGeometry, linked = false): dia.Element {
+  const markup: dia.MarkupJSON = [
+    {
+      tagName: "rect",
+      selector: "body",
+      attributes: { width: e.width, height: e.height, fill: "#eceff1", stroke: COLORS.stroke },
+    },
+  ];
+  if (linked) markup.push(navMark(e.width));
   return new dia.Element<dia.Element.Attributes>({
     id: e.id,
     type: "submind.Execution",
     position: { x: e.x, y: e.y },
     size: { width: e.width, height: e.height },
-    markup: [
-      {
-        tagName: "rect",
-        selector: "body",
-        attributes: { width: e.width, height: e.height, fill: "#eceff1", stroke: COLORS.stroke },
-      },
-    ],
+    markup,
   });
 }
 
 /** Combined fragment (operator tab, operands with guards) or interaction use (`ref` and its name). */
-export function fragmentCell(f: FragmentGeometry): dia.Element {
+export function fragmentCell(f: FragmentGeometry, linked = false): dia.Element {
   const tab = f.label.length * CHAR_WIDTH + 2 * PAD_X;
   const h = FONT_SIZE + 8;
   const markup: dia.MarkupJSON = [
@@ -298,6 +327,7 @@ export function fragmentCell(f: FragmentGeometry): dia.Element {
   if (f.type === "interaction_use") {
     markup.push(text(f.text, f.width / 2, f.height / 2 + 4, "middle", COLORS.text));
   }
+  if (linked) markup.push(navMark(f.width));
   f.operands.forEach((o, i) => {
     const top = o.y - f.y;
     if (i > 0) {
@@ -329,8 +359,15 @@ const DOT = (fill: string): Marker => ({
   fill,
 });
 
-/** Message: a line between fixed points with its arrowhead by sort; lost/found end in a filled circle. */
-export function messageCell(m: MessageGeometry, entry: LayoutEdge | undefined): dia.Link {
+/**
+ * Message: a line between fixed points with its arrowhead by sort; lost/found end in a filled circle.
+ * `linked`: ↗ after its label (REQ-042).
+ */
+export function messageCell(
+  m: MessageGeometry,
+  entry: LayoutEdge | undefined,
+  linked = false,
+): dia.Link {
   const stroke = entry?.style?.stroke ?? COLORS.stroke;
   const head = m.head === "filled" ? FILLED_ARROW(stroke) : OPEN_ARROW;
   const start = m.points[0] ?? { x: 0, y: 0 };
@@ -340,7 +377,10 @@ export function messageCell(m: MessageGeometry, entry: LayoutEdge | undefined): 
     source: start,
     target: end,
     vertices: m.points.slice(1, -1),
-    labels: m.label === "" ? [] : [label(m.label, 0.5, m.points.length > 2 ? 0 : -10)],
+    labels:
+      m.label === "" && !linked
+        ? []
+        : [label(linked ? `${m.label} ↗`.trim() : m.label, 0.5, m.points.length > 2 ? 0 : -10)],
     attrs: {
       line: {
         stroke,

@@ -28,6 +28,10 @@ export type EngineErrorCode =
   | "CREATE_BLOCKED"
   /** Deleting the element would leave references to it; `references` lists them (REQ-024). */
   | "REFERENCED"
+  /** A write would add a key of a later version to a 1.0 document, or change its version (spec §11). */
+  | "MIGRATION_REQUIRED"
+  /** `migrate` cannot run while a 1.0 document is not loaded (phase 1 or 3 error; spec §11.1). */
+  | "MIGRATE_BLOCKED"
   /** Malformed edit operation, e.g. a parent of the wrong type or `id` in an update patch. */
   | "INVALID_ARGUMENT";
 

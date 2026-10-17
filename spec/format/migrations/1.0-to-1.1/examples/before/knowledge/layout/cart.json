@@ -1,0 +1,10 @@
+{
+  "format_version": "1.0",
+  "diagram": {"idref": "cart"},
+  "nodes": {
+    "Cart": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

@@ -14,4 +14,4 @@
   "lifelines": [{"name": "server", "id": "Order.server"}, {"id": "Order.client", "name": ""}],
   "name": "Order", "id": "Order"},
   {"id": "Pay", "name": "Pay", "visibility": "public"}]},
- "name": "Sequence", "id": "sequence", "format_version": "1.0"}
+ "name": "Sequence", "id": "sequence", "format_version": "1.1"}

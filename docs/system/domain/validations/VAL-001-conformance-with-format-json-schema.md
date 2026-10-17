@@ -11,18 +11,20 @@ implementation: verified
 code:
   - src/format/document.ts#parseDocument
   - src/format/schema.ts#SchemaSet
+  - src/format/schema.ts#schemaVersion
 test_code:
   - test/format/corpus.test.ts
   - test/format/rules.test.ts
 relations:
   tests: []
-  decisions: []
+  decisions: [DEC-020]
 uncertainties: []
 ---
 
 # VAL-001 · Conformance with the format JSON Schema
 
 ## Rule
+Each document is validated with the schema of its own supported version (1.1 or 1.0; spec §10.1, §11), so a 1.1 key in a 1.0 document is `SCHEMA_VIOLATION`.
 Allowed collections, field types, required fields (`id`; `name`/`visibility` on named elements), enumerations (visibility, association kind and direction, parameter direction, message kind, fragment operator) and `null` only where the spec allows it (unknown value).
 
 ## Applies to

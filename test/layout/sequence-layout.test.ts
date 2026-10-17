@@ -48,7 +48,7 @@ const seq = (inter: Record<string, unknown>): DiagramInput => ({
   elements: [{ id: String(inter.id), type: "interaction", node: inter }],
   names: {},
   layout: null,
-  formatVersion: "1.0",
+  formatVersion: "1.1",
 });
 
 interface Rect {
@@ -259,7 +259,7 @@ describe("sequence auto-layout (DEC-018)", () => {
   it("orders lifelines by their current x, drops orphan entries and keeps only edge styles", async () => {
     const v = await view(GARAGE, "rent-car");
     const layout: Layout = {
-      format_version: "1.0",
+      format_version: "1.1",
       diagram: { idref: "rent-car" },
       nodes: {
         "RentCar.car": { x: 0, y: 500, style: { fill: "#ffeeee" } },
@@ -285,7 +285,7 @@ describe("sequence auto-layout (DEC-018)", () => {
   it("with keep, lifelines with a position keep it and the others go to their right", async () => {
     const v = await view(GARAGE, "rent-car");
     const layout: Layout = {
-      format_version: "1.0",
+      format_version: "1.1",
       diagram: { idref: "rent-car" },
       nodes: { "RentCar.garage": { x: 500, y: 0 } },
     };
@@ -299,7 +299,7 @@ describe("sequence auto-layout (DEC-018)", () => {
   it("with keep, existing entries stay as they are (orphans included); only new lifelines are added", async () => {
     const v = await view(GARAGE, "rent-car");
     const layout: Layout = {
-      format_version: "1.0",
+      format_version: "1.1",
       diagram: { idref: "rent-car" },
       nodes: {
         "RentCar.contract": { x: 640, y: 120 },
@@ -384,7 +384,7 @@ describe("sequence auto-layout (DEC-018)", () => {
     expect(Object.getPrototypeOf(a.nodes)).toBe(Object.prototype);
     expect(serialize("layout", a)).toContain('"__proto__"');
     const prev = JSON.parse('{"__proto__": {"x": 300, "y": 20}}') as Record<string, never>;
-    const layout: Layout = { format_version: "1.0", diagram: { idref: "d" }, nodes: prev };
+    const layout: Layout = { format_version: "1.1", diagram: { idref: "d" }, nodes: prev };
     const k = autoLayoutSequence({ ...v, layout }, { keep: true });
     expect(Object.hasOwn(k.nodes ?? {}, "__proto__")).toBe(true);
     expect(Object.getOwnPropertyDescriptor(k.nodes, "__proto__")?.value).toEqual({ x: 300, y: 20 });

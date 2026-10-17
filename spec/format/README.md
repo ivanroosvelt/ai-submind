@@ -1,8 +1,9 @@
-# ai-submind knowledge format · version 1.0
+# ai-submind knowledge format · version 1.1
 
 Normative specification of the contents of `knowledge/` managed by ai-submind. The JSON Schema
-2020-12 files in [`schema/1.0/`](schema/1.0/) are the canonical source of the **structure** (keys, types,
-enumerations and key order); this document is the canonical source of the **semantics**
+2020-12 files in [`schema/1.1/`](schema/1.1/) are the canonical source of the **structure** (keys, types,
+enumerations and key order) of the current version; those of the earlier supported version 1.0 are kept in
+[`schema/1.0/`](schema/1.0/) (§11). This document is the canonical source of the **semantics**
 (identifiers, references, consistency rules, canonical serialization and versioning).
 
 The words **must**, **must not** and **may** are normative.
@@ -20,7 +21,8 @@ That work is published under CC BY-NC-ND 4.0; this specification does not reprod
 it takes its ideas (identifiers with `id` and references `{"idref": ...}`, the model as the root and owner of
 the relationships, the event order of an interaction given by the array order, diagrams as
 sets of references) and redefines them in its own words, adapted to ai-submind. The differences
-are listed in §12. Product decisions that support it: DEC-002 (format) and DEC-003 (IDs).
+are listed in §12. Product decisions that support it: DEC-002 (format), DEC-003 (IDs) and DEC-020
+(cross-diagram relations and version 1.1).
 
 ## 2. Structure of `knowledge/`
 
@@ -124,12 +126,13 @@ recomputed.
 - Every reference **must** resolve to an existing `id` in `knowledge/` (`REF_UNRESOLVED`) of a type
   allowed by the key that contains it (`REF_TYPE_MISMATCH`; table in §10.2).
 - Since IDs are global, a reference may point to an element of **another model** without additional
-  syntax (e.g. primitive types shared in a `types` model).
+  syntax (e.g. primitive types shared in a `types` model). Only `links` (§7.1) and the layout `diagram` may
+  point to a model or a diagram as a whole.
 - The keys of layout maps (§8) are IDs, not `idref` objects; `rename` rewrites them too.
 
 ## 5. Manifest `ai-submind.json`
 
-Schema: [`ai-submind.schema.json`](schema/1.0/ai-submind.schema.json).
+Schema: [`ai-submind.schema.json`](schema/1.1/ai-submind.schema.json).
 
 | Key | Type | Req. | Meaning |
 |-----|------|------|---------|
@@ -141,7 +144,7 @@ Its presence indicates that `knowledge/` is initialized. `ai-submind init` creat
 
 ## 6. Model (`models/<model-id>.json`)
 
-Schema: [`model.schema.json`](schema/1.0/model.schema.json). The tables summarize the semantics; types,
+Schema: [`model.schema.json`](schema/1.1/model.schema.json). The tables summarize the semantics; types,
 requiredness and exact key order are in the schema.
 
 ### 6.1 Common conventions
@@ -186,7 +189,7 @@ requiredness and exact key order are in the schema.
 | Element | Contents |
 |---------|----------|
 | attribute | `type` (ref), `multiplicity`, `default_value` (text), flags `is_static`, `is_ordered`, `is_unique`, `is_read_only`, `is_derived`, `is_derived_union` |
-| operation | `parameters` (ordered), `return_type` (ref), `exceptions` (refs), flags `is_static`, `is_abstract`, `is_query` |
+| operation | `parameters` (ordered), `return_type` (ref), `exceptions` (refs), flags `is_static`, `is_abstract`, `is_query`, `behavior` (ref to an interaction; 1.1) |
 | parameter | `direction` ∈ `in`, `out`, `inout`; `type` (ref), `multiplicity`, `default_value` |
 | association end | `element` (ref, required), `role`, `multiplicity`, `navigability` (boolean), `visibility` |
 
@@ -195,6 +198,10 @@ Rules:
 - In `aggregation` and `composition`, `end1` is the whole (diamond side) and `end2` the part.
 - The lists `attributes`, `operations`, `parameters` and `literals` are **ordered**: their order is the
   presentation order and is not reordered.
+- `behavior` (since 1.1, DEC-020): the interaction that describes the behavior of the operation (UML
+  `Operation.method`); it may be in another model. At most one per operation. It is the class → sequence
+  direction of the relation whose sequence → class direction is `messages[].signature` (§6.5); several operations
+  may share an interaction. In the schema it follows `return_type`.
 
 ### 6.5 Interactions (sequence)
 
@@ -253,6 +260,7 @@ Allowed on every element with an `id`, on the model and on the diagrams; always 
 | `documentation` | Markdown text | description for people and agents; included in lexical search |
 | `code_refs` | list of `{path, symbol?}` | links to the code of the host repository |
 | `external_id` | text | original ID in an external tool (DEC-003) |
+| `links` | set of references (1.1) | elements, models or diagrams this one drills down to (DEC-020) |
 
 `code_refs[].path` is a path relative to the repository root with `/` as separator and no trailing slash;
 it must not start with `/` or `~`, or contain `:`, `\`, control characters, empty segments (`//`) or
@@ -261,13 +269,21 @@ with the code `CODE_REF_INVALID` instead of `SCHEMA_VIOLATION`. If the path does
 `CODE_REF_MISSING` is emitted (it does not block: code evolves separately). `symbol` is optional and free
 (name of a class, function, etc.).
 
+`links` (since 1.1, DEC-020) is a set of references `{"idref": ...}` without duplicates (`SCHEMA_VIOLATION`)
+whose target may be **any element, model or diagram** of `knowledge/`, in this or another model file: "see also /
+drills down to" (e.g. a lifeline or a fragment linked to the diagram of a sub-flow, a class linked to the model
+that details it). It adds no UML semantics; prefer `behavior` (§6.4) for the behavior of an operation. A link to
+the element, model or diagram that carries it is `LINK_SELF` (§10.3); links to its own model or diagram, or
+between elements of the same file, are valid, and so are cycles between flows. In the schema it follows
+`external_id`. Not allowed on the manifest or on layouts.
+
 ### 7.2 Layout
 
 UMJ does not define layout; ai-submind stores it separately (§8) so that moving a node does not pollute the model.
 
 ## 8. Layout (`layout/<diagram-id>.json`)
 
-Schema: [`layout.schema.json`](schema/1.0/layout.schema.json).
+Schema: [`layout.schema.json`](schema/1.1/layout.schema.json).
 
 | Key | Contents |
 |-----|----------|
@@ -309,9 +325,10 @@ no differences.
 4. **Ordered** arrays (significant order, preserved): `attributes`, `operations`, `parameters`,
    `literals`, `lifelines`, `fragments`, `operands`, `arguments`, `exceptions`, `vertices`.
 5. **Set** arrays (sorted): collections of `elements`, `diagrams`, `messages`, `executions` and the reference lists
-   `members`, `covered` and diagram `elements` by `id`/`idref` in code point order;
+   `members`, `covered`, `links` and diagram `elements` by `id`/`idref` in code point order;
    `stereotypes` and `tags` by value; `code_refs` by `path` and then `symbol` (without `symbol` comes first).
    "Code point order" compares strings by UTF-16 code units, like the ECMAScript `<` operator.
+   Single references (e.g. `behavior`, `return_type`) are not arrays: written on one line as any reference.
 6. Numbers: integers without fractional part or exponent.
 7. Text: the escaping of ECMAScript `JSON.stringify`: `\"`, `\\`, `\b`, `\f`, `\n`, `\r`, `\t`; the
    other control characters U+0000–U+001F as `\u00xx` with lowercase hexadecimal; lone
@@ -355,6 +372,8 @@ Rules between phases:
 | `messages[].signature` | operation |
 | `covered` (any fragment, execution) | lifeline of the same interaction |
 | `interaction_use.interaction` | interaction other than the one containing it |
+| `operations[].behavior` (1.1) | interaction (any model) |
+| `links[]` (1.1, any carrier) | any element, model or diagram other than the carrier (§10.3) |
 | `diagrams[].elements` | according to `kind` (§6.6) |
 | layout `diagram` | diagram |
 
@@ -369,6 +388,7 @@ Rules between phases:
   after `finish` in temporal order (`EXECUTION_ORDER`). Both are checked only when `start` and `finish` are
   occurrences of the same interaction (otherwise §10.2 applies).
 - Multiplicity with `n ≤ m` (`MULTIPLICITY_INVALID`).
+- A `links` entry must not point to the element, model or diagram that carries it (`LINK_SELF`).
 
 ### 10.4 Codes
 
@@ -398,6 +418,7 @@ and, in phase 4, `subjects`: the IDs the finding is about (empty when it is not 
 | `EXECUTION_COVERAGE` | error | 4 | `start` or `finish` of an execution does not cover its `covered` lifeline |
 | `EXECUTION_ORDER` | error | 4 | an execution finishes before it starts in temporal order |
 | `MULTIPLICITY_INVALID` | error | 4 | lower bound greater than the upper bound |
+| `LINK_SELF` | error | 4 | a `links` entry points to its own carrier (1.1) |
 | `CODE_REF_INVALID` | error | 3 | `code_refs` path that is absolute or contains `..` / `\` |
 | `CODE_REF_MISSING` | warning | 4 | nonexistent `code_refs` path |
 | `LAYOUT_ORPHAN` | warning | 4 | layout entry for an element not shown |
@@ -405,16 +426,21 @@ and, in phase 4, `subjects`: the IDs the finding is about (empty when it is not 
 Operation codes (API, not validation): `AMBIGUOUS_ID` (query or write on a duplicated `id`, or a
 write that adds a reference to it),
 `RENAME_COLLISION` and `RENAME_BLOCKED` (§3.2), `CREATE_BLOCKED` (a write that adds IDs while a document is
-not loaded as writable, which may already hold them).
+not loaded as writable, which may already hold them), `MIGRATION_REQUIRED` (a write that would add a key of a later
+version, e.g. `behavior` or `links`, to a 1.0 document, or change the `format_version` of an existing document; the
+message names `migrate`) and `MIGRATE_BLOCKED` (§11).
 
 ## 11. Versioning
 
-- Each file declares `format_version` = `MAJOR.MINOR`. This specification defines `1.0`.
+- Each file declares `format_version` = `MAJOR.MINOR`. This specification defines `1.1` (current) and keeps
+  `1.0` as an earlier supported version.
 - A **minor** change only adds optional keys or values; a **major** change may break.
 - Version equal to the supported one → normal load.
-- Earlier supported version → load with warning `FORMAT_VERSION_OUTDATED`; it is only updated through an
-  explicit migration (never when writing for another reason).
-- Earlier version that is not supported (no schema or migration; in 1.0, every `0.x` version) → treated
+- Earlier supported version → load with warning `FORMAT_VERSION_OUTDATED`; the document is validated with the
+  schema of its own version and stays writable within that version: writes keep its `format_version` and may not
+  add keys of a later version (`MIGRATION_REQUIRED`). Its version only changes through the explicit migration
+  (never when writing for another reason).
+- Earlier version that is not supported (no schema or migration; in 1.1, every `0.x` version) → treated
   as a later version.
 - Version later than the supported one (major or minor) → `FORMAT_VERSION_UNSUPPORTED`: the document is always
   loaded **read-only** with **tolerant reading**: it is interpreted with the schema of the highest supported
@@ -422,13 +448,28 @@ not loaded as writable, which may already hold them).
   without a valid `id` or without the minimal recognizable shape are dropped from queries. Every write to the
   document is rejected, as are the operations that would have to modify it (e.g. `rename`).
 - The documents of `knowledge/` may have different versions from one another; each one is evaluated separately.
-- Migrations (planned, DEC-010): each version change ships a guide `migrations/<from>-to-<to>/` for agents and
-  people, with a before/after example; the explicit `migrate` operation is the only write allowed on a document
-  whose version is not writable.
+- The engine creates new documents (models, layouts, manifest) with the current version; an explicit `put` of a
+  whole document and `rename` keep the version the document declares.
+- Migrations (DEC-010): each version change ships a guide `migrations/<from>-to-<to>/` for agents and
+  people, with a before/after example; the explicit `migrate` operation is the only write that changes the
+  `format_version` of an existing document, and the only write allowed on a document whose version is not writable.
+
+### 11.1 Version 1.1 and `migrate` 1.0 → 1.1
+
+- 1.1 is a minor change (DEC-020): it only adds the optional keys `behavior` (§6.4) and `links` (§7.1), the semantic
+  rule `LINK_SELF` and the reference types of §10.2. Every valid 1.0 document is valid 1.1 once its
+  `format_version` is changed. A 1.0 reader (ai-submind 0.1.x) opens 1.1 documents read-only with tolerant reading.
+- `migrate` (engine, MCP and CLI) rewrites `format_version` from `1.0` to `1.1` in every 1.0 document of
+  `knowledge/` (models, layouts and manifest), in canonical form, and changes nothing else. The batch is validated
+  as a whole and written sequentially; re-running it is idempotent (no 1.0 document → nothing written). It supports
+  `dryRun`, which reports the documents that would change. Documents of any other version are left untouched.
+- If a 1.0 document is not loaded (an error of phase 1 or 3), `migrate` fails with `MIGRATE_BLOCKED` and writes
+  nothing: fix or restore the document first. Phase 4 findings do not block (the migration does not change them).
+- Guide: [`migrations/1.0-to-1.1/`](migrations/1.0-to-1.1/README.md).
 
 ## 12. Differences from UMJ
 
-| UMJ | ai-submind 1.0 | Reason |
+| UMJ | ai-submind 1.1 | Reason |
 |-----|----------------|--------|
 | A single document with the model | one file per model + manifest + separate layout | diffs and merges in Git (DEC-002) |
 | Arbitrary IDs from the source tool | readable, global IDs with deterministic derivation; the original goes to `external_id` | readability and queries (DEC-003) |
@@ -448,8 +489,11 @@ not loaded as writable, which may already hold them).
 | No multiplicity or default value on attributes/parameters | `multiplicity`, `default_value` | needed for useful classes |
 | No layout | `layout/<diagram-id>.json` | requirement of the viewer (REQ-010) |
 | Aggregation without an explicit side | `end1` = whole | unambiguous semantics |
+| No reference from an operation to the interaction that describes it (UML: `Operation.method`) | `behavior` on operations (1.1) | class → sequence navigation, typed (DEC-020) |
+| No references to a whole model or diagram | `links` extension on every element with `id`, model and diagram (1.1) | flows of flows across files (DEC-020) |
 
 ## 13. Examples
 
 [`examples/`](examples/README.md) (source repository only; not shipped in the npm package): a complete valid `knowledge/` (garage: every construct) and
-invalid cases with the expected code.
+invalid cases with the expected code. Migration guides with their own before/after examples:
+[`migrations/`](migrations/1.0-to-1.1/README.md).

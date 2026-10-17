@@ -16,14 +16,14 @@ test_code:
   - test/format/rules.test.ts
 relations:
   tests: []
-  decisions: []
+  decisions: [DEC-020]
 uncertainties: []
 ---
 
 # VAL-003 · idref referential integrity
 
 ## Rule
-Every `idref` points to an existing id of a compatible type (e.g. generalization ends → class; realization supplier → interface; message events → occurrence specification; `covered` → lifeline; class diagram → elements allowed by its `kind`).
+Every `idref` points to an existing id of a compatible type (e.g. generalization ends → class; realization supplier → interface; message events → occurrence specification; `covered` → lifeline; class diagram → elements allowed by its `kind`; 1.1: operation `behavior` → interaction, `links` → any element, model or diagram other than its carrier, else `LINK_SELF`).
 
 Since IDs are global (DEC-003), a reference to another model is a plain `idref`.
 
@@ -39,5 +39,7 @@ Severity error; broken references are reported without blocking the loading of t
 |-------|--------|
 | Generalization towards a non-existent id | error |
 | `covered` pointing to a class | error |
+| `behavior` pointing to a class | REF_TYPE_MISMATCH |
+| `links` entry pointing to its own carrier | LINK_SELF |
 
 Source: REP-003 Annex A, adjusted to DEC-001..DEC-007. Exact grammar and codes: format spec (API-004, §10).

@@ -1,0 +1,6 @@
+{
+  "description": "A links entry (1.1) points to the element that carries it",
+  "codes": [
+    "LINK_SELF"
+  ]
+}

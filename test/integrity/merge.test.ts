@@ -255,7 +255,7 @@ describe("post-merge integrity with real git merges", () => {
         writeFile(
           join(dir, "knowledge", "models", "billing.json"),
           serialize("model", {
-            format_version: "1.0",
+            format_version: "1.1",
             id: "billing",
             name: "Billing",
             elements: { primitive_types: [money] },

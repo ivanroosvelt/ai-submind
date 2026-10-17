@@ -8,6 +8,7 @@ import {
   pickBranch,
   rootLocation,
   schemas,
+  schemaVersion,
   type SchemaLocation,
   type SchemaSet,
 } from "./schema.js";
@@ -32,6 +33,7 @@ const SET_KEYS = new Set([
   "executions",
   "members",
   "covered",
+  "links",
   "elements",
   "stereotypes",
   "tags",
@@ -120,7 +122,7 @@ export function canonicalize(
   data: unknown,
   set: SchemaSet = schemas(),
 ): unknown {
-  return canon(set, data, rootLocation(kind), undefined);
+  return canon(set, data, rootLocation(kind, schemaVersion(data)), undefined);
 }
 
 function emit(v: Json, indent: string): string {

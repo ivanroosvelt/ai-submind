@@ -1,6 +1,7 @@
-// Types of the knowledge/ documents (format 1.0). The canonical structure is the JSON Schema in
-// spec/format/schema/1.0/; these types mirror it for code and only describe documents that already passed
-// schema validation. `null` values accepted by the reader are typed as optional.
+// Types of the knowledge/ documents (format 1.1; 1.0 is the same minus `behavior` and `links`). The
+// canonical structure is the JSON Schema in spec/format/schema/<version>/; these types mirror it for code
+// and only describe documents that already passed schema validation. `null` values accepted by the
+// reader are typed as optional.
 
 export interface Ref {
   idref: string;
@@ -20,6 +21,8 @@ export interface Extensions {
   documentation?: string | null;
   code_refs?: CodeRef[];
   external_id?: string | null;
+  /** Format 1.1 (DEC-020): elements, models or diagrams this one drills down to. */
+  links?: Ref[];
 }
 
 export interface Identified extends Extensions {
@@ -58,6 +61,8 @@ export interface Operation extends Identified {
   name: string;
   visibility: Visibility;
   return_type?: Ref | null;
+  /** Format 1.1 (DEC-020): the interaction that describes the operation. */
+  behavior?: Ref | null;
   is_static?: boolean | null;
   is_abstract?: boolean | null;
   is_query?: boolean | null;

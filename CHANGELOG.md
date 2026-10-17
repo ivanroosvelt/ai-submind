@@ -3,6 +3,17 @@
 All notable changes to `ai-submind` are recorded here. Versions follow semver; while in 0.x the knowledge
 format may change only as described in [spec/format/README.md](spec/format/README.md) §11.
 
+## Unreleased
+
+- Knowledge format 1.1 (minor): operation `behavior` (reference to the interaction that implements it) and a
+  `links` extension on every element with an id, the model and diagrams (references to any element, model or
+  diagram); new semantic rule `LINK_SELF`. Format 1.0 stays supported (loads with `FORMAT_VERSION_OUTDATED`).
+- `migrate` 1.0 → 1.1 as an MCP tool and a CLI command (`ai-submind migrate [--dry-run]`), with a migration
+  guide in `spec/format/migrations/1.0-to-1.1/`. The CLI `migrate` and `init` refuse to run while the daemon is
+  running.
+- Queries: new relation group `links`; `behavior` belongs to the `sequence` group.
+- Web UI: drill-down between diagrams; elements with a target show ↗ and open it by double click.
+
 ## 0.1.1 — 2026-10-16
 
 - README: quick start with `npx ai-submind` and the release process.

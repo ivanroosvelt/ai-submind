@@ -8,6 +8,7 @@ export {
   type DocumentInfo,
   type EngineOptions,
   type EngineStatus,
+  type MigrateResult,
   type BatchOperation,
   type RenameResult,
   type TransactionResult,

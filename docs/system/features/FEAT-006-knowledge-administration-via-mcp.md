@@ -21,7 +21,7 @@ relations:
   interfaces: [API-001]
   integrations: []
   depends_on: [FEAT-001, FEAT-002]
-  decisions: [DEC-015, DEC-016]
+  decisions: [DEC-015, DEC-016, DEC-020]
 uncertainties:
   - "IDs of message occurrences are not derived from their message (`<message>.send`): an occurrence created without `id` gets `<interaction>.occ`; agents pass explicit IDs for them."
 ---
@@ -33,11 +33,12 @@ Administration tools of the MCP server (API-001) over the engine; the only ways 
 Element-level edits live in the engine (`src/engine/edit.ts`): create with derived IDs (also for inline children),
 merge-patch update, delete with optional cascade (DEC-016), diagram membership, atomic batches of them, implicit
 init and dry run (DEC-015). Every edit is planned on working copies and committed as one engine transaction whose
-batch is built inside the transaction, after pending external changes are loaded. Input keys `__proto__`,
+batch is built inside the transaction, after pending external changes are loaded. Flows of flows (REQ-041, DEC-020): `behavior` and `links` travel inside `data`/`patch`, which the
+create/update/batch tool descriptions explain; `relations` accepts the group `links`. Input keys `__proto__`,
 `constructor` and `prototype` are rejected (INVALID_ARGUMENT) before anything is copied.
 
 ## Behavior
-REQ-021, REQ-023..027, REQ-039.
+REQ-021, REQ-023..027, REQ-039, REQ-041.
 
 ## States and transitions
 No states of its own.

@@ -1,4 +1,4 @@
-// Subcommands of the `ai-submind` CLI (API-003, REQ-001, REQ-002, REQ-037, DEC-014). Logs go to stderr:
+// Subcommands of the `ai-submind` CLI (API-003, REQ-001, REQ-002, REQ-037, REQ-043, DEC-014). Logs go to stderr:
 // stdout is reserved for command output (and for the stdio MCP proxy).
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
@@ -8,6 +8,7 @@ import { parseArgs } from "node:util";
 import { MANIFEST } from "../engine/edit.js";
 import { Engine } from "../engine/engine.js";
 import { validateKnowledgeDir } from "../format/knowledge.js";
+import { SUPPORTED_VERSION } from "../format/schema.js";
 import { ensureLocalDir, resolveProject, type Project } from "../daemon/project.js";
 import { isAlive, liveRuntime, readRuntime, releaseLock, request } from "../daemon/runtime.js";
 import { startDaemon } from "../daemon/server.js";
@@ -21,6 +22,7 @@ commands:
   stop       stop the daemon                       [--knowledge <dir>]
   init       create knowledge/ with its manifest   [--knowledge <dir>]
   validate   validate knowledge/ (exit 1 on error) [--knowledge <dir>]
+  migrate    upgrade format 1.0 documents to the current format [--knowledge <dir>] [--dry-run]
   mcp        stdio MCP server for agents, proxied to the daemon (started if needed) [--knowledge <dir>]
 `;
 
@@ -108,6 +110,17 @@ async function stop(project: Project): Promise<number> {
   return 1;
 }
 
+/**
+ * Init and migrate run their own engine, and Engine.open cleans .ai-submind/tmp under a running daemon's
+ * writes: refuse while one is alive (`instead` says what to do). True when refused.
+ */
+async function refuseUnderDaemon(project: Project, instead: string): Promise<boolean> {
+  const runtime = await liveRuntime(project);
+  if (runtime === undefined) return false;
+  log(`ai-submind: the daemon is running (pid ${String(runtime.pid)}); ${instead}`);
+  return true;
+}
+
 async function init(project: Project): Promise<number> {
   await mkdir(project.knowledge, { recursive: true });
   await ensureLocalDir(project);
@@ -115,13 +128,30 @@ async function init(project: Project): Promise<number> {
     out(`${join(project.knowledge, "ai-submind.json")} already exists; nothing overwritten`);
     return 0;
   }
-  // ponytail: Engine.open cleans .ai-submind/tmp, which could race a running daemon's write; route init
-  // through the daemon if that ever matters.
+  if (
+    await refuseUnderDaemon(
+      project,
+      "stop it first (`ai-submind stop`), or let its first MCP write create knowledge/",
+    )
+  )
+    return 1;
   const engine = await Engine.open(project.knowledge);
   await engine.transact([
     { op: "put", path: "ai-submind.json", data: MANIFEST, expectedRevision: null },
   ]);
   out(`initialized ${project.knowledge}`);
+  return 0;
+}
+
+async function migrate(project: Project, dryRun: boolean): Promise<number> {
+  if (await refuseUnderDaemon(project, "use the MCP `migrate` tool or stop it (`ai-submind stop`)"))
+    return 1;
+  const engine = await Engine.open(project.knowledge);
+  const { migrated } = await engine.migrate({ dryRun });
+  for (const path of migrated) out(path);
+  log(
+    `${dryRun ? "would migrate" : "migrated"} ${String(migrated.length)} documents to format ${SUPPORTED_VERSION} (${project.knowledge})`,
+  );
   return 0;
 }
 
@@ -160,7 +190,7 @@ export async function run(argv: string[]): Promise<number> {
     return 0;
   }
   try {
-    if (!["serve", "status", "stop", "init", "validate", "mcp"].includes(command)) {
+    if (!["serve", "status", "stop", "init", "validate", "migrate", "mcp"].includes(command)) {
       throw new UsageError(`unknown command: ${command}`);
     }
     const { values } = parseArgs({
@@ -169,8 +199,9 @@ export async function run(argv: string[]): Promise<number> {
       options: {
         knowledge: { type: "string" },
         ...(command === "serve" && { port: { type: "string" }, idle: { type: "string" } }),
+        ...(command === "migrate" && { "dry-run": { type: "boolean" } }),
       },
-    }) as { values: { knowledge?: string; port?: string; idle?: string } };
+    }) as { values: { knowledge?: string; port?: string; idle?: string; "dry-run"?: boolean } };
     const port = integer("port", values.port);
     const idle = integer("idle", values.idle);
     const project = await resolveProject(process.cwd(), values.knowledge);
@@ -183,6 +214,8 @@ export async function run(argv: string[]): Promise<number> {
         return await stop(project);
       case "init":
         return await init(project);
+      case "migrate":
+        return await migrate(project, values["dry-run"] === true);
       case "mcp":
         return await proxy(project);
       default:

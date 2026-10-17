@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-submind:format:1.1:defs",
+  "title": "ai-submind 1.1 · common definitions",
+  "$defs": {
+    "formatVersion": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "fileId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "elementId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!.*\\.\\.)[\\p{L}\\p{N}_$]([\\p{L}\\p{N}_$().-]*[\\p{L}\\p{N}_$)])?$"
+    },
+    "ref": {
+      "type": "object",
+      "required": [
+        "idref"
+      ],
+      "properties": {
+        "idref": {
+          "$ref": "#/$defs/elementId"
+        }
+      },
+      "additionalProperties": false
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "visibility": {
+      "enum": [
+        "public",
+        "private",
+        "protected",
+        "package"
+      ]
+    },
+    "flag": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "optText": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "optRef": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "multiplicity": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^(\\*|(0|[1-9][0-9]*)(\\.\\.((0|[1-9][0-9]*)|\\*))?)$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^\\S(.*\\S)?$"
+    },
+    "stereotypes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/label"
+      },
+      "uniqueItems": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/label"
+      },
+      "uniqueItems": true
+    },
+    "documentation": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "codeRef": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?![/~])(?!.*[:\\\\\\u0000-\\u001f])(?!.*//)(?!.*/$)(?!(.*/)?\\.{1,2}(/|$)).+$"
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "codeRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/codeRef"
+      },
+      "uniqueItems": true
+    },
+    "externalId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ref"
+      },
+      "uniqueItems": true
+    },
+    "integer": {
+      "type": "integer",
+      "minimum": -10000000,
+      "maximum": 10000000
+    },
+    "size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000000
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9a-f]{6}$"
+    }
+  }
+}

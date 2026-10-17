@@ -184,7 +184,7 @@ describe("create and update (REQ-021, REQ-023)", () => {
     expect(real).toMatchObject({ dryRun: false, initialized: true });
     expect(real.diff).toEqual(dry.diff);
     expect(real.revisions).toEqual(dry.revisions);
-    expect(await json("ai-submind.json")).toEqual({ format_version: "1.0" });
+    expect(await json("ai-submind.json")).toEqual({ format_version: "1.1" });
     expect((await edit(e, [{ op: "update", id: "m", patch: { name: "N" } }])).initialized).toBe(
       false,
     );
@@ -359,7 +359,8 @@ describe("delete, cascade and diagrams (REQ-024, REQ-025, DEC-016)", () => {
 
   it("deleting a diagram deletes its layout; deleting a model deletes its file", async () => {
     const e = await open();
-    const r = await edit(e, [{ op: "delete", id: "rent-car" }]);
+    // rent-car is a link target in the corpus (DEC-020): cascade removes those links.
+    const r = await edit(e, [{ op: "delete", id: "rent-car", cascade: true }]);
     expect(r.revisions["layout/rent-car.json"]).toBeNull();
     expect(e.revision("layout/rent-car.json")).toBeNull();
     const m = await edit(e, [{ op: "create", type: "model", data: { name: "Tmp" } }]);
@@ -379,6 +380,90 @@ describe("delete, cascade and diagrams (REQ-024, REQ-025, DEC-016)", () => {
       "VALIDATION_FAILED",
     );
     expect(err.details.findings?.map((f) => f.code)).toEqual(["DIAGRAM_ELEMENT_NOT_ALLOWED"]);
+  });
+});
+
+describe("behavior and links (REQ-041, DEC-020)", () => {
+  it("create and update set behavior and links on elements, models and diagrams", async () => {
+    const e = await open();
+    const r = await edit(e, [
+      {
+        op: "create",
+        type: "operation",
+        parent: "Garage",
+        data: {
+          name: "refuel",
+          visibility: "public",
+          behavior: { idref: "CheckFuel" },
+          links: [{ idref: "check-fuel" }],
+        },
+      },
+      { op: "update", id: "types", patch: { links: [{ idref: "overview" }, { idref: "garage" }] } },
+      { op: "update", id: "check-fuel", patch: { links: [{ idref: "rent-car" }] } },
+      { op: "update", id: "Car", patch: { links: [{ idref: "RentCar" }] } },
+    ]);
+    expect(r.created).toEqual(["Garage.refuel()"]);
+    expect(node(e, "Garage.refuel()")).toMatchObject({
+      behavior: { idref: "CheckFuel" },
+      links: [{ idref: "check-fuel" }],
+    });
+    // A set: written sorted by idref.
+    expect((await json<Model>("models/types.json")).links).toEqual([
+      { idref: "garage" },
+      { idref: "overview" },
+    ]);
+    expect(node(e, "check-fuel").links).toEqual([{ idref: "rent-car" }]);
+    expect(node(e, "Car").links).toEqual([{ idref: "RentCar" }]);
+    expect(e.status().findings).toEqual([]);
+    await rejects(
+      edit(e, [{ op: "update", id: "Car.start()", patch: { behavior: { idref: "Car" } } }]),
+      "VALIDATION_FAILED",
+    );
+  });
+
+  it("without cascade, a behavior or links target is REFERENCED", async () => {
+    const e = await open();
+    const fuel = await rejects(edit(e, [{ op: "delete", id: "check-fuel" }]), "REFERENCED");
+    expect(fuel.details.references).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ source: "RentCar.car", idref: "check-fuel" }),
+        expect.objectContaining({ source: "overview", idref: "check-fuel" }),
+      ]),
+    );
+    const rent = await rejects(edit(e, [{ op: "delete", id: "Garage.rent()" }]), "REFERENCED");
+    expect(rent.details.references).toContainEqual(
+      expect.objectContaining({ source: "overview", idref: "Garage.rent()" }),
+    );
+  });
+
+  it("cascade unsets behavior and removes only the deleted entry from links", async () => {
+    const e = await open();
+    const r = await edit(e, [{ op: "delete", id: "RentCar", cascade: true }]);
+    expect(node(e, "Garage.rent()")).not.toHaveProperty("behavior");
+    expect(r.affected).toContainEqual(
+      expect.objectContaining({ action: "unset", id: "Garage.rent()" }),
+    );
+    const d = await edit(e, [{ op: "delete", id: "check-fuel", cascade: true }]);
+    expect(node(e, "overview").links).toEqual([{ idref: "Garage.rent()" }]);
+    expect(d.affected).toContainEqual(
+      expect.objectContaining({ action: "removed_ref", id: "overview" }),
+    );
+    expect(e.status().findings.filter((f) => f.severity === "error")).toEqual([]);
+  });
+
+  it("deleting a whole model removes the links to it", async () => {
+    const e = await open();
+    const r = await edit(e, [{ op: "delete", id: "types", cascade: true }]);
+    expect(r.revisions["models/types.json"]).toBeNull();
+    // An empty set is not written (canonical form).
+    expect(await json<Model>("models/garage.json")).not.toHaveProperty("links");
+    expect(r.affected).toContainEqual({
+      action: "removed_ref",
+      file: "models/garage.json",
+      pointer: "/links/0",
+      id: "garage",
+    });
+    expect(e.status().findings.filter((f) => f.severity === "error")).toEqual([]);
   });
 });
 
@@ -446,7 +531,7 @@ describe("duplicated IDs (REQ-035, DEC-016)", () => {
     await writeFile(
       join(root, "models", "billing.json"),
       serialize("model", {
-        format_version: "1.0",
+        format_version: "1.1",
         id: "billing",
         name: "Billing",
         elements: { primitive_types: [money] },

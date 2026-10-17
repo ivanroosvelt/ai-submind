@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { serialize, type Model } from "../../src/format/index.js";
-import { Engine } from "../../src/engine/index.js";
+import { edit, Engine } from "../../src/engine/index.js";
 import {
   createQuery,
   LexicalIndex,
@@ -296,6 +296,44 @@ describe("queries over the garage corpus", () => {
     ]);
   });
 
+  it("groups behavior with sequence and links on their own, also for models and diagrams (DEC-020)", () => {
+    const rel = (id: string, args: Parameters<Query["relations"]>[1]): string[][] =>
+      q
+        .relations(id, args)
+        .data.items.map((r) => [r.direction === "in" ? r.from : r.to, r.kind, r.key ?? ""]);
+    expect(rel("RentCar", { direction: "in", groups: ["sequence"] })).toEqual([
+      ["Garage.rent()", "reference", "behavior"],
+    ]);
+    expect(rel("check-fuel", { direction: "in", groups: ["links"] })).toEqual([
+      ["Mechanic.repair()", "reference", "links"],
+      ["RentCar.car", "reference", "links"],
+      ["overview", "reference", "links"],
+    ]);
+    expect(rel("garage", { direction: "out", groups: ["links"] })).toEqual([
+      ["types", "reference", "links"],
+    ]);
+    expect(rel("overview", { direction: "out", groups: ["links"] })).toEqual([
+      ["Garage.rent()", "reference", "links"],
+      ["check-fuel", "reference", "links"],
+    ]);
+    expect(rel("RentCar.car", { direction: "out", groups: ["sequence"] })).toEqual([
+      ["Car", "reference", "represents"],
+    ]);
+  });
+
+  it("impact and paths follow behavior and links to and from models and diagrams", () => {
+    const dependents = (id: string): string[] =>
+      q.impact(id, { maxDepth: 1 }).data.items.map((x) => x.id);
+    expect(dependents("RentCar")).toContain("Garage.rent()");
+    expect(dependents("check-fuel")).toEqual(expect.arrayContaining(["RentCar.car", "overview"]));
+    expect(dependents("types")).toContain("garage");
+    const one = (from: string, to: string): GraphPath | undefined =>
+      q.paths(from, to, { directed: true }).data.paths[0];
+    expect(one("Garage.rent()", "RentCar")?.edges.map((e) => e.key)).toEqual(["behavior"]);
+    expect(one("RentCar.car", "check-fuel")?.edges.map((e) => e.key)).toEqual(["links"]);
+    expect(one("garage", "types")?.edges.map((e) => e.key)).toEqual(["links"]);
+  });
+
   it("computes impact with kinds, depth and the files involved", () => {
     const refs = q.impact("Integer", { kinds: ["reference"] }).data;
     expect(refs.items.map((x) => [x.id, x.depth])).toEqual([
@@ -313,7 +351,10 @@ describe("queries over the garage corpus", () => {
       ["overview", 1],
       ["types", 1],
       ["Car", 2],
+      ["CheckFuel.garage", 2],
+      ["Contract", 2],
       ["Engine", 2],
+      ["RentCar.start.receive.exec", 2],
       ["garage", 2],
     ]);
     expect(two.files).toEqual(["layout/overview.json", "models/garage.json", "models/types.json"]);
@@ -323,7 +364,15 @@ describe("queries over the garage corpus", () => {
     const fuel = (maxDepth: number): string[] =>
       q.impact("FuelType", { maxDepth }).data.items.map((x) => x.id);
     expect(fuel(1)).toEqual(["Car.fuel", "Fleet", "garage", "overview"]);
-    expect(fuel(2)).toEqual(["Car.fuel", "Fleet", "garage", "overview", "Car"]);
+    expect(fuel(2)).toEqual([
+      "Car.fuel",
+      "Fleet",
+      "garage",
+      "overview",
+      "Car",
+      "CheckFuel.garage",
+      "RentCar.start.receive.exec",
+    ]);
     const car = q.impact("FuelType", { maxDepth: 2 }).data.items.find((x) => x.id === "Car");
     expect(car?.via).toMatchObject({ kind: "owns", from: "Car", to: "Car.fuel" });
 
@@ -459,7 +508,7 @@ describe("queries over a modified corpus", () => {
       types.elements = { primitive_types: [{ bogus: true } as never, ...prims] };
       await writeFile(
         join(root, "models/types.json"),
-        JSON.stringify({ ...types, format_version: "1.1" }),
+        JSON.stringify({ ...types, format_version: "1.2" }),
       );
     });
     const r = q.get("Boolean");
@@ -503,6 +552,69 @@ describe("queries over a modified corpus", () => {
     await engine.reload();
     expect(q.search("motor").data.items.map((h) => h.id)).toEqual(["Auto"]);
     expect(facade()).toEqual(fresh());
+  });
+
+  it("terminates on cycles between flows (behavior, interaction_use and links)", async () => {
+    const { engine, q } = await setup();
+    // RentCar uses CheckFuel (interaction_use); CheckFuel now drills back to RentCar.
+    await edit(engine, [
+      { op: "update", id: "CheckFuel", patch: { links: [{ idref: "RentCar" }] } },
+      { op: "update", id: "Mechanic--uses--Engine", patch: { links: [{ idref: "RentCar" }] } },
+    ]);
+    // A link carried by a relation element is in the links group only, not in its relation's group.
+    const dep = (groups: Parameters<Query["relations"]>[1]): string[] =>
+      q.relations("Mechanic--uses--Engine", groups).data.items.map((r) => r.to);
+    expect(dep({ direction: "out", groups: ["dependency"] })).not.toContain("RentCar");
+    expect(dep({ direction: "out", groups: ["links"] })).toEqual(["RentCar"]);
+    const all = q.impact("RentCar", { direction: "both" }).data;
+    const seen = all.items.map((x) => x.id);
+    expect(seen).toEqual(expect.arrayContaining(["CheckFuel", "Garage.rent()"]));
+    expect(new Set(seen).size).toBe(seen.length);
+    expect(all.truncated).toBe(false);
+    const route1 = (from: string, to: string): string[] =>
+      q.paths(from, to, { directed: true }).data.paths.map(route);
+    expect(route1("CheckFuel", "RentCar")).toEqual(["CheckFuel > RentCar"]);
+    expect(route1("Garage.rent()", "CheckFuel")).toEqual([
+      "Garage.rent() > RentCar > RentCar.ref--CheckFuel > CheckFuel",
+    ]);
+  });
+
+  it("diagram targets: where each shown element drills down to (REQ-042)", async () => {
+    const { engine, q } = await setup();
+    await edit(engine, [
+      {
+        op: "update",
+        id: "CheckFuel.garage",
+        patch: { links: [{ idref: "garage" }, { idref: "types" }] },
+      },
+      { op: "update", id: "Engine.power", patch: { links: [{ idref: "check-fuel" }] } },
+    ]);
+    const targets = (id: string) => q.diagram(id).data.targets;
+    // Class diagram: the diagram's own links; a classifier gets the behaviors of its operations.
+    const overview = targets("overview");
+    expect(overview.overview).toEqual([
+      { id: "Garage.rent()", kind: "element" },
+      { id: "check-fuel", kind: "diagram" },
+    ]);
+    expect(overview.Garage).toEqual([{ id: "RentCar", kind: "element" }]);
+    expect(overview["Garage.rent()"]).toEqual([{ id: "RentCar", kind: "element" }]);
+    expect(overview.Car).toEqual([{ id: "CheckFuel", kind: "element" }]);
+    // A classifier also gets its members' links (the member keeps its own entry).
+    expect(overview.Engine).toEqual([{ id: "check-fuel", kind: "diagram" }]);
+    expect(overview["Engine.power"]).toEqual([{ id: "check-fuel", kind: "diagram" }]);
+    // Sequence diagram: signature → operation → behavior, interaction_use, a lifeline's links. A target
+    // that is the diagram itself or what it shows (RentCar.rent → Garage.rent() → RentCar) is left out.
+    const rent = targets("rent-car");
+    expect(rent["RentCar.canDrive"]).toEqual([{ id: "CheckFuel", kind: "element" }]);
+    expect(rent["RentCar.ref--CheckFuel"]).toEqual([{ id: "CheckFuel", kind: "element" }]);
+    expect(rent["RentCar.car"]).toEqual([{ id: "check-fuel", kind: "diagram" }]);
+    expect(rent).not.toHaveProperty("RentCar.rent");
+    // A model target opens its first diagram (by ID, the tree's order), if it has any.
+    expect(targets("check-fuel")["CheckFuel.garage"]).toEqual([
+      { id: "garage", kind: "model", diagram: "check-fuel" },
+      { id: "types", kind: "model" },
+    ]);
+    expect(q.diagram("check-fuel").data.names.types).toBe("Types");
   });
 
   it("rebuilds the lexical index after a generation gap", async () => {
@@ -550,7 +662,7 @@ describe("path search limits", () => {
         })),
       );
       const model = {
-        format_version: "1.0",
+        format_version: "1.1",
         id: "dense",
         name: "Dense",
         elements: {

@@ -28,7 +28,7 @@ relations:
   interfaces: [API-001]
   integrations: []
   depends_on: [FEAT-002]
-  decisions: [DEC-012, DEC-013]
+  decisions: [DEC-012, DEC-013, DEC-020]
 uncertainties: []
 ---
 
@@ -39,6 +39,10 @@ Read-only queries over the engine (DEC-004) and free-text lexical search (DEC-00
 
 ## Behavior
 REQ-014..019, REQ-038; every result carries the engine generation, the degraded state and the excluded documents (REQ-022). Graph semantics, limits and errors (`NOT_FOUND`, `AMBIGUOUS_ID`, `INVALID_ARGUMENT`): DEC-012. Lexical engine: DEC-013.
+Flows of flows (REQ-041, DEC-020): `behavior` and `links` are `reference` edges (keys `behavior`, `links`);
+`relations` groups `behavior` under `sequence` and `links` under its own group `links`; impact and paths
+traverse them, with models and diagrams as link endpoints (paths still use them as intermediate steps only with
+`throughHubs`).
 
 ## States and transitions
 No states of its own; results in stable order, no effects on disk.

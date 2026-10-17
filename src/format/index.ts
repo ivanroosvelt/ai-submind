@@ -1,4 +1,4 @@
-// Core of knowledge format 1.0 (FEAT-003, API-004): canonical serialization and validation.
+// Core of the knowledge format, 1.1 and 1.0 (FEAT-003, API-004): canonical serialization and validation.
 export { canonicalize, compareCodeUnits, serialize } from "./canonical.js";
 export {
   classifyPath,
@@ -26,7 +26,7 @@ export {
   type KnowledgeFile,
   type KnowledgeReport,
 } from "./knowledge.js";
-export { SUPPORTED_VERSION } from "./schema.js";
+export { SUPPORTED_VERSION, SUPPORTED_VERSIONS } from "./schema.js";
 export {
   checkKnowledge,
   COLLECTIONS,

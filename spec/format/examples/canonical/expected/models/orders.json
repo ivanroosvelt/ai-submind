@@ -1,5 +1,5 @@
 {
-  "format_version": "1.0",
+  "format_version": "1.1",
   "id": "orders",
   "name": "Orders",
   "elements": {
@@ -7,7 +7,11 @@
       {
         "id": "Line",
         "name": "Línea",
-        "visibility": "public"
+        "visibility": "public",
+        "links": [
+          {"idref": "PurchaseOrder"},
+          {"idref": "orders-view"}
+        ]
       },
       {
         "id": "PurchaseOrder",
@@ -28,6 +32,14 @@
             "id": "PurchaseOrder.date",
             "name": "date",
             "visibility": "private"
+          }
+        ],
+        "operations": [
+          {
+            "id": "PurchaseOrder.place()",
+            "name": "place",
+            "visibility": "public",
+            "behavior": {"idref": "Order"}
           }
         ]
       }

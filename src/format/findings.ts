@@ -1,4 +1,4 @@
-// Validation codes of format 1.0 (spec §10.4). Severity and phase are part of the contract.
+// Validation codes of the format (spec §10.4). Severity and phase are part of the contract.
 
 export const VALIDATION_CODES = {
   PATH_OUTSIDE_KNOWLEDGE: "error",
@@ -22,6 +22,7 @@ export const VALIDATION_CODES = {
   EXECUTION_COVERAGE: "error",
   EXECUTION_ORDER: "error",
   MULTIPLICITY_INVALID: "error",
+  LINK_SELF: "error",
   CODE_REF_INVALID: "error",
   CODE_REF_MISSING: "warning",
   LAYOUT_ORPHAN: "warning",

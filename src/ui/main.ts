@@ -1,7 +1,7 @@
 // ai-submind web UI (FEAT-007, FEAT-009, API-002, DEC-017, DEC-018): tree of models and diagrams, class and
 // sequence diagrams drawn with @joint/core and own shapes, zoom/pan, selection with a detail panel and
-// navigation between diagrams, findings panel, layout saved (the only write, REQ-032) and live refresh
-// through SSE. Plain TypeScript and DOM APIs.
+// navigation between diagrams (drill-down to linked flows, REQ-042), findings panel, layout saved (the only
+// write, REQ-032) and live refresh through SSE. Plain TypeScript and DOM APIs.
 import { dia, highlighters, linkTools, shapes } from "@joint/core";
 import type { Finding } from "../format/findings.js";
 import type { Diagram, Layout, LayoutEdge, LayoutNode } from "../format/types.js";
@@ -32,7 +32,18 @@ interface DiagramInfo {
   errors: number;
   warnings: number;
 }
-type View = DiagramInput & { diagram: Diagram; file: string; revision: string };
+/** Drill-down target computed by the server (API-002, REQ-042); `diagram`: a model's first diagram. */
+interface Target {
+  id: string;
+  kind: "element" | "diagram" | "model";
+  diagram?: string;
+}
+type View = DiagramInput & {
+  diagram: Diagram;
+  file: string;
+  revision: string;
+  targets: Record<string, Target[]>;
+};
 
 class ApiError extends Error {
   constructor(
@@ -178,6 +189,11 @@ const cellOf = (id: string): dia.Cell | undefined => graph.getCell(id);
 const nameOf = (id: string): string | undefined =>
   current && Object.hasOwn(current.names, id) ? current.names[id] : undefined;
 
+/** Drill-down targets of `id` in the open diagram (REQ-042). */
+const targetsOf = (id: string): Target[] =>
+  (current && Object.hasOwn(current.targets, id) ? current.targets[id] : undefined) ?? [];
+const linked = (id: string): boolean => targetsOf(id).length > 0;
+
 function render(view: View, first: boolean): void {
   current = view;
   title.textContent = `${view.diagram.name} · ${view.diagram.id}`;
@@ -192,8 +208,8 @@ function render(view: View, first: boolean): void {
   const placed = autoLayout(view, { keep: true });
   rendering = true;
   graph.resetCells([
-    ...g.nodes.map((n) => nodeCell(n, placed.nodes?.[n.id] ?? { x: 0, y: 0 })),
-    ...g.edges.map((e) => linkCell(e, placed.edges?.[e.id])),
+    ...g.nodes.map((n) => nodeCell(n, placed.nodes?.[n.id] ?? { x: 0, y: 0 }, linked(n.id))),
+    ...g.edges.map((e) => linkCell(e, placed.edges?.[e.id], linked(e.id))),
   ]);
   rendering = false;
   if (first) {
@@ -222,13 +238,19 @@ function renderSequence(view: View, first: boolean): void {
   rendering = true;
   graph.resetCells([
     // Combined fragments behind (outline only); interaction uses opaque above lifelines (UML).
-    ...g.fragments.filter((f) => f.type === "combined_fragment").map((f) => fragmentCell(f)),
+    ...g.fragments
+      .filter((f) => f.type === "combined_fragment")
+      .map((f) => fragmentCell(f, linked(f.id))),
     ...g.lifelines.map((l) =>
-      lifelineCell(l, Object.hasOwn(nodes, l.id) ? nodes[l.id]?.style : undefined),
+      lifelineCell(l, Object.hasOwn(nodes, l.id) ? nodes[l.id]?.style : undefined, linked(l.id)),
     ),
-    ...g.executions.map((e) => executionCell(e)),
-    ...g.fragments.filter((f) => f.type === "interaction_use").map((f) => fragmentCell(f)),
-    ...g.messages.map((m) => messageCell(m, Object.hasOwn(edges, m.id) ? edges[m.id] : undefined)),
+    ...g.executions.map((e) => executionCell(e, linked(e.id))),
+    ...g.fragments
+      .filter((f) => f.type === "interaction_use")
+      .map((f) => fragmentCell(f, linked(f.id))),
+    ...g.messages.map((m) =>
+      messageCell(m, Object.hasOwn(edges, m.id) ? edges[m.id] : undefined, linked(m.id)),
+    ),
     ...g.lifelines.filter((l) => !l.destroyed).map((l) => lifelineEndCell(l)),
   ]);
   rendering = false;
@@ -480,6 +502,32 @@ async function reveal(id: string): Promise<void> {
   }
 }
 
+/** Opens target `t` (REQ-042): an element through a diagram that shows it, a diagram, a model's first. */
+function navigate(t: Target): void {
+  if (t.kind === "element") {
+    void reveal(t.id);
+    return;
+  }
+  const diagram = t.kind === "diagram" ? t.id : t.diagram;
+  if (diagram === undefined) notice(`Model ${nameOf(t.id) ?? t.id} has no diagrams.`);
+  else if (diagram !== current?.diagram.id) location.hash = encodeURIComponent(diagram);
+}
+
+/** "Navigates to" section of the detail for `id`, empty without targets. */
+function navSection(id: string): HTMLElement[] {
+  const list = targetsOf(id);
+  if (list.length === 0) return [];
+  const ul = h("ul", undefined, "incoming");
+  for (const t of list) {
+    const b = h("button", `${nameOf(t.id) ?? t.id} · ${t.kind}`, "ref");
+    b.addEventListener("click", () => {
+      navigate(t);
+    });
+    ul.append(h("li", undefined, undefined, b));
+  }
+  return [h("h3", "Navigates to"), ul];
+}
+
 function value(v: unknown): HTMLElement {
   if (v === null) return h("em", "unknown");
   if (Array.isArray(v)) {
@@ -516,7 +564,10 @@ function showDetail(id: string | undefined): void {
   const el =
     id === undefined ? undefined : (current?.elements.find((e) => e.id === id) ?? parts.get(id));
   if (id === undefined || !el) {
-    detail.append(h("p", "Select an element to see its properties.", "hint"));
+    detail.append(
+      h("p", "Select an element to see its properties.", "hint"),
+      ...(current ? navSection(current.diagram.id) : []),
+    );
     return;
   }
   const cell = cellOf(id);
@@ -535,6 +586,7 @@ function showDetail(id: string | undefined): void {
     h("h2", typeof node.name === "string" && node.name !== "" ? node.name : id),
     h("p", `${el.type} · ${id}`, "hint"),
     value(Object.fromEntries(Object.entries(node).filter(([k]) => k !== "id"))),
+    ...navSection(id),
     h("h3", "Referenced by"),
     incoming,
   );
@@ -564,12 +616,11 @@ paper.on("cell:pointerclick", (v: dia.CellView) => {
   const id = String(v.model.id);
   showDetail(id.startsWith("end:") ? id.slice("end:".length) : id);
 });
-// Double click on an interaction use opens the diagram of the interaction it uses.
+// Double click on a marked element (↗) opens its first drill-down target (REQ-042): the flow behind a
+// message or an operation, the interaction an interaction use uses, or the first of its links.
 paper.on("cell:pointerdblclick", (v: dia.CellView) => {
-  const node = parts.get(String(v.model.id))?.node as
-    { interaction?: { idref?: unknown } } | undefined;
-  const used = node?.interaction?.idref;
-  if (typeof used === "string") void reveal(used);
+  const first = targetsOf(String(v.model.id))[0];
+  if (first) navigate(first);
 });
 paper.on("blank:pointerclick", () => {
   showDetail(undefined);

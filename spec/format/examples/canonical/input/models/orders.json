@@ -1,8 +1,8 @@
 {"name": "Orders", "elements": {"interactions": [], "classes": [
-  {"visibility": "public", "operations": [], "name": "PurchaseOrder", "id": "PurchaseOrder", "tags": ["z-tag", "a-tag"], "is_abstract": null,
+  {"visibility": "public", "operations": [{"behavior": {"idref": "Order"}, "name": "place", "id": "PurchaseOrder.place()", "visibility": "public", "return_type": null}], "name": "PurchaseOrder", "id": "PurchaseOrder", "tags": ["z-tag", "a-tag"], "is_abstract": null,
    "attributes": [{"name": "total", "id": "PurchaseOrder.total", "visibility": "private", "is_static": null, "type": {"idref": "Line"}},
                   {"id": "PurchaseOrder.date", "visibility": "private", "name": "date"}]},
-  {"id": "Line", "name": "Línea", "visibility": "public", "documentation": null}],
+  {"id": "Line", "name": "Línea", "visibility": "public", "documentation": null, "links": [{"idref": "orders-view"}, {"idref": "PurchaseOrder"}]}],
  "associations": []},
- "id": "orders", "format_version": "1.0", "diagrams": [
+ "id": "orders", "format_version": "1.1", "diagrams": [
   {"elements": [{"idref": "PurchaseOrder"}, {"idref": "Line"}], "name": "Orders", "kind": "class", "id": "orders-view"}]}

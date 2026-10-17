@@ -1,7 +1,7 @@
 // MCP tools and resources in process (PLAN-002 S8; API-001, DEC-016): tool list and schemas, results as
 // structured content, typed errors, and resources, through the SDK client over an in-memory transport.
 import { fileURLToPath } from "node:url";
-import { cp, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { cp, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
@@ -59,6 +59,7 @@ describe("tools", () => {
         "impact",
         "list_diagrams",
         "list_models",
+        "migrate",
         "paths",
         "relations",
         "rename",
@@ -81,6 +82,7 @@ describe("tools", () => {
         "auto_layout_diagram",
         "delete_element",
         "edit_diagram",
+        "migrate",
         "rename",
         "update_element",
       ].sort(),
@@ -147,6 +149,51 @@ describe("tools", () => {
     expect(batch.structuredContent).toMatchObject({ created: ["Bus"] });
     const ren = await call("rename", { id: "Bus", newId: "Coach" });
     expect(ren.structuredContent).toMatchObject({ renamed: [["Bus", "Coach"]] });
+  });
+
+  it("edits and queries behavior and links (flows of flows, REQ-041)", async () => {
+    const { tools } = await client.listTools();
+    const describes = (name: string): string =>
+      tools.find((t) => t.name === name)?.description ?? "";
+    for (const name of ["create_element", "update_element", "apply_batch"]) {
+      expect(describes(name)).toMatch(/behavior/);
+      expect(describes(name)).toMatch(/links/);
+    }
+    expect(describes("relations")).toMatch(/links/);
+    const u = await call("apply_batch", {
+      operations: [
+        { op: "update", id: "Car.refuel()", patch: { behavior: { idref: "CheckFuel" } } },
+        { op: "update", id: "rent-car", patch: { links: [{ idref: "check-fuel" }] } },
+      ],
+    });
+    expect(u.isError).toBeFalsy();
+    const rel = async (args: Record<string, unknown>): Promise<string[]> =>
+      (
+        (await call("relations", args)).structuredContent as {
+          data: { items: { from: string; key: string }[] };
+        }
+      ).data.items.map((r) => `${r.from}:${r.key}`);
+    expect(await rel({ id: "CheckFuel", direction: "in", groups: ["sequence"] })).toContain(
+      "Car.refuel():behavior",
+    );
+    expect(await rel({ id: "check-fuel", direction: "in", groups: ["links"] })).toEqual([
+      "Mechanic.repair():links",
+      "RentCar.car:links",
+      "overview:links",
+      "rent-car:links",
+    ]);
+  });
+
+  it("migrate upgrades 1.0 documents (REQ-043); dryRun writes nothing", async () => {
+    const path = join(dir, "knowledge", "ai-submind.json");
+    await writeFile(path, '{\n  "format_version": "1.0"\n}\n');
+    await engine.reload();
+    const dry = await call("migrate", { dryRun: true });
+    expect(dry.structuredContent).toMatchObject({ dryRun: true, migrated: ["ai-submind.json"] });
+    expect(await readFile(path, "utf8")).toContain('"1.0"');
+    const r = await call("migrate");
+    expect(r.structuredContent).toMatchObject({ dryRun: false, migrated: ["ai-submind.json"] });
+    expect(await readFile(path, "utf8")).toBe('{\n  "format_version": "1.1"\n}\n');
   });
 });
 
@@ -248,6 +295,9 @@ describe("resources", () => {
       layout: { diagram: { idref: "overview" } },
     });
     expect(await text("ai-submind://diagram/check-fuel")).toMatchObject({ layout: null });
-    expect(await text("ai-submind://schema/defs")).toHaveProperty("$id");
+    expect(await text("ai-submind://schema/defs")).toHaveProperty(
+      "$id",
+      "urn:ai-submind:format:1.1:defs",
+    );
   });
 });

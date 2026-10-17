@@ -1,5 +1,5 @@
 {
-  "format_version": "1.0",
+  "format_version": "1.1",
   "name": "Example garage",
-  "documentation": "Reference example of the ai-submind 1.0 format: covers every class and sequence construct."
+  "documentation": "Reference example of the ai-submind 1.1 format: covers every class and sequence construct, behavior and links."
 }

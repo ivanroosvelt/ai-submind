@@ -63,4 +63,4 @@
 
 ## Next step
 
-PLAN-002 and PLAN-004 (npm publication) are completed (archived). Next: semantic search (FEAT-005, DEC-007).
+PLAN-002, PLAN-004 (npm publication) and PLAN-005 (format 1.1: behavior, links, migrate, drill-down) are completed (archived). Next: semantic search (FEAT-005, DEC-007).

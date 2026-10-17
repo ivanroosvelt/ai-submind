@@ -196,6 +196,66 @@ describe("init", () => {
   });
 });
 
+describe("migrate (REQ-043)", () => {
+  it("--dry-run lists the 1.0 documents; migrate upgrades them; again is a no-op", async () => {
+    const hop = join(REPO, "spec", "format", "migrations", "1.0-to-1.1", "examples");
+    const k = join(dir, "knowledge");
+    await cp(join(hop, "before", "knowledge"), k, { recursive: true });
+    const docs = ["ai-submind.json", "layout/cart.json", "models/shop.json"];
+    const manifest = (): Promise<string> => readFile(join(k, "ai-submind.json"), "utf8");
+    const before = await manifest();
+
+    const dry = await cli("migrate", "--dry-run");
+    expect(dry.code).toBe(0);
+    expect(dry.stdout).toBe(docs.map((d) => `${d}\n`).join(""));
+    expect(dry.stderr).toContain("would migrate 3 documents");
+    expect(await manifest()).toBe(before);
+
+    const r = await cli("migrate");
+    expect(r).toMatchObject({ code: 0, stdout: dry.stdout });
+    for (const d of docs) {
+      expect(await readFile(join(k, d), "utf8")).toBe(
+        await readFile(join(hop, "after", "knowledge", d), "utf8"),
+      );
+    }
+    const again = await cli("migrate");
+    expect(again).toMatchObject({ code: 0, stdout: "" });
+    expect(again.stderr).toContain("migrated 0 documents");
+  });
+
+  it("exits 1 with MIGRATE_BLOCKED and writes nothing while a 1.0 document does not load", async () => {
+    const k = join(dir, "knowledge");
+    await mkdir(join(k, "models"), { recursive: true });
+    await writeFile(join(k, "ai-submind.json"), '{"format_version": "1.0"}');
+    await writeFile(join(k, "models", "m.json"), '{"format_version": "1.0", "id": "m"}');
+    const r = await cli("migrate");
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain("MIGRATE_BLOCKED");
+    expect(await readFile(join(k, "ai-submind.json"), "utf8")).toBe('{"format_version": "1.0"}');
+  });
+});
+
+describe("init and migrate under a running daemon", () => {
+  it("refuse with exit 1 and write nothing (Engine.open would clean the daemon's tmp/)", async () => {
+    const served = serve(dir, "--port", "0");
+    await until(() => existsSync(local("runtime.json")) && served.stderr().includes("?token="));
+    const init = await cli("init");
+    expect(init.code).toBe(1);
+    expect(init.stderr).toMatch(/daemon is running.*stop/);
+    expect(existsSync(join(dir, "knowledge", "ai-submind.json"))).toBe(false);
+
+    const hop = join(REPO, "spec", "format", "migrations", "1.0-to-1.1", "examples");
+    await cp(join(hop, "before", "knowledge"), join(dir, "knowledge"), { recursive: true });
+    const manifest = (): Promise<string> =>
+      readFile(join(dir, "knowledge", "ai-submind.json"), "utf8");
+    const before = await manifest();
+    const r = await cli("migrate");
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/daemon is running.*MCP `migrate` tool.*stop/);
+    expect(await manifest()).toBe(before);
+  }, 30_000);
+});
+
 describe("validate", () => {
   it("exits 0 with a notice without the default knowledge/", async () => {
     const r = await cli("validate");

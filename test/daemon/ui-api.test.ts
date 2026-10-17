@@ -72,7 +72,11 @@ const snapshot = async (): Promise<string[]> => {
   );
 };
 
-type View = DiagramInput & { revision: string; diagram: { id: string; kind: string } };
+type View = DiagramInput & {
+  revision: string;
+  diagram: { id: string; kind: string };
+  targets: Record<string, { id: string; kind: string }[]>;
+};
 
 describe("static UI (DEC-017, NFR-004)", () => {
   it("serves dist/ui behind the token with content types; the ?token= trade is unchanged", async () => {
@@ -139,7 +143,9 @@ describe("read routes (REQ-028, REQ-031, REQ-033)", () => {
     expect(view.names.Integer).toBe("Integer");
     expect(view.layout?.diagram).toEqual({ idref: "overview" });
     expect(view.revision).toMatch(/^[0-9a-f]{64}:[0-9a-f]{64}$/);
-    expect(view.formatVersion).toBe("1.0");
+    expect(view.formatVersion).toBe("1.1");
+    // Drill-down targets computed by the server (REQ-042), also across models.
+    expect(view.targets.Garage).toEqual([{ id: "RentCar", kind: "element" }]);
     expect((await call("/api/diagram?id=nope")).status).toBe(404);
     expect(json(await call("/api/diagram?id=nope"))).toMatchObject({
       error: { code: "NOT_FOUND" },

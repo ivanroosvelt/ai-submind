@@ -10,6 +10,7 @@ tags: [format, data]
 implementation: verified
 code:
   - src/format/types.ts#Elements
+  - spec/format/schema/1.1/model.schema.json
   - spec/format/schema/1.0/model.schema.json
 test_code:
   - test/format/corpus.test.ts
@@ -17,7 +18,7 @@ test_code:
 relations:
   related: []
   validations: [VAL-001, VAL-002, VAL-003, VAL-007]
-  decisions: []
+  decisions: [DEC-020]
 uncertainties: []
 ---
 
@@ -34,6 +35,8 @@ Generic concept for every element with an `id` inside a model; its type is given
 | name | text | depending on type |  |
 | visibility | enumeration | depending on type | VAL-001 |
 | external_id | text | no | ids from imported tools (DEC-003) |
+| links | set of idref (1.1) | no | any element, model or diagram but itself (VAL-003, DEC-020) |
+| behavior | idref (1.1, operations only) | no | an interaction (VAL-003, DEC-020) |
 
 ## Invariants
 `null` = unknown value; it is not replaced by a default. Renaming `id` only via the engine (REQ-039).

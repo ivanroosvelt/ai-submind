@@ -10,6 +10,7 @@ tags: [format, data]
 implementation: verified
 code:
   - src/format/types.ts#Diagram
+  - spec/format/schema/1.1/model.schema.json
   - spec/format/schema/1.0/model.schema.json
 test_code:
   - test/format/corpus.test.ts
@@ -17,7 +18,7 @@ test_code:
 relations:
   related: [ENT-003]
   validations: [VAL-001, VAL-002, VAL-003]
-  decisions: [DEC-018]
+  decisions: [DEC-018, DEC-020]
 uncertainties: []
 ---
 
@@ -34,6 +35,7 @@ Set of references to model elements, without layout; `kind` declares the diagram
 | name | text | yes |  |
 | kind | enumeration | yes | class, sequence; extensible (REQ-013) |
 | elements | list of idref | no | VAL-003 |
+| links | set of idref (1.1) | no | target of drill-down links from any element (VAL-003, DEC-020) |
 
 ## Invariants
 Only references elements allowed by its `kind`.

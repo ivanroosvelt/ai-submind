@@ -13,7 +13,12 @@ Base product complete ([PLAN-002](docs/plans/archive/PLAN-002-gestor-diagramas-b
   engine, structured queries and lexical search, CLI with a per-project daemon, MCP server, web UI (JointJS) for
   class and sequence diagrams, and Git integrity (diagnosis after a merge, no automatic repair:
   [FEAT-008](docs/system/features/FEAT-008-git-integrity.md)).
-- Published on npm: [`ai-submind`](https://www.npmjs.com/package/ai-submind) (0.1.0, 2026-10-16).
+- Knowledge format 1.1 ([PLAN-005](docs/plans/archive/PLAN-005-flujos-de-flujos.md)): an operation's
+  `behavior` points to the interaction that describes it, and a `links` extension on any element, model or diagram
+  links it to the flow behind it ([DEC-020](docs/system/decisions/DEC-020-cross-diagram-behavior-links-and-format-1-1.md)).
+  Format 1.0 documents still load (warning `FORMAT_VERSION_OUTDATED`) and are upgraded only explicitly with
+  `migrate` ([guide](spec/format/migrations/1.0-to-1.1/README.md)).
+- Published on npm: [`ai-submind`](https://www.npmjs.com/package/ai-submind) (0.1.1, 2026-10-16).
 
 ## Requirements
 
@@ -40,7 +45,7 @@ Or install it as a dev dependency (`npm install -D ai-submind`) so that `npx ai-
 
 To try a local build instead: `npm pack` in this repository and `npm install /path/to/ai-submind-<version>.tgz`
 in the host project. The package contains `dist/` (without `*.map` source maps), `spec/format/README.md`, `spec/format/schema/`,
-`LICENSE`, `NOTICE` and `CHANGELOG.md`.
+`spec/format/migrations/`, `LICENSE`, `NOTICE` and `CHANGELOG.md`.
 
 ## CLI
 
@@ -55,6 +60,7 @@ npx ai-submind <command> [options]   # or, from this repository: node dist/cli/m
 | `stop` | Stops the daemon | `--knowledge <dir>` |
 | `init` | Creates `knowledge/` with its `ai-submind.json` manifest | `--knowledge <dir>` |
 | `validate` | Validates `knowledge/`, including merge conflicts, duplicate IDs and broken references (exit code 1 on errors) | `--knowledge <dir>` |
+| `migrate` | Upgrades every format 1.0 document of `knowledge/` to the current format (only `format_version` changes) | `--knowledge <dir>`, `--dry-run` |
 | `mcp` | Stdio MCP server for agents, connected to the daemon (starts it if needed) | `--knowledge <dir>` |
 
 `--knowledge` is relative to the current directory and must stay inside the project root; it defaults to
@@ -74,6 +80,11 @@ lost/found), combined fragments with operands and guards, and interaction uses (
 horizontally only (their order is their x) and their length changes with the handle at the bottom;
 «Auto-layout» works here too. References in the details panel open a diagram that shows the target, and
 double-clicking an interaction use opens the diagram of the used interaction.
+
+Elements with a drill-down target (the flow behind an operation or a message, an
+interaction use, or `links`) are marked ↗: double-clicking one opens its first target (a diagram that shows the
+target element, the target diagram, or a model's first diagram), and the details panel lists every target under
+«Navigates to».
 
 The UI build writes `dist/ui/THIRD-PARTY-LICENSES.md` with the licenses of the bundled third-party code
 (`@joint/core`, MPL-2.0; `@dagrejs/dagre`, MIT); `dist/ui/index.html` says where to get the source form of
@@ -103,8 +114,8 @@ it is not running:
 Without installing the package, use `"command": "node"` with `"args": ["/path/to/ai-submind/dist/cli/main.js", "mcp"]`.
 
 Tools: `list_models`, `list_diagrams`, `get_element`, `find_elements`, `search`, `relations`, `impact`,
-`paths`, `validate` (read); `create_element`, `update_element`, `delete_element`, `edit_diagram`,
-`apply_batch`, `rename`, `auto_layout_diagram` (write, all with `dryRun`; the first write initializes
+`paths`, `validate` (read; `relations` has a `links` group); `create_element`, `update_element`, `delete_element`, `edit_diagram`,
+`apply_batch`, `rename`, `auto_layout_diagram`, `migrate` (write, all with `dryRun`; the first write initializes
 `knowledge/` if it does not exist). Resources `ai-submind://schema/{name}`, `ai-submind://model/{id}` and
 `ai-submind://diagram/{id}`. Inputs, outputs and errors in
 [API-001](docs/system/interfaces/API-001-ai-submind-mcp-server.md).

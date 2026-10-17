@@ -1,9 +1,9 @@
 // Identifier grammar and derivation (spec §3.1, §3.3). The grammar is read from the format schema
 // (defs `fileId` / `elementId`) so it has a single source.
-import { schemas, type SchemaSet } from "../format/schema.js";
+import { schemas, SUPPORTED_VERSION, type SchemaSet } from "../format/schema.js";
 import { EngineError } from "./errors.js";
 
-const DEFS = "urn:ai-submind:format:1.0:defs";
+const DEFS = `urn:ai-submind:format:${SUPPORTED_VERSION}:defs`;
 
 export const FILE_ID_MAX = 64;
 export const ELEMENT_ID_MAX = 256;

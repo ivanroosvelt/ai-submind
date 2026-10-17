@@ -1,0 +1,17 @@
+{
+  "format_version": "1.0",
+  "id": "m",
+  "name": "M",
+  "links": [
+    {"idref": "A"}
+  ],
+  "elements": {
+    "classes": [
+      {
+        "id": "A",
+        "name": "A",
+        "visibility": "public"
+      }
+    ]
+  }
+}

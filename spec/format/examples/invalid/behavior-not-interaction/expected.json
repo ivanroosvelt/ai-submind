@@ -1,0 +1,6 @@
+{
+  "description": "behavior (1.1) points to a class instead of an interaction",
+  "codes": [
+    "REF_TYPE_MISMATCH"
+  ]
+}

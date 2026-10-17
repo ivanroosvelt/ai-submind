@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { serialize, type Layout, type Model } from "../../src/format/index.js";
 import {
+  edit,
   Engine,
   EngineError,
   revisionOf,
@@ -163,7 +164,7 @@ describe("transactions (REQ-005, REQ-008, REQ-011, REQ-026)", () => {
 
   it("creates a document only if it does not exist (expectedRevision null)", async () => {
     const e = await open();
-    const data = { format_version: "1.0", id: "extra", name: "Extra" };
+    const data = { format_version: "1.1", id: "extra", name: "Extra" };
     await e.transact([{ op: "put", path: "models/extra.json", data, expectedRevision: null }]);
     expect(e.get("extra")[0]?.file).toBe("models/extra.json");
     await rejects(
@@ -203,7 +204,7 @@ describe("transactions (REQ-005, REQ-008, REQ-011, REQ-026)", () => {
     const e = await open();
     const m = await json<Model>("models/types.json");
     await rejects(
-      e.transact([{ op: "put", path: "models/types.json", data: { ...m, format_version: "1.1" } }]),
+      e.transact([{ op: "put", path: "models/types.json", data: { ...m, format_version: "1.2" } }]),
       "VALIDATION_FAILED",
     );
   });
@@ -229,7 +230,7 @@ describe("transactions (REQ-005, REQ-008, REQ-011, REQ-026)", () => {
 
   it("rejects paths that are not documents or leave knowledge/", async () => {
     const e = await open();
-    const data = { format_version: "1.0", id: "x", name: "x" };
+    const data = { format_version: "1.1", id: "x", name: "x" };
     await rejects(e.transact([{ op: "put", path: "../x.json", data }]), "PATH_OUTSIDE_KNOWLEDGE");
     await rejects(e.transact([{ op: "put", path: "/tmp/x.json", data }]), "PATH_OUTSIDE_KNOWLEDGE");
     await rejects(e.transact([{ op: "put", path: "notes/x.json", data }]), "INVALID_PATH");
@@ -249,7 +250,7 @@ describe("transactions (REQ-005, REQ-008, REQ-011, REQ-026)", () => {
     await rm(join(root, "layout"), { recursive: true });
     await symlink(outside, join(root, "layout"));
     const e = await open();
-    const layout: Layout = { format_version: "1.0", diagram: { idref: "overview" } };
+    const layout: Layout = { format_version: "1.1", diagram: { idref: "overview" } };
     await rejects(
       e.transact([{ op: "put", path: "layout/overview.json", data: layout }]),
       "PATH_OUTSIDE_KNOWLEDGE",
@@ -265,7 +266,7 @@ describe("transactions (REQ-005, REQ-008, REQ-011, REQ-026)", () => {
         {
           op: "put",
           path: "models/broken.json",
-          data: { format_version: "1.0", id: "broken", name: "b" },
+          data: { format_version: "1.1", id: "broken", name: "b" },
         },
       ]),
       "DOCUMENT_INVALID",
@@ -376,7 +377,7 @@ describe("rename (REQ-039, spec §3.2)", () => {
     const e = await open();
     // IDs are opaque: an attribute may have an ID that does not start with its owner's.
     const ship = {
-      format_version: "1.0",
+      format_version: "1.1",
       id: "ships",
       name: "Ships",
       elements: {
@@ -428,7 +429,7 @@ describe("reload (REQ-007)", () => {
     expect(await e.reload()).toBeUndefined();
     await writeFile(
       join(root, "models/extra.json"),
-      serialize("model", { format_version: "1.0", id: "extra", name: "Extra" }),
+      serialize("model", { format_version: "1.1", id: "extra", name: "Extra" }),
     );
     const diff = await e.reload();
     expect(diff?.added).toEqual(["extra"]);
@@ -444,7 +445,7 @@ describe("reload (REQ-007)", () => {
         for (const id of ["a", "b", "c"]) {
           await writeFile(
             join(root, `models/${id}.json`),
-            serialize("model", { format_version: "1.0", id, name: id }),
+            serialize("model", { format_version: "1.1", id, name: id }),
           );
         }
       },
@@ -494,7 +495,7 @@ describe("review S5 (H1-H10)", () => {
     await writeUntilChange(e, () =>
       writeFile(
         join(root, "models/live.json"),
-        serialize("model", { format_version: "1.0", id: "live", name: "live" }),
+        serialize("model", { format_version: "1.1", id: "live", name: "live" }),
       ),
     );
     await rm(root, { recursive: true, force: true });
@@ -505,7 +506,7 @@ describe("review S5 (H1-H10)", () => {
     const garage = await json<Model>("models/garage.json");
     garage.diagrams = [...(garage.diagrams ?? []), { id: "diagram", kind: "class", name: "d" }];
     await writeFile(join(root, "models/garage.json"), serialize("model", garage));
-    const layout = { format_version: "1.0", diagram: { idref: "diagram" } };
+    const layout = { format_version: "1.1", diagram: { idref: "diagram" } };
     await writeFile(join(root, "layout/other.json"), serialize("layout", layout));
     const e = await open();
     expect(e.status().findings.map((f) => f.code)).toEqual(["FILE_ID_MISMATCH"]);
@@ -518,7 +519,7 @@ describe("review S5 (H1-H10)", () => {
   it("H4: a file is moved only when it is named after its own ID", async () => {
     await writeFile(
       join(root, "models/car.json"),
-      serialize("model", { format_version: "1.0", id: "other", name: "o" }),
+      serialize("model", { format_version: "1.1", id: "other", name: "o" }),
     );
     const e = await open();
     await e.rename("Car", "car");
@@ -634,5 +635,113 @@ describe("dry run and builders (PLAN-002 S8; REQ-027, DEC-015)", () => {
     });
     expect(Object.keys(r.revisions)).toEqual(["models/types.json"]);
     expect((await json<Model>("models/types.json")).name).toBe("Mine");
+  });
+});
+
+describe("format 1.0 and migrate (REQ-041, REQ-043, spec §11, §11.1)", () => {
+  /** Rewrites every document of the corpus as format 1.0 (without the 1.1 keys). */
+  async function downgrade(): Promise<Record<string, string>> {
+    const strip = (v: unknown): unknown =>
+      Array.isArray(v)
+        ? v.map(strip)
+        : v !== null && typeof v === "object"
+          ? Object.fromEntries(
+              Object.entries(v)
+                .filter(([k]) => k !== "links" && k !== "behavior")
+                .map(([k, x]) => [k, strip(x)]),
+            )
+          : v;
+    const before = await snapshot();
+    for (const [rel, t] of Object.entries(before)) {
+      const kind =
+        rel === "ai-submind.json" ? "manifest" : rel.startsWith("models/") ? "model" : "layout";
+      const data = { ...(strip(JSON.parse(t)) as object), format_version: "1.0" };
+      await writeFile(join(root, rel), serialize(kind, data));
+    }
+    return snapshot();
+  }
+
+  it("rename rewrites behavior and links references", async () => {
+    const e = await open();
+    await e.rename("RentCar", "Renting");
+    await e.rename("check-fuel", "fuel-check");
+    const g = await text("models/garage.json");
+    expect(g).toContain('"behavior": {"idref": "Renting"}');
+    expect(g).toContain('{"idref": "fuel-check"}');
+    expect(e.status().findings).toEqual([]);
+  });
+
+  it("1.0 documents load with FORMAT_VERSION_OUTDATED and stay writable as 1.0", async () => {
+    const before = await downgrade();
+    const e = await open();
+    const s = e.status();
+    expect(s.state).toBe("ok");
+    expect(s.findings.map((f) => [f.code, f.file])).toEqual(
+      Object.keys(before)
+        .sort()
+        .map((rel) => ["FORMAT_VERSION_OUTDATED", rel]),
+    );
+    const m = await json<Model>("models/types.json");
+    await e.transact([{ op: "put", path: "models/types.json", data: { ...m, name: "T" } }]);
+    expect(await json<Model>("models/types.json")).toMatchObject({
+      format_version: "1.0",
+      name: "T",
+    });
+  });
+
+  it("MIGRATION_REQUIRED: 1.1 keys or a version change on a 1.0 document, nothing written", async () => {
+    const before = await downgrade();
+    const e = await open();
+    const m = await json<Model>("models/types.json");
+    const err = await rejects(
+      e.transact([
+        { op: "put", path: "models/types.json", data: { ...m, links: [{ idref: "garage" }] } },
+      ]),
+      "MIGRATION_REQUIRED",
+    );
+    expect(err.message).toContain("migrate");
+    await rejects(
+      edit(e, [{ op: "update", id: "Garage.rent()", patch: { behavior: { idref: "RentCar" } } }]),
+      "MIGRATION_REQUIRED",
+    );
+    await rejects(
+      e.transact([{ op: "put", path: "models/types.json", data: { ...m, format_version: "1.1" } }]),
+      "MIGRATION_REQUIRED",
+    );
+    expect(await snapshot()).toEqual(before);
+  });
+
+  it("migrate rewrites every 1.0 document to 1.1 in canonical form and nothing else; idempotent", async () => {
+    const original = await snapshot();
+    const before = await downgrade();
+    const e = await open();
+    const dry = await e.migrate({ dryRun: true });
+    expect(dry.migrated).toEqual(Object.keys(before).sort());
+    expect(await snapshot()).toEqual(before);
+    const r = await e.migrate();
+    expect(r.migrated).toEqual(dry.migrated);
+    expect(r.revisions).toEqual(dry.revisions);
+    const after = await snapshot();
+    for (const [rel, t] of Object.entries(before)) {
+      expect(after[rel]).toBe(t.replace('"format_version": "1.0"', '"format_version": "1.1"'));
+    }
+    expect(after["models/types.json"]).toBe(original["models/types.json"]);
+    expect(e.status().findings).toEqual([]);
+    expect(await e.migrate()).toMatchObject({ migrated: [], revisions: {} });
+  });
+
+  it("MIGRATE_BLOCKED while a 1.0 document is not loaded; other versions are untouched", async () => {
+    await downgrade();
+    const bad = { format_version: "1.0", id: "bad", name: "Bad", colour: "red" };
+    await writeFile(join(root, "models/bad.json"), JSON.stringify(bad));
+    const e = await open();
+    const before = await snapshot();
+    await rejects(e.migrate(), "MIGRATE_BLOCKED");
+    expect(await snapshot()).toEqual(before);
+    const later = JSON.stringify({ ...bad, format_version: "2.0" });
+    await writeFile(join(root, "models/bad.json"), later);
+    const r = await e.migrate();
+    expect(r.migrated).not.toContain("models/bad.json");
+    expect(await text("models/bad.json")).toBe(later);
   });
 });

@@ -4,7 +4,7 @@ type: feature
 name: "Knowledge format, layout and validation"
 status: active
 evidence: verified-code
-summary: "Own format derived from UMJ with JSON Schema 2020-12, canonical serialization, separate layout and validation."
+summary: "Own format derived from UMJ with JSON Schema 2020-12 (current 1.1, earlier 1.0 supported), canonical serialization, separate layout, validation and explicit migrate 1.0 → 1.1."
 aliases: ["format", "umj", "json schema", "spec"]
 tags: [format, contracts]
 implementation: verified
@@ -12,16 +12,19 @@ code:
   - src/format/index.ts
   - src/format/canonical.ts#serialize
   - src/format/knowledge.ts#validateKnowledgeDir
+  - src/format/schema.ts#schemaVersion
+  - src/engine/engine.ts#Engine
 test_code:
   - test/format/corpus.test.ts
   - test/format/rules.test.ts
+  - test/engine/engine.test.ts
 relations:
   entities: [ENT-001, ENT-002, ENT-003, ENT-004, ENT-005]
   functions: []
   interfaces: [API-004]
   integrations: []
   depends_on: []
-  decisions: [DEC-002, DEC-003, DEC-009]
+  decisions: [DEC-002, DEC-003, DEC-009, DEC-010, DEC-020]
 uncertainties: []
 ---
 

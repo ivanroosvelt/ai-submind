@@ -13,7 +13,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | API-001 | interface | ai-submind MCP server | active | verified | verified-code | [API-001-ai-submind-mcp-server.md](../../../docs/system/interfaces/API-001-ai-submind-mcp-server.md) |
 | API-002 | interface | UI HTTP API | active | verified | verified-code | [API-002-ui-http-api.md](../../../docs/system/interfaces/API-002-ui-http-api.md) |
 | API-003 | interface | ai-submind CLI | active | verified | verified-code | [API-003-ai-submind-cli.md](../../../docs/system/interfaces/API-003-ai-submind-cli.md) |
-| API-004 | interface | ai-submind knowledge format 1.0 | active | verified | verified-code | [API-004-ai-submind-knowledge-format-1-0.md](../../../docs/system/interfaces/API-004-ai-submind-knowledge-format-1-0.md) |
+| API-004 | interface | ai-submind knowledge format 1.1 (1.0 supported) | active | verified | verified-code | [API-004-ai-submind-knowledge-format-1-0.md](../../../docs/system/interfaces/API-004-ai-submind-knowledge-format-1-0.md) |
 | DEC-001 | decision | Node.js ≥22 + TypeScript ESM stack distributed as the npm package ai-submind (npx) | active | - | declared-doc | [DEC-001-node-typescript-npx-stack.md](../../../docs/system/decisions/DEC-001-node-typescript-npx-stack.md) |
 | DEC-002 | decision | Own knowledge format derived from UMJ: one file per model + separate layout | active | - | declared-doc | [DEC-002-knowledge-format-derived-from-umj.md](../../../docs/system/decisions/DEC-002-knowledge-format-derived-from-umj.md) |
 | DEC-003 | decision | Human-readable IDs with reference guarantee and maintenance | active | - | declared-doc | [DEC-003-readable-ids-with-reference-maintenance.md](../../../docs/system/decisions/DEC-003-readable-ids-with-reference-maintenance.md) |
@@ -23,7 +23,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | DEC-007 | decision | Lexical search always available and optional local semantic search | active | - | declared-doc | [DEC-007-lexical-search-and-optional-semantic-search.md](../../../docs/system/decisions/DEC-007-lexical-search-and-optional-semantic-search.md) |
 | DEC-008 | decision | Single npm package with Vitest, ESLint (typescript-eslint) and Prettier | active | - | declared-doc | [DEC-008-single-package-vitest-eslint-prettier.md](../../../docs/system/decisions/DEC-008-single-package-vitest-eslint-prettier.md) |
 | DEC-009 | decision | Ajv 8 as the JSON Schema validator of the format and dependency-cruiser for module boundaries | active | - | declared-doc | [DEC-009-ajv-and-dependency-cruiser.md](../../../docs/system/decisions/DEC-009-ajv-and-dependency-cruiser.md) |
-| DEC-010 | decision | Format migrations as versioned from→to guides for LLM agents | proposed | - | declared-doc | [DEC-010-versioned-llm-migration-guides.md](../../../docs/system/decisions/DEC-010-versioned-llm-migration-guides.md) |
+| DEC-010 | decision | Format migrations as versioned from→to guides for LLM agents | active | - | declared-doc | [DEC-010-versioned-llm-migration-guides.md](../../../docs/system/decisions/DEC-010-versioned-llm-migration-guides.md) |
 | DEC-011 | decision | Engine persistence: per-file atomic writes, SHA-256 revisions, no-new-errors acceptance and native recursive fs.watch | active | - | declared-doc | [DEC-011-engine-persistence-and-reload.md](../../../docs/system/decisions/DEC-011-engine-persistence-and-reload.md) |
 | DEC-012 | decision | Query graph semantics: edge kinds, dependency direction, hubs and strict arguments | active | - | declared-doc | [DEC-012-query-graph-semantics.md](../../../docs/system/decisions/DEC-012-query-graph-semantics.md) |
 | DEC-013 | decision | Own lexical engine: BM25F with Unicode folding and camelCase splitting, in memory | active | - | declared-doc | [DEC-013-own-lexical-engine-bm25f.md](../../../docs/system/decisions/DEC-013-own-lexical-engine-bm25f.md) |
@@ -33,6 +33,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | DEC-017 | decision | UI stack: plain TypeScript, Vite, SSE and a shared deterministic layout | active | - | declared-doc | [DEC-017-ui-stack-sse-and-shared-layout.md](../../../docs/system/decisions/DEC-017-ui-stack-sse-and-shared-layout.md) |
 | DEC-018 | decision | Sequence executions in format 1.0 and a shared sequence layout | active | - | declared-doc | [DEC-018-sequence-executions-and-layout.md](../../../docs/system/decisions/DEC-018-sequence-executions-and-layout.md) |
 | DEC-019 | decision | ai-submind is licensed under Apache-2.0 | active | - | verified-code | [DEC-019-apache-2-license.md](../../../docs/system/decisions/DEC-019-apache-2-license.md) |
+| DEC-020 | decision | Cross-diagram relations: operation behavior, links extension and format 1.1 with explicit migrate | active | - | declared-doc | [DEC-020-cross-diagram-behavior-links-and-format-1-1.md](../../../docs/system/decisions/DEC-020-cross-diagram-behavior-links-and-format-1-1.md) |
 | ENT-001 | entity | ai-submind project configuration | active | verified | verified-code | [ENT-001-ai-submind-project-configuration.md](../../../docs/system/domain/entities/ENT-001-ai-submind-project-configuration.md) |
 | ENT-002 | entity | Model | active | verified | verified-code | [ENT-002-model.md](../../../docs/system/domain/entities/ENT-002-model.md) |
 | ENT-003 | entity | Model element | active | verified | verified-code | [ENT-003-model-element.md](../../../docs/system/domain/entities/ENT-003-model-element.md) |
@@ -98,6 +99,9 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 | REQ-038 | requirement | Lexical search | active | - | declared-doc | [REQ-038-lexical-search.md](../../../docs/system/requirements/REQ-038-lexical-search.md) |
 | REQ-039 | requirement | Rename id with reference rewriting | active | - | declared-doc | [REQ-039-rename-id-with-reference-rewriting.md](../../../docs/system/requirements/REQ-039-rename-id-with-reference-rewriting.md) |
 | REQ-040 | requirement | Explore and adjust sequence diagram layout | active | - | declared-doc | [REQ-040-explore-and-adjust-sequence-diagram-layout.md](../../../docs/system/requirements/REQ-040-explore-and-adjust-sequence-diagram-layout.md) |
+| REQ-041 | requirement | Cross-diagram relations: operation behavior and links | active | - | declared-doc | [REQ-041-cross-diagram-relations-behavior-and-links.md](../../../docs/system/requirements/REQ-041-cross-diagram-relations-behavior-and-links.md) |
+| REQ-042 | requirement | Drill-down navigation between diagrams and link marker | active | - | declared-doc | [REQ-042-drill-down-navigation-and-link-marker.md](../../../docs/system/requirements/REQ-042-drill-down-navigation-and-link-marker.md) |
+| REQ-043 | requirement | Migrate knowledge from format 1.0 to 1.1 | active | - | declared-doc | [REQ-043-migrate-format-1-0-to-1-1.md](../../../docs/system/requirements/REQ-043-migrate-format-1-0-to-1-1.md) |
 | VAL-001 | validation | Conformance with the format JSON Schema | active | verified | verified-code | [VAL-001-conformance-with-format-json-schema.md](../../../docs/system/domain/validations/VAL-001-conformance-with-format-json-schema.md) |
 | VAL-002 | validation | Element ID uniqueness and format | active | verified | verified-code | [VAL-002-element-id-uniqueness-and-format.md](../../../docs/system/domain/validations/VAL-002-element-id-uniqueness-and-format.md) |
 | VAL-003 | validation | idref referential integrity | active | verified | verified-code | [VAL-003-idref-referential-integrity.md](../../../docs/system/domain/validations/VAL-003-idref-referential-integrity.md) |
@@ -114,6 +118,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `API-001 decisions DEC-015`
 - `API-001 decisions DEC-016`
 - `API-001 decisions DEC-017`
+- `API-001 decisions DEC-020`
 - `API-001 entities ENT-002`
 - `API-001 entities ENT-003`
 - `API-001 entities ENT-004`
@@ -133,6 +138,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `API-002 validations VAL-005`
 - `API-003 consumers ACT-001`
 - `API-003 consumers ACT-002`
+- `API-003 decisions DEC-020`
 - `API-003 entities ENT-001`
 - `API-004 consumers ACT-001`
 - `API-004 consumers ACT-002`
@@ -140,6 +146,8 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `API-004 consumers FEAT-007`
 - `API-004 decisions DEC-002`
 - `API-004 decisions DEC-003`
+- `API-004 decisions DEC-010`
+- `API-004 decisions DEC-020`
 - `API-004 entities ENT-001`
 - `API-004 entities ENT-002`
 - `API-004 entities ENT-003`
@@ -280,6 +288,18 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `DEC-018 affects ENT-005`
 - `DEC-018 affects VAL-005`
 - `DEC-019 affects NFR-009`
+- `DEC-020 affects REQ-041`
+- `DEC-020 affects REQ-042`
+- `DEC-020 affects REQ-043`
+- `DEC-020 affects API-004`
+- `DEC-020 affects ENT-003`
+- `DEC-020 affects ENT-004`
+- `DEC-020 affects VAL-003`
+- `DEC-020 affects VAL-004`
+- `DEC-020 affects FEAT-003`
+- `DEC-020 affects FEAT-007`
+- `DEC-020 affects FEAT-009`
+- `DEC-020 affects NFR-011`
 - `ENT-001 validations VAL-001`
 - `ENT-001 validations VAL-004`
 - `ENT-001 validations VAL-006`
@@ -290,11 +310,13 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `ENT-002 validations VAL-003`
 - `ENT-002 validations VAL-006`
 - `ENT-002 validations VAL-007`
+- `ENT-003 decisions DEC-020`
 - `ENT-003 validations VAL-001`
 - `ENT-003 validations VAL-002`
 - `ENT-003 validations VAL-003`
 - `ENT-003 validations VAL-007`
 - `ENT-004 decisions DEC-018`
+- `ENT-004 decisions DEC-020`
 - `ENT-004 related ENT-003`
 - `ENT-004 validations VAL-001`
 - `ENT-004 validations VAL-002`
@@ -314,6 +336,7 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `FEAT-002 decisions DEC-011`
 - `FEAT-002 decisions DEC-015`
 - `FEAT-002 decisions DEC-016`
+- `FEAT-002 decisions DEC-020`
 - `FEAT-002 depends_on FEAT-003`
 - `FEAT-002 entities ENT-001`
 - `FEAT-002 entities ENT-002`
@@ -323,6 +346,8 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `FEAT-003 decisions DEC-002`
 - `FEAT-003 decisions DEC-003`
 - `FEAT-003 decisions DEC-009`
+- `FEAT-003 decisions DEC-010`
+- `FEAT-003 decisions DEC-020`
 - `FEAT-003 entities ENT-001`
 - `FEAT-003 entities ENT-002`
 - `FEAT-003 entities ENT-003`
@@ -331,12 +356,14 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `FEAT-003 interfaces API-004`
 - `FEAT-004 decisions DEC-012`
 - `FEAT-004 decisions DEC-013`
+- `FEAT-004 decisions DEC-020`
 - `FEAT-004 depends_on FEAT-002`
 - `FEAT-004 interfaces API-001`
 - `FEAT-005 depends_on FEAT-004`
 - `FEAT-005 interfaces API-001`
 - `FEAT-006 decisions DEC-015`
 - `FEAT-006 decisions DEC-016`
+- `FEAT-006 decisions DEC-020`
 - `FEAT-006 depends_on FEAT-001`
 - `FEAT-006 depends_on FEAT-002`
 - `FEAT-006 entities ENT-002`
@@ -533,5 +560,37 @@ One row per element. Relations: one `SOURCE relation TARGET` line (grep-friendly
 - `REQ-040 depends_on REQ-028`
 - `REQ-040 depends_on REQ-029`
 - `REQ-040 features FEAT-009`
+- `REQ-041 actors ACT-002`
+- `REQ-041 actors ACT-001`
+- `REQ-041 constraints VAL-003`
+- `REQ-041 constraints NFR-011`
+- `REQ-041 decisions DEC-020`
+- `REQ-041 decisions DEC-002`
+- `REQ-041 decisions DEC-003`
+- `REQ-041 depends_on REQ-009`
+- `REQ-041 depends_on REQ-039`
+- `REQ-041 features FEAT-003`
+- `REQ-041 features FEAT-002`
+- `REQ-041 features FEAT-004`
+- `REQ-041 features FEAT-006`
+- `REQ-042 actors ACT-001`
+- `REQ-042 decisions DEC-020`
+- `REQ-042 depends_on REQ-041`
+- `REQ-042 depends_on REQ-028`
+- `REQ-042 depends_on REQ-040`
+- `REQ-042 features FEAT-007`
+- `REQ-042 features FEAT-009`
+- `REQ-043 actors ACT-002`
+- `REQ-043 actors ACT-001`
+- `REQ-043 constraints VAL-004`
+- `REQ-043 constraints NFR-011`
+- `REQ-043 decisions DEC-020`
+- `REQ-043 decisions DEC-010`
+- `REQ-043 depends_on REQ-026`
+- `REQ-043 depends_on REQ-027`
+- `REQ-043 features FEAT-003`
+- `VAL-001 decisions DEC-020`
+- `VAL-003 decisions DEC-020`
 - `VAL-004 decisions DEC-010`
+- `VAL-004 decisions DEC-020`
 - `VAL-007 decisions DEC-018`

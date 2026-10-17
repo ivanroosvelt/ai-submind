@@ -9,8 +9,9 @@ import {
   pickBranch,
   rootLocation,
   schemas,
+  schemaVersion,
   SUPPORTED_VERSION,
-  SUPPORTED_VERSION_PARTS,
+  SUPPORTED_VERSIONS,
   type SchemaLocation,
   type SchemaSet,
 } from "./schema.js";
@@ -196,14 +197,27 @@ export function parseDocument(
   }
 
   const findings: Finding[] = [];
-  const loc = rootLocation(kind);
   const declared =
     isObject(data) && typeof data.format_version === "string" ? data.format_version : undefined;
   const version = declared === undefined ? undefined : parseVersion(declared);
-  if (version !== undefined && compareVersions(version, SUPPORTED_VERSION_PARTS) !== 0) {
-    // 1.0 is the first version: no earlier one has a schema or a migration, so every version other than
-    // the supported one is opened read-only with tolerant reading (spec §11).
-    const later = compareVersions(version, SUPPORTED_VERSION_PARTS) > 0;
+  const current = parseVersion(SUPPORTED_VERSION) ?? [0, 0];
+  if (
+    declared !== undefined &&
+    SUPPORTED_VERSIONS.includes(declared) &&
+    declared !== SUPPORTED_VERSION
+  ) {
+    findings.push(
+      finding(
+        "FORMAT_VERSION_OUTDATED",
+        path,
+        "/format_version",
+        `version ${declared} is earlier than the current one (${SUPPORTED_VERSION}): run migrate to upgrade`,
+      ),
+    );
+  } else if (version !== undefined && compareVersions(version, current) !== 0) {
+    // Versions without a schema (later, or earlier and not migratable) are opened read-only with
+    // tolerant reading against the current schema (spec §11).
+    const later = compareVersions(version, current) > 0;
     findings.push(
       finding(
         "FORMAT_VERSION_UNSUPPORTED",
@@ -213,7 +227,7 @@ export function parseDocument(
       ),
     );
     const pointerMap = new Map<string, string>();
-    const tolerated = tolerate(set, data, loc, "", "", pointerMap);
+    const tolerated = tolerate(set, data, rootLocation(kind), "", "", pointerMap);
     if (tolerated === undefined) {
       findings.push(
         finding(
@@ -229,6 +243,9 @@ export function parseDocument(
       : { path, kind, status: "read_only", data: tolerated, pointerMap, findings };
   }
 
+  // Each supported version is validated with its own schema; a missing or malformed version is a
+  // schema error of the current one.
+  const loc = rootLocation(kind, schemaVersion(data));
   const validate = set.validator(loc);
   if (!validate(data)) {
     findings.push(...schemaFindings(path, validate.errors ?? []));

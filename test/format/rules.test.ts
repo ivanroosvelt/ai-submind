@@ -16,7 +16,7 @@ import {
 const enc = new TextEncoder();
 const MANIFEST: KnowledgeFile = {
   path: "ai-submind.json",
-  bytes: enc.encode('{"format_version": "1.0"}\n'),
+  bytes: enc.encode('{"format_version": "1.1"}\n'),
 };
 
 function file(path: string, data: unknown): KnowledgeFile {
@@ -24,7 +24,7 @@ function file(path: string, data: unknown): KnowledgeFile {
 }
 
 function model(id: string, elements: unknown, extra: Record<string, unknown> = {}): KnowledgeFile {
-  return file(`models/${id}.json`, { format_version: "1.0", id, name: id, elements, ...extra });
+  return file(`models/${id}.json`, { format_version: "1.1", id, name: id, elements, ...extra });
 }
 
 const cls = (id: string, extra: Record<string, unknown> = {}) => ({
@@ -76,7 +76,7 @@ describe("phase 1: file", () => {
 
   it("a conflict marker after U+2028 inside a string is not MERGE_CONFLICT", () => {
     const lineSeparator = String.fromCharCode(0x2028);
-    const text = `{"format_version": "1.0", "id": "m", "name": "a${lineSeparator}=======b"}`;
+    const text = `{"format_version": "1.1", "id": "m", "name": "a${lineSeparator}=======b"}`;
     expect(check({ path: "models/m.json", bytes: enc.encode(text) })).toEqual([]);
   });
 
@@ -91,7 +91,7 @@ describe("phase 1: file", () => {
   it("unloaded document: references to its IDs become REF_UNRESOLVED", () => {
     const broken = {
       path: "models/types.json",
-      bytes: enc.encode('{"format_version": "1.0", "id": "types",'),
+      bytes: enc.encode('{"format_version": "1.1", "id": "types",'),
     };
     const user = model("m", {
       classes: [
@@ -130,8 +130,8 @@ describe("phase 1: file", () => {
       k = join(tmp, "knowledge");
       await mkdir(join(k, "models"), { recursive: true });
       await mkdir(join(k, ".ai-submind"));
-      await writeFile(join(k, "ai-submind.json"), '{\n  "format_version": "1.0"\n}\n');
-      await writeFile(join(k, ".ai-submind", "cache.json"), '{"format_version": "1.0"}');
+      await writeFile(join(k, "ai-submind.json"), '{\n  "format_version": "1.1"\n}\n');
+      await writeFile(join(k, ".ai-submind", "cache.json"), '{"format_version": "1.1"}');
     });
     afterEach(async () => {
       await rm(tmp, { recursive: true, force: true });
@@ -148,7 +148,7 @@ describe("phase 1: file", () => {
     it("a link pointing outside knowledge/ is PATH_OUTSIDE_KNOWLEDGE and is not read", async () => {
       await writeFile(
         join(tmp, "outside.json"),
-        '{"format_version": "1.0", "id": "outside", "name": "O"}',
+        '{"format_version": "1.1", "id": "outside", "name": "O"}',
       );
       await symlink(join(tmp, "outside.json"), join(k, "models", "outside.json"));
       expect(await result()).toEqual({
@@ -259,13 +259,13 @@ describe("phase 2: version", () => {
       { diagrams: [{ id: "c", kind: "class", name: "C", elements: [{ idref: "A" }] }] },
     );
     const layout = file("layout/c.json", {
-      format_version: "1.1",
+      format_version: "1.2",
       diagram: { idref: "c" },
       nodes: { A: { x: 1, y: 2, glow: true }, Z: { x: 0, y: 0 }, Q: { x: 0.5, y: 0 } },
     });
     const report = validateFiles([MANIFEST, m, layout]);
     expect(report.documents.find((d) => d.path === "layout/c.json")?.data).toEqual({
-      format_version: "1.1",
+      format_version: "1.2",
       diagram: { idref: "c" },
       nodes: { A: { x: 1, y: 2 }, Z: { x: 0, y: 0 } },
     });
@@ -274,9 +274,65 @@ describe("phase 2: version", () => {
       ["LAYOUT_ORPHAN", "/nodes/Z"],
     ]);
   });
+  it("earlier supported version 1.0: FORMAT_VERSION_OUTDATED, writable, validated with the 1.0 schema", () => {
+    const old = model("m", { classes: [cls("A")] }, { format_version: "1.0" });
+    const report = validateFiles([MANIFEST, old]);
+    expect(report.findings.map((x) => [x.code, x.severity, x.pointer])).toEqual([
+      ["FORMAT_VERSION_OUTDATED", "warning", "/format_version"],
+    ]);
+    expect(report.documents.find((d) => d.path === "models/m.json")?.status).toBe("writable");
+    const linked = model(
+      "m",
+      { classes: [cls("A", { links: [{ idref: "m" }] })] },
+      { format_version: "1.0" },
+    );
+    expect(codes(check(linked))).toEqual(["FORMAT_VERSION_OUTDATED", "SCHEMA_VIOLATION"]);
+    expect(serialize("model", JSON.parse(new TextDecoder().decode(old.bytes)))).toContain(
+      '"format_version": "1.0"',
+    );
+  });
 });
 
 describe("phase 4: references and semantics", () => {
+  it("behavior (1.1) must reference an interaction, in any model", () => {
+    const op = (target: string) => ({
+      ...cls("C"),
+      operations: [{ id: "C.op()", name: "op", visibility: "public", behavior: { idref: target } }],
+    });
+    const flows = model("flows", { interactions: [interaction("Flow")] });
+    expect(check(model("m", { classes: [op("Flow")] }), flows)).toEqual([]);
+    const f = check(model("m", { classes: [op("C")] }), flows);
+    expect(f.map((x) => [x.code, x.pointer])).toEqual([
+      ["REF_TYPE_MISMATCH", "/elements/classes/0/operations/0/behavior"],
+    ]);
+  });
+
+  it("links (1.1) reach any element, model or diagram, but not their own carrier", () => {
+    const diagrams = [{ id: "d", kind: "class", name: "D", links: [{ idref: "m" }] }];
+    const other = model("other", { classes: [cls("O")] });
+    const ok = model(
+      "m",
+      { classes: [cls("A", { links: [{ idref: "O" }, { idref: "d" }, { idref: "other" }] })] },
+      { diagrams, links: [{ idref: "A" }] },
+    );
+    expect(check(ok, other)).toEqual([]);
+    const self = model(
+      "m",
+      { classes: [cls("A", { links: [{ idref: "A" }] })] },
+      { diagrams: [{ ...diagrams[0], links: [{ idref: "d" }] }], links: [{ idref: "m" }] },
+    );
+    expect(check(self).map((x) => [x.code, x.pointer, x.subjects])).toEqual([
+      ["LINK_SELF", "/diagrams/0/links/0", ["d"]],
+      ["LINK_SELF", "/elements/classes/0/links/0", ["A"]],
+      ["LINK_SELF", "/links/0", ["m"]],
+    ]);
+    const dup = model("m", { classes: [cls("A", { links: [{ idref: "m" }, { idref: "m" }] })] });
+    expect(codes(check(dup))).toEqual(["SCHEMA_VIOLATION"]);
+    expect(
+      codes(check(model("m", { classes: [cls("A", { links: [{ idref: "Nope" }] })] }))),
+    ).toEqual(["REF_UNRESOLVED"]);
+  });
+
   it("covered and events must belong to the same interaction", () => {
     const i1 = interaction("I1");
     const i2 = interaction("I2", [{ id: "I2.x", type: "occurrence", covered: { idref: "I1.a" } }]);
@@ -416,13 +472,13 @@ describe("phase 4: references and semantics", () => {
       },
     ];
     const layout = file("layout/c.json", {
-      format_version: "1.0",
+      format_version: "1.1",
       diagram: { idref: "c" },
       nodes: { A: { x: 0, y: 0 }, "B--extends--A": { x: 1, y: 1 } },
       edges: { "B--extends--A": { vertices: [{ x: 5, y: 5 }] } },
     });
     const ghost = file("layout/nothing.json", {
-      format_version: "1.0",
+      format_version: "1.1",
       diagram: { idref: "nothing" },
       nodes: { A: { x: 0, y: 0 } },
     });
@@ -487,9 +543,40 @@ describe("phase 4: references and semantics", () => {
 });
 
 describe("canonical serialization", () => {
+  it("links as a set sorted by idref; behavior right after return_type (1.1)", () => {
+    const text = serialize("model", {
+      format_version: "1.1",
+      id: "m",
+      name: "M",
+      elements: {
+        classes: [
+          cls("A", {
+            links: [{ idref: "b" }, { idref: "B" }, { idref: "a" }],
+            operations: [
+              {
+                behavior: { idref: "I" },
+                id: "A.f()",
+                name: "f",
+                visibility: "public",
+                is_query: true,
+                return_type: { idref: "A" },
+              },
+            ],
+          }),
+        ],
+      },
+    });
+    expect(text).toContain(
+      '"links": [\n          {"idref": "B"},\n          {"idref": "a"},\n          {"idref": "b"}\n        ]',
+    );
+    expect(text).toContain(
+      '"return_type": {"idref": "A"},\n            "behavior": {"idref": "I"},\n',
+    );
+  });
+
   it("JSON.stringify escapes, literal Unicode and single-line references", () => {
     const m = {
-      format_version: "1.0",
+      format_version: "1.1",
       id: "m",
       name: 'Quotes " backslash \\ tab\t nl\n ctrl\u0001 del\u007f ñ 😀',
       elements: {
@@ -503,7 +590,7 @@ describe("canonical serialization", () => {
     expect(serialize("model", m)).toBe(
       [
         "{",
-        '  "format_version": "1.0",',
+        '  "format_version": "1.1",',
         '  "id": "m",',
         '  "name": "Quotes \\" backslash \\\\ tab\\t nl\\n ctrl\\u0001 del\u007f ñ 😀",',
         '  "elements": {',
@@ -531,7 +618,7 @@ describe("canonical serialization", () => {
 
   it("sets by code point, code_refs by path and symbol, ordered arrays untouched", () => {
     const m = {
-      format_version: "1.0",
+      format_version: "1.1",
       id: "m",
       name: "M",
       elements: {
@@ -565,7 +652,7 @@ describe("canonical serialization", () => {
 
   it("empty required values are written; layout maps sorted and without empty entries", () => {
     const lifeline = serialize("model", {
-      format_version: "1.0",
+      format_version: "1.1",
       id: "m",
       name: "M",
       elements: {
@@ -579,12 +666,12 @@ describe("canonical serialization", () => {
       edges: { z: {}, a: { vertices: [] } },
       nodes: { b: { y: 2, x: 1, style: null }, B: { x: 0, y: 0 } },
       diagram: { idref: "d" },
-      format_version: "1.0",
+      format_version: "1.1",
     });
     expect(layout).toBe(
       [
         "{",
-        '  "format_version": "1.0",',
+        '  "format_version": "1.1",',
         '  "diagram": {"idref": "d"},',
         '  "nodes": {',
         '    "B": {',

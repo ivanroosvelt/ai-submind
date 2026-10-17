@@ -78,11 +78,18 @@ const dryRun = z
   .optional()
   .describe("Validate and return the result and diff without writing anything");
 const object = z.record(z.string(), z.unknown());
+/** Flows of flows (DEC-020), for the descriptions of the write tools. */
+const FLOWS =
+  " Flows of flows: an operation's `behavior: {idref}` names the interaction (sequence flow) that " +
+  "describes it; `links: [{idref}]` on any element, model or diagram drills down to any other element, " +
+  "model or diagram (a set; patch with the whole array). Both need format 1.1 (see migrate).";
 const OPS = {
   create: {
     type: z.enum(ELEMENT_TYPES),
     parent: id.optional().describe("Container ID; required for everything but a model"),
-    data: object.describe("Element content in format 1.0; `id` is derived when absent"),
+    data: object.describe(
+      `Element content in format ${SUPPORTED_VERSION}; \`id\` is derived when absent`,
+    ),
     index: int.optional().describe("Position in an ordered container (default: append)"),
     expectedRevision: revision,
   },
@@ -187,7 +194,9 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
   );
   tool(
     "relations",
-    "Edges that leave or reach an element (associations, generalizations, ownership, references…).",
+    "Edges that leave or reach an element, model or diagram (associations, generalizations, ownership, " +
+      "references…). Group `sequence` includes an operation's `behavior` (key behavior); group `links` " +
+      "has only the `links` references (flows of flows), whose ends may be models and diagrams.",
     z.strictObject({
       id,
       direction: z.enum(["out", "in", "both"]).optional(),
@@ -244,14 +253,16 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
   tool(
     "create_element",
     "Creates a model (no parent), a diagram, or an element under its container. IDs are derived from " +
-      "names when absent, also for inline children. The first write initializes knowledge/.",
+      "names when absent, also for inline children. The first write initializes knowledge/." +
+      FLOWS,
     z.strictObject({ ...OPS.create, dryRun }),
     "create",
     ({ dryRun: dry, ...op }) => write([{ op: "create", ...op } as EditOperation], dry),
   );
   tool(
     "update_element",
-    "Applies a merge patch to an element or model (names change, IDs never do; use rename).",
+    "Applies a merge patch to an element, diagram or model (names change, IDs never do; use rename)." +
+      FLOWS,
     z.strictObject({ ...OPS.update, dryRun }),
     "write",
     ({ dryRun: dry, ...op }) => write([{ op: "update", ...op } as EditOperation], dry),
@@ -273,7 +284,8 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
   );
   tool(
     "apply_batch",
-    "Applies several create/update/delete/edit_diagram operations atomically: all or nothing.",
+    "Applies several create/update/delete/edit_diagram operations atomically: all or nothing." +
+      FLOWS,
     z.strictObject({
       operations: z
         .array(
@@ -298,6 +310,20 @@ export function createMcpServer(engine: Engine, query: Query, version: string): 
     async ({ id: from, newId, dryRun: dry }) => ({
       dryRun: dry === true,
       ...(await engine.rename(from, newId, { dryRun: dry === true })),
+      generation: engine.generation,
+    }),
+  );
+
+  tool(
+    "migrate",
+    `Explicitly upgrades every format 1.0 document of knowledge/ to ${SUPPORTED_VERSION} in one transaction ` +
+      "(only format_version changes); required before using behavior or links on them. Lists `migrated`; " +
+      "fails with MIGRATE_BLOCKED while a 1.0 document does not load.",
+    z.strictObject({ dryRun }),
+    "write",
+    async ({ dryRun: dry }) => ({
+      dryRun: dry === true,
+      ...(await engine.migrate({ dryRun: dry === true })),
       generation: engine.generation,
     }),
   );

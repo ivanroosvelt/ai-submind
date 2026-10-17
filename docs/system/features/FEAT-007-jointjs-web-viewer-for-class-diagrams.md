@@ -14,9 +14,11 @@ code:
   - src/layout/size.ts#nodeBox
   - src/layout/class-layout.ts#autoLayout
   - src/daemon/ui-api.ts#uiRoutes
+  - src/query/query.ts#Query
 test_code:
   - test/layout/layout.test.ts
   - test/daemon/ui-api.test.ts
+  - test/query/query.test.ts
 relations:
   entities: [ENT-004, ENT-005]
   functions: []
@@ -25,7 +27,7 @@ relations:
   depends_on: [FEAT-001, FEAT-002]
   decisions: [DEC-006, DEC-017]
 uncertainties:
-  - "Rendering, interaction and live refresh are not covered by automated tests (no browser in the suite); verified by hand in a browser (PLAN-002 S9)."
+  - "Rendering, interaction and live refresh are not covered by automated tests (no browser in the suite); verified by hand in a browser (PLAN-002 S9); drill-down and ↗ markers checked by the user on 2026-10-17 (PLAN-005 S6)."
 ---
 
 # FEAT-007 · JointJS web viewer for class diagrams
@@ -45,11 +47,16 @@ reloads (REQ-029). The «Auto-layout» button recomputes the whole layout with t
 as the MCP tool `auto_layout_diagram`) and saves it through the same `PUT` (REQ-032). SSE events refresh the tree, the findings panel and the open diagram, except the page's own
 writes (REQ-030). The detail panel shows every property, `null` as “unknown”, references as links to shown
 elements and the relations that reach the element (`GET /api/relations`), navigable when their source is shown
-(REQ-031). Saves run one after another; an event stream refused with 401 (daemon restarted) shows “Session
+(REQ-031). Drill-down (REQ-042): a node with a target in the view's `targets` (API-002; a classifier whose
+operation has `behavior`, or that or one of its attributes/operations has `links`) shows a ↗ above its top-right
+corner (tooltip), and a relation link with a target a ↗ after its name at the midpoint; double click opens the
+first target (an element through `reveal`, a diagram directly, a model's first diagram, or a notice if it has none)
+and the detail lists every target under «Navigates to» (with nothing selected, the open diagram's own links).
+Saves run one after another; an event stream refused with 401 (daemon restarted) shows “Session
 expired” and stops retrying. Sequence diagrams: FEAT-009.
 
 ## Behavior
-REQ-028..033.
+REQ-028..033, REQ-042.
 
 ## States and transitions
 No UI states of its own beyond selection and view.

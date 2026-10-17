@@ -34,10 +34,18 @@ uncertainties: []
   `reference` (innermost element containing an `idref` → target, with its key), and one derived edge per
   relation element: `generalization` (specific → general), `dependency` and `realization` (client →
   supplier), `association` (end1 → end2; undirected when the association is `undirected`). Layout references
-  are not edges.
+  are not edges. Format 1.1 (DEC-020) adds no edge kind: an operation's `behavior` and every `links` entry are
+  `reference` edges with key `behavior` / `links`; the carrier of a `links` entry may be an element, the model or a
+  diagram, and so may its target, so models and diagrams are ordinary nodes at either end.
 - A→B means "A depends on B". Impact (`dependents`) follows incoming edges; undirected edges are traversed
   both ways; unresolved references are not traversed. BFS with a visited set: it terminates and each element
   appears once.
+- Relation groups (REQ-017): `association`, `generalization`, `dependency`, `realization` (the derived edge and
+  the references of that relation element), `ownership` (`owns`, `member`), `diagram` (`shows`), `typing`
+  (`type`, `return_type`, `exceptions`), `sequence` (the sequence keys plus `behavior`), and `links` (only the
+  `links` references; a link carried by a relation element is not in that relation's group).
+- Cycles between flows (an operation's `behavior` → B, B `interaction_use` → A, or `links` back) are ordinary
+  graph cycles: impact visits each ID once and paths are simple, so both terminate.
 - Paths: simple paths, shortest first, undirected by default; models and diagrams only as endpoints unless
   `throughHubs`; length, count and visit budget limits with `truncated`.
 - Results in a stable order: listings and `find` by ID (code-unit comparison); `relations` by direction (outgoing

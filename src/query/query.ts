@@ -96,6 +96,18 @@ export interface DiagramView {
   layout: Layout | null;
   /** Format version a new layout is written with. */
   formatVersion: string;
+  /** Drill-down targets (REQ-042) of the diagram and of the shown elements and their parts, by ID. */
+  targets: Record<string, NavTarget[]>;
+}
+
+/**
+ * Where an element navigates to (REQ-042): an element (opened through a diagram that shows it), a diagram,
+ * or a model with its first diagram by ID, the tree's order (absent if it has none).
+ */
+export interface NavTarget {
+  id: string;
+  kind: "element" | "diagram" | "model";
+  diagram?: string;
 }
 
 export type RelationGroup =
@@ -106,7 +118,8 @@ export type RelationGroup =
   | "ownership"
   | "diagram"
   | "typing"
-  | "sequence";
+  | "sequence"
+  | "links";
 
 export const RELATION_GROUPS: readonly RelationGroup[] = [
   "association",
@@ -117,6 +130,7 @@ export const RELATION_GROUPS: readonly RelationGroup[] = [
   "diagram",
   "typing",
   "sequence",
+  "links",
 ];
 
 export interface RelationsArgs extends PageArgs {
@@ -149,6 +163,7 @@ const SEQUENCE_KEYS = new Set([
   "interaction",
   "start",
   "finish",
+  "behavior",
 ]);
 
 /** Share of documents touched by pending changes above which the lexical index is rebuilt. */
@@ -358,6 +373,7 @@ export class Query {
         names: Object.fromEntries([...names].sort(([a], [b]) => compareCodeUnits(a, b))),
         layout,
         formatVersion: SUPPORTED_VERSION,
+        targets: navTargets(g, diagram, name),
       },
       meta,
     };
@@ -498,6 +514,75 @@ export class Query {
   }
 }
 
+/** Members of a classifier whose behavior and links count as the classifier's (REQ-042). */
+const MEMBER_TYPES = new Set(["attribute", "operation"]);
+
+const idrefOf = (v: unknown): string | undefined => {
+  const idref = (v as { idref?: unknown } | undefined)?.idref;
+  return typeof idref === "string" ? idref : undefined;
+};
+
+/**
+ * Drill-down targets of `diagram` and of everything it shows (parts included), REQ-042: an operation's
+ * behavior, a message's signature → behavior, an interaction use's interaction, a classifier's operation
+ * behaviors, then `links` (a classifier's own, then its members'). Targets that are the diagram itself or one of its shown elements are left out
+ * (they would not leave it). `name` is called for every target, to add it to the view's names.
+ */
+function navTargets(
+  g: Graph,
+  diagram: Diagram,
+  name: (id: string) => void,
+): Record<string, NavTarget[]> {
+  const node = (id: string): Record<string, unknown> | undefined =>
+    g.byId.get(id)?.[0]?.node as Record<string, unknown> | undefined;
+  const skip = new Set([diagram.id, ...(diagram.elements ?? []).map((r) => r.idref)]);
+  const firstDiagram = new Map<string, string>();
+  for (const list of g.byId.values()) {
+    const x = list[0];
+    if (x?.type !== "diagram") continue;
+    const model = g.modelOfFile.get(x.file);
+    const prev = model === undefined ? undefined : firstDiagram.get(model);
+    if (model !== undefined && (prev === undefined || compareCodeUnits(x.id, prev) < 0))
+      firstDiagram.set(model, x.id);
+  }
+  const out: Record<string, NavTarget[]> = {};
+  const visit = (id: string): void => {
+    const type = g.typeOf(id);
+    const n = node(id) ?? {};
+    const ids: (string | undefined)[] = [];
+    if (type === "operation") ids.push(idrefOf(n.behavior));
+    if (type === "message") ids.push(idrefOf(node(idrefOf(n.signature) ?? "")?.behavior));
+    if (type === "interaction_use") ids.push(idrefOf(n.interaction));
+    const members = g.children(id).filter((c) => MEMBER_TYPES.has(g.typeOf(c) ?? ""));
+    for (const c of members) ids.push(idrefOf(node(c)?.behavior));
+    const linksOf = (x: Record<string, unknown> | undefined): (string | undefined)[] =>
+      Array.isArray(x?.links) ? x.links.map(idrefOf) : [];
+    ids.push(...linksOf(n));
+    for (const c of members) ids.push(...linksOf(node(c)));
+    const list: NavTarget[] = [];
+    for (const t of new Set(ids)) {
+      const kind = g.typeOf(t ?? "");
+      if (t === undefined || kind === undefined || t === id || skip.has(t)) continue;
+      name(t);
+      if (kind === "model") {
+        const first = firstDiagram.get(t);
+        list.push(first === undefined ? { id: t, kind } : { id: t, kind, diagram: first });
+      } else list.push({ id: t, kind: kind === "diagram" ? "diagram" : "element" });
+    }
+    if (list.length > 0)
+      Object.defineProperty(out, id, {
+        value: list,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    for (const c of g.children(id)) visit(c);
+  };
+  visit(diagram.id);
+  for (const id of skip) if (id !== diagram.id) visit(id);
+  return out;
+}
+
 function countFindings(list: readonly Finding[]): { errors: number; warnings: number } {
   let errors = 0;
   for (const f of list) if (f.severity === "error") errors++;
@@ -515,9 +600,12 @@ function inGroup(g: Graph, e: Edge, group: RelationGroup): boolean {
       return e.key !== undefined && TYPING_KEYS.has(e.key);
     case "sequence":
       return e.key !== undefined && SEQUENCE_KEYS.has(e.key);
+    case "links":
+      return e.key === "links";
     default: {
       if (e.kind === group) return true;
-      if (e.kind !== "reference") return false;
+      // A link carried by a relation element is not part of that relation (DEC-020).
+      if (e.kind !== "reference" || e.key === "links") return false;
       const source = g.typeOf(e.from);
       return source === group || (group === "association" && source === "association_end");
     }

@@ -26,7 +26,7 @@ relations:
   interfaces: []
   integrations: []
   depends_on: [FEAT-003]
-  decisions: [DEC-004, DEC-011, DEC-015, DEC-016]
+  decisions: [DEC-004, DEC-011, DEC-015, DEC-016, DEC-020]
 uncertainties:
   - "3-way semantic merge and path language: later (DEC-004)."
 ---
@@ -35,9 +35,14 @@ uncertainties:
 
 ## Description
 In-process TypeScript engine (DEC-004): in-memory document graph and indexes, validated transactional writes, optimistic concurrency control, atomic writes, rename with reference rewriting, watcher and semantic diff. Git is the history. Includes document-level batch transactions with dry run, rename with dry run, ID derivation, reload with watcher and semantic diff, and element-level edits with derived IDs, cascade and implicit init (`edit.ts`). Queries are FEAT-004; the engine exposes `generation` for their caches.
+`behavior` and `links` (format 1.1, DEC-020) are written through the same create/update operations on elements,
+diagrams and the model (a `links` patch replaces the whole set, written sorted); deleting their target follows
+the cascade like any optional reference: without `cascade` it is `REFERENCED`; with it, `behavior` is unset and
+only the deleted entry leaves `links` (an emptied set is not written). Deleting a whole model or diagram removes
+the links to it.
 
 ## Behavior
-REQ-005..008, REQ-022, REQ-023..027 (element edits, batch, dry run), REQ-039.
+REQ-005..008, REQ-022, REQ-023..027 (element edits, batch, dry run), REQ-039, REQ-041.
 
 ## Operation errors
 `NOT_FOUND`, `AMBIGUOUS_ID`, `INVALID_ID`, `INVALID_PATH`, `PATH_OUTSIDE_KNOWLEDGE`, `INVALID_BATCH`, `DOCUMENT_INVALID`, `REVISION_CONFLICT`, `VALIDATION_FAILED` (with the findings), `RENAME_COLLISION`, `RENAME_BLOCKED`, `CREATE_BLOCKED`, `REFERENCED` (with the references),

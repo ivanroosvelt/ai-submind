@@ -97,6 +97,8 @@ describe("npx ai-submind from the packed tarball", () => {
         "LICENSE",
         "NOTICE",
         "spec/format/schema/1.0/model.schema.json",
+        "spec/format/schema/1.1/model.schema.json",
+        "spec/format/migrations/1.0-to-1.1/README.md",
       ]),
     );
     // No sources, so no source maps pointing at them.

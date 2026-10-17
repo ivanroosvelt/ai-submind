@@ -14,10 +14,12 @@ code:
   - src/ui/main.ts
   - src/ui/shapes.ts
   - src/mcp/tools.ts#createMcpServer
+  - src/query/query.ts#Query
 test_code:
   - test/layout/sequence-layout.test.ts
   - test/daemon/ui-api.test.ts
   - test/mcp/tools.test.ts
+  - test/query/query.test.ts
 relations:
   entities: [ENT-004, ENT-005]
   functions: []
@@ -26,7 +28,7 @@ relations:
   depends_on: [FEAT-007, FEAT-008]
   decisions: [DEC-006, DEC-017, DEC-018]
 uncertainties:
-  - "Rendering, dragging and navigation are not covered by automated tests (no browser in the suite); checked in the browser by the user on 2026-10-15 (rent-car, check-fuel; PLAN-002 S11)."
+  - "Rendering, dragging and navigation are not covered by automated tests (no browser in the suite); checked in the browser by the user on 2026-10-15 (rent-car, check-fuel; PLAN-002 S11); drill-down and ↗ markers checked by the user on 2026-10-17 (PLAN-005 S6)."
 ---
 
 # FEAT-009 · Sequence diagram viewer
@@ -55,12 +57,15 @@ length is measured from the drawn header top; the Auto-layout button and the MCP
 `auto_layout_diagram` use the same module. Navigation: references in the detail select the target or, if it has
 no cell, the closest element that has one (the message of an occurrence, then its owners up the chain: operand →
 fragment, → interaction), on the current canvas first, otherwise in the first diagram that shows one of them (lifeline → represented class; class “Referenced by” → lifeline in its
-sequence diagram; interaction use → used interaction, also by double click). Simplifications marked `ponytail:`
+sequence diagram; interaction use → used interaction, also by double click). Drill-down (REQ-042, FEAT-007): a message whose
+`signature` operation has `behavior`, an interaction use, a lifeline, fragment or execution with `links` get a ↗
+(after the message label; above the top-right corner of the lifeline header, fragment or execution) and open their first target by
+double click; a message whose behavior is the shown interaction itself gets none. Simplifications marked `ponytail:`
 in the code: only labels of messages between neighbouring lifelines make room; a destroyed lifeline ignores
 `height`; messages follow a dragged lifeline on drop, not while dragging.
 
 ## Behavior
-REQ-040.
+REQ-040, REQ-042.
 
 ## States and transitions
 No states of its own.

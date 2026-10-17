@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-submind:format:1.1:ai-submind",
+  "title": "ai-submind 1.1 · manifest (knowledge/ai-submind.json)",
+  "type": "object",
+  "required": [
+    "format_version"
+  ],
+  "properties": {
+    "format_version": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/formatVersion"
+    },
+    "name": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+    },
+    "documentation": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+    }
+  },
+  "additionalProperties": false
+}

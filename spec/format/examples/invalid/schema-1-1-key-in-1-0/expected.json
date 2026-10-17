@@ -1,0 +1,7 @@
+{
+  "description": "Format 1.0 document using the 1.1 key links: outdated and not allowed by the 1.0 schema",
+  "codes": [
+    "FORMAT_VERSION_OUTDATED",
+    "SCHEMA_VIOLATION"
+  ]
+}

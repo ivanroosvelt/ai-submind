@@ -24,7 +24,7 @@ relations:
   entities: [ENT-002, ENT-003, ENT-004]
   validations: [VAL-001, VAL-002, VAL-003, VAL-006, VAL-007]
   tests: []
-  decisions: [DEC-005, DEC-014, DEC-015, DEC-016, DEC-017]
+  decisions: [DEC-005, DEC-014, DEC-015, DEC-016, DEC-017, DEC-020]
 uncertainties:
   - "Versioning of the MCP contract."
   - "No output schemas yet: results are JSON text plus `structuredContent`."
@@ -48,7 +48,7 @@ is the stdio proxy (DEC-005, DEC-016). Arguments are camelCase. Every result is 
 | `get_element` | `id` | element, type, owner, file, children, content | NOT_FOUND, AMBIGUOUS_ID |
 | `find_elements` | filter (type, model, package, diagram, owner, interaction, name+match, tags, stereotypes, code refs, documentation, visibility), page | page of element summaries | INVALID_ARGUMENT |
 | `search` | `text`, `mode?`, `prefix?`, filter, page | ranked hits (BM25F) | INVALID_ARGUMENT |
-| `relations` | `id`, `direction?`, `kinds?`, `keys?`, `groups?`, page | page of edges | NOT_FOUND, AMBIGUOUS_ID, INVALID_ARGUMENT |
+| `relations` | `id`, `direction?`, `kinds?`, `keys?`, `groups?` (`association`, `generalization`, `dependency`, `realization`, `ownership`, `diagram`, `typing`, `sequence`, `links`), page | page of edges | NOT_FOUND, AMBIGUOUS_ID, INVALID_ARGUMENT |
 | `impact` | `id`, `direction?`, `maxDepth?`, `kinds?`, `limit?` | dependents/dependencies with depth and files | NOT_FOUND, INVALID_ARGUMENT |
 | `paths` | `from`, `to`, `directed?`, `mode?`, `maxLength?`, `maxPaths?`, `kinds?`, `throughHubs?` | simple paths | NOT_FOUND, INVALID_ARGUMENT |
 | `validate` | - | reload from disk, then `{state, errors, warnings, findings}` | |
@@ -58,6 +58,7 @@ is the stdio proxy (DEC-005, DEC-016). Arguments are camelCase. Every result is 
 | `edit_diagram` | `id`, `add?`, `remove?`, `expectedRevision?`, `dryRun?` | write result | VALIDATION_FAILED (`DIAGRAM_ELEMENT_NOT_ALLOWED`), same |
 | `apply_batch` | `operations` (`op`: create, update, delete, edit_diagram), `dryRun?` | one write result, all or nothing | any of the above |
 | `rename` | `id`, `newId`, `dryRun?` | revisions, diff, `renamed` pairs | NOT_FOUND, AMBIGUOUS_ID, INVALID_ID, RENAME_COLLISION, RENAME_BLOCKED, VALIDATION_FAILED |
+| `migrate` | `dryRun?` | `{dryRun, migrated, revisions, diff, generation}`: every 1.0 document upgraded to 1.1 (REQ-043) | MIGRATE_BLOCKED, REVISION_CONFLICT |
 | `auto_layout_diagram` | `diagram`, `dryRun?` | `{dryRun, initialized, layout, revisions, diff, generation}` | NOT_FOUND, AMBIGUOUS_ID, INVALID_ARGUMENT (not a diagram), REVISION_CONFLICT, DOCUMENT_INVALID, VALIDATION_FAILED |
 
 Write result: `{dryRun, initialized, created, affected, revisions, diff, generation}`; `affected` lists every
@@ -75,8 +76,11 @@ keep only `style`. Agents never set coordinates (DEC-015). Every write tool exce
 `update_element` and deleted (with its layout) with `delete_element`. The first write on a `knowledge/` without
 `ai-submind.json` creates it like `ai-submind init`; `initialized: true` means that the write creates (in a dry run,
 would create) that manifest. A dry run validates and returns the same result without writing anything (DEC-015). `cascade` semantics: DEC-016.
+Flows of flows (DEC-020): an operation's `behavior: {idref}` (an interaction) and `links: [{idref}]` on any element,
+diagram or model go in `data`/`patch` of the write tools, whose descriptions explain them; in `relations` they are
+`reference` edges with key `behavior` (group `sequence`) or `links` (group `links`).
 
-Resources: `ai-submind://schema/{name}` (`ai-submind`, `defs`, `layout`, `model`: JSON Schemas of format 1.0),
+Resources: `ai-submind://schema/{name}` (`ai-submind`, `defs`, `layout`, `model`: JSON Schemas of the current format, 1.1),
 `ai-submind://model/{id}` (model document as loaded), `ai-submind://diagram/{id}` (`{diagram, layout | null}`).
 
 ## Errors

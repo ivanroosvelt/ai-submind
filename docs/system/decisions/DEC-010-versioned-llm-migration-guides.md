@@ -2,7 +2,7 @@
 id: DEC-010
 type: decision
 name: "Format migrations as versioned from→to guides for LLM agents"
-status: proposed
+status: active
 evidence: declared-doc
 summary: "Every format version change ships a migration guide spec/format/migrations/<from>-to-<to>/ with step-by-step instructions an LLM agent can follow, a before/after corpus tested in CI, and an explicit migrate operation that is the only write allowed on documents of another version."
 aliases: [migration, format migration, upgrade, from-to, migration guide]
@@ -10,9 +10,7 @@ tags: [format, versioning, migrations]
 relations:
   affects: [VAL-004, NFR-011, API-004]
   supersedes: []
-uncertainties:
-  - "Whether trivial mechanical steps also ship a deterministic transform script next to the guide, or the guide alone is enough: decide with the first real version change."
-  - "Shape of the migrate operation in CLI and MCP (one document per call vs a batch per version hop): fixed in the plan that implements this decision."
+uncertainties: []
 ---
 
 # DEC-010 · Format migrations as versioned from→to guides for LLM agents
@@ -36,7 +34,7 @@ uncertainties:
 3. No migrations: users recreate documents — loses data; contradicts NFR-011.
 
 ## Decision
-Alternative 1 (proposed; it becomes active with the plan that implements it, at the first format change).
+Alternative 1 (active since the first format change, 1.0 → 1.1, implemented in PLAN-005 S2b; refined by DEC-020).
 - **Location**: `spec/format/migrations/<from>-to-<to>/` (e.g. `1.0-to-1.1/`), published with the package.
   Migrating across several versions chains hops (1.0→1.1→2.0); there is no direct 1.0→2.0 guide unless
   written on purpose.
@@ -70,5 +68,8 @@ VAL-004 (version handling), NFR-011 (format compatibility), API-004 (format cont
 spec §11.
 
 ## Verification
-Not implemented: there is a single format version. It is verified with the first version change (guide,
-corpus test, `migrate` operation).
+Active since the first version change (1.0 → 1.1, PLAN-005 S2b), with the refinements of DEC-020: the guide file
+is `README.md`; the hop is mechanical, so `migrate` (engine, MCP tool, CLI `ai-submind migrate`) performs it
+deterministically as one batch per hop, and the guide serves manual edits. Corpus
+`spec/format/migrations/1.0-to-1.1/examples/` checked by `test/format/corpus.test.ts`; `spec/format/migrations` is in the
+package `files`.

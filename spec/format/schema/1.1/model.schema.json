@@ -1,0 +1,1445 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-submind:format:1.1:model",
+  "title": "ai-submind 1.1 · model (knowledge/models/<model-id>.json)",
+  "required": [
+    "format_version",
+    "id",
+    "name"
+  ],
+  "properties": {
+    "format_version": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/formatVersion"
+    },
+    "id": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/fileId"
+    },
+    "name": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+    },
+    "visibility": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+    },
+    "stereotypes": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+    },
+    "tags": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+    },
+    "documentation": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+    },
+    "code_refs": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+    },
+    "external_id": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+    },
+    "links": {
+      "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+    },
+    "elements": {
+      "$ref": "#/$defs/elements"
+    },
+    "diagrams": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagram"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "$defs": {
+    "elements": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/package"
+          }
+        },
+        "actors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actor"
+          }
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/class"
+          }
+        },
+        "interfaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/interface"
+          }
+        },
+        "data_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dataType"
+          }
+        },
+        "enumerations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/enumeration"
+          }
+        },
+        "primitive_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/primitiveType"
+          }
+        },
+        "associations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/association"
+          }
+        },
+        "generalizations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/generalization"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        },
+        "realizations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/realization"
+          }
+        },
+        "interactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/interaction"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "package": {
+      "type": "object",
+      "title": "Package",
+      "required": [
+        "id",
+        "name",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "actor": {
+      "type": "object",
+      "title": "Actor",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "class": {
+      "type": "object",
+      "title": "Class",
+      "required": [
+        "id",
+        "name",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "is_abstract": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attribute"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "interface": {
+      "type": "object",
+      "title": "Interface",
+      "required": [
+        "id",
+        "name",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attribute"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "dataType": {
+      "type": "object",
+      "title": "Data type",
+      "required": [
+        "id",
+        "name",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attribute"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "enumeration": {
+      "type": "object",
+      "title": "Enumeration",
+      "required": [
+        "id",
+        "name",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "literals": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "primitiveType": {
+      "type": "object",
+      "title": "Primitive type",
+      "required": [
+        "id",
+        "name",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "kind": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "attribute": {
+      "type": "object",
+      "title": "Attribute",
+      "required": [
+        "id",
+        "name",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "type": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optRef"
+        },
+        "multiplicity": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/multiplicity"
+        },
+        "default_value": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+        },
+        "is_static": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "is_ordered": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "is_unique": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "is_read_only": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "is_derived": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "is_derived_union": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "operation": {
+      "type": "object",
+      "title": "Operation",
+      "required": [
+        "id",
+        "name",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "return_type": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optRef"
+        },
+        "behavior": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optRef"
+        },
+        "is_static": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "is_abstract": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "is_query": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/parameter"
+          }
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "parameter": {
+      "type": "object",
+      "title": "Parameter",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "direction": {
+          "enum": [
+            "in",
+            "out",
+            "inout"
+          ]
+        },
+        "type": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optRef"
+        },
+        "multiplicity": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/multiplicity"
+        },
+        "default_value": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "association": {
+      "type": "object",
+      "title": "Association",
+      "required": [
+        "id",
+        "type",
+        "direction",
+        "end1",
+        "end2"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "type": {
+          "enum": [
+            "association",
+            "aggregation",
+            "composition"
+          ]
+        },
+        "direction": {
+          "enum": [
+            "directed",
+            "undirected"
+          ]
+        },
+        "end1": {
+          "$ref": "#/$defs/associationEnd"
+        },
+        "end2": {
+          "$ref": "#/$defs/associationEnd"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "associationEnd": {
+      "type": "object",
+      "title": "Association end",
+      "required": [
+        "id",
+        "element"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "element": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "role": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+        },
+        "multiplicity": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/multiplicity"
+        },
+        "navigability": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/flag"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "generalization": {
+      "type": "object",
+      "title": "Generalization",
+      "required": [
+        "id",
+        "specific",
+        "general"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "specific": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "general": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "dependency": {
+      "type": "object",
+      "title": "Dependency",
+      "required": [
+        "id",
+        "client",
+        "supplier"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+        },
+        "client": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "supplier": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "realization": {
+      "type": "object",
+      "title": "Realization",
+      "required": [
+        "id",
+        "client",
+        "supplier"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "client": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "supplier": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "interaction": {
+      "type": "object",
+      "title": "Interaction",
+      "required": [
+        "id",
+        "name",
+        "visibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "visibility": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/visibility"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "lifelines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/lifeline"
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/message"
+          }
+        },
+        "fragments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fragment"
+          }
+        },
+        "executions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/execution"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "lifeline": {
+      "type": "object",
+      "title": "Lifeline",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "type": "string"
+        },
+        "represents": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optRef"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "message": {
+      "type": "object",
+      "title": "Message",
+      "required": [
+        "id",
+        "name",
+        "sort",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sort": {
+          "enum": [
+            "synch_call",
+            "asynch_call",
+            "asynch_signal",
+            "create_message",
+            "delete_message",
+            "reply"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "complete",
+            "lost",
+            "found",
+            "unknown"
+          ]
+        },
+        "arguments": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "send_event": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optRef"
+        },
+        "receive_event": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optRef"
+        },
+        "signature": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optRef"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fragment": {
+      "title": "Fragment",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "occurrence",
+            "combined_fragment",
+            "interaction_use"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "occurrence"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/occurrence"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "combined_fragment"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/combinedFragment"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "interaction_use"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/interactionUse"
+          }
+        }
+      ]
+    },
+    "occurrence": {
+      "type": "object",
+      "title": "Occurrence specification",
+      "required": [
+        "id",
+        "type",
+        "covered"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "type": {
+          "const": "occurrence"
+        },
+        "covered": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "combinedFragment": {
+      "type": "object",
+      "title": "Combined fragment",
+      "required": [
+        "id",
+        "type",
+        "operator",
+        "covered",
+        "operands"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "type": {
+          "const": "combined_fragment"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+        },
+        "operator": {
+          "enum": [
+            "alt",
+            "opt",
+            "par",
+            "loop",
+            "critical",
+            "neg",
+            "assert",
+            "strict",
+            "seq",
+            "ignore",
+            "consider",
+            "break"
+          ]
+        },
+        "covered": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "operands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operand"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "operand": {
+      "type": "object",
+      "title": "Interaction operand",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "guard": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "fragments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fragment"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "interactionUse": {
+      "type": "object",
+      "title": "Interaction use",
+      "required": [
+        "id",
+        "type",
+        "covered",
+        "interaction"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "type": {
+          "const": "interaction_use"
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/optText"
+        },
+        "covered": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "interaction": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "arguments": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "execution": {
+      "type": "object",
+      "title": "Execution specification",
+      "required": [
+        "id",
+        "covered",
+        "start",
+        "finish"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/elementId"
+        },
+        "covered": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "start": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "finish": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        }
+      },
+      "additionalProperties": false
+    },
+    "diagram": {
+      "type": "object",
+      "title": "Diagram",
+      "required": [
+        "id",
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/fileId"
+        },
+        "kind": {
+          "enum": [
+            "class",
+            "sequence"
+          ]
+        },
+        "name": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/name"
+        },
+        "stereotypes": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/stereotypes"
+        },
+        "tags": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/tags"
+        },
+        "documentation": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/documentation"
+        },
+        "code_refs": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/codeRefs"
+        },
+        "external_id": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/externalId"
+        },
+        "links": {
+          "$ref": "urn:ai-submind:format:1.1:defs#/$defs/links"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:ai-submind:format:1.1:defs#/$defs/ref"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "sequence"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "elements"
+            ],
+            "properties": {
+              "elements": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

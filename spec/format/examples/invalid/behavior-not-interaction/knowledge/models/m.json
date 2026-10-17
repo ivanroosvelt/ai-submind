@@ -1,0 +1,22 @@
+{
+  "format_version": "1.1",
+  "id": "m",
+  "name": "M",
+  "elements": {
+    "classes": [
+      {
+        "id": "A",
+        "name": "A",
+        "visibility": "public",
+        "operations": [
+          {
+            "id": "A.run()",
+            "name": "run",
+            "visibility": "public",
+            "behavior": {"idref": "A"}
+          }
+        ]
+      }
+    ]
+  }
+}

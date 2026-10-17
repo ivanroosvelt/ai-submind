@@ -1,17 +1,24 @@
-// Loading of the format's JSON Schemas and navigation by schema location. Schemas are read from
-// spec/format/schema/<version>/ (published with the package via `files` in package.json), which sits at
-// the same depth from src/format/ and from dist/format/.
+// Loading of the format's JSON Schemas and navigation by schema location. Schemas of every supported
+// version are read from spec/format/schema/<version>/ (published with the package via `files` in
+// package.json), which sits at the same depth from src/format/ and from dist/format/.
 import { readFileSync, readdirSync } from "node:fs";
 import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
 import type { DocumentKind } from "./types.js";
 
 export type Version = readonly [number, number];
 
-export const SUPPORTED_VERSION = "1.0";
-export const SUPPORTED_VERSION_PARTS: Version = [1, 0];
+/** Current version (spec §11): new documents are written with it. */
+export const SUPPORTED_VERSION = "1.1";
+/** Versions with a schema in spec/format/schema/<version>/, oldest first; all but the last are outdated. */
+export const SUPPORTED_VERSIONS: readonly string[] = ["1.0", SUPPORTED_VERSION];
 
-const SCHEMA_DIR = new URL(`../../spec/format/schema/${SUPPORTED_VERSION}/`, import.meta.url);
-const URN = `urn:ai-submind:format:${SUPPORTED_VERSION}`;
+const SCHEMA_ROOT = new URL("../../spec/format/schema/", import.meta.url);
+
+/** Version whose schema describes `data`: its own if supported, otherwise the current one (tolerant reading). */
+export function schemaVersion(data: unknown): string {
+  const v = isObject(data) ? data.format_version : undefined;
+  return typeof v === "string" && SUPPORTED_VERSIONS.includes(v) ? v : SUPPORTED_VERSION;
+}
 
 export type SchemaNode = Readonly<Record<string, unknown>>;
 
@@ -21,8 +28,9 @@ export interface SchemaLocation {
   pointer: string;
 }
 
-export function rootLocation(kind: DocumentKind): SchemaLocation {
-  return { base: `${URN}:${kind === "manifest" ? "ai-submind" : kind}`, pointer: "" };
+export function rootLocation(kind: DocumentKind, version = SUPPORTED_VERSION): SchemaLocation {
+  const name = kind === "manifest" ? "ai-submind" : kind;
+  return { base: `urn:ai-submind:format:${version}:${name}`, pointer: "" };
 }
 
 export class SchemaSet {
@@ -30,11 +38,14 @@ export class SchemaSet {
   private readonly documents = new Map<string, SchemaNode>();
   private readonly validators = new Map<string, ValidateFunction>();
 
-  constructor(dir: URL = SCHEMA_DIR) {
+  constructor(dirs: readonly URL[] = SUPPORTED_VERSIONS.map((v) => new URL(`${v}/`, SCHEMA_ROOT))) {
     this.ajv = new Ajv2020({ allErrors: true, strict: true });
-    for (const name of readdirSync(dir)
-      .filter((f) => f.endsWith(".json"))
-      .sort()) {
+    for (const [dir, name] of dirs.flatMap((d) =>
+      readdirSync(d)
+        .filter((f) => f.endsWith(".json"))
+        .sort()
+        .map((f) => [d, f] as const),
+    )) {
       const schema = JSON.parse(readFileSync(new URL(name, dir), "utf8")) as SchemaNode;
       const id = schema.$id;
       if (typeof id !== "string") throw new Error(`schema without $id: ${name}`);
@@ -88,7 +99,7 @@ export class SchemaSet {
 
 let shared: SchemaSet | undefined;
 
-/** Schemas of the supported version, loaded once per process. */
+/** Schemas of every supported version, loaded once per process. */
 export function schemas(): SchemaSet {
   shared ??= new SchemaSet();
   return shared;

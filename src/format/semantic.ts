@@ -6,6 +6,7 @@ import type {
   AssociationEnd,
   Elements,
   Execution,
+  Extensions,
   Fragment,
   Interaction,
   Layout,
@@ -16,7 +17,7 @@ import type {
   StructuredClassifier,
 } from "./types.js";
 
-/** Element types of format 1.0, in the order of the spec. */
+/** Element types of the format, in the order of the spec. */
 export const ELEMENT_TYPES = [
   "model",
   "diagram",
@@ -93,6 +94,8 @@ export type RefRule =
   | "operation"
   | "covered"
   | "used_interaction"
+  | "behavior"
+  | "link"
   | "class_diagram_element"
   | "sequence_diagram_element"
   | "diagram";
@@ -138,6 +141,8 @@ const ALLOWED: Record<RefRule, readonly ElementType[] | ((t: ElementType) => boo
   operation: ["operation"],
   covered: ["lifeline"],
   used_interaction: ["interaction"],
+  behavior: ["interaction"],
+  link: () => true,
   class_diagram_element: [...NODE_TYPES, ...RELATIONS],
   sequence_diagram_element: ["interaction"],
   diagram: ["diagram"],
@@ -180,6 +185,8 @@ class Indexer {
     const list = this.byId.get(id);
     if (list) list.push(entry);
     else this.byId.set(id, [entry]);
+    // `links` (1.1) is allowed on every element with an id, the model and diagrams (spec §7.1).
+    this.refList((node as Extensions).links, `${ptr}/links`, "link", id, scope.interaction);
   }
 
   /** Reference at `ptr`, contained in element `source` (absent only in layouts). */
@@ -302,6 +309,7 @@ class Indexer {
       const op = `${p}/operations/${String(i)}`;
       this.add(o.id, "operation", op, o, { parent: c.id });
       this.ref(o.return_type, `${op}/return_type`, "classifier", o.id);
+      this.ref(o.behavior, `${op}/behavior`, "behavior", o.id);
       this.refList(o.exceptions, `${op}/exceptions`, "classifier", o.id);
       (o.parameters ?? []).forEach((q, k) => {
         const qp = `${op}/parameters/${String(k)}`;
@@ -570,6 +578,8 @@ export function checkKnowledge(
           [r.idref],
         ),
       );
+    } else if (r.rule === "link" && t.id === r.source) {
+      out.push(finding("LINK_SELF", r.file, r.pointer, `${r.idref} links to itself`, [r.idref]));
     } else if (r.rule === "used_interaction" && t.id === r.interaction) {
       out.push(
         finding(
